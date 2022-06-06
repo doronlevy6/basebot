@@ -1,7 +1,7 @@
-/**
- * This is not a production server yet!
- * This is only a minimal backend to get started.
- */
+// Before anything else runs, first we must load the environment that we are running
+import { loadEnvs } from '@base/env';
+import { environment } from './environments/environment';
+loadEnvs(environment, ['configs', 'secrets']);
 
 import * as express from 'express';
 

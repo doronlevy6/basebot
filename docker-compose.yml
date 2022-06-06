@@ -15,7 +15,7 @@ services:
       - postgres
       - redis
     environment:
-      NODE_ENV: local
+      NODE_OVERRIDE_ENV: local
       PORT: 3333
     ports:
       - 3333:3333
