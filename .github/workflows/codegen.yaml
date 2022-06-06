@@ -2,7 +2,7 @@ name: "Codegen"
 
 on:
   schedule:
-    - cron: "* * * * *"
+    - cron: "*/5 * * * *"
 
 concurrency:
   group: codegen-basebot
