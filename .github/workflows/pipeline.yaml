@@ -154,7 +154,7 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           context: ./
-          file: ./build/images/Dockerfile
+          file: ./build/Dockerfile
           push: true
           build-args: |
             SERVICE_NAME=${{ matrix.service }}
