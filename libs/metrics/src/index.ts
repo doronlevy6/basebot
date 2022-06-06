@@ -4,3 +4,4 @@ export {
   expressMetricsEndpoint,
   expressHttpMetricsMiddleware,
 } from './lib/express_middleware';
+export { httpMetricsEndpoint } from './lib/http_middleware';
