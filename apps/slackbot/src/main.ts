@@ -6,15 +6,10 @@ import { loadEnvs } from '@base/env';
 import { environment } from './environments/environment';
 loadEnvs(environment, ['configs', 'secrets']);
 
-import {
-  PrometheusReporter,
-  expressMetricsEndpoint,
-  expressHttpMetricsMiddleware,
-} from '@base/metrics';
+import { PrometheusReporter } from '@base/metrics';
 import { logger } from '@base/logger';
 import { Configuration, DefaultApi } from '@base/oapigen';
-
-import * as express from 'express';
+import { createApp } from './app';
 import { Server } from 'http';
 
 const gracefulShutdown = (server: Server) => (signal: string) => {
@@ -30,52 +25,24 @@ const gracefulShutdown = (server: Server) => (signal: string) => {
   });
 };
 
-const app = express();
-const metricsReporter = new PrometheusReporter();
-const configuration = new Configuration({
-  basePath: process.env.BASE_BACKEND_URL,
-});
+const startApp = async () => {
+  const metricsReporter = new PrometheusReporter();
 
-const defaultApi = new DefaultApi(configuration);
+  const configuration = new Configuration({
+    basePath: process.env.BASE_BACKEND_URL,
+  });
+  const defaultApi = new DefaultApi(configuration);
 
-app.use(expressHttpMetricsMiddleware(metricsReporter));
-app.get('/metrics', expressMetricsEndpoint(metricsReporter));
+  // TODO: database
+  const slackApp = createApp(null, defaultApi, metricsReporter);
 
-app.get('/base/health', async (req, res) => {
-  const apires = await defaultApi.healthControllerCheck();
-  res.send(apires.data);
-});
+  const port = process.env['PORT'] || 3000;
+  const server = await slackApp.start(port);
+  server.on('error', console.error);
 
-app.get('/health', async (req, res) => {
-  const healthRes = {
-    status: 'ok',
-    info: {
-      serviceInfo: {
-        status: 'up',
-        env: process.env.ENV,
-        version: process.env.VERSION,
-        tag: process.env.TAG,
-      },
-    },
-    error: {},
-    details: {
-      serviceInfo: {
-        status: 'up',
-        env: process.env.ENV,
-        version: process.env.VERSION,
-        tag: process.env.TAG,
-      },
-    },
-  };
-  res.send(JSON.stringify(healthRes));
-});
+  const shutdownHandler = gracefulShutdown(server);
+  process.on('SIGINT', shutdownHandler);
+  process.on('SIGTERM', shutdownHandler);
+};
 
-const port = process.env['PORT'] || 3333;
-const server = app.listen(port, () => {
-  logger.info(`Listening at http://localhost:${port}/api`);
-});
-server.on('error', console.error);
-
-const shutdownHandler = gracefulShutdown(server);
-process.on('SIGINT', shutdownHandler);
-process.on('SIGTERM', shutdownHandler);
+startApp();
