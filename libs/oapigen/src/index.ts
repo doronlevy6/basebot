@@ -1,1 +1,1 @@
-export * from './lib/oapigen';
+export * from './lib/index';
