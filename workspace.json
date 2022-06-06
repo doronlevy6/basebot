@@ -2,9 +2,9 @@
   "$schema": "./node_modules/nx/schemas/workspace-schema.json",
   "version": 2,
   "projects": {
-    "basebot": "apps/basebot",
     "env": "libs/env",
     "logger": "libs/logger",
-    "metrics": "libs/metrics"
+    "metrics": "libs/metrics",
+    "slackbot": "apps/slackbot"
   }
 }

@@ -1,7 +1,7 @@
 version: "3.8"
 services:
 # Monolith API
-  basebot:
+  slackbot:
     build:
       dockerfile: ./build/Dockerfile.local
       context: .
@@ -10,7 +10,7 @@ services:
       - ./libs:/app/libs
       - ./configs:/app/configs
       - ./secrets:/app/secrets
-    command: npm run start basebot
+    command: npm run start slackbot
     depends_on:
       - postgres
       - redis

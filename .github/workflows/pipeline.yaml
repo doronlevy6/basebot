@@ -111,7 +111,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        service: [basebot]
+        service: [slackbot]
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v2

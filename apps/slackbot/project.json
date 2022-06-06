@@ -1,16 +1,16 @@
 {
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "apps/basebot/src",
+  "sourceRoot": "apps/slackbot/src",
   "projectType": "application",
   "targets": {
     "build": {
       "executor": "@nrwl/node:webpack",
       "outputs": ["{options.outputPath}"],
       "options": {
-        "outputPath": "dist/apps/basebot",
-        "main": "apps/basebot/src/main.ts",
-        "tsConfig": "apps/basebot/tsconfig.app.json",
-        "assets": ["apps/basebot/src/assets"]
+        "outputPath": "dist/apps/slackbot",
+        "main": "apps/slackbot/src/main.ts",
+        "tsConfig": "apps/slackbot/tsconfig.app.json",
+        "assets": ["apps/slackbot/src/assets"]
       },
       "configurations": {
         "production": {
@@ -19,8 +19,8 @@
           "inspect": false,
           "fileReplacements": [
             {
-              "replace": "apps/basebot/src/environments/environment.ts",
-              "with": "apps/basebot/src/environments/environment.prod.ts"
+              "replace": "apps/slackbot/src/environments/environment.ts",
+              "with": "apps/slackbot/src/environments/environment.prod.ts"
             }
           ]
         }
@@ -29,7 +29,7 @@
     "serve": {
       "executor": "@nrwl/node:node",
       "options": {
-        "buildTarget": "basebot:build",
+        "buildTarget": "slackbot:build",
         "inspect": true,
         "host": "0.0.0.0",
         "port": 9229
@@ -39,14 +39,14 @@
       "executor": "@nrwl/linter:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
-        "lintFilePatterns": ["apps/basebot/**/*.ts"]
+        "lintFilePatterns": ["apps/slackbot/**/*.ts"]
       }
     },
     "test": {
       "executor": "@nrwl/jest:jest",
-      "outputs": ["coverage/apps/basebot"],
+      "outputs": ["coverage/apps/slackbot"],
       "options": {
-        "jestConfig": "apps/basebot/jest.config.ts",
+        "jestConfig": "apps/slackbot/jest.config.ts",
         "passWithNoTests": true
       }
     }

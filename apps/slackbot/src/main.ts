@@ -18,7 +18,7 @@ app.use(expressHttpMetricsMiddleware(metricsReporter));
 app.get('/metrics', expressMetricsEndpoint(metricsReporter));
 
 app.get('/api', (req, res) => {
-  res.send({ message: 'Welcome to basebot!' });
+  res.send({ message: 'Welcome to slackbot!' });
 });
 
 const port = process.env['PORT'] || 3333;

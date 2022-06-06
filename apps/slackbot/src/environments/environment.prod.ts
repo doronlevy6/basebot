@@ -1,6 +1,6 @@
 export const environment = {
   production: true,
-  serviceName: 'basebot',
+  serviceName: 'slackbot',
   env: 'production',
   cwd: process.cwd(),
 };
