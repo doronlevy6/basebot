@@ -261,6 +261,69 @@ export interface ImportFreeText {
 /**
  * 
  * @export
+ * @interface ImportTask
+ */
+export interface ImportTask {
+    /**
+     * 
+     * @type {string}
+     * @memberof ImportTask
+     */
+    'action': string;
+    /**
+     * 
+     * @type {ImportTaskDate}
+     * @memberof ImportTask
+     */
+    'dueDate': ImportTaskDate;
+    /**
+     * 
+     * @type {ImportTaskUser}
+     * @memberof ImportTask
+     */
+    'owner': ImportTaskUser;
+}
+/**
+ * 
+ * @export
+ * @interface ImportTaskDate
+ */
+export interface ImportTaskDate {
+    /**
+     * 
+     * @type {string}
+     * @memberof ImportTaskDate
+     */
+    'dateText': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ImportTaskDate
+     */
+    'date': string;
+}
+/**
+ * 
+ * @export
+ * @interface ImportTaskUser
+ */
+export interface ImportTaskUser {
+    /**
+     * 
+     * @type {string}
+     * @memberof ImportTaskUser
+     */
+    'text': string;
+    /**
+     * 
+     * @type {Array<User>}
+     * @memberof ImportTaskUser
+     */
+    'baseUsers': Array<User>;
+}
+/**
+ * 
+ * @export
  * @interface Organization
  */
 export interface Organization {
@@ -1377,7 +1440,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async importTasksControllerCreateTasksFromFreeText(importFreeText: ImportFreeText, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+        async importTasksControllerCreateTasksFromFreeText(importFreeText: ImportFreeText, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<ImportTask>>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.importTasksControllerCreateTasksFromFreeText(importFreeText, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
@@ -1616,7 +1679,7 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        importTasksControllerCreateTasksFromFreeText(importFreeText: ImportFreeText, options?: any): AxiosPromise<void> {
+        importTasksControllerCreateTasksFromFreeText(importFreeText: ImportFreeText, options?: any): AxiosPromise<Array<ImportTask>> {
             return localVarFp.importTasksControllerCreateTasksFromFreeText(importFreeText, options).then((request) => request(axios, basePath));
         },
         /**
