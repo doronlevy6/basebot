@@ -15,6 +15,20 @@ import * as express from 'express';
 import { logger } from '@base/logger';
 
 import { Configuration, DefaultApi } from '@base/oapigen';
+import { Server } from 'http';
+
+const gracefulShutdown = (server: Server) => (signal: string) => {
+  logger.info('starting shutdown, got signal ' + signal);
+  if (!server.listening) process.exit(0);
+
+  server.close((err) => {
+    if (err) {
+      logger.error(err);
+      return process.exit(1);
+    }
+    process.exit(0);
+  });
+};
 
 const app = express();
 const metricsReporter = new PrometheusReporter();
@@ -61,3 +75,7 @@ const server = app.listen(port, () => {
   logger.info(`Listening at http://localhost:${port}/api`);
 });
 server.on('error', console.error);
+
+const shutdownHandler = gracefulShutdown(server);
+process.on('SIGINT', shutdownHandler);
+process.on('SIGTERM', shutdownHandler);
