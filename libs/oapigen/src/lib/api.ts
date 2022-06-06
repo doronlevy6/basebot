@@ -24,6 +24,31 @@ import { BASE_PATH, COLLECTION_FORMATS, RequestArgs, BaseAPI, RequiredError } fr
 /**
  * 
  * @export
+ * @interface AuthLoginResponse
+ */
+export interface AuthLoginResponse {
+    /**
+     * 
+     * @type {string}
+     * @memberof AuthLoginResponse
+     */
+    'email': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof AuthLoginResponse
+     */
+    'userId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof AuthLoginResponse
+     */
+    'orgId': string;
+}
+/**
+ * 
+ * @export
  * @interface CreateOrganizationDto
  */
 export interface CreateOrganizationDto {
@@ -106,6 +131,37 @@ export interface CreateTaskDto {
      * @memberof CreateTaskDto
      */
     'tags': Array<string>;
+}
+/**
+ * 
+ * @export
+ * @interface CreateUserDto
+ */
+export interface CreateUserDto {
+    /**
+     * 
+     * @type {string}
+     * @memberof CreateUserDto
+     */
+    'email': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof CreateUserDto
+     */
+    'dispalyName': string;
+    /**
+     * 
+     * @type {Organization}
+     * @memberof CreateUserDto
+     */
+    'organization': Organization;
+    /**
+     * 
+     * @type {string}
+     * @memberof CreateUserDto
+     */
+    'externalAuthId'?: string;
 }
 /**
  * 
@@ -541,6 +597,18 @@ export interface User {
      * @memberof User
      */
     'dispalyName': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof User
+     */
+    'organizationId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof User
+     */
+    'externalAuthId': string;
 }
 
 /**
@@ -564,6 +632,35 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             }
 
             const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        auth0ControllerOnNewAuth0Login: async (options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/auth0`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
@@ -1180,13 +1277,13 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
         },
         /**
          * 
-         * @param {object} body 
+         * @param {CreateUserDto} createUserDto 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        usersControllerCreate: async (body: object, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'body' is not null or undefined
-            assertParamExists('usersControllerCreate', 'body', body)
+        usersControllerCreate: async (createUserDto: CreateUserDto, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'createUserDto' is not null or undefined
+            assertParamExists('usersControllerCreate', 'createUserDto', createUserDto)
             const localVarPath = `/users`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -1206,7 +1303,7 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(body, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(createUserDto, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -1364,6 +1461,15 @@ export const DefaultApiFp = function(configuration?: Configuration) {
          */
         async appControllerGetHello(options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.appControllerGetHello(options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+        /**
+         * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async auth0ControllerOnNewAuth0Login(options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<AuthLoginResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.auth0ControllerOnNewAuth0Login(options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
         /**
@@ -1546,12 +1652,12 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
-         * @param {object} body 
+         * @param {CreateUserDto} createUserDto 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async usersControllerCreate(body: object, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<string>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.usersControllerCreate(body, options);
+        async usersControllerCreate(createUserDto: CreateUserDto, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<User>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.usersControllerCreate(createUserDto, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
         /**
@@ -1611,6 +1717,14 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          */
         appControllerGetHello(options?: any): AxiosPromise<void> {
             return localVarFp.appControllerGetHello(options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        auth0ControllerOnNewAuth0Login(options?: any): AxiosPromise<AuthLoginResponse> {
+            return localVarFp.auth0ControllerOnNewAuth0Login(options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -1774,12 +1888,12 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
         },
         /**
          * 
-         * @param {object} body 
+         * @param {CreateUserDto} createUserDto 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        usersControllerCreate(body: object, options?: any): AxiosPromise<string> {
-            return localVarFp.usersControllerCreate(body, options).then((request) => request(axios, basePath));
+        usersControllerCreate(createUserDto: CreateUserDto, options?: any): AxiosPromise<User> {
+            return localVarFp.usersControllerCreate(createUserDto, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -1835,6 +1949,16 @@ export class DefaultApi extends BaseAPI {
      */
     public appControllerGetHello(options?: AxiosRequestConfig) {
         return DefaultApiFp(this.configuration).appControllerGetHello(options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApi
+     */
+    public auth0ControllerOnNewAuth0Login(options?: AxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).auth0ControllerOnNewAuth0Login(options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -2035,13 +2159,13 @@ export class DefaultApi extends BaseAPI {
 
     /**
      * 
-     * @param {object} body 
+     * @param {CreateUserDto} createUserDto 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApi
      */
-    public usersControllerCreate(body: object, options?: AxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).usersControllerCreate(body, options).then((request) => request(this.axios, this.basePath));
+    public usersControllerCreate(createUserDto: CreateUserDto, options?: AxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).usersControllerCreate(createUserDto, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
