@@ -13,7 +13,8 @@
     "docker:login": "aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 221762091942.dkr.ecr.us-east-1.amazonaws.com",
     "start:local": "npm run docker:login && docker compose up",
     "rebuild:local": "npm run start:local -- --build",
-    "clean:local": "docker compose down"
+    "clean:local": "docker compose down",
+    "ngrok": "ngrok http 3000 -subdomain thebase"
   },
   "private": true,
   "dependencies": {
