@@ -1,0 +1,35 @@
+version: "3.8"
+services:
+# Monolith API
+  basebot:
+    build:
+      dockerfile: ./build/Dockerfile.local
+      context: .
+    volumes:
+      - ./src:/app/src
+      - ./configs:/app/configs
+      - ./secrets:/app/secrets
+    command: npm run serve basebot
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      NODE_ENV: local
+      PORT: 3333
+    ports:
+      - 3333:3333
+      - 9229:9229
+
+# Databases
+  postgres:
+    image: postgres:13.4
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: development
+    ports:
+      - 5432:5432
+  redis:
+    image: redis:latest
+    ports:
+      - 6379:6379
