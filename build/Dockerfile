@@ -8,6 +8,7 @@ RUN npm install --production
 COPY ./dist/apps/$SERVICE_NAME .
 COPY ./configs ./configs
 COPY ./secrets ./secrets
+COPY ./versions.env ./versions.env
 
 FROM gcr.io/distroless/nodejs:16
 WORKDIR /app
