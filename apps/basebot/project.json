@@ -31,6 +31,7 @@
       "options": {
         "buildTarget": "basebot:build",
         "inspect": true,
+        "host": "0.0.0.0",
         "port": 9229
       }
     },
