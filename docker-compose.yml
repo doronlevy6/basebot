@@ -6,10 +6,11 @@ services:
       dockerfile: ./build/Dockerfile.local
       context: .
     volumes:
-      - ./src:/app/src
+      - ./apps:/app/apps
+      - ./libs:/app/libs
       - ./configs:/app/configs
       - ./secrets:/app/secrets
-    command: npm run serve basebot
+    command: npm run start basebot
     depends_on:
       - postgres
       - redis
