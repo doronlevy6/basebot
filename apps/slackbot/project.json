@@ -10,7 +10,8 @@
         "outputPath": "dist/apps/slackbot",
         "main": "apps/slackbot/src/main.ts",
         "tsConfig": "apps/slackbot/tsconfig.app.json",
-        "assets": ["apps/slackbot/src/assets"]
+        "assets": ["apps/slackbot/src/assets"],
+        "generatePackageJson": true
       },
       "configurations": {
         "production": {
