@@ -24,9 +24,33 @@ const defaultApi = new DefaultApi(configuration);
 app.use(expressHttpMetricsMiddleware(metricsReporter));
 app.get('/metrics', expressMetricsEndpoint(metricsReporter));
 
-app.get('/api', async (req, res) => {
+app.get('/base/health', async (req, res) => {
   const apires = await defaultApi.healthControllerCheck();
   res.send(apires.data);
+});
+
+app.get('/health', async (req, res) => {
+  const healthRes = {
+    status: 'ok',
+    info: {
+      serviceInfo: {
+        status: 'up',
+        env: process.env.ENV,
+        version: process.env.VERSION,
+        tag: process.env.TAG,
+      },
+    },
+    error: {},
+    details: {
+      serviceInfo: {
+        status: 'up',
+        env: process.env.ENV,
+        version: process.env.VERSION,
+        tag: process.env.TAG,
+      },
+    },
+  };
+  res.send(JSON.stringify(healthRes));
 });
 
 const port = process.env['PORT'] || 3333;
