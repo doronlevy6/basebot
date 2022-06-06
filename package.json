@@ -14,7 +14,7 @@
     "start:local": "npm run docker:login && docker compose up",
     "rebuild:local": "npm run start:local -- --build",
     "clean:local": "docker compose down",
-    "ngrok": "ngrok http 3000 -subdomain thebase",
+    "ngrok": "ngrok http 3000 --subdomain thebase",
     "codegen": "openapi-generator-cli generate -i https://stg.base.la/oapi-json -o libs/oapigen/src/lib -g typescript-axios --additional-properties=supportsES6=true,npmVersion=8.5.0"
   },
   "private": true,
