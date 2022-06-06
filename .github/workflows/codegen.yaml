@@ -1,0 +1,53 @@
+name: "Codegen"
+
+on:
+  schedule:
+    - cron: "* * * * *"
+
+concurrency:
+  group: codegen-basebot
+  cancel-in-progress: true
+
+jobs:
+  codegen:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: write
+    steps:
+      - uses: actions/checkout@v2
+        name: Checkout
+        with:
+          ref: main
+      - uses: actions/setup-node@v2
+        with:
+          node-version: "16"
+          cache: "npm"
+      - name: Cache dependencies
+        uses: actions/cache@v2
+        with:
+          path: ~/.npm
+          key: npm-${{ hashFiles('package-lock.json') }}
+          restore-keys: npm-
+      - name: NPM CI
+        run: npm ci
+      - name: Codegen
+        id: codegen
+        run: |
+          npm run codegen
+          diff=$(git diff --color)
+          echo "::set-output name=diff::$(git diff --color)"
+          if [[ -z "${diff}" ]]; then
+            echo "::set-output name=hasdiff::false"
+          else
+            echo "::set-output name=hasdiff::true"
+          fi
+      - name: Create Pull Request for Changes
+        if: ${{ steps.codegen.outputs.hasdiff }}
+        uses: peter-evans/create-pull-request@v4
+        with:
+          commit-message: Updated OpenAPI Definitions
+          branch: libs/oapigen
+          delete-branch: true
+          title: Updated OpenAPI Definitions
+          draft: true
