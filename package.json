@@ -5,16 +5,17 @@
   "scripts": {
     "start": "nx serve",
     "build": "nx build",
-    "test": "nx test",
-    "format": "npx prettier --write .",
-    "lint": "npx nx lint --fix",
+    "test": "nx run-many --target=test --all",
+    "format": "prettier --write .",
+    "lint": "nx run-many --target=lint --all --fix",
     "secrets:read": "aws s3 sync s3://base-service-secrets/secrets/basebot secrets",
     "secrets:write": "aws s3 sync secrets s3://base-service-secrets/secrets/basebot",
     "docker:login": "aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 221762091942.dkr.ecr.us-east-1.amazonaws.com",
     "start:local": "npm run docker:login && docker compose up",
     "rebuild:local": "npm run start:local -- --build",
     "clean:local": "docker compose down",
-    "ngrok": "ngrok http 3000 -subdomain thebase"
+    "ngrok": "ngrok http 3000 -subdomain thebase",
+    "codegen": "openapi-generator-cli generate -i https://stg.base.la/oapi-json -o libs/oapigen/src/lib -g typescript-axios --additional-properties=supportsES6=true,npmVersion=8.5.0"
   },
   "private": true,
   "dependencies": {
