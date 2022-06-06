@@ -16,7 +16,8 @@
     "baseUrl": ".",
     "paths": {
       "@base/env": ["libs/env/src/index.ts"],
-      "@base/logger": ["libs/logger/src/index.ts"]
+      "@base/logger": ["libs/logger/src/index.ts"],
+      "@base/metrics": ["libs/metrics/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

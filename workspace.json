@@ -4,6 +4,7 @@
   "projects": {
     "basebot": "apps/basebot",
     "env": "libs/env",
-    "logger": "libs/logger"
+    "logger": "libs/logger",
+    "metrics": "libs/metrics"
   }
 }
