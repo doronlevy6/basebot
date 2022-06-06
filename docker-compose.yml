@@ -1,6 +1,5 @@
 version: "3.8"
 services:
-# Monolith API
   slackbot:
     build:
       dockerfile: ./build/Dockerfile.local
@@ -14,12 +13,21 @@ services:
     depends_on:
       - postgres
       - redis
+      - base
     environment:
       NODE_OVERRIDE_ENV: local
       PORT: 3333
     ports:
       - 3333:3333
       - 9229:9229
+# Monolith API
+  base:
+    image: 221762091942.dkr.ecr.us-east-1.amazonaws.com/base:stg
+    environment:
+      NODE_ENV: local
+      PORT: 3000
+    ports:
+      - 3000:3000
 
 # Databases
   postgres:
