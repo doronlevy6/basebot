@@ -15,7 +15,8 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@base/env": ["libs/env/src/index.ts"]
+      "@base/env": ["libs/env/src/index.ts"],
+      "@base/logger": ["libs/logger/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

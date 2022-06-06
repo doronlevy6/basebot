@@ -3,6 +3,7 @@
   "version": 2,
   "projects": {
     "basebot": "apps/basebot",
-    "env": "libs/env"
+    "env": "libs/env",
+    "logger": "libs/logger"
   }
 }
