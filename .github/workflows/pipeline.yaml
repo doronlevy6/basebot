@@ -82,6 +82,38 @@ jobs:
               'Run `npm run lint` to lint it.'
             exit 1
           fi
+  codegen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        name: Checkout
+      - uses: actions/setup-node@v2
+        with:
+          node-version: "16"
+          cache: "npm"
+      - name: Cache dependencies
+        uses: actions/cache@v2
+        with:
+          path: ~/.npm
+          key: npm-${{ hashFiles('package-lock.json') }}
+          restore-keys: npm-
+      - name: NPM CI
+        run: npm ci
+      - name: Codegen
+        run: |
+          npm run codegen
+          diff=$(git diff --color)
+
+          if [[ -z "${diff}" ]]; then
+          printf "\e[32m%s\e[0m\n" \
+            "Code is all generated!"
+          else
+            echo "${diff}"
+            printf "\n\e[31m%s\e[0m\n\n%s\n" \
+              "Code is not generated!" \
+              'Run `npm run codegen` to generate it.'
+            exit 1
+          fi
   test:
     runs-on: ubuntu-latest
     steps:
@@ -103,7 +135,7 @@ jobs:
         run: npm run test
   docker-build-and-push-to-staging:
     if: github.ref == 'refs/heads/main' # only run docker-build-and-push-to-staging on main branch
-    needs: [format, lint, test]
+    needs: [format, lint, codegen, test]
     permissions:
       id-token: write
       contents: read
