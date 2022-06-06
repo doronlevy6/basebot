@@ -7,7 +7,9 @@
     "build": "nx build",
     "test": "nx test",
     "format": "npx prettier --write .",
-    "lint": "npx nx lint --fix"
+    "lint": "npx nx lint --fix",
+    "secrets:read": "aws s3 sync s3://base-service-secrets/secrets/basebot secrets",
+    "secrets:write": "aws s3 sync secrets s3://base-service-secrets/secrets/basebot"
   },
   "private": true,
   "dependencies": {
