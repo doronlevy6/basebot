@@ -5,6 +5,7 @@
     "env": "libs/env",
     "logger": "libs/logger",
     "metrics": "libs/metrics",
+    "oapigen": "libs/oapigen",
     "slackbot": "apps/slackbot"
   }
 }
