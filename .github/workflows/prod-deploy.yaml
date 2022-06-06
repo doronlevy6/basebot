@@ -1,0 +1,55 @@
+name: "Production Deploy Pipeline"
+
+on:
+  push:
+    branches-ignore:
+      - "*"
+    tags:
+      - v*
+
+concurrency:
+  group: prod-deploy-basebot-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  docker-push-to-production:
+    permissions:
+      id-token: write
+      contents: read
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        service: [basebot]
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v2
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-region: us-east-1
+          role-to-assume: arn:aws:iam::221762091942:role/GitHubRoleBasebot
+          role-session-name: BasebotCICD
+      - name: Deploy To Production
+        run: |
+          MANIFEST=$(
+            aws ecr batch-get-image \
+              --repository-name "${{ matrix.service }}" \
+              --image-ids imageTag="${{ github.sha }}" \
+              --output json | jq \
+              --raw-output \
+              --join-output \
+              '.images[0].imageManifest'
+          )
+
+          status=$(
+            aws ecr put-image \
+              --repository-name "${{ matrix.service }}" \
+              --image-tag "prod" \
+              --image-manifest "$MANIFEST" | jq \
+              --raw-output \
+              --join-output \
+              '.image'
+          )
+
+          echo $status

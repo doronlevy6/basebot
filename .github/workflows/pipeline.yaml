@@ -1,0 +1,166 @@
+name: "CI/CD Pipeline"
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+
+concurrency:
+  group: pipeline-basebot-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        name: Checkout
+      - uses: actions/setup-node@v2
+        with:
+          node-version: "16"
+          cache: "npm"
+      - name: Cache dependencies
+        uses: actions/cache@v2
+        with:
+          path: ~/.npm
+          key: npm-${{ hashFiles('package-lock.json') }}
+          restore-keys: npm-
+      - name: NPM CI
+        run: npm ci
+      - name: Format
+        run: |
+          npm run format
+          diff=$(git diff --color)
+
+          if [[ -z "${diff}" ]]; then
+          printf "\e[32m%s\e[0m\n" \
+            "Code is all formatted!"
+          else
+            echo "${diff}"
+            printf "\n\e[31m%s\e[0m\n\n%s\n" \
+              "Code is not formatted!" \
+              'Run `npm run format` to format it.'
+            exit 1
+          fi
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        name: Checkout
+      - uses: actions/setup-node@v2
+        with:
+          node-version: "16"
+          cache: "npm"
+      - name: Cache dependencies
+        uses: actions/cache@v2
+        with:
+          path: ~/.npm
+          key: npm-${{ hashFiles('package-lock.json') }}
+          restore-keys: npm-
+      - name: NPM CI
+        run: npm ci
+      - name: Lint
+        run: |
+          npm run lint
+          diff=$(git diff --color)
+
+          if [[ -z "${diff}" ]]; then
+          printf "\e[32m%s\e[0m\n" \
+            "Code is all linted!"
+          else
+            echo "${diff}"
+            printf "\n\e[31m%s\e[0m\n\n%s\n" \
+              "Code is not linted!" \
+              'Run `npm run lint` to lint it.'
+            exit 1
+          fi
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        name: Checkout
+      - uses: actions/setup-node@v2
+        with:
+          node-version: "16"
+          cache: "npm"
+      - name: Cache dependencies
+        uses: actions/cache@v2
+        with:
+          path: ~/.npm
+          key: npm-${{ hashFiles('package-lock.json') }}
+          restore-keys: npm-
+      - name: NPM CI
+        run: npm ci
+      - name: Test
+        run: npm run test
+  docker-build-and-push-to-staging:
+    if: github.ref == 'refs/heads/main' # only run docker-build-and-push-to-staging on main branch
+    needs: [format, lint, test]
+    permissions:
+      id-token: write
+      contents: read
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        service: [basebot]
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v2
+      - name: Set up Docker Buildx
+        id: buildx
+        with:
+          install: true
+        uses: docker/setup-buildx-action@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: "16"
+          cache: "npm"
+      - name: Cache dependencies
+        uses: actions/cache@v2
+        with:
+          path: ~/.npm
+          key: npm-${{ hashFiles('package-lock.json') }}
+          restore-keys: npm-
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-region: us-east-1
+          role-to-assume: arn:aws:iam::221762091942:role/GitHubRoleBasebot
+          role-session-name: BasebotCICD
+      - name: Download Secrets from S3
+        run: npm run secrets:read
+      - name: Login to Amazon ECR
+        id: ecr-login
+        uses: aws-actions/amazon-ecr-login@v1
+      - name: Versioning
+        env:
+          TAG: ${{ github.sha }}
+          VERSION: ${{ github.sha }}
+        run: printf "VERSION=$VERSION\nTAG=$TAG" >> versions.env
+      - name: NPM CI
+        run: npm ci
+      - name: NPM Build
+        run: npm run build ${{ matrix.service }}
+      - name: Build Image
+        uses: docker/build-push-action@v3
+        with:
+          context: ./
+          file: ./build/images/Dockerfile
+          push: true
+          build-args: |
+            SERVICE_NAME=${{ matrix.service }}
+          tags: |
+            ${{ steps.ecr-login.outputs.registry }}/${{ matrix.service }}:latest
+            ${{ steps.ecr-login.outputs.registry }}/${{ matrix.service }}:stg
+            ${{ steps.ecr-login.outputs.registry }}/${{ matrix.service }}:${{ github.sha }}
+          platforms: |
+            linux/amd64
