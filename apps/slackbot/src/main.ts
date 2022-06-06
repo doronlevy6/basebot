@@ -11,10 +11,10 @@ import {
   expressMetricsEndpoint,
   expressHttpMetricsMiddleware,
 } from '@base/metrics';
-import * as express from 'express';
 import { logger } from '@base/logger';
-
 import { Configuration, DefaultApi } from '@base/oapigen';
+
+import * as express from 'express';
 import { Server } from 'http';
 
 const gracefulShutdown = (server: Server) => (signal: string) => {
