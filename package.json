@@ -20,6 +20,7 @@
   "private": true,
   "dependencies": {
     "@openapitools/openapi-generator-cli": "^2.5.1",
+    "dotenv": "^16.0.1",
     "express": "4.17.2",
     "prom-client": "^14.0.1",
     "tslib": "^2.4.0"
