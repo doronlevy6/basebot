@@ -1,3 +1,6 @@
+// Force import TSLib because of a bug in NX
+import 'tslib';
+
 // Before anything else runs, first we must load the environment that we are running
 import { loadEnvs } from '@base/env';
 import { environment } from './environments/environment';
