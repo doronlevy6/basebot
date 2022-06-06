@@ -29,7 +29,9 @@
     "serve": {
       "executor": "@nrwl/node:node",
       "options": {
-        "buildTarget": "basebot:build"
+        "buildTarget": "basebot:build",
+        "inspect": true,
+        "port": 9229
       }
     },
     "lint": {
