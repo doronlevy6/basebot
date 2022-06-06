@@ -3,8 +3,8 @@ import * as path from 'path';
 import { IInitialEnv } from './types';
 
 export const loadEnvs = (initialEnv: IInitialEnv, envTypes: string[]) => {
-  if (process.env['NODE_OVERRIDE_ENV']) {
-    initialEnv.env = process.env['NODE_OVERRIDE_ENV'];
+  if (process.env.NODE_OVERRIDE_ENV) {
+    initialEnv.env = process.env.NODE_OVERRIDE_ENV;
   }
 
   for (let i = 0; i < envTypes.length; i++) {

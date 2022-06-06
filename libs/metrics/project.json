@@ -3,16 +3,6 @@
   "sourceRoot": "libs/metrics/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "@nrwl/js:tsc",
-      "outputs": ["{options.outputPath}"],
-      "options": {
-        "outputPath": "dist/libs/metrics",
-        "main": "libs/metrics/src/index.ts",
-        "tsConfig": "libs/metrics/tsconfig.lib.json",
-        "assets": ["libs/metrics/*.md"]
-      }
-    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "outputs": ["{options.outputFile}"],
