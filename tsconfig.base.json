@@ -19,7 +19,8 @@
       "@base/logger": ["libs/logger/src/index.ts"],
       "@base/metrics": ["libs/metrics/src/index.ts"],
       "@base/oapigen": ["libs/oapigen/src/index.ts"]
-    }
+    },
+    "types": ["node"]
   },
   "exclude": ["node_modules", "tmp"]
 }
