@@ -2,6 +2,7 @@
   "$schema": "./node_modules/nx/schemas/workspace-schema.json",
   "version": 2,
   "projects": {
-    "basebot": "apps/basebot"
+    "basebot": "apps/basebot",
+    "env": "libs/env"
   }
 }
