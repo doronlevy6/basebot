@@ -26,4 +26,6 @@ export const loadEnvs = (initialEnv: IInitialEnv, envTypes: string[]) => {
 
     console.info('Successfully loaded env ' + envPath);
   }
+
+  process.env['SERVICE_NAME'] = initialEnv.serviceName;
 };
