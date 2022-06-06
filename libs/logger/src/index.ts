@@ -12,3 +12,4 @@ export const logger: ILogger = new Logger({
 });
 
 export { Logger };
+export { BoltWrapper } from './lib/slackbolt_wrapper';

@@ -1,6 +1,7 @@
 import { App } from '@slack/bolt';
 import { DefaultApi } from '@base/oapigen';
 import { httpMetricsEndpoint, IReporter } from '@base/metrics';
+import { logger, BoltWrapper } from '@base/logger';
 
 // TODO: database
 export function createApp(
@@ -10,6 +11,7 @@ export function createApp(
   metricsReporter: IReporter,
 ): App {
   return new App({
+    logger: new BoltWrapper(logger),
     signingSecret: process.env.SLACK_SIGNING_SECRET,
     clientId: process.env.SLACK_CLIENT_ID,
     clientSecret: process.env.SLACK_CLIENT_SECRET,
