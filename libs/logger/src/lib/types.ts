@@ -3,6 +3,9 @@ export interface ILogger {
   info: (message: string | object) => void;
   warn: (message: string | object) => void;
   error: (message: string | object) => void;
+  setName: (name: string) => void;
+  getLevel: () => LogLevel;
+  setLevel: (level: LogLevel) => void;
 }
 
 export interface IConfig {

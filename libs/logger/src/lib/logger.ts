@@ -8,6 +8,7 @@ type logFunc = (...data: any[]) => void;
 export class Logger implements ILogger {
   private cfg: IConfig;
   private level: LogLevel;
+  private name: string | undefined;
 
   constructor(config: IConfig) {
     this.cfg = config;
@@ -46,6 +47,18 @@ export class Logger implements ILogger {
     this.leveledLog('error', message, console.error);
   }
 
+  public setName(name: string) {
+    this.name = name;
+  }
+
+  public getLevel(): LogLevel {
+    return this.level;
+  }
+
+  public setLevel(level: LogLevel) {
+    this.level = level;
+  }
+
   private leveledLog(level: string, message: string | object, logger: logFunc) {
     let log = message;
     if (typeof message === 'object') {
@@ -58,6 +71,7 @@ export class Logger implements ILogger {
         level: level,
         service: this.cfg.service || 'frontend',
         message: log,
+        name: this.name,
       }),
     );
   }
