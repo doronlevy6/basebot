@@ -6,7 +6,7 @@ import { loadEnvs } from '@base/env';
 import { environment } from './environments/environment';
 loadEnvs(environment, ['configs', 'secrets']);
 
-import { PrometheusReporter } from '@base/metrics';
+import { PrometheusReporter, slackBoltMetricsMiddleware } from '@base/metrics';
 import { logger } from '@base/logger';
 import { Configuration, DefaultApi } from '@base/oapigen';
 import { createApp } from './app';
@@ -35,6 +35,7 @@ const startApp = async () => {
 
   // TODO: database
   const slackApp = createApp(null, defaultApi, metricsReporter);
+  slackApp.use(slackBoltMetricsMiddleware(metricsReporter));
 
   const port = process.env['PORT'] || 3000;
   const server = await slackApp.start(port);

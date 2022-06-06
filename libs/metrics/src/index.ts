@@ -5,3 +5,4 @@ export {
   expressHttpMetricsMiddleware,
 } from './lib/express_middleware';
 export { httpMetricsEndpoint } from './lib/http_middleware';
+export { slackBoltMetricsMiddleware } from './lib/slackbolt_middleware';
