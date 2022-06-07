@@ -58,7 +58,7 @@ export function createQueueWorker(
   });
 
   worker.on('failed', (job, error) => {
-    logger.info(`failed job ${job.id} with error ${error.message}`);
+    logger.error(`failed job ${job.id} with error ${error.message}`);
   });
 
   return worker;
