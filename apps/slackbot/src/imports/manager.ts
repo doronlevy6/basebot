@@ -48,17 +48,23 @@ export class ImportManager {
           throw new Error(`Error getting team info in slack`);
         }
 
-        const orgRes = await this.backendApi.organizationsControllerCreate({
-          id: teamInfoRes.team.email_domain,
-          name: teamInfoRes.team.name,
-          domain: teamInfoRes.team.email_domain,
-        });
+        try {
+          const orgRes = await this.backendApi.organizationsControllerCreate({
+            id: teamInfoRes.team.email_domain,
+            name: teamInfoRes.team.name,
+            domain: teamInfoRes.team.email_domain,
+          });
 
-        await this.addTeamToUsersImport(
-          orgRes.data.id,
-          job.data.teamId,
-          job.data.token,
-        );
+          await this.addTeamToUsersImport(
+            orgRes.data.id,
+            job.data.teamId,
+            job.data.token,
+          );
+        } catch (error) {
+          throw new Error(
+            `Error creating organization in backend with error ${error}`,
+          );
+        }
       },
     );
 
@@ -94,11 +100,17 @@ export class ImportManager {
         for (let index = 0; index < usersRes.members.length; index++) {
           const user = usersRes.members[index];
           logger.info(`Importing User: ${user}`);
-          this.backendApi.usersControllerCreate({
-            email: user.profile.email,
-            displayName: user.profile.display_name || user.profile.real_name,
-            organizationId: this.orgIdFromEmail(user.profile.email),
-          });
+          try {
+            await this.backendApi.usersControllerCreate({
+              email: user.profile.email,
+              displayName: user.profile.display_name || user.profile.real_name,
+              organizationId: this.orgIdFromEmail(user.profile.email),
+            });
+          } catch (error) {
+            throw new Error(
+              `Error creating user ${user} in backend with error ${error}`,
+            );
+          }
         }
       },
     );
