@@ -69,6 +69,9 @@ const startApp = async () => {
   }
 
   const slackApp = createApp(pgStore, defaultApi, metricsReporter);
+
+  importManager.setSlackClient(slackApp);
+
   slackApp.use(slackBoltMetricsMiddleware(metricsReporter));
   slackApp.event('message', async ({ event, logger }) => {
     logger.info(event);

@@ -126,7 +126,10 @@ export class PgInstallationStore implements InstallationStore {
         enterprise: 'false',
       });
 
-      await this.importManager.addTeamToImport(installation.team.id);
+      await this.importManager.addTeamToImport(
+        installation.team.id,
+        installation.bot.token,
+      );
 
       return;
     }
