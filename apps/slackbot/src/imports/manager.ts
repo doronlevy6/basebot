@@ -168,20 +168,22 @@ export class ImportManager {
       logger.info({ msg: 'importing user', user: user });
 
       if (user.is_bot || !user.profile.email) {
+        logger.info({ msg: 'skipping user with no email', user: user });
         continue;
       }
 
-      try {
-        await this.backendApi.usersControllerCreate({
-          email: user.profile.email,
-          displayName: user.profile.display_name || user.profile.real_name,
-          organizationId: this.orgIdFromEmail(user.profile.email),
-        });
-      } catch (error) {
-        throw new Error(
-          `Error creating user ${user.id} in backend with error ${error}`,
-        );
-      }
+      // TODO: Allow API Key so we can create from Slackbot
+      // try {
+      //   await this.backendApi.usersControllerCreate({
+      //     email: user.profile.email,
+      //     displayName: user.profile.display_name || user.profile.real_name,
+      //     organizationId: job.data.organizationId,
+      //   });
+      // } catch (error) {
+      //   throw new Error(
+      //     `Error creating user ${user.id} in backend with error ${error}`,
+      //   );
+      // }
     }
   }
 
