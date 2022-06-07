@@ -95,20 +95,26 @@ export class PgInstallationStore implements InstallationStore {
       installation.isEnterpriseInstall &&
       installation.enterprise !== undefined
     ) {
-      await this.db('slack_enterprise_installations').insert({
-        id: installation.enterprise.id,
-        raw: installation,
-      });
+      await this.db('slack_enterprise_installations')
+        .insert({
+          id: installation.enterprise.id,
+          raw: installation,
+        })
+        .onConflict('id')
+        .merge(['raw']);
       this.metricsReporter.incrementCounter('stored_installations_total', 1, {
         enterprise: 'true',
       });
       return;
     }
     if (installation.team !== undefined) {
-      await this.db('slack_installations').insert({
-        id: installation.team.id,
-        raw: installation,
-      });
+      await this.db('slack_installations')
+        .insert({
+          id: installation.team.id,
+          raw: installation,
+        })
+        .onConflict('id')
+        .merge(['raw']);
       this.metricsReporter.incrementCounter('stored_installations_total', 1, {
         enterprise: 'false',
       });
