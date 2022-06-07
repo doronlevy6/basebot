@@ -129,6 +129,8 @@ export class ImportManager {
   async close() {
     await this.teamsQueue.close();
     await this.teamsWorker.close();
+    await this.teamUsersQueue.close();
+    await this.teamUsersWorker.close();
   }
 
   async addTeamToImport(teamId: string, token: string, cursor?: string) {
