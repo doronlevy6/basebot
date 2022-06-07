@@ -1,4 +1,5 @@
 import { logger } from '@base/logger';
+import { DefaultApi } from '@base/oapigen';
 import { App } from '@slack/bolt';
 import { Job, Queue, Worker } from 'bullmq';
 import { createQueue, createQueueWorker, IQueueConfig } from './queues';
@@ -13,8 +14,10 @@ export class ImportManager {
   private app: App;
   private teamsQueue: Queue;
   private teamsWorker: Worker;
+  private backendApi: DefaultApi;
 
-  constructor(queueCfg: IQueueConfig) {
+  constructor(queueCfg: IQueueConfig, backendApi: DefaultApi) {
+    this.backendApi = backendApi;
     this.teamsQueue = createQueue('teams', queueCfg);
 
     this.teamsWorker = createQueueWorker(
@@ -45,8 +48,13 @@ export class ImportManager {
         }
 
         for (let index = 0; index < usersRes.members.length; index++) {
-          // TODO: Create users
-          logger.info(usersRes.members[index]);
+          const user = usersRes.members[index];
+          logger.info(`Importing User: ${user}`);
+          this.backendApi.usersControllerCreate({
+            email: user.profile.email,
+            displayName: user.profile.display_name || user.profile.real_name,
+            organizationId: this.orgIdFromEmail(user.profile.email),
+          });
         }
       },
     );
@@ -63,6 +71,7 @@ export class ImportManager {
     for (let i = 0; i < 10; i++) {
       try {
         await this.teamsQueue.getWorkers();
+        await this.backendApi.healthControllerCheck();
         return true;
       } catch (error) {
         logger.error(`error pinging the queues: ${error}`);
@@ -84,5 +93,9 @@ export class ImportManager {
       token: token,
       cursor: cursor,
     });
+  }
+
+  private orgIdFromEmail(email: string) {
+    return email.split('@').pop();
   }
 }

@@ -1,12 +1,10 @@
 import { App } from '@slack/bolt';
-import { DefaultApi } from '@base/oapigen';
 import { httpMetricsEndpoint, IReporter } from '@base/metrics';
 import { logger, BoltWrapper } from '@base/logger';
 import { PgInstallationStore } from './installations/installationStore';
 
 export function createApp(
   installationStore: PgInstallationStore,
-  backendApi: DefaultApi,
   metricsReporter: IReporter,
 ): App {
   return new App({
@@ -42,20 +40,6 @@ export function createApp(
             },
           };
           res.end(JSON.stringify(healthRes));
-        },
-      },
-      {
-        path: '/base/health',
-        method: ['GET'],
-        handler: async (_, res) => {
-          try {
-            const apires = await backendApi.healthControllerCheck();
-            res.writeHead(200);
-            res.end(JSON.stringify(apires.data));
-          } catch (error) {
-            res.writeHead(500);
-            res.end(JSON.stringify({ error: error }));
-          }
         },
       },
       {

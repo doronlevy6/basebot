@@ -39,12 +39,15 @@ const startApp = async () => {
   });
   const defaultApi = new DefaultApi(configuration);
 
-  const importManager = new ImportManager({
-    prefix: process.env.ENV || 'local',
-    host: process.env.REDIS_HOST,
-    port: parseInt(process.env.REDIS_PORT, 10),
-    password: process.env.REDIS_PASSWORD || '',
-  });
+  const importManager = new ImportManager(
+    {
+      prefix: process.env.ENV || 'local',
+      host: process.env.REDIS_HOST,
+      port: parseInt(process.env.REDIS_PORT, 10),
+      password: process.env.REDIS_PASSWORD || '',
+    },
+    defaultApi,
+  );
   let ready = await importManager.isReady();
   if (!ready) {
     throw new Error('ImportManager is not ready');
@@ -68,7 +71,7 @@ const startApp = async () => {
     throw new Error('PgStore is not ready');
   }
 
-  const slackApp = createApp(pgStore, defaultApi, metricsReporter);
+  const slackApp = createApp(pgStore, metricsReporter);
 
   importManager.setSlackClient(slackApp);
 
