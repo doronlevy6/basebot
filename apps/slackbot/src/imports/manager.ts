@@ -107,14 +107,15 @@ export class ImportManager {
     }
 
     try {
-      const orgRes = await this.backendApi.organizationsControllerCreate({
-        id: teamInfoRes.team.email_domain,
-        name: teamInfoRes.team.name,
-        domain: teamInfoRes.team.email_domain,
-      });
+      // TODO: Allow API Key so we can create from Slackbot
+      // const orgRes = await this.backendApi.organizationsControllerCreate({
+      //   id: teamInfoRes.team.email_domain,
+      //   name: teamInfoRes.team.name,
+      //   domain: teamInfoRes.team.email_domain,
+      // });
 
       await this.addTeamToUsersImport(
-        orgRes.data.id,
+        teamInfoRes.team.email_domain,
         job.data.teamId,
         job.data.token,
       );
