@@ -101,6 +101,9 @@ export class ImportManager {
   }
 
   private async importTeam(job: Job<TeamImportJob>) {
+    logger.info(this.app);
+    logger.info(this.app.client);
+
     const teamInfoRes = await this.app.client.team.info({
       team: job.data.teamId,
       token: job.data.token,
