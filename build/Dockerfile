@@ -4,6 +4,7 @@ WORKDIR /app
 ARG SERVICE_NAME
 COPY ./dist/apps/$SERVICE_NAME/package.json .
 RUN npm install --production
+RUN npm install --save pg
 
 COPY ./dist/apps/$SERVICE_NAME .
 COPY ./configs ./configs
