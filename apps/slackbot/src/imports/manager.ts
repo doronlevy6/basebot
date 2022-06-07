@@ -4,28 +4,71 @@ import { App } from '@slack/bolt';
 import { Job, Queue, Worker } from 'bullmq';
 import { createQueue, createQueueWorker, IQueueConfig } from './queues';
 
-interface TeamImportJob {
-  teamId: string;
+interface ImportJob {
   token: string;
   cursor?: string;
+}
+
+interface TeamImportJob extends ImportJob {
+  teamId: string;
+}
+
+interface TeamUserImportJob extends TeamImportJob {
+  organizationId: string;
 }
 
 export class ImportManager {
   private app: App;
   private teamsQueue: Queue;
+  private teamUsersQueue: Queue;
   private teamsWorker: Worker;
+  private teamUsersWorker: Worker;
   private backendApi: DefaultApi;
 
   constructor(queueCfg: IQueueConfig, backendApi: DefaultApi) {
     this.backendApi = backendApi;
     this.teamsQueue = createQueue('teams', queueCfg);
+    this.teamUsersQueue = createQueue('teamUsers', queueCfg);
 
     this.teamsWorker = createQueueWorker(
       'teams',
       queueCfg,
       async (job: Job<TeamImportJob>) => {
+        const teamInfoRes = await this.app.client.team.info({
+          team: job.data.teamId,
+          token: job.data.token,
+        });
+        if (teamInfoRes.error) {
+          throw new Error(
+            `Error getting team info in slack: ${teamInfoRes.error}`,
+          );
+        }
+
+        if (!teamInfoRes.ok) {
+          throw new Error(`Error getting team info in slack`);
+        }
+
+        const orgRes = await this.backendApi.organizationsControllerCreate({
+          id: teamInfoRes.team.email_domain,
+          name: teamInfoRes.team.name,
+          domain: teamInfoRes.team.email_domain,
+        });
+
+        await this.addTeamToUsersImport(
+          orgRes.data.id,
+          job.data.teamId,
+          job.data.token,
+        );
+      },
+    );
+
+    this.teamUsersWorker = createQueueWorker(
+      'teamUsers',
+      queueCfg,
+      async (job: Job<TeamUserImportJob>) => {
         const usersRes = await this.app.client.users.list({
           limit: 200,
+          team_id: job.data.teamId,
           token: job.data.token,
           cursor: job.data.cursor,
         });
@@ -40,7 +83,8 @@ export class ImportManager {
 
         const nextCursor = usersRes.response_metadata?.next_cursor;
         if (nextCursor) {
-          await this.addTeamToImport(
+          await this.addTeamToUsersImport(
+            job.data.organizationId,
             job.data.teamId,
             job.data.token,
             nextCursor,
@@ -89,6 +133,20 @@ export class ImportManager {
 
   async addTeamToImport(teamId: string, token: string, cursor?: string) {
     await this.teamsQueue.add('teamImport', {
+      teamId: teamId,
+      token: token,
+      cursor: cursor,
+    });
+  }
+
+  async addTeamToUsersImport(
+    organizationId: string,
+    teamId: string,
+    token: string,
+    cursor?: string,
+  ) {
+    await this.teamUsersQueue.add('teamUsersImport', {
+      organizationId: organizationId,
       teamId: teamId,
       token: token,
       cursor: cursor,
