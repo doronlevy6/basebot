@@ -41,7 +41,7 @@ const startApp = async () => {
 
   const importManager = new ImportManager(
     {
-      prefix: process.env.ENV || 'local',
+      prefix: `{slackbot:imports:${process.env.ENV || 'local'}}`,
       host: process.env.REDIS_HOST,
       port: parseInt(process.env.REDIS_PORT, 10),
       password: process.env.REDIS_PASSWORD || '',
