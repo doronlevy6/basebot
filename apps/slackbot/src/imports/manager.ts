@@ -48,14 +48,26 @@ export class ImportManager {
       'teams',
       this.queueCfg,
       async (job) => {
-        this.importTeam(job);
+        try {
+          this.importTeam(job);
+        } catch (error) {
+          logger.error(
+            `failed import team job ${job.id} with error ${error.message}`,
+          );
+        }
       },
     );
     this.teamUsersWorker = createQueueWorker(
       'teamUsers',
       this.queueCfg,
       async (job) => {
-        this.importTeamUsers(job);
+        try {
+          this.importTeamUsers(job);
+        } catch (error) {
+          logger.error(
+            `failed import team users job ${job.id} with error ${error.message}`,
+          );
+        }
       },
     );
 
