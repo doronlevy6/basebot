@@ -21,39 +21,16 @@ export function createQueue(queueName: string, cfg: IQueueConfig): Queue {
   return queue;
 }
 
-function createRedis(cfg: IQueueConfig): IORedis.Redis | IORedis.Cluster {
-  if (cfg.cluster) {
-    return new IORedis.Cluster(
-      [
-        {
-          host: cfg.host,
-          port: cfg.port,
-        },
-      ],
-      { redisOptions: { password: cfg.password } },
-    );
-  }
-
-  return new IORedis.default({
-    host: cfg.host,
-    port: cfg.port,
-    password: cfg.password,
-  });
-}
-
 export function createQueueWorker(
   queueName: string,
   cfg: IQueueConfig,
   processor: Processor,
 ): Worker {
+  const connection = createRedis(cfg);
+
   const worker = new Worker(queueName, processor, {
     prefix: cfg.prefix,
-    connection: {
-      host: cfg.host,
-      port: cfg.port,
-      password: cfg.password,
-      enableOfflineQueue: false,
-    },
+    connection: connection,
   });
 
   worker.on('completed', (job) => {
@@ -65,4 +42,25 @@ export function createQueueWorker(
   });
 
   return worker;
+}
+
+function createRedis(cfg: IQueueConfig): IORedis.Redis | IORedis.Cluster {
+  if (cfg.cluster) {
+    return new IORedis.Cluster(
+      [
+        {
+          host: cfg.host,
+          port: cfg.port,
+        },
+      ],
+      { redisOptions: { password: cfg.password }, enableOfflineQueue: false },
+    );
+  }
+
+  return new IORedis.default({
+    host: cfg.host,
+    port: cfg.port,
+    password: cfg.password,
+    enableOfflineQueue: false,
+  });
 }
