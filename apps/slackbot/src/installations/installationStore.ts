@@ -13,11 +13,13 @@ export interface PgConfig {
   user: string;
   password: string;
   database: string;
+  synchronize: boolean;
 }
 
 export class PgInstallationStore implements InstallationStore {
   private metricsReporter: IReporter;
   private db: Knex;
+  private synchronize: boolean;
 
   constructor(metricsReporter: IReporter, cfg: PgConfig) {
     this.metricsReporter = metricsReporter;
@@ -46,22 +48,44 @@ export class PgInstallationStore implements InstallationStore {
         database: cfg.database,
       },
     });
+    this.synchronize = cfg.synchronize;
   }
 
   async isReady(): Promise<boolean> {
     const delay = (ms: number) =>
       new Promise((resolve) => setTimeout(resolve, ms));
 
+    let connected = false;
     for (let i = 0; i < 10; i++) {
       try {
-        await this.db.select('now()');
-        return true;
+        await this.db.raw('SELECT now()');
+        connected = true;
+        break;
       } catch (error) {
         logger.error(`error pinging the database: ${error}`);
       }
       await delay(1000 * i); // Wait for (number of seconds * loop number) so that we try a few times before giving up
     }
-    return false;
+
+    if (!connected) {
+      return false;
+    }
+
+    if (this.synchronize) {
+      logger.info('attempting to synchronize tables');
+      await this.db
+        .raw(`CREATE TABLE IF NOT EXISTS slack_enterprise_installations (
+        id varchar(36) NOT NULL PRIMARY KEY,
+        raw jsonb NOT NULL
+      );`);
+
+      await this.db.raw(`CREATE TABLE IF NOT EXISTS slack_installations (
+        id varchar(36) NOT NULL PRIMARY KEY,
+        raw jsonb NOT NULL
+      );`);
+    }
+
+    return true;
   }
 
   async storeInstallation<AuthVersion extends 'v1' | 'v2'>(
