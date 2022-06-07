@@ -24,6 +24,13 @@ export function createQueue(
   const queue = new Queue(queueName, {
     prefix: cfg.prefix,
     connection: connection,
+    defaultJobOptions: {
+      attempts: 5,
+      backoff: {
+        type: 'exponential',
+        delay: 1000,
+      },
+    },
   });
 
   const queueScheduler = new QueueScheduler(queueName, {
