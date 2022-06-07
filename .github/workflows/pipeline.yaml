@@ -207,6 +207,8 @@ jobs:
           context: ./
           file: ./build/Dockerfile
           push: true
+          build-args: |
+            SERVICE_NAME=${{ matrix.service }}
           tags: |
             ${{ steps.ecr-login.outputs.registry }}/${{ matrix.service }}:latest
             ${{ steps.ecr-login.outputs.registry }}/${{ matrix.service }}:stg
