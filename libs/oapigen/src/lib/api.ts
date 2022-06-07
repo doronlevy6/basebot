@@ -79,10 +79,10 @@ export interface CreateOrganizationDto {
 export interface CreateTaskDto {
     /**
      * 
-     * @type {User}
+     * @type {string}
      * @memberof CreateTaskDto
      */
-    'creator': User;
+    'creatorId': string;
     /**
      * 
      * @type {string}
@@ -109,16 +109,10 @@ export interface CreateTaskDto {
     'externalTickets': Array<ExternalTicket>;
     /**
      * 
-     * @type {User}
-     * @memberof CreateTaskDto
-     */
-    'assignee': User;
-    /**
-     * 
      * @type {string}
      * @memberof CreateTaskDto
      */
-    'updatedAt': string;
+    'assigneeId': string;
     /**
      * 
      * @type {string}
@@ -149,13 +143,13 @@ export interface CreateUserDto {
      * @type {string}
      * @memberof CreateUserDto
      */
-    'dispalyName': string;
+    'displayName': string;
     /**
      * 
-     * @type {Organization}
+     * @type {string}
      * @memberof CreateUserDto
      */
-    'organization': Organization;
+    'organizationId': string;
     /**
      * 
      * @type {string}
@@ -401,6 +395,12 @@ export interface Organization {
      * @memberof Organization
      */
     'domain': string;
+    /**
+     * 
+     * @type {Array<User>}
+     * @memberof Organization
+     */
+    'users': Array<User>;
 }
 /**
  * 
@@ -420,6 +420,12 @@ export interface Task {
      * @memberof Task
      */
     'creator': User;
+    /**
+     * 
+     * @type {string}
+     * @memberof Task
+     */
+    'creatorId': string;
     /**
      * 
      * @type {string}
@@ -456,6 +462,18 @@ export interface Task {
      * @memberof Task
      */
     'assignee': User;
+    /**
+     * 
+     * @type {string}
+     * @memberof Task
+     */
+    'assigneeId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof Task
+     */
+    'createdAt': string;
     /**
      * 
      * @type {string}
@@ -514,10 +532,10 @@ export interface UpdateTaskDto {
     'id': string;
     /**
      * 
-     * @type {User}
+     * @type {string}
      * @memberof UpdateTaskDto
      */
-    'creator': User;
+    'creatorId': string;
     /**
      * 
      * @type {string}
@@ -544,16 +562,10 @@ export interface UpdateTaskDto {
     'externalTickets': Array<ExternalTicket>;
     /**
      * 
-     * @type {User}
-     * @memberof UpdateTaskDto
-     */
-    'assignee': User;
-    /**
-     * 
      * @type {string}
      * @memberof UpdateTaskDto
      */
-    'updatedAt': string;
+    'assigneeId': string;
     /**
      * 
      * @type {string}
@@ -596,7 +608,7 @@ export interface User {
      * @type {string}
      * @memberof User
      */
-    'dispalyName': string;
+    'displayName': string;
     /**
      * 
      * @type {string}
