@@ -22,6 +22,7 @@
   "dependencies": {
     "@openapitools/openapi-generator-cli": "^2.5.1",
     "@slack/bolt": "^3.11.1",
+    "@slack/web-api": "^6.7.1",
     "axios": "^0.27.2",
     "bullmq": "^1.85.3",
     "dotenv": "^16.0.1",
