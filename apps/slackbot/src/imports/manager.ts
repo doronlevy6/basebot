@@ -47,12 +47,16 @@ export class ImportManager {
     this.teamsWorker = createQueueWorker(
       'teams',
       this.queueCfg,
-      this.importTeam,
+      async (job) => {
+        this.importTeam(job);
+      },
     );
     this.teamUsersWorker = createQueueWorker(
       'teamUsers',
       this.queueCfg,
-      this.importTeamUsers,
+      async (job) => {
+        this.importTeamUsers(job);
+      },
     );
 
     for (let i = 0; i < 10; i++) {
@@ -101,9 +105,6 @@ export class ImportManager {
   }
 
   private async importTeam(job: Job<TeamImportJob>) {
-    logger.info(this.app);
-    logger.info(this.app.client);
-
     const teamInfoRes = await this.app.client.team.info({
       team: job.data.teamId,
       token: job.data.token,
@@ -164,7 +165,12 @@ export class ImportManager {
 
     for (let index = 0; index < usersRes.members.length; index++) {
       const user = usersRes.members[index];
-      logger.info(`Importing User: ${user}`);
+      logger.info({ msg: 'importing user', user: user });
+
+      if (user.is_bot || !user.profile.email) {
+        continue;
+      }
+
       try {
         await this.backendApi.usersControllerCreate({
           email: user.profile.email,
@@ -173,7 +179,7 @@ export class ImportManager {
         });
       } catch (error) {
         throw new Error(
-          `Error creating user ${user} in backend with error ${error}`,
+          `Error creating user ${user.id} in backend with error ${error}`,
         );
       }
     }
