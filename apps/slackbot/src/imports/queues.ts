@@ -1,5 +1,5 @@
 import { logger } from '@base/logger';
-import { Processor, Queue, Worker } from 'bullmq';
+import { Processor, Queue, QueueScheduler, Worker } from 'bullmq';
 import * as IORedis from 'ioredis';
 
 export interface IQueueConfig {
@@ -10,7 +10,15 @@ export interface IQueueConfig {
   cluster: boolean;
 }
 
-export function createQueue(queueName: string, cfg: IQueueConfig): Queue {
+export interface QueueWrapper {
+  queue: Queue;
+  scheduler: QueueScheduler;
+}
+
+export function createQueue(
+  queueName: string,
+  cfg: IQueueConfig,
+): QueueWrapper {
   const connection = createRedis(cfg);
 
   const queue = new Queue(queueName, {
@@ -18,7 +26,12 @@ export function createQueue(queueName: string, cfg: IQueueConfig): Queue {
     connection: connection,
   });
 
-  return queue;
+  const queueScheduler = new QueueScheduler(queueName, {
+    prefix: cfg.prefix,
+    connection: connection,
+  });
+
+  return { queue: queue, scheduler: queueScheduler };
 }
 
 export function createQueueWorker(

@@ -1,8 +1,13 @@
 import { logger } from '@base/logger';
 import { DefaultApi } from '@base/oapigen';
 import { App } from '@slack/bolt';
-import { Job, Queue, Worker } from 'bullmq';
-import { createQueue, createQueueWorker, IQueueConfig } from './queues';
+import { Job, Worker } from 'bullmq';
+import {
+  createQueue,
+  createQueueWorker,
+  IQueueConfig,
+  QueueWrapper,
+} from './queues';
 
 interface ImportJob {
   token: string;
@@ -20,8 +25,8 @@ interface TeamUserImportJob extends TeamImportJob {
 export class ImportManager {
   private app: App;
   private queueCfg: IQueueConfig;
-  private teamsQueue: Queue;
-  private teamUsersQueue: Queue;
+  private teamsQueue: QueueWrapper;
+  private teamUsersQueue: QueueWrapper;
   private teamsWorker: Worker;
   private teamUsersWorker: Worker;
   private backendApi: DefaultApi;
@@ -52,7 +57,7 @@ export class ImportManager {
 
     for (let i = 0; i < 10; i++) {
       try {
-        await this.teamsQueue.getWorkers();
+        await this.teamsQueue.queue.getWorkers();
         await this.backendApi.healthControllerCheck();
         return true;
       } catch (error) {
@@ -65,14 +70,16 @@ export class ImportManager {
   }
 
   async close() {
-    await this.teamsQueue.close();
+    await this.teamsQueue.queue.close();
+    await this.teamsQueue.scheduler.close();
     await this.teamsWorker.close();
-    await this.teamUsersQueue.close();
+    await this.teamUsersQueue.queue.close();
+    await this.teamUsersQueue.scheduler.close();
     await this.teamUsersWorker.close();
   }
 
   async addTeamToImport(teamId: string, token: string, cursor?: string) {
-    await this.teamsQueue.add('teamImport', {
+    await this.teamsQueue.queue.add('teamImport', {
       teamId: teamId,
       token: token,
       cursor: cursor,
@@ -85,7 +92,7 @@ export class ImportManager {
     token: string,
     cursor?: string,
   ) {
-    await this.teamUsersQueue.add('teamUsersImport', {
+    await this.teamUsersQueue.queue.add('teamUsersImport', {
       organizationId: organizationId,
       teamId: teamId,
       token: token,
