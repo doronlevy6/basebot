@@ -1,5 +1,5 @@
 import { logger } from '@base/logger';
-import { Queue, Worker } from 'bullmq';
+import { Processor, Queue, Worker } from 'bullmq';
 
 export interface IQueueConfig {
   prefix: string;
@@ -24,22 +24,17 @@ export function createQueue(queueName: string, cfg: IQueueConfig): Queue {
 export function createQueueWorker(
   queueName: string,
   cfg: IQueueConfig,
+  processor: Processor,
 ): Worker {
-  const worker = new Worker(
-    queueName,
-    async (job) => {
-      logger.info(job.data);
+  const worker = new Worker(queueName, processor, {
+    prefix: cfg.prefix,
+    connection: {
+      host: cfg.host,
+      port: cfg.port,
+      password: cfg.password,
+      enableOfflineQueue: false,
     },
-    {
-      prefix: cfg.prefix,
-      connection: {
-        host: cfg.host,
-        port: cfg.port,
-        password: cfg.password,
-        enableOfflineQueue: false,
-      },
-    },
-  );
+  });
 
   worker.on('completed', (job) => {
     logger.info(`completed job ${job.id}`);

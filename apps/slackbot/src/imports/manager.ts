@@ -1,5 +1,5 @@
 import { logger } from '@base/logger';
-import { Queue, Worker } from 'bullmq';
+import { Job, Queue, Worker } from 'bullmq';
 import { createQueue, createQueueWorker, IQueueConfig } from './queues';
 
 export class ImportManager {
@@ -12,8 +12,20 @@ export class ImportManager {
     this.teamsQueue = createQueue('teams', queueCfg);
     this.usersQueue = createQueue('users', queueCfg);
 
-    this.teamsWorker = createQueueWorker('teams', queueCfg);
-    this.usersWorker = createQueueWorker('users', queueCfg);
+    this.teamsWorker = createQueueWorker(
+      'teams',
+      queueCfg,
+      async (job: Job) => {
+        logger.info(job.data);
+      },
+    );
+    this.usersWorker = createQueueWorker(
+      'users',
+      queueCfg,
+      async (job: Job) => {
+        logger.info(job.data);
+      },
+    );
   }
 
   async isReady(): Promise<boolean> {
