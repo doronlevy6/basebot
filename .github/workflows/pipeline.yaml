@@ -27,12 +27,15 @@ jobs:
         with:
           node-version: "16"
           cache: "npm"
-      - name: Cache dependencies
-        uses: actions/cache@v2
+      - name: Cache node modules
+        uses: actions/cache@v3
         with:
           path: ~/.npm
-          key: npm-${{ hashFiles('package-lock.json') }}
-          restore-keys: npm-
+          key: npm-base-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            npm-base-${{ hashFiles('**/package-lock.json') }}
+            npm-base-
+            npm-
       - name: NPM CI
         run: npm ci
       - name: Format
@@ -59,12 +62,15 @@ jobs:
         with:
           node-version: "16"
           cache: "npm"
-      - name: Cache dependencies
-        uses: actions/cache@v2
+      - name: Cache node modules
+        uses: actions/cache@v3
         with:
           path: ~/.npm
-          key: npm-${{ hashFiles('package-lock.json') }}
-          restore-keys: npm-
+          key: npm-base-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            npm-base-${{ hashFiles('**/package-lock.json') }}
+            npm-base-
+            npm-
       - name: NPM CI
         run: npm ci
       - name: Lint
@@ -91,12 +97,15 @@ jobs:
         with:
           node-version: "16"
           cache: "npm"
-      - name: Cache dependencies
-        uses: actions/cache@v2
+      - name: Cache node modules
+        uses: actions/cache@v3
         with:
           path: ~/.npm
-          key: npm-${{ hashFiles('package-lock.json') }}
-          restore-keys: npm-
+          key: npm-base-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            npm-base-${{ hashFiles('**/package-lock.json') }}
+            npm-base-
+            npm-
       - name: NPM CI
         run: npm ci
       - name: Codegen
@@ -123,18 +132,20 @@ jobs:
         with:
           node-version: "16"
           cache: "npm"
-      - name: Cache dependencies
-        uses: actions/cache@v2
+      - name: Cache node modules
+        uses: actions/cache@v3
         with:
           path: ~/.npm
-          key: npm-${{ hashFiles('package-lock.json') }}
-          restore-keys: npm-
+          key: npm-base-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            npm-base-${{ hashFiles('**/package-lock.json') }}
+            npm-base-
+            npm-
       - name: NPM CI
         run: npm ci
       - name: Test
         run: npm run test
   docker-build-and-push-to-staging:
-    if: github.ref == 'refs/heads/main' # only run docker-build-and-push-to-staging on main branch
     needs: [format, lint, codegen, test]
     permissions:
       id-token: write
@@ -148,6 +159,7 @@ jobs:
       - name: Checkout Repo
         uses: actions/checkout@v2
       - name: Set up Docker Buildx
+        if: github.ref == 'refs/heads/main'
         id: buildx
         with:
           install: true
@@ -156,21 +168,27 @@ jobs:
         with:
           node-version: "16"
           cache: "npm"
-      - name: Cache dependencies
-        uses: actions/cache@v2
+      - name: Cache node modules
+        uses: actions/cache@v3
         with:
           path: ~/.npm
-          key: npm-${{ hashFiles('package-lock.json') }}
-          restore-keys: npm-
+          key: npm-base-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            npm-base-${{ hashFiles('**/package-lock.json') }}
+            npm-base-
+            npm-
       - name: Configure AWS Credentials
+        if: github.ref == 'refs/heads/main'
         uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-region: us-east-1
           role-to-assume: arn:aws:iam::221762091942:role/GitHubRoleBasebot
           role-session-name: BasebotCICD
       - name: Download Secrets from S3
+        if: github.ref == 'refs/heads/main'
         run: npm run secrets:read
       - name: Login to Amazon ECR
+        if: github.ref == 'refs/heads/main'
         id: ecr-login
         uses: aws-actions/amazon-ecr-login@v1
       - name: Versioning
@@ -183,13 +201,12 @@ jobs:
       - name: NPM Build
         run: npm run build ${{ matrix.service }}
       - name: Build Image
+        if: github.ref == 'refs/heads/main'
         uses: docker/build-push-action@v3
         with:
           context: ./
           file: ./build/Dockerfile
           push: true
-          build-args: |
-            SERVICE_NAME=${{ matrix.service }}
           tags: |
             ${{ steps.ecr-login.outputs.registry }}/${{ matrix.service }}:latest
             ${{ steps.ecr-login.outputs.registry }}/${{ matrix.service }}:stg
