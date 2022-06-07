@@ -1,19 +1,7 @@
 import { logger } from '@base/logger';
-import { Processor, Queue, QueueScheduler, Worker } from 'bullmq';
-import * as IORedis from 'ioredis';
-
-export interface IQueueConfig {
-  prefix: string;
-  host: string;
-  port: number;
-  password: string;
-  cluster: boolean;
-}
-
-export interface QueueWrapper {
-  queue: Queue;
-  scheduler: QueueScheduler;
-}
+import { Worker, Queue, QueueScheduler, Processor } from 'bullmq';
+import { createRedis } from './redisConfig';
+import { IQueueConfig, QueueWrapper } from './types';
 
 export function createQueue(
   queueName: string,
@@ -62,29 +50,4 @@ export function createQueueWorker(
   });
 
   return worker;
-}
-
-function createRedis(cfg: IQueueConfig): IORedis.Redis | IORedis.Cluster {
-  if (cfg.cluster) {
-    return new IORedis.Cluster(
-      [
-        {
-          host: cfg.host,
-          port: cfg.port,
-        },
-      ],
-      {
-        redisOptions: { password: cfg.password, maxRetriesPerRequest: null },
-        enableOfflineQueue: false,
-      },
-    );
-  }
-
-  return new IORedis.default({
-    host: cfg.host,
-    port: cfg.port,
-    password: cfg.password,
-    enableOfflineQueue: false,
-    maxRetriesPerRequest: null,
-  });
 }
