@@ -73,7 +73,10 @@ function createRedis(cfg: IQueueConfig): IORedis.Redis | IORedis.Cluster {
           port: cfg.port,
         },
       ],
-      { redisOptions: { password: cfg.password }, enableOfflineQueue: false },
+      {
+        redisOptions: { password: cfg.password, maxRetriesPerRequest: null },
+        enableOfflineQueue: false,
+      },
     );
   }
 
@@ -82,5 +85,6 @@ function createRedis(cfg: IQueueConfig): IORedis.Redis | IORedis.Cluster {
     port: cfg.port,
     password: cfg.password,
     enableOfflineQueue: false,
+    maxRetriesPerRequest: null,
   });
 }
