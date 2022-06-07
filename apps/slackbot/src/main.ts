@@ -45,6 +45,7 @@ const startApp = async () => {
       host: process.env.REDIS_HOST,
       port: parseInt(process.env.REDIS_PORT, 10),
       password: process.env.REDIS_PASSWORD || '',
+      cluster: process.env.REDIS_CLUSTER === 'true',
     },
     defaultApi,
   );
