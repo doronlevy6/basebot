@@ -7,7 +7,7 @@ import {
   createQueueWorker,
   IQueueConfig,
   QueueWrapper,
-} from './queues';
+} from '../queues/queues';
 
 interface ImportJob {
   token: string;
