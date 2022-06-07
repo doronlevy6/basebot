@@ -19,6 +19,7 @@ interface TeamUserImportJob extends TeamImportJob {
 
 export class ImportManager {
   private app: App;
+  private queueCfg: IQueueConfig;
   private teamsQueue: Queue;
   private teamUsersQueue: Queue;
   private teamsWorker: Worker;
@@ -26,103 +27,28 @@ export class ImportManager {
   private backendApi: DefaultApi;
 
   constructor(queueCfg: IQueueConfig, backendApi: DefaultApi) {
+    this.queueCfg = queueCfg;
     this.backendApi = backendApi;
     this.teamsQueue = createQueue('teams', queueCfg);
     this.teamUsersQueue = createQueue('teamUsers', queueCfg);
+  }
+
+  async isReady(app: App): Promise<boolean> {
+    this.app = app;
+
+    const delay = (ms: number) =>
+      new Promise((resolve) => setTimeout(resolve, ms));
 
     this.teamsWorker = createQueueWorker(
       'teams',
-      queueCfg,
-      async (job: Job<TeamImportJob>) => {
-        const teamInfoRes = await this.app.client.team.info({
-          team: job.data.teamId,
-          token: job.data.token,
-        });
-        if (teamInfoRes.error) {
-          throw new Error(
-            `Error getting team info in slack: ${teamInfoRes.error}`,
-          );
-        }
-
-        if (!teamInfoRes.ok) {
-          throw new Error(`Error getting team info in slack`);
-        }
-
-        try {
-          const orgRes = await this.backendApi.organizationsControllerCreate({
-            id: teamInfoRes.team.email_domain,
-            name: teamInfoRes.team.name,
-            domain: teamInfoRes.team.email_domain,
-          });
-
-          await this.addTeamToUsersImport(
-            orgRes.data.id,
-            job.data.teamId,
-            job.data.token,
-          );
-        } catch (error) {
-          throw new Error(
-            `Error creating organization in backend with error ${error}`,
-          );
-        }
-      },
+      this.queueCfg,
+      this.importTeam,
     );
-
     this.teamUsersWorker = createQueueWorker(
       'teamUsers',
-      queueCfg,
-      async (job: Job<TeamUserImportJob>) => {
-        const usersRes = await this.app.client.users.list({
-          limit: 200,
-          team_id: job.data.teamId,
-          token: job.data.token,
-          cursor: job.data.cursor,
-        });
-
-        if (usersRes.error) {
-          throw new Error(`Error listing users in slack: ${usersRes.error}`);
-        }
-
-        if (!usersRes.ok) {
-          throw new Error(`Error listing users in slack`);
-        }
-
-        const nextCursor = usersRes.response_metadata?.next_cursor;
-        if (nextCursor) {
-          await this.addTeamToUsersImport(
-            job.data.organizationId,
-            job.data.teamId,
-            job.data.token,
-            nextCursor,
-          );
-        }
-
-        for (let index = 0; index < usersRes.members.length; index++) {
-          const user = usersRes.members[index];
-          logger.info(`Importing User: ${user}`);
-          try {
-            await this.backendApi.usersControllerCreate({
-              email: user.profile.email,
-              displayName: user.profile.display_name || user.profile.real_name,
-              organizationId: this.orgIdFromEmail(user.profile.email),
-            });
-          } catch (error) {
-            throw new Error(
-              `Error creating user ${user} in backend with error ${error}`,
-            );
-          }
-        }
-      },
+      this.queueCfg,
+      this.importTeamUsers,
     );
-  }
-
-  setSlackClient(app: App) {
-    this.app = app;
-  }
-
-  async isReady(): Promise<boolean> {
-    const delay = (ms: number) =>
-      new Promise((resolve) => setTimeout(resolve, ms));
 
     for (let i = 0; i < 10; i++) {
       try {
@@ -165,6 +91,81 @@ export class ImportManager {
       token: token,
       cursor: cursor,
     });
+  }
+
+  private async importTeam(job: Job<TeamImportJob>) {
+    const teamInfoRes = await this.app.client.team.info({
+      team: job.data.teamId,
+      token: job.data.token,
+    });
+    if (teamInfoRes.error) {
+      throw new Error(`Error getting team info in slack: ${teamInfoRes.error}`);
+    }
+
+    if (!teamInfoRes.ok) {
+      throw new Error(`Error getting team info in slack`);
+    }
+
+    try {
+      const orgRes = await this.backendApi.organizationsControllerCreate({
+        id: teamInfoRes.team.email_domain,
+        name: teamInfoRes.team.name,
+        domain: teamInfoRes.team.email_domain,
+      });
+
+      await this.addTeamToUsersImport(
+        orgRes.data.id,
+        job.data.teamId,
+        job.data.token,
+      );
+    } catch (error) {
+      throw new Error(
+        `Error creating organization in backend with error ${error}`,
+      );
+    }
+  }
+
+  private async importTeamUsers(job: Job<TeamUserImportJob>) {
+    const usersRes = await this.app.client.users.list({
+      limit: 200,
+      team_id: job.data.teamId,
+      token: job.data.token,
+      cursor: job.data.cursor,
+    });
+
+    if (usersRes.error) {
+      throw new Error(`Error listing users in slack: ${usersRes.error}`);
+    }
+
+    if (!usersRes.ok) {
+      throw new Error(`Error listing users in slack`);
+    }
+
+    const nextCursor = usersRes.response_metadata?.next_cursor;
+    if (nextCursor) {
+      await this.addTeamToUsersImport(
+        job.data.organizationId,
+        job.data.teamId,
+        job.data.token,
+        nextCursor,
+      );
+    }
+
+    for (let index = 0; index < usersRes.members.length; index++) {
+      const user = usersRes.members[index];
+      logger.info(`Importing User: ${user}`);
+      try {
+        await this.backendApi.usersControllerCreate({
+          email: user.profile.email,
+          displayName: user.profile.display_name || user.profile.real_name,
+          organizationId: this.orgIdFromEmail(user.profile.email),
+        });
+      } catch (error) {
+        throw new Error(
+          `Error creating user ${user} in backend with error ${error}`,
+        );
+      }
+    }
   }
 
   private orgIdFromEmail(email: string) {

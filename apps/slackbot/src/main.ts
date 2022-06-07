@@ -49,10 +49,6 @@ const startApp = async () => {
     },
     defaultApi,
   );
-  let ready = await importManager.isReady();
-  if (!ready) {
-    throw new Error('ImportManager is not ready');
-  }
 
   const pgStore = new PgInstallationStore(
     metricsReporter,
@@ -67,14 +63,16 @@ const startApp = async () => {
     importManager,
   );
 
-  ready = await pgStore.isReady();
+  const slackApp = createApp(pgStore, metricsReporter);
+
+  let ready = await pgStore.isReady();
   if (!ready) {
     throw new Error('PgStore is not ready');
   }
-
-  const slackApp = createApp(pgStore, metricsReporter);
-
-  importManager.setSlackClient(slackApp);
+  ready = await importManager.isReady(slackApp);
+  if (!ready) {
+    throw new Error('ImportManager is not ready');
+  }
 
   slackApp.use(slackBoltMetricsMiddleware(metricsReporter));
   slackApp.event('message', async ({ event, logger }) => {
