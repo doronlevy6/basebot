@@ -12,6 +12,7 @@ import { Configuration, DefaultApi } from '@base/oapigen';
 import { createApp } from './app';
 import { Server } from 'http';
 import { PgInstallationStore } from './installations/installationStore';
+import { ImportManager } from './imports/manager';
 
 const gracefulShutdown = (server: Server) => (signal: string) => {
   logger.info('starting shutdown, got signal ' + signal);
@@ -26,6 +27,10 @@ const gracefulShutdown = (server: Server) => (signal: string) => {
   });
 };
 
+const gracefulShutdownAsync = (importManager: ImportManager) => async () => {
+  await importManager.close();
+};
+
 const startApp = async () => {
   const metricsReporter = new PrometheusReporter();
 
@@ -34,23 +39,38 @@ const startApp = async () => {
   });
   const defaultApi = new DefaultApi(configuration);
 
-  const pgStore = new PgInstallationStore(metricsReporter, {
-    host: process.env.DB_HOST,
-    port: parseInt(process.env.DB_PORT, 10),
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_DATABASE,
-    synchronize: ['development', 'local'].includes(process.env.ENV),
+  const importManager = new ImportManager({
+    prefix: process.env.ENV || 'local',
+    host: process.env.REDIS_HOST,
+    port: parseInt(process.env.REDIS_PORT, 10),
+    password: process.env.REDIS_PASSWORD || '',
   });
+  let ready = await importManager.isReady();
+  if (!ready) {
+    throw new Error('ImportManager is not ready');
+  }
 
-  const ready = await pgStore.isReady();
+  const pgStore = new PgInstallationStore(
+    metricsReporter,
+    {
+      host: process.env.DB_HOST,
+      port: parseInt(process.env.DB_PORT, 10),
+      user: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
+      database: process.env.DB_DATABASE,
+      synchronize: ['development', 'local'].includes(process.env.ENV),
+    },
+    importManager,
+  );
+
+  ready = await pgStore.isReady();
   if (!ready) {
     throw new Error('PgStore is not ready');
   }
 
   const slackApp = createApp(pgStore, defaultApi, metricsReporter);
   slackApp.use(slackBoltMetricsMiddleware(metricsReporter));
-  slackApp.event('message', async ({ event, client, logger }) => {
+  slackApp.event('message', async ({ event, logger }) => {
     logger.info(event);
   });
 
@@ -61,6 +81,7 @@ const startApp = async () => {
   const shutdownHandler = gracefulShutdown(server);
   process.on('SIGINT', shutdownHandler);
   process.on('SIGTERM', shutdownHandler);
+  process.on('beforeExit', gracefulShutdownAsync(importManager));
 };
 
 startApp();
