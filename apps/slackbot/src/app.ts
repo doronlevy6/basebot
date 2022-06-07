@@ -2,11 +2,10 @@ import { App } from '@slack/bolt';
 import { DefaultApi } from '@base/oapigen';
 import { httpMetricsEndpoint, IReporter } from '@base/metrics';
 import { logger, BoltWrapper } from '@base/logger';
+import { PgInstallationStore } from './installations/installationStore';
 
-// TODO: database
 export function createApp(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  database: any,
+  installationStore: PgInstallationStore,
   backendApi: DefaultApi,
   metricsReporter: IReporter,
 ): App {
@@ -72,43 +71,6 @@ export function createApp(
       'users:read.email',
       'users.profile:read',
     ],
-    installationStore: {
-      storeInstallation: async (installation) => {
-        if (
-          installation.isEnterpriseInstall &&
-          installation.enterprise !== undefined
-        ) {
-          return await database.set(installation.enterprise.id, installation);
-        }
-        if (installation.team !== undefined) {
-          return await database.set(installation.team.id, installation);
-        }
-        throw new Error('Failed saving installation data to installationStore');
-      },
-      fetchInstallation: async (installQuery) => {
-        if (
-          installQuery.isEnterpriseInstall &&
-          installQuery.enterpriseId !== undefined
-        ) {
-          return await database.get(installQuery.enterpriseId);
-        }
-        if (installQuery.teamId !== undefined) {
-          return await database.get(installQuery.teamId);
-        }
-        throw new Error('Failed fetching installation');
-      },
-      deleteInstallation: async (installQuery) => {
-        if (
-          installQuery.isEnterpriseInstall &&
-          installQuery.enterpriseId !== undefined
-        ) {
-          return await database.delete(installQuery.enterpriseId);
-        }
-        if (installQuery.teamId !== undefined) {
-          return await database.delete(installQuery.teamId);
-        }
-        throw new Error('Failed to delete installation');
-      },
-    },
+    installationStore: installationStore,
   });
 }

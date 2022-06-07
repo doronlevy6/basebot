@@ -11,6 +11,7 @@ import { logger } from '@base/logger';
 import { Configuration, DefaultApi } from '@base/oapigen';
 import { createApp } from './app';
 import { Server } from 'http';
+import { PgInstallationStore } from './installations/installationStore';
 
 const gracefulShutdown = (server: Server) => (signal: string) => {
   logger.info('starting shutdown, got signal ' + signal);
@@ -33,8 +34,20 @@ const startApp = async () => {
   });
   const defaultApi = new DefaultApi(configuration);
 
-  // TODO: database
-  const slackApp = createApp(null, defaultApi, metricsReporter);
+  const pgStore = new PgInstallationStore(metricsReporter, {
+    host: process.env.DB_HOST,
+    port: parseInt(process.env.DB_PORT, 10),
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_DATABASE,
+  });
+
+  const ready = await pgStore.isReady();
+  if (!ready) {
+    throw new Error('PgStore is not ready');
+  }
+
+  const slackApp = createApp(pgStore, defaultApi, metricsReporter);
   slackApp.use(slackBoltMetricsMiddleware(metricsReporter));
 
   const port = process.env['PORT'] || 3000;
