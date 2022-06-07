@@ -50,6 +50,9 @@ const startApp = async () => {
 
   const slackApp = createApp(pgStore, defaultApi, metricsReporter);
   slackApp.use(slackBoltMetricsMiddleware(metricsReporter));
+  slackApp.event('message', async ({ event, client, logger }) => {
+    logger.info(event);
+  });
 
   const port = process.env['PORT'] || 3000;
   const server = await slackApp.start(port);
