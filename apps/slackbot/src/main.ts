@@ -50,7 +50,7 @@ const startApp = async () => {
 
   const importManager = new ImportManager(
     {
-      prefix: `{slackbot:imports:${process.env.ENV || 'local'}}`,
+      prefix: `{base:queues:${process.env.ENV || 'local'}}`,
       ...allQueueCfg,
     },
     defaultApi,
@@ -71,7 +71,7 @@ const startApp = async () => {
 
   const taskStatusManager = new TaskStatusManager(
     {
-      prefix: `{slackbot:taskStatus:${process.env.ENV || 'local'}}`,
+      prefix: `{base:queues:${process.env.ENV || 'local'}}`,
       ...allQueueCfg,
     },
     pgStore,
@@ -112,7 +112,7 @@ const startApp = async () => {
   );
 
   // const taskStatusTriggerer = new TaskStatusTriggerer({
-  //   prefix: `{slackbot:taskStatus:${process.env.ENV || 'local'}}`,
+  //   prefix: `{base:queues:${process.env.ENV || 'local'}}`,
   //   ...allQueueCfg,
   // });
   // ready = await taskStatusTriggerer.isReady();
