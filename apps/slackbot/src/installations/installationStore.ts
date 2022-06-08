@@ -180,7 +180,7 @@ export class PgInstallationStore implements InstallationStore {
       this.metricsReporter.incrementCounter('fetched_installations_total', 1, {
         enterprise: 'true',
       });
-      return res[0] as Installation<'v1' | 'v2', boolean>;
+      return res[0].raw as Installation<'v1' | 'v2', boolean>;
     }
     if (query.teamId !== undefined) {
       const res = await this.db
@@ -194,7 +194,7 @@ export class PgInstallationStore implements InstallationStore {
       this.metricsReporter.incrementCounter('fetched_installations_total', 1, {
         enterprise: 'false',
       });
-      return res[0] as Installation<'v1' | 'v2', boolean>;
+      return res[0].raw as Installation<'v1' | 'v2', boolean>;
     }
     throw new Error('Failed fetching installation');
   }
@@ -221,7 +221,7 @@ export class PgInstallationStore implements InstallationStore {
     this.metricsReporter.incrementCounter('fetched_installations_total', 1, {
       enterprise: enterprise,
     });
-    return res[0] as Installation<'v1' | 'v2', boolean>;
+    return res[0].raw as Installation<'v1' | 'v2', boolean>;
   }
 
   async deleteInstallation(query: InstallationQuery<boolean>): Promise<void> {
