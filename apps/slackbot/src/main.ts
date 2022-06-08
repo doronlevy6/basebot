@@ -13,6 +13,7 @@ import { createApp } from './app';
 import { Server } from 'http';
 import { PgInstallationStore } from './installations/installationStore';
 import { ImportManager } from './imports/manager';
+import { TaskStatusManager } from './task-status/manager';
 
 const gracefulShutdown = (server: Server) => (signal: string) => {
   logger.info('starting shutdown, got signal ' + signal);
@@ -27,9 +28,11 @@ const gracefulShutdown = (server: Server) => (signal: string) => {
   });
 };
 
-const gracefulShutdownAsync = (importManager: ImportManager) => async () => {
-  await importManager.close();
-};
+const gracefulShutdownAsync =
+  (importManager: ImportManager, taskStatusManager: TaskStatusManager) =>
+  async () => {
+    await Promise.all([importManager.close(), taskStatusManager.close()]);
+  };
 
 const startApp = async () => {
   const metricsReporter = new PrometheusReporter();
@@ -38,14 +41,17 @@ const startApp = async () => {
     basePath: process.env.BASE_BACKEND_URL,
   });
   const defaultApi = new DefaultApi(configuration);
+  const allQueueCfg = {
+    host: process.env.REDIS_HOST,
+    port: parseInt(process.env.REDIS_PORT, 10),
+    password: process.env.REDIS_PASSWORD || '',
+    cluster: process.env.REDIS_CLUSTER === 'true',
+  };
 
   const importManager = new ImportManager(
     {
       prefix: `{slackbot:imports:${process.env.ENV || 'local'}}`,
-      host: process.env.REDIS_HOST,
-      port: parseInt(process.env.REDIS_PORT, 10),
-      password: process.env.REDIS_PASSWORD || '',
-      cluster: process.env.REDIS_CLUSTER === 'true',
+      ...allQueueCfg,
     },
     defaultApi,
   );
@@ -63,6 +69,14 @@ const startApp = async () => {
     importManager,
   );
 
+  const taskStatusManager = new TaskStatusManager(
+    {
+      prefix: `{slackbot:taskStatus:${process.env.ENV || 'local'}}`,
+      ...allQueueCfg,
+    },
+    pgStore,
+  );
+
   const slackApp = createApp(pgStore, metricsReporter);
 
   let ready = await pgStore.isReady();
@@ -72,6 +86,10 @@ const startApp = async () => {
   ready = await importManager.isReady(slackApp);
   if (!ready) {
     throw new Error('ImportManager is not ready');
+  }
+  ready = await taskStatusManager.isReady();
+  if (!ready) {
+    throw new Error('TaskStatusManager is not ready');
   }
 
   slackApp.use(slackBoltMetricsMiddleware(metricsReporter));
@@ -86,7 +104,10 @@ const startApp = async () => {
   const shutdownHandler = gracefulShutdown(server);
   process.on('SIGINT', shutdownHandler);
   process.on('SIGTERM', shutdownHandler);
-  process.on('beforeExit', gracefulShutdownAsync(importManager));
+  process.on(
+    'beforeExit',
+    gracefulShutdownAsync(importManager, taskStatusManager),
+  );
 };
 
 startApp();

@@ -2,6 +2,7 @@ import { logger } from '@base/logger';
 import { Job, Worker } from 'bullmq';
 import { createQueueWorker, IQueueConfig } from '@base/queues';
 import { WebClient } from '@slack/web-api';
+import { PgInstallationStore } from '../installations/installationStore';
 
 interface TaskStatusJob {
   organizationId: string;
@@ -12,9 +13,11 @@ interface TaskStatusJob {
 export class TaskStatusManager {
   private queueCfg: IQueueConfig;
   private taskStatusWorker: Worker;
+  private installationStore: PgInstallationStore;
 
-  constructor(queueCfg: IQueueConfig) {
+  constructor(queueCfg: IQueueConfig, installationStore: PgInstallationStore) {
     this.queueCfg = queueCfg;
+    this.installationStore = installationStore;
   }
 
   async isReady(): Promise<boolean> {
