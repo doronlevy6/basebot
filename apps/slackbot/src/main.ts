@@ -118,7 +118,7 @@ const startApp = async () => {
     gracefulShutdownAsync(importManager, taskStatusManager),
   );
 
-  const coby = {
+  const creator = {
     id: 'u_coby',
     email: 'coby@base.la',
     organizationId: 'base.la',
@@ -127,7 +127,7 @@ const startApp = async () => {
     externalAuthId: '',
   };
 
-  const itay = {
+  const assignee = {
     id: 'u_itay',
     email: 'itay@base.la',
     organizationId: 'base.la',
@@ -138,13 +138,15 @@ const startApp = async () => {
 
   const task = {
     id: 't_123',
-    creator: itay,
-    creatorId: 'u_itay',
+    creator: creator,
+    creatorId: creator.id,
     title: 'This is some task!',
     dueDate: 'Tomorrow',
   } as Task;
 
-  await taskStatusTriggerer.addTaskToQueue(coby, task);
+  for (let i = 0; i < 5; i++) {
+    await taskStatusTriggerer.addTaskToQueue(assignee, task);
+  }
 };
 
 startApp();
