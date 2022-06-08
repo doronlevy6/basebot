@@ -5,6 +5,7 @@ import {
   InstallationQuery,
   InstallationStore,
 } from '@slack/bolt';
+import { WebClient } from '@slack/web-api';
 import knex, { Knex } from 'knex';
 import { ImportManager } from '../imports/manager';
 
@@ -82,12 +83,14 @@ export class PgInstallationStore implements InstallationStore {
       logger.info('attempting to synchronize tables');
       await this.db
         .raw(`CREATE TABLE IF NOT EXISTS slack_enterprise_installations (
-        id varchar(36) NOT NULL PRIMARY KEY,
+        slack_id varchar(36) NOT NULL PRIMARY KEY,
+        base_id varchar(36) NOT NULL UNIQUE,
         raw jsonb NOT NULL
       );`);
 
       await this.db.raw(`CREATE TABLE IF NOT EXISTS slack_installations (
-        id varchar(36) NOT NULL PRIMARY KEY,
+        slack_id varchar(36) NOT NULL PRIMARY KEY,
+        base_id varchar(36) NOT NULL UNIQUE,
         raw jsonb NOT NULL
       );`);
     }
@@ -98,16 +101,31 @@ export class PgInstallationStore implements InstallationStore {
   async storeInstallation<AuthVersion extends 'v1' | 'v2'>(
     installation: Installation<AuthVersion, boolean>,
   ): Promise<void> {
+    const client = new WebClient(installation.bot.token);
+    const teamInfoRes = await client.team.info({});
+    if (teamInfoRes.error) {
+      throw new Error(
+        `Error getting team info in store installation on slack: ${teamInfoRes.error}`,
+      );
+    }
+
+    if (!teamInfoRes.ok) {
+      throw new Error(`Error getting team info in store installation on slack`);
+    }
+
+    const domain = teamInfoRes.team.email_domain;
+
     if (
       installation.isEnterpriseInstall &&
       installation.enterprise !== undefined
     ) {
       await this.db('slack_enterprise_installations')
         .insert({
-          id: installation.enterprise.id,
+          slack_id: installation.enterprise.id,
+          base_id: domain,
           raw: installation,
         })
-        .onConflict('id')
+        .onConflict('slack_id')
         .merge(['raw']);
       this.metricsReporter.incrementCounter('stored_installations_total', 1, {
         enterprise: 'true',
@@ -117,10 +135,11 @@ export class PgInstallationStore implements InstallationStore {
     if (installation.team !== undefined) {
       await this.db('slack_installations')
         .insert({
-          id: installation.team.id,
+          slack_id: installation.team.id,
+          base_id: domain,
           raw: installation,
         })
-        .onConflict('id')
+        .onConflict('slack_id')
         .merge(['raw']);
       this.metricsReporter.incrementCounter('stored_installations_total', 1, {
         enterprise: 'false',
@@ -143,7 +162,7 @@ export class PgInstallationStore implements InstallationStore {
       const res = await this.db
         .select('raw')
         .from('slack_enterprise_installations')
-        .where({ id: query.enterpriseId });
+        .where({ slack_id: query.enterpriseId });
       if (!res || res.length == 0) {
         throw new Error('no installation found');
       }
@@ -157,7 +176,7 @@ export class PgInstallationStore implements InstallationStore {
       const res = await this.db
         .select('raw')
         .from('slack_installations')
-        .where({ id: query.teamId });
+        .where({ slack_id: query.teamId });
       if (!res || res.length == 0) {
         throw new Error('no installation found');
       }
@@ -173,7 +192,7 @@ export class PgInstallationStore implements InstallationStore {
   async deleteInstallation(query: InstallationQuery<boolean>): Promise<void> {
     if (query.isEnterpriseInstall && query.enterpriseId !== undefined) {
       await this.db('slack_enterprise_installations')
-        .where({ id: query.enterpriseId })
+        .where({ slack_id: query.enterpriseId })
         .delete();
 
       this.metricsReporter.incrementCounter('deleted_installations_total', 1, {
@@ -182,7 +201,9 @@ export class PgInstallationStore implements InstallationStore {
       return;
     }
     if (query.teamId !== undefined) {
-      await this.db('slack_installations').where({ id: query.teamId }).delete();
+      await this.db('slack_installations')
+        .where({ slack_id: query.teamId })
+        .delete();
 
       this.metricsReporter.incrementCounter('deleted_installations_total', 1, {
         enterprise: 'false',
