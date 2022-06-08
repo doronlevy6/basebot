@@ -114,7 +114,7 @@ export class PgInstallationStore implements InstallationStore {
     }
 
     const domains = teamInfoRes.team.email_domain.split(',');
-
+    let saved = false;
     for (let i = 0; i < domains.length; i++) {
       const domain = domains[i];
 
@@ -133,7 +133,8 @@ export class PgInstallationStore implements InstallationStore {
         this.metricsReporter.incrementCounter('stored_installations_total', 1, {
           enterprise: 'true',
         });
-        return;
+        saved = true;
+        continue;
       }
       if (installation.team !== undefined) {
         await this.db('slack_installations')
@@ -153,11 +154,13 @@ export class PgInstallationStore implements InstallationStore {
           installation.team.id,
           installation.bot.token,
         );
+        saved = true;
       }
-
-      return;
     }
-    throw new Error('Failed saving installation data to installationStore');
+
+    if (!saved) {
+      throw new Error('Failed saving installation data to installationStore');
+    }
   }
 
   async fetchInstallation(
