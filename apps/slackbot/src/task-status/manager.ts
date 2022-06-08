@@ -2,21 +2,23 @@ import { logger } from '@base/logger';
 import { Job, Worker } from 'bullmq';
 import { createQueueWorker, IQueueConfig } from '@base/queues';
 import {
+  ActionsBlock,
+  Button,
   HeaderBlock,
-  PlainTextOption,
   SectionBlock,
   UsersLookupByEmailResponse,
   WebClient,
 } from '@slack/web-api';
 import { PgInstallationStore } from '../installations/installationStore';
 import { Task, User } from '@base/oapigen';
+import { TaskStatus } from './types';
 
 interface TaskStatusJob {
   user: User;
   task: Task;
 }
 
-type MessageBlocks = SectionBlock | HeaderBlock;
+type MessageBlocks = SectionBlock | HeaderBlock | ActionsBlock;
 
 export class TaskStatusManager {
   private queueCfg: IQueueConfig;
@@ -98,7 +100,12 @@ export class TaskStatusManager {
         job.data.user.id,
         job.data.user.organizationId,
         job.data.task,
-        ['Reassigned to someone else', 'Not started', 'In Progress', 'Done'],
+        [
+          TaskStatus.Reassigned,
+          TaskStatus.NotStarted,
+          TaskStatus.InProgress,
+          TaskStatus.Done,
+        ],
       ),
     });
     logger.info({ msg: 'receive task status request', job: job.data });
@@ -112,17 +119,18 @@ export class TaskStatusManager {
     task: Task,
     value: string[],
   ): MessageBlocks[] {
-    const valuesToSendArr = [baseOrg, baseUser, task.id];
-
-    const options = value.map((val) => {
-      const a: PlainTextOption = {
+    const buttons = value.map((val) => {
+      const button: Button = {
+        type: 'button',
         text: {
           type: 'plain_text',
           text: val,
+          emoji: true,
         },
-        value: JSON.stringify(valuesToSendArr),
+        value: JSON.stringify([baseOrg, baseUser, val]),
+        action_id: val,
       };
-      return a;
+      return button;
     });
 
     return [
@@ -158,20 +166,12 @@ export class TaskStatusManager {
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: '<https://example.com|View Task>',
+          text: 'What is the current status of this task?',
         },
       },
       {
-        type: 'section',
-        text: {
-          type: 'mrkdwn',
-          text: 'What is the current status of this task?',
-        },
-        accessory: {
-          type: 'static_select',
-          options: options,
-          action_id: 'static_select-action',
-        },
+        type: 'actions',
+        elements: buttons,
       },
     ];
   }
