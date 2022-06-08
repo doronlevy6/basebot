@@ -113,42 +113,47 @@ export class PgInstallationStore implements InstallationStore {
       throw new Error(`Error getting team info in store installation on slack`);
     }
 
-    const domain = teamInfoRes.team.email_domain;
+    const domains = teamInfoRes.team.email_domain.split(',');
 
-    if (
-      installation.isEnterpriseInstall &&
-      installation.enterprise !== undefined
-    ) {
-      await this.db('slack_enterprise_installations')
-        .insert({
-          slack_id: installation.enterprise.id,
-          base_id: domain,
-          raw: installation,
-        })
-        .onConflict('slack_id')
-        .merge(['raw']);
-      this.metricsReporter.incrementCounter('stored_installations_total', 1, {
-        enterprise: 'true',
-      });
-      return;
-    }
-    if (installation.team !== undefined) {
-      await this.db('slack_installations')
-        .insert({
-          slack_id: installation.team.id,
-          base_id: domain,
-          raw: installation,
-        })
-        .onConflict('slack_id')
-        .merge(['raw']);
-      this.metricsReporter.incrementCounter('stored_installations_total', 1, {
-        enterprise: 'false',
-      });
+    for (let i = 0; i < domains.length; i++) {
+      const domain = domains[i];
 
-      await this.importManager.addTeamToImport(
-        installation.team.id,
-        installation.bot.token,
-      );
+      if (
+        installation.isEnterpriseInstall &&
+        installation.enterprise !== undefined
+      ) {
+        await this.db('slack_enterprise_installations')
+          .insert({
+            slack_id: installation.enterprise.id,
+            base_id: domain,
+            raw: installation,
+          })
+          .onConflict('slack_id')
+          .merge(['raw']);
+        this.metricsReporter.incrementCounter('stored_installations_total', 1, {
+          enterprise: 'true',
+        });
+        return;
+      }
+      if (installation.team !== undefined) {
+        await this.db('slack_installations')
+          .insert({
+            slack_id: installation.team.id,
+            base_id: domain,
+            raw: installation,
+          })
+          .onConflict('slack_id')
+          .merge(['raw']);
+        this.metricsReporter.incrementCounter('stored_installations_total', 1, {
+          enterprise: 'false',
+        });
+
+        await this.importManager.addTeamToImport(
+          domain,
+          installation.team.id,
+          installation.bot.token,
+        );
+      }
 
       return;
     }

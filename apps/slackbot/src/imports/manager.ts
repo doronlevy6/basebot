@@ -15,11 +15,8 @@ interface ImportJob {
 }
 
 interface TeamImportJob extends ImportJob {
-  teamId: string;
-}
-
-interface TeamUserImportJob extends TeamImportJob {
   organizationId: string;
+  teamId: string;
 }
 
 export class ImportManager {
@@ -82,8 +79,14 @@ export class ImportManager {
     await this.teamUsersWorker.close();
   }
 
-  async addTeamToImport(teamId: string, token: string, cursor?: string) {
+  async addTeamToImport(
+    organizationId: string,
+    teamId: string,
+    token: string,
+    cursor?: string,
+  ) {
     await this.teamsQueue.queue.add('teamImport', {
+      organizationId: organizationId,
       teamId: teamId,
       token: token,
       cursor: cursor,
@@ -105,28 +108,16 @@ export class ImportManager {
   }
 
   private async importTeam(job: Job<TeamImportJob>) {
-    const teamInfoRes = await this.app.client.team.info({
-      team: job.data.teamId,
-      token: job.data.token,
-    });
-    if (teamInfoRes.error) {
-      throw new Error(`Error getting team info in slack: ${teamInfoRes.error}`);
-    }
-
-    if (!teamInfoRes.ok) {
-      throw new Error(`Error getting team info in slack`);
-    }
-
     try {
       // TODO: Allow API Key so we can create from Slackbot
       // const orgRes = await this.backendApi.organizationsControllerCreate({
-      //   id: teamInfoRes.team.email_domain,
+      //   id: job.data.organizationId,
       //   name: teamInfoRes.team.name,
-      //   domain: teamInfoRes.team.email_domain,
+      //   domain: job.data.organizationId,
       // });
 
       await this.addTeamToUsersImport(
-        teamInfoRes.team.email_domain,
+        job.data.organizationId,
         job.data.teamId,
         job.data.token,
       );
@@ -137,7 +128,7 @@ export class ImportManager {
     }
   }
 
-  private async importTeamUsers(job: Job<TeamUserImportJob>) {
+  private async importTeamUsers(job: Job<TeamImportJob>) {
     const usersRes = await this.app.client.users.list({
       limit: 200,
       team_id: job.data.teamId,
