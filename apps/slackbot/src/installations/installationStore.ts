@@ -194,6 +194,31 @@ export class PgInstallationStore implements InstallationStore {
     throw new Error('Failed fetching installation');
   }
 
+  async fetchInstallationByBaseId(
+    base_id: string,
+  ): Promise<Installation<'v1' | 'v2', boolean>> {
+    let enterprise = 'true';
+    let res = await this.db
+      .select('raw')
+      .from('slack_enterprise_installations')
+      .where({ base_id: base_id });
+    if (!res || res.length == 0) {
+      res = await this.db
+        .select('raw')
+        .from('slack_installations')
+        .where({ base_id: base_id });
+      enterprise = 'false';
+    }
+    if (!res || res.length == 0) {
+      throw new Error('no installation found');
+    }
+
+    this.metricsReporter.incrementCounter('fetched_installations_total', 1, {
+      enterprise: enterprise,
+    });
+    return res[0] as Installation<'v1' | 'v2', boolean>;
+  }
+
   async deleteInstallation(query: InstallationQuery<boolean>): Promise<void> {
     if (query.isEnterpriseInstall && query.enterpriseId !== undefined) {
       await this.db('slack_enterprise_installations')
