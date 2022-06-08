@@ -11,7 +11,8 @@ import {
 } from '@slack/web-api';
 import { PgInstallationStore } from '../installations/installationStore';
 import { Task, User } from '@base/oapigen';
-import { TaskStatus } from './types';
+import { TaskStatuses } from './types';
+import { App, BlockButtonAction } from '@slack/bolt';
 
 interface TaskStatusJob {
   user: User;
@@ -53,6 +54,20 @@ export class TaskStatusManager {
     }
 
     return false;
+  }
+
+  async initActions(app: App) {
+    for (let i = 0; i < TaskStatuses.length; i++) {
+      const actionId = TaskStatuses[i];
+      app.action<BlockButtonAction>(actionId, async ({ body, ack, say }) => {
+        const [baseOrg, baseUser, val] = JSON.parse(body.actions[0].value);
+        await ack();
+        logger.info(`${baseOrg} user ${baseUser} has sent back ${val}`);
+        say(
+          `Thanks for the update! We will update the task status to be ${val}`,
+        );
+      });
+    }
   }
 
   async close() {
@@ -100,12 +115,7 @@ export class TaskStatusManager {
         job.data.user.id,
         job.data.user.organizationId,
         job.data.task,
-        [
-          TaskStatus.Reassigned,
-          TaskStatus.NotStarted,
-          TaskStatus.InProgress,
-          TaskStatus.Done,
-        ],
+        TaskStatuses,
       ),
     });
     logger.info({ msg: 'receive task status request', job: job.data });
@@ -127,7 +137,7 @@ export class TaskStatusManager {
           text: val,
           emoji: true,
         },
-        value: JSON.stringify([baseOrg, baseUser, val]),
+        value: JSON.stringify([baseOrg, baseUser, task.id, val]),
         action_id: val,
       };
       return button;

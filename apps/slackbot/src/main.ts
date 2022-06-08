@@ -97,6 +97,8 @@ const startApp = async () => {
     logger.info(event);
   });
 
+  taskStatusManager.initActions(slackApp);
+
   const port = process.env['PORT'] || 3000;
   const server = await slackApp.start(port);
   server.on('error', console.error);
@@ -117,7 +119,7 @@ const startApp = async () => {
   // if (!ready) {
   //   throw new Error('TaskStatusTriggerer is not ready');
   // }
-  // const creator = {
+  // const assignee1 = {
   //   id: 'u_coby',
   //   email: 'coby@base.la',
   //   organizationId: 'base.la',
@@ -126,7 +128,7 @@ const startApp = async () => {
   //   externalAuthId: '',
   // };
 
-  // const assignee1 = {
+  // const creator = {
   //   id: 'u_itay',
   //   email: 'itay@base.la',
   //   organizationId: 'base.la',
@@ -161,8 +163,8 @@ const startApp = async () => {
 
   // for (let i = 0; i < 5; i++) {
   //   await taskStatusTriggerer.addTaskToQueue(assignee1, task);
-  //   await taskStatusTriggerer.addTaskToQueue(assignee2, task);
-  //   await taskStatusTriggerer.addTaskToQueue(assignee3, task);
+  //   // await taskStatusTriggerer.addTaskToQueue(assignee2, task);
+  //   // await taskStatusTriggerer.addTaskToQueue(assignee3, task);
   // }
 };
 
