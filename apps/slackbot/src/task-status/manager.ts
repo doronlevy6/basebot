@@ -60,9 +60,13 @@ export class TaskStatusManager {
     for (let i = 0; i < TaskStatuses.length; i++) {
       const actionId = TaskStatuses[i];
       app.action<BlockButtonAction>(actionId, async ({ body, ack, say }) => {
-        const [baseOrg, baseUser, val] = JSON.parse(body.actions[0].value);
+        const [baseOrg, baseUser, taskId, val] = JSON.parse(
+          body.actions[0].value,
+        );
         await ack();
-        logger.info(`${baseOrg} user ${baseUser} has sent back ${val}`);
+        logger.info(
+          `${baseOrg} user ${baseUser} has sent back ${val} for task ID ${taskId}`,
+        );
         say(
           `Thanks for the update! We will update the task status to be ${val}`,
         );
