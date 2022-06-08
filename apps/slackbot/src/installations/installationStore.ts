@@ -83,16 +83,18 @@ export class PgInstallationStore implements InstallationStore {
       logger.info('attempting to synchronize tables');
       await this.db
         .raw(`CREATE TABLE IF NOT EXISTS slack_enterprise_installations (
-        slack_id varchar(36) NOT NULL PRIMARY KEY,
+        slack_id varchar(36) NOT NULL,
         base_id varchar(36) NOT NULL UNIQUE,
         raw jsonb NOT NULL
-      );`);
+      );
+      CREATE INDEX IF NOT EXISTS slack_enterprise_installations_slack_id ON slack_enterprise_installations (slack_id);`);
 
       await this.db.raw(`CREATE TABLE IF NOT EXISTS slack_installations (
-        slack_id varchar(36) NOT NULL PRIMARY KEY,
+        slack_id varchar(36) NOT NULL,
         base_id varchar(36) NOT NULL UNIQUE,
         raw jsonb NOT NULL
-      );`);
+      );
+      CREATE INDEX IF NOT EXISTS slack_installations_slack_id ON slack_installations (slack_id);`);
     }
 
     return true;
@@ -128,8 +130,8 @@ export class PgInstallationStore implements InstallationStore {
             base_id: domain,
             raw: installation,
           })
-          .onConflict('slack_id')
-          .merge(['raw']);
+          .onConflict('base_id')
+          .merge(['raw', 'slack_id']);
         this.metricsReporter.incrementCounter('stored_installations_total', 1, {
           enterprise: 'true',
         });
@@ -143,8 +145,8 @@ export class PgInstallationStore implements InstallationStore {
             base_id: domain,
             raw: installation,
           })
-          .onConflict('slack_id')
-          .merge(['raw']);
+          .onConflict('base_id')
+          .merge(['raw', 'slack_id']);
         this.metricsReporter.incrementCounter('stored_installations_total', 1, {
           enterprise: 'false',
         });
