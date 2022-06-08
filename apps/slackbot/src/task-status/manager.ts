@@ -2,6 +2,7 @@ import { logger } from '@base/logger';
 import { Job, Worker } from 'bullmq';
 import { createQueueWorker, IQueueConfig } from '@base/queues';
 import {
+  HeaderBlock,
   PlainTextOption,
   SectionBlock,
   UsersLookupByEmailResponse,
@@ -14,6 +15,8 @@ interface TaskStatusJob {
   user: User;
   task: Task;
 }
+
+type MessageBlocks = SectionBlock | HeaderBlock;
 
 export class TaskStatusManager {
   private queueCfg: IQueueConfig;
@@ -94,7 +97,7 @@ export class TaskStatusManager {
         taskCreatorSlackUserRes,
         job.data.user.id,
         job.data.user.organizationId,
-        job.data.task.id,
+        job.data.task,
         ['Reassigned to someone else', 'Not started', 'In Progress', 'Done'],
       ),
     });
@@ -106,10 +109,10 @@ export class TaskStatusManager {
     taskCreatorUserRes: UsersLookupByEmailResponse,
     baseUser: string,
     baseOrg: string,
-    taskId: string,
+    task: Task,
     value: string[],
-  ): SectionBlock[] {
-    const valuesToSendArr = [baseOrg, baseUser, taskId];
+  ): MessageBlocks[] {
+    const valuesToSendArr = [baseOrg, baseUser, task.id];
 
     const options = value.map((val) => {
       const a: PlainTextOption = {
@@ -127,7 +130,35 @@ export class TaskStatusManager {
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: `Hi <${assignedUserRes.user.id}>, you have a task status update request! <${taskCreatorUserRes.user.id}> created this task for you which is due in X days/weeks.`,
+          text: `Hi <@${assignedUserRes.user.id}>, you have a task status update request! <@${taskCreatorUserRes.user.id}> created this task for you which is due in X days/weeks.`,
+        },
+      },
+      {
+        type: 'header',
+        text: {
+          type: 'plain_text',
+          text: 'Task',
+          emoji: true,
+        },
+      },
+      {
+        type: 'section',
+        fields: [
+          {
+            type: 'mrkdwn',
+            text: `*Due Date:*\n${task.dueDate}`,
+          },
+          {
+            type: 'mrkdwn',
+            text: `*Title:*\n${task.title}`,
+          },
+        ],
+      },
+      {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: '<https://example.com|View Task>',
         },
       },
       {
