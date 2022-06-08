@@ -8,13 +8,12 @@ loadEnvs(environment, ['configs', 'secrets']);
 
 import { PrometheusReporter, slackBoltMetricsMiddleware } from '@base/metrics';
 import { logger } from '@base/logger';
-import { Configuration, DefaultApi, Task } from '@base/oapigen';
+import { Configuration, DefaultApi } from '@base/oapigen';
 import { createApp } from './app';
 import { Server } from 'http';
 import { PgInstallationStore } from './installations/installationStore';
 import { ImportManager } from './imports/manager';
 import { TaskStatusManager } from './task-status/manager';
-import { TaskStatusTriggerer } from './task-status/triggerer_tester';
 
 const gracefulShutdown = (server: Server) => (signal: string) => {
   logger.info('starting shutdown, got signal ' + signal);
@@ -77,10 +76,6 @@ const startApp = async () => {
     },
     pgStore,
   );
-  const taskStatusTriggerer = new TaskStatusTriggerer({
-    prefix: `{slackbot:taskStatus:${process.env.ENV || 'local'}}`,
-    ...allQueueCfg,
-  });
 
   const slackApp = createApp(pgStore, metricsReporter);
 
@@ -95,10 +90,6 @@ const startApp = async () => {
   ready = await taskStatusManager.isReady();
   if (!ready) {
     throw new Error('TaskStatusManager is not ready');
-  }
-  ready = await taskStatusTriggerer.isReady();
-  if (!ready) {
-    throw new Error('TaskStatusTriggerer is not ready');
   }
 
   slackApp.use(slackBoltMetricsMiddleware(metricsReporter));
@@ -118,35 +109,61 @@ const startApp = async () => {
     gracefulShutdownAsync(importManager, taskStatusManager),
   );
 
-  const creator = {
-    id: 'u_coby',
-    email: 'coby@base.la',
-    organizationId: 'base.la',
-    displayName: 'Coby',
-    organization: undefined,
-    externalAuthId: '',
-  };
+  // const taskStatusTriggerer = new TaskStatusTriggerer({
+  //   prefix: `{slackbot:taskStatus:${process.env.ENV || 'local'}}`,
+  //   ...allQueueCfg,
+  // });
+  // ready = await taskStatusTriggerer.isReady();
+  // if (!ready) {
+  //   throw new Error('TaskStatusTriggerer is not ready');
+  // }
+  // const creator = {
+  //   id: 'u_coby',
+  //   email: 'coby@base.la',
+  //   organizationId: 'base.la',
+  //   displayName: 'Coby',
+  //   organization: undefined,
+  //   externalAuthId: '',
+  // };
 
-  const assignee = {
-    id: 'u_itay',
-    email: 'itay@base.la',
-    organizationId: 'base.la',
-    displayName: 'Itay',
-    organization: undefined,
-    externalAuthId: '',
-  };
+  // const assignee1 = {
+  //   id: 'u_itay',
+  //   email: 'itay@base.la',
+  //   organizationId: 'base.la',
+  //   displayName: 'Itay',
+  //   organization: undefined,
+  //   externalAuthId: '',
+  // };
+  // const assignee2 = {
+  //   id: 'u_lior',
+  //   email: 'lior@base.la',
+  //   organizationId: 'base.la',
+  //   displayName: 'Lior',
+  //   organization: undefined,
+  //   externalAuthId: '',
+  // };
+  // const assignee3 = {
+  //   id: 'u_amir',
+  //   email: 'amir@base.la',
+  //   organizationId: 'base.la',
+  //   displayName: 'Amir',
+  //   organization: undefined,
+  //   externalAuthId: '',
+  // };
 
-  const task = {
-    id: 't_123',
-    creator: creator,
-    creatorId: creator.id,
-    title: 'This is some task!',
-    dueDate: 'Tomorrow',
-  } as Task;
+  // const task = {
+  //   id: 't_123',
+  //   creator: creator,
+  //   creatorId: creator.id,
+  //   title: 'This is some task!',
+  //   dueDate: 'Tomorrow',
+  // } as Task;
 
-  for (let i = 0; i < 5; i++) {
-    await taskStatusTriggerer.addTaskToQueue(assignee, task);
-  }
+  // for (let i = 0; i < 5; i++) {
+  //   await taskStatusTriggerer.addTaskToQueue(assignee1, task);
+  //   await taskStatusTriggerer.addTaskToQueue(assignee2, task);
+  //   await taskStatusTriggerer.addTaskToQueue(assignee3, task);
+  // }
 };
 
 startApp();
