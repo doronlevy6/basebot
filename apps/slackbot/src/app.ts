@@ -57,5 +57,8 @@ export function createApp(
       'users.profile:read',
     ],
     installationStore: installationStore,
+    installerOptions: {
+      directInstall: true,
+    },
   });
 }
