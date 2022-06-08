@@ -50,7 +50,11 @@ export class TaskStatusManager {
   }
 
   private async requestTaskStatus(job: Job<TaskStatusJob>) {
-    const client = new WebClient(''); // TODO: Get Token by org id
+    const installation = await this.installationStore.fetchInstallationByBaseId(
+      job.data.organizationId,
+    );
+
+    const client = new WebClient(installation.bot.token);
     client.chat.postMessage({
       channel: '', // TODO: Get user ID
       text: `An update is requested for task id ${job.data.taskId}`, // TODO: Design
