@@ -6,13 +6,12 @@ import { loadEnvs } from '@base/env';
 import { environment } from './environments/environment';
 loadEnvs(environment, ['configs', 'secrets']);
 
-import { PrometheusReporter, slackBoltMetricsMiddleware } from '@base/metrics';
 import { logger } from '@base/logger';
-import { Configuration, DefaultApi } from '@base/oapigen';
-import { createApp } from './app';
+import { PrometheusReporter, slackBoltMetricsMiddleware } from '@base/metrics';
 import { Server } from 'http';
+import { createApp } from './app';
+import { ImportController } from './imports/controller';
 import { PgInstallationStore } from './installations/installationStore';
-import { ImportManager } from './imports/manager';
 import { TaskStatusManager } from './task-status/manager';
 
 const gracefulShutdown = (server: Server) => (signal: string) => {
@@ -29,7 +28,7 @@ const gracefulShutdown = (server: Server) => (signal: string) => {
 };
 
 const gracefulShutdownAsync =
-  (importManager: ImportManager, taskStatusManager: TaskStatusManager) =>
+  (importManager: ImportController, taskStatusManager: TaskStatusManager) =>
   async () => {
     await Promise.all([importManager.close(), taskStatusManager.close()]);
   };
@@ -37,10 +36,6 @@ const gracefulShutdownAsync =
 const startApp = async () => {
   const metricsReporter = new PrometheusReporter();
 
-  const configuration = new Configuration({
-    basePath: process.env.BASE_BACKEND_URL,
-  });
-  const defaultApi = new DefaultApi(configuration);
   const allQueueCfg = {
     host: process.env.REDIS_HOST,
     port: parseInt(process.env.REDIS_PORT, 10),
@@ -48,26 +43,14 @@ const startApp = async () => {
     cluster: process.env.REDIS_CLUSTER === 'true',
   };
 
-  const importManager = new ImportManager(
-    {
-      prefix: `{base:queues:${process.env.ENV || 'local'}}`,
-      ...allQueueCfg,
-    },
-    defaultApi,
-  );
-
-  const pgStore = new PgInstallationStore(
-    metricsReporter,
-    {
-      host: process.env.DB_HOST,
-      port: parseInt(process.env.DB_PORT, 10),
-      user: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
-      database: process.env.DB_DATABASE,
-      synchronize: ['development', 'local'].includes(process.env.ENV),
-    },
-    importManager,
-  );
+  const pgStore = new PgInstallationStore(metricsReporter, {
+    host: process.env.DB_HOST,
+    port: parseInt(process.env.DB_PORT, 10),
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_DATABASE,
+    synchronize: ['development', 'local'].includes(process.env.ENV),
+  });
 
   const taskStatusManager = new TaskStatusManager(
     {
@@ -79,11 +62,23 @@ const startApp = async () => {
 
   const slackApp = createApp(pgStore, metricsReporter);
 
+  const importManager = new ImportController({
+    prefix: `{base:queues:${process.env.ENV || 'local'}}`,
+    ...allQueueCfg,
+  });
+
+  pgStore.onNewInstallation = ({ botToken, teamDomains, teamId }) =>
+    importManager.startImport({
+      token: botToken,
+      slackTeamEmailDomains: teamDomains,
+      slackTeamId: teamId,
+    });
+
   let ready = await pgStore.isReady();
   if (!ready) {
     throw new Error('PgStore is not ready');
   }
-  ready = await importManager.isReady(slackApp);
+  ready = await importManager.isReady();
   if (!ready) {
     throw new Error('ImportManager is not ready');
   }
