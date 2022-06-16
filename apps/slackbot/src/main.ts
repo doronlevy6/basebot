@@ -13,6 +13,10 @@ import { createApp } from './app';
 import { ImportController } from './imports/controller';
 import { PgInstallationStore } from './installations/installationStore';
 import { TaskStatusManager } from './task-status/manager';
+import { TaskStatusTriggerer } from './task-status/triggerer_tester';
+import { Configuration, SlackbotApiApi as SlackbotApi } from '@base/oapigen';
+import { registerSlackbotEvents } from './installations/routes/router';
+import { runTestExample } from './task-status/tasks_example_test';
 
 const gracefulShutdown = (server: Server) => (signal: string) => {
   logger.info('starting shutdown, got signal ' + signal);
@@ -51,6 +55,12 @@ const startApp = async () => {
     database: process.env.DB_DATABASE,
     synchronize: ['development', 'local'].includes(process.env.ENV),
   });
+
+  const baseApi = new SlackbotApi(
+    new Configuration({
+      basePath: process.env.BASE_BACKEND_URL,
+    }),
+  );
 
   const taskStatusManager = new TaskStatusManager(
     {
@@ -92,7 +102,7 @@ const startApp = async () => {
     logger.info(event);
   });
 
-  taskStatusManager.initActions(slackApp);
+  registerSlackbotEvents(slackApp, baseApi);
 
   const port = process.env['PORT'] || 3000;
   const server = await slackApp.start(port);
@@ -106,61 +116,15 @@ const startApp = async () => {
     gracefulShutdownAsync(importManager, taskStatusManager),
   );
 
-  // const taskStatusTriggerer = new TaskStatusTriggerer({
-  //   prefix: `{base:queues:${process.env.ENV || 'local'}}`,
-  //   ...allQueueCfg,
-  // });
-  // ready = await taskStatusTriggerer.isReady();
-  // if (!ready) {
-  //   throw new Error('TaskStatusTriggerer is not ready');
-  // }
-  // const assignee1 = {
-  //   id: 'u_coby',
-  //   email: 'coby@base.la',
-  //   organizationId: 'base.la',
-  //   displayName: 'Coby',
-  //   organization: undefined,
-  //   externalAuthId: '',
-  // };
-
-  // const creator = {
-  //   id: 'u_itay',
-  //   email: 'itay@base.la',
-  //   organizationId: 'base.la',
-  //   displayName: 'Itay',
-  //   organization: undefined,
-  //   externalAuthId: '',
-  // };
-  // const assignee2 = {
-  //   id: 'u_lior',
-  //   email: 'lior@base.la',
-  //   organizationId: 'base.la',
-  //   displayName: 'Lior',
-  //   organization: undefined,
-  //   externalAuthId: '',
-  // };
-  // const assignee3 = {
-  //   id: 'u_amir',
-  //   email: 'amir@base.la',
-  //   organizationId: 'base.la',
-  //   displayName: 'Amir',
-  //   organization: undefined,
-  //   externalAuthId: '',
-  // };
-
-  // const task = {
-  //   id: 't_123',
-  //   creator: creator,
-  //   creatorId: creator.id,
-  //   title: 'This is some task!',
-  //   dueDate: 'Tomorrow',
-  // } as Task;
-
-  // for (let i = 0; i < 5; i++) {
-  //   await taskStatusTriggerer.addTaskToQueue(assignee1, task);
-  //   // await taskStatusTriggerer.addTaskToQueue(assignee2, task);
-  //   // await taskStatusTriggerer.addTaskToQueue(assignee3, task);
-  // }
+  const taskStatusTriggerer = new TaskStatusTriggerer({
+    prefix: `{base:queues:${process.env.ENV || 'local'}}`,
+    ...allQueueCfg,
+  });
+  ready = await taskStatusTriggerer.isReady();
+  if (!ready) {
+    throw new Error('TaskStatusTriggerer is not ready');
+  }
+  runTestExample(taskStatusTriggerer);
 };
 
 startApp();

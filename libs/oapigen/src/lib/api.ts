@@ -349,6 +349,31 @@ export interface Organization {
 /**
  * 
  * @export
+ * @interface SlackUpdateTaskDto
+ */
+export interface SlackUpdateTaskDto {
+    /**
+     * 
+     * @type {string}
+     * @memberof SlackUpdateTaskDto
+     */
+    'assigneeId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof SlackUpdateTaskDto
+     */
+    'status'?: string;
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof SlackUpdateTaskDto
+     */
+    'links'?: Array<string>;
+}
+/**
+ * 
+ * @export
  * @interface SlackUserDto
  */
 export interface SlackUserDto {
@@ -1735,6 +1760,45 @@ export const SlackbotApiApiAxiosParamCreator = function (configuration?: Configu
                 options: localVarRequestOptions,
             };
         },
+        /**
+         * 
+         * @param {string} id 
+         * @param {SlackUpdateTaskDto} slackUpdateTaskDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        slackbotApiControllerUpdate: async (id: string, slackUpdateTaskDto: SlackUpdateTaskDto, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('slackbotApiControllerUpdate', 'id', id)
+            // verify required parameter 'slackUpdateTaskDto' is not null or undefined
+            assertParamExists('slackbotApiControllerUpdate', 'slackUpdateTaskDto', slackUpdateTaskDto)
+            const localVarPath = `/slackbot-api/task/{id}`
+                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'PATCH', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(slackUpdateTaskDto, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
     }
 };
 
@@ -1753,6 +1817,17 @@ export const SlackbotApiApiFp = function(configuration?: Configuration) {
          */
         async slackbotApiControllerCreate(usersImportDto: UsersImportDto, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.slackbotApiControllerCreate(usersImportDto, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+        /**
+         * 
+         * @param {string} id 
+         * @param {SlackUpdateTaskDto} slackUpdateTaskDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async slackbotApiControllerUpdate(id: string, slackUpdateTaskDto: SlackUpdateTaskDto, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Task>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.slackbotApiControllerUpdate(id, slackUpdateTaskDto, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
     }
@@ -1774,6 +1849,16 @@ export const SlackbotApiApiFactory = function (configuration?: Configuration, ba
         slackbotApiControllerCreate(usersImportDto: UsersImportDto, options?: any): AxiosPromise<void> {
             return localVarFp.slackbotApiControllerCreate(usersImportDto, options).then((request) => request(axios, basePath));
         },
+        /**
+         * 
+         * @param {string} id 
+         * @param {SlackUpdateTaskDto} slackUpdateTaskDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        slackbotApiControllerUpdate(id: string, slackUpdateTaskDto: SlackUpdateTaskDto, options?: any): AxiosPromise<Task> {
+            return localVarFp.slackbotApiControllerUpdate(id, slackUpdateTaskDto, options).then((request) => request(axios, basePath));
+        },
     };
 };
 
@@ -1793,6 +1878,18 @@ export class SlackbotApiApi extends BaseAPI {
      */
     public slackbotApiControllerCreate(usersImportDto: UsersImportDto, options?: AxiosRequestConfig) {
         return SlackbotApiApiFp(this.configuration).slackbotApiControllerCreate(usersImportDto, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {string} id 
+     * @param {SlackUpdateTaskDto} slackUpdateTaskDto 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof SlackbotApiApi
+     */
+    public slackbotApiControllerUpdate(id: string, slackUpdateTaskDto: SlackUpdateTaskDto, options?: AxiosRequestConfig) {
+        return SlackbotApiApiFp(this.configuration).slackbotApiControllerUpdate(id, slackUpdateTaskDto, options).then((request) => request(this.axios, this.basePath));
     }
 }
 

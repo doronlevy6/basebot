@@ -5,6 +5,7 @@ import {
   ActionsBlock,
   Button,
   HeaderBlock,
+  PlainTextOption,
   SectionBlock,
   UsersLookupByEmailResponse,
   WebClient,
@@ -12,7 +13,6 @@ import {
 import { PgInstallationStore } from '../installations/installationStore';
 import { Task, User } from '@base/oapigen';
 import { TaskStatuses } from './types';
-import { App, BlockButtonAction } from '@slack/bolt';
 
 interface TaskStatusJob {
   user: User;
@@ -54,24 +54,6 @@ export class TaskStatusManager {
     }
 
     return false;
-  }
-
-  async initActions(app: App) {
-    for (let i = 0; i < TaskStatuses.length; i++) {
-      const actionId = TaskStatuses[i];
-      app.action<BlockButtonAction>(actionId, async ({ body, ack, say }) => {
-        const [baseOrg, baseUser, taskId, val] = JSON.parse(
-          body.actions[0].value,
-        );
-        await ack();
-        logger.info(
-          `${baseOrg} user ${baseUser} has sent back ${val} for task ID ${taskId}`,
-        );
-        say(
-          `Thanks for the update! We will update the task status to be ${val}`,
-        );
-      });
-    }
   }
 
   async close() {
@@ -131,20 +113,22 @@ export class TaskStatusManager {
     baseUser: string,
     baseOrg: string,
     task: Task,
-    value: string[],
+    taskStatuses: string[],
   ): MessageBlocks[] {
-    const buttons = value.map((val) => {
-      const button: Button = {
-        type: 'button',
+    const statusesOptions = taskStatuses.map((status) => {
+      const option: PlainTextOption = {
         text: {
           type: 'plain_text',
-          text: val,
-          emoji: true,
+          text: status,
         },
-        value: JSON.stringify([baseOrg, baseUser, task.id, val]),
-        action_id: val,
+        value: JSON.stringify({
+          organizationId: baseOrg,
+          assigneeId: baseUser,
+          taskId: task.id,
+          status: status,
+        }),
       };
-      return button;
+      return option;
     });
 
     return [
@@ -174,6 +158,10 @@ export class TaskStatusManager {
             type: 'mrkdwn',
             text: `*Title:*\n${task.title}`,
           },
+          {
+            type: 'mrkdwn',
+            text: `*Status:*\n${task.status}`,
+          },
         ],
       },
       {
@@ -182,10 +170,11 @@ export class TaskStatusManager {
           type: 'mrkdwn',
           text: 'What is the current status of this task?',
         },
-      },
-      {
-        type: 'actions',
-        elements: buttons,
+        accessory: {
+          type: 'overflow',
+          options: statusesOptions,
+          action_id: 'task-status-select',
+        },
       },
     ];
   }
