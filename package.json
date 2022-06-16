@@ -16,7 +16,7 @@
     "clean:local": "docker compose down",
     "ngrok": "ngrok http 3000",
     "ngrok:base": "ngrok http 3000 --subdomain thebase",
-    "codegen": "openapi-generator-cli generate -i https://stg.base.la/oapi-json -o libs/oapigen/src/lib -g typescript-axios --additional-properties=supportsES6=true,npmVersion=8.5.0"
+    "codegen": "openapi-generator-cli generate -i http://localhost:3000/oapi-json -o libs/oapigen/src/lib -g typescript-axios --additional-properties=supportsES6=true,npmVersion=8.5.0"
   },
   "private": true,
   "dependencies": {
@@ -24,7 +24,7 @@
     "@slack/bolt": "^3.11.1",
     "@slack/web-api": "^6.7.1",
     "axios": "^0.27.2",
-    "bullmq": "^1.85.3",
+    "bullmq": "^1.85.3", 
     "dotenv": "^16.0.1",
     "express": "4.17.2",
     "ioredis": "^5.0.6",
