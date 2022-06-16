@@ -7,7 +7,6 @@ import {
 } from '@slack/bolt';
 import { WebClient } from '@slack/web-api';
 import knex, { Knex } from 'knex';
-import { ImportManager } from '../imports/manager';
 
 export interface PgConfig {
   host: string;
@@ -18,18 +17,20 @@ export interface PgConfig {
   synchronize: boolean;
 }
 
+interface OnInstallationPayload {
+  teamDomains: string[];
+  teamId: string;
+  botToken: string;
+  isEnterpriseInstallation: boolean;
+}
+
 export class PgInstallationStore implements InstallationStore {
+  onNewInstallation?: (payload: OnInstallationPayload) => void;
   private metricsReporter: IReporter;
   private db: Knex;
   private synchronize: boolean;
-  private importManager: ImportManager;
 
-  constructor(
-    metricsReporter: IReporter,
-    cfg: PgConfig,
-    importMananger: ImportManager,
-  ) {
-    this.importManager = importMananger;
+  constructor(metricsReporter: IReporter, cfg: PgConfig) {
     this.metricsReporter = metricsReporter;
     this.metricsReporter.registerCounter(
       'stored_installations_total',
@@ -151,14 +152,16 @@ export class PgInstallationStore implements InstallationStore {
           enterprise: 'false',
         });
 
-        await this.importManager.addTeamToImport(
-          domain,
-          installation.team.id,
-          installation.bot.token,
-        );
         saved = true;
       }
     }
+
+    this.onNewInstallation({
+      teamDomains: domains,
+      teamId: installation.team?.id,
+      botToken: installation.bot.token,
+      isEnterpriseInstallation: installation.isEnterpriseInstall,
+    });
 
     if (!saved) {
       throw new Error('Failed saving installation data to installationStore');
