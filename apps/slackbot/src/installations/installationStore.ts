@@ -16,16 +16,7 @@ export interface PgConfig {
   database: string;
   synchronize: boolean;
 }
-
-interface OnInstallationPayload {
-  teamDomains: string[];
-  teamId: string;
-  botToken: string;
-  isEnterpriseInstallation: boolean;
-}
-
 export class PgInstallationStore implements InstallationStore {
-  onNewInstallation?: (payload: OnInstallationPayload) => void;
   private metricsReporter: IReporter;
   private db: Knex;
   private synchronize: boolean;
@@ -155,13 +146,6 @@ export class PgInstallationStore implements InstallationStore {
         saved = true;
       }
     }
-
-    this.onNewInstallation({
-      teamDomains: domains,
-      teamId: installation.team?.id,
-      botToken: installation.bot.token,
-      isEnterpriseInstallation: installation.isEnterpriseInstall,
-    });
 
     if (!saved) {
       throw new Error('Failed saving installation data to installationStore');

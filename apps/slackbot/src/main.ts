@@ -70,25 +70,18 @@ const startApp = async () => {
     pgStore,
   );
 
-  const slackApp = createApp(pgStore, metricsReporter);
-
-  const importManager = new ImportController({
+  const importController = new ImportController({
     prefix: `{base:queues:${process.env.ENV || 'local'}}`,
     ...allQueueCfg,
   });
 
-  pgStore.onNewInstallation = ({ botToken, teamDomains, teamId }) =>
-    importManager.startImport({
-      token: botToken,
-      slackTeamEmailDomains: teamDomains,
-      slackTeamId: teamId,
-    });
+  const slackApp = createApp(pgStore, metricsReporter, importController);
 
   let ready = await pgStore.isReady();
   if (!ready) {
     throw new Error('PgStore is not ready');
   }
-  ready = await importManager.isReady();
+  ready = await importController.isReady();
   if (!ready) {
     throw new Error('ImportManager is not ready');
   }
@@ -113,7 +106,7 @@ const startApp = async () => {
   process.on('SIGTERM', shutdownHandler);
   process.on(
     'beforeExit',
-    gracefulShutdownAsync(importManager, taskStatusManager),
+    gracefulShutdownAsync(importController, taskStatusManager),
   );
 
   const taskStatusTriggerer = new TaskStatusTriggerer({
