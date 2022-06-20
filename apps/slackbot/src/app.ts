@@ -5,11 +5,13 @@ import { PgInstallationStore } from './installations/installationStore';
 import { installationSucccessHandler } from './installations/success-handler';
 import { installationFailureHandler } from './installations/failure-handler';
 import { ImportController } from './imports/controller';
+import { SlackbotApiApi as SlackbotApi } from '@base/oapigen';
 
 export function createApp(
   installationStore: PgInstallationStore,
   metricsReporter: IReporter,
   importController: ImportController,
+  baseApi: SlackbotApi,
 ): App {
   return new App({
     logger: new BoltWrapper(logger),
@@ -30,7 +32,7 @@ export function createApp(
     installerOptions: {
       directInstall: true,
       callbackOptions: {
-        successAsync: installationSucccessHandler(importController),
+        successAsync: installationSucccessHandler(importController, baseApi),
         failure: installationFailureHandler,
       },
     },

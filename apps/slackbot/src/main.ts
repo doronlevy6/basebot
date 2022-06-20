@@ -75,7 +75,12 @@ const startApp = async () => {
     ...allQueueCfg,
   });
 
-  const slackApp = createApp(pgStore, metricsReporter, importController);
+  const slackApp = createApp(
+    pgStore,
+    metricsReporter,
+    importController,
+    baseApi,
+  );
 
   let ready = await pgStore.isReady();
   if (!ready) {

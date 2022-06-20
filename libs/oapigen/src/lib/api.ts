@@ -345,6 +345,62 @@ export interface Organization {
      * @memberof Organization
      */
     'users': Array<User>;
+    /**
+     * 
+     * @type {OrganizationSettings}
+     * @memberof Organization
+     */
+    'settings': OrganizationSettings;
+}
+/**
+ * 
+ * @export
+ * @interface OrganizationSettings
+ */
+export interface OrganizationSettings {
+    /**
+     * 
+     * @type {Organization}
+     * @memberof OrganizationSettings
+     */
+    'organization': Organization;
+    /**
+     * 
+     * @type {string}
+     * @memberof OrganizationSettings
+     */
+    'organizationId': string;
+    /**
+     * 
+     * @type {OrganizationSettingsDto}
+     * @memberof OrganizationSettings
+     */
+    'settings': OrganizationSettingsDto;
+}
+/**
+ * 
+ * @export
+ * @interface OrganizationSettingsDto
+ */
+export interface OrganizationSettingsDto {
+    /**
+     * 
+     * @type {string}
+     * @memberof OrganizationSettingsDto
+     */
+    'logo'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof OrganizationSettingsDto
+     */
+    'displayName'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof OrganizationSettingsDto
+     */
+    'slackTeamId'?: string;
 }
 /**
  * 
@@ -363,7 +419,7 @@ export interface SlackUpdateTaskDto {
      * @type {string}
      * @memberof SlackUpdateTaskDto
      */
-    'status'?: string;
+    'status': string;
     /**
      * 
      * @type {Array<string>}
@@ -523,6 +579,37 @@ export interface UpdateOrganizationDto {
      * @memberof UpdateOrganizationDto
      */
     'domain': string;
+}
+/**
+ * 
+ * @export
+ * @interface UpdateSettingsDto
+ */
+export interface UpdateSettingsDto {
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof UpdateSettingsDto
+     */
+    'teamDomains': Array<string>;
+    /**
+     * 
+     * @type {string}
+     * @memberof UpdateSettingsDto
+     */
+    'teamId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof UpdateSettingsDto
+     */
+    'teamDisplayName': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof UpdateSettingsDto
+     */
+    'teamLogo': string;
 }
 /**
  * 
@@ -1343,6 +1430,173 @@ export class ImportApi extends BaseAPI {
 
 
 /**
+ * OrganizationSettingsApi - axios parameter creator
+ * @export
+ */
+export const OrganizationSettingsApiAxiosParamCreator = function (configuration?: Configuration) {
+    return {
+        /**
+         * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        organizationSettingsControllerFindOne: async (options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/organization-settings`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication bearer required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {OrganizationSettingsDto} organizationSettingsDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        organizationSettingsControllerUpdate: async (organizationSettingsDto: OrganizationSettingsDto, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'organizationSettingsDto' is not null or undefined
+            assertParamExists('organizationSettingsControllerUpdate', 'organizationSettingsDto', organizationSettingsDto)
+            const localVarPath = `/organization-settings`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication bearer required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(organizationSettingsDto, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+    }
+};
+
+/**
+ * OrganizationSettingsApi - functional programming interface
+ * @export
+ */
+export const OrganizationSettingsApiFp = function(configuration?: Configuration) {
+    const localVarAxiosParamCreator = OrganizationSettingsApiAxiosParamCreator(configuration)
+    return {
+        /**
+         * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async organizationSettingsControllerFindOne(options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<OrganizationSettings>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.organizationSettingsControllerFindOne(options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+        /**
+         * 
+         * @param {OrganizationSettingsDto} organizationSettingsDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async organizationSettingsControllerUpdate(organizationSettingsDto: OrganizationSettingsDto, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<OrganizationSettings>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.organizationSettingsControllerUpdate(organizationSettingsDto, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+    }
+};
+
+/**
+ * OrganizationSettingsApi - factory interface
+ * @export
+ */
+export const OrganizationSettingsApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
+    const localVarFp = OrganizationSettingsApiFp(configuration)
+    return {
+        /**
+         * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        organizationSettingsControllerFindOne(options?: any): AxiosPromise<OrganizationSettings> {
+            return localVarFp.organizationSettingsControllerFindOne(options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {OrganizationSettingsDto} organizationSettingsDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        organizationSettingsControllerUpdate(organizationSettingsDto: OrganizationSettingsDto, options?: any): AxiosPromise<OrganizationSettings> {
+            return localVarFp.organizationSettingsControllerUpdate(organizationSettingsDto, options).then((request) => request(axios, basePath));
+        },
+    };
+};
+
+/**
+ * OrganizationSettingsApi - object-oriented interface
+ * @export
+ * @class OrganizationSettingsApi
+ * @extends {BaseAPI}
+ */
+export class OrganizationSettingsApi extends BaseAPI {
+    /**
+     * 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof OrganizationSettingsApi
+     */
+    public organizationSettingsControllerFindOne(options?: AxiosRequestConfig) {
+        return OrganizationSettingsApiFp(this.configuration).organizationSettingsControllerFindOne(options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {OrganizationSettingsDto} organizationSettingsDto 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof OrganizationSettingsApi
+     */
+    public organizationSettingsControllerUpdate(organizationSettingsDto: OrganizationSettingsDto, options?: AxiosRequestConfig) {
+        return OrganizationSettingsApiFp(this.configuration).organizationSettingsControllerUpdate(organizationSettingsDto, options).then((request) => request(this.axios, this.basePath));
+    }
+}
+
+
+/**
  * OrganizationsApi - axios parameter creator
  * @export
  */
@@ -1799,6 +2053,41 @@ export const SlackbotApiApiAxiosParamCreator = function (configuration?: Configu
                 options: localVarRequestOptions,
             };
         },
+        /**
+         * 
+         * @param {UpdateSettingsDto} updateSettingsDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        slackbotApiControllerUpdateSettings: async (updateSettingsDto: UpdateSettingsDto, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'updateSettingsDto' is not null or undefined
+            assertParamExists('slackbotApiControllerUpdateSettings', 'updateSettingsDto', updateSettingsDto)
+            const localVarPath = `/slackbot-api/organization-settings`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(updateSettingsDto, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
     }
 };
 
@@ -1830,6 +2119,16 @@ export const SlackbotApiApiFp = function(configuration?: Configuration) {
             const localVarAxiosArgs = await localVarAxiosParamCreator.slackbotApiControllerUpdate(id, slackUpdateTaskDto, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
+        /**
+         * 
+         * @param {UpdateSettingsDto} updateSettingsDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async slackbotApiControllerUpdateSettings(updateSettingsDto: UpdateSettingsDto, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<OrganizationSettings>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.slackbotApiControllerUpdateSettings(updateSettingsDto, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
     }
 };
 
@@ -1858,6 +2157,15 @@ export const SlackbotApiApiFactory = function (configuration?: Configuration, ba
          */
         slackbotApiControllerUpdate(id: string, slackUpdateTaskDto: SlackUpdateTaskDto, options?: any): AxiosPromise<Task> {
             return localVarFp.slackbotApiControllerUpdate(id, slackUpdateTaskDto, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {UpdateSettingsDto} updateSettingsDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        slackbotApiControllerUpdateSettings(updateSettingsDto: UpdateSettingsDto, options?: any): AxiosPromise<OrganizationSettings> {
+            return localVarFp.slackbotApiControllerUpdateSettings(updateSettingsDto, options).then((request) => request(axios, basePath));
         },
     };
 };
@@ -1890,6 +2198,17 @@ export class SlackbotApiApi extends BaseAPI {
      */
     public slackbotApiControllerUpdate(id: string, slackUpdateTaskDto: SlackUpdateTaskDto, options?: AxiosRequestConfig) {
         return SlackbotApiApiFp(this.configuration).slackbotApiControllerUpdate(id, slackUpdateTaskDto, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {UpdateSettingsDto} updateSettingsDto 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof SlackbotApiApi
+     */
+    public slackbotApiControllerUpdateSettings(updateSettingsDto: UpdateSettingsDto, options?: AxiosRequestConfig) {
+        return SlackbotApiApiFp(this.configuration).slackbotApiControllerUpdateSettings(updateSettingsDto, options).then((request) => request(this.axios, this.basePath));
     }
 }
 
