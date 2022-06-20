@@ -493,7 +493,7 @@ export interface Task {
      * @type {string}
      * @memberof Task
      */
-    'status': string;
+    'status': TaskStatusEnum;
     /**
      * 
      * @type {string}
@@ -555,6 +555,19 @@ export interface Task {
      */
     'links': Array<string>;
 }
+
+export const TaskStatusEnum = {
+    Null: 'null',
+    Empty: '',
+    NotStarted: 'not_started',
+    Waiting: 'waiting',
+    OnHold: 'on_hold',
+    InProgress: 'in_progress',
+    Done: 'done'
+} as const;
+
+export type TaskStatusEnum = typeof TaskStatusEnum[keyof typeof TaskStatusEnum];
+
 /**
  * 
  * @export
@@ -2260,6 +2273,45 @@ export const TasksApiAxiosParamCreator = function (configuration?: Configuration
         },
         /**
          * 
+         * @param {Array<CreateTaskDto>} createTaskDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        tasksControllerCreateBulk: async (createTaskDto: Array<CreateTaskDto>, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'createTaskDto' is not null or undefined
+            assertParamExists('tasksControllerCreateBulk', 'createTaskDto', createTaskDto)
+            const localVarPath = `/tasks/bulk`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication bearer required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(createTaskDto, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
          * @param {string} id 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -2430,6 +2482,16 @@ export const TasksApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
+         * @param {Array<CreateTaskDto>} createTaskDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async tasksControllerCreateBulk(createTaskDto: Array<CreateTaskDto>, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<Task>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.tasksControllerCreateBulk(createTaskDto, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+        /**
+         * 
          * @param {string} id 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -2489,6 +2551,15 @@ export const TasksApiFactory = function (configuration?: Configuration, basePath
         },
         /**
          * 
+         * @param {Array<CreateTaskDto>} createTaskDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        tasksControllerCreateBulk(createTaskDto: Array<CreateTaskDto>, options?: any): AxiosPromise<Array<Task>> {
+            return localVarFp.tasksControllerCreateBulk(createTaskDto, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
          * @param {string} id 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -2542,6 +2613,17 @@ export class TasksApi extends BaseAPI {
      */
     public tasksControllerCreate(createTaskDto: CreateTaskDto, options?: AxiosRequestConfig) {
         return TasksApiFp(this.configuration).tasksControllerCreate(createTaskDto, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {Array<CreateTaskDto>} createTaskDto 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof TasksApi
+     */
+    public tasksControllerCreateBulk(createTaskDto: Array<CreateTaskDto>, options?: AxiosRequestConfig) {
+        return TasksApiFp(this.configuration).tasksControllerCreateBulk(createTaskDto, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
