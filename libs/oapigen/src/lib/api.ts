@@ -24,6 +24,44 @@ import { BASE_PATH, COLLECTION_FORMATS, RequestArgs, BaseAPI, RequiredError } fr
 /**
  * 
  * @export
+ * @interface ConvertDraftsDto
+ */
+export interface ConvertDraftsDto {
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof ConvertDraftsDto
+     */
+    'draftIds': Array<string>;
+}
+/**
+ * 
+ * @export
+ * @interface ConvertDraftsResponseDto
+ */
+export interface ConvertDraftsResponseDto {
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ConvertDraftsResponseDto
+     */
+    'ok': boolean;
+    /**
+     * 
+     * @type {string}
+     * @memberof ConvertDraftsResponseDto
+     */
+    'error'?: string;
+    /**
+     * 
+     * @type {Array<Task>}
+     * @memberof ConvertDraftsResponseDto
+     */
+    'tasks'?: Array<Task>;
+}
+/**
+ * 
+ * @export
  * @interface CreateExternalResourceDto
  */
 export interface CreateExternalResourceDto {
@@ -80,6 +118,31 @@ export interface CreateOrganizationDto {
 /**
  * 
  * @export
+ * @interface CreateTaskDraftDto
+ */
+export interface CreateTaskDraftDto {
+    /**
+     * 
+     * @type {string}
+     * @memberof CreateTaskDraftDto
+     */
+    'assigneeText'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof CreateTaskDraftDto
+     */
+    'dueDateText'?: string;
+    /**
+     * 
+     * @type {DraftOriginDto}
+     * @memberof CreateTaskDraftDto
+     */
+    'origin'?: DraftOriginDto;
+}
+/**
+ * 
+ * @export
  * @interface CreateTaskDto
  */
 export interface CreateTaskDto {
@@ -94,19 +157,7 @@ export interface CreateTaskDto {
      * @type {string}
      * @memberof CreateTaskDto
      */
-    'status': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof CreateTaskDto
-     */
-    'description': string;
-    /**
-     * 
-     * @type {Array<ExternalTicket>}
-     * @memberof CreateTaskDto
-     */
-    'externalTickets': Array<ExternalTicket>;
+    'description'?: string;
     /**
      * 
      * @type {string}
@@ -115,23 +166,76 @@ export interface CreateTaskDto {
     'assigneeId': string;
     /**
      * 
+     * @type {Array<ExternalTicket>}
+     * @memberof CreateTaskDto
+     */
+    'externalTickets'?: Array<ExternalTicket>;
+    /**
+     * 
      * @type {string}
      * @memberof CreateTaskDto
      */
-    'dueDate': string;
+    'dueDate'?: string;
     /**
      * 
      * @type {Array<string>}
      * @memberof CreateTaskDto
      */
-    'tags': Array<string>;
+    'tags'?: Array<string>;
     /**
      * 
      * @type {Array<string>}
      * @memberof CreateTaskDto
      */
-    'links': Array<string>;
+    'links'?: Array<string>;
 }
+/**
+ * 
+ * @export
+ * @interface DeleteDraftsBulkDto
+ */
+export interface DeleteDraftsBulkDto {
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof DeleteDraftsBulkDto
+     */
+    'draftIds': Array<string>;
+}
+/**
+ * 
+ * @export
+ * @interface DraftOriginDto
+ */
+export interface DraftOriginDto {
+    /**
+     * 
+     * @type {string}
+     * @memberof DraftOriginDto
+     */
+    'type': DraftOriginDtoTypeEnum;
+    /**
+     * 
+     * @type {string}
+     * @memberof DraftOriginDto
+     */
+    'originalText': string;
+    /**
+     * 
+     * @type {object}
+     * @memberof DraftOriginDto
+     */
+    'metadata': object;
+}
+
+export const DraftOriginDtoTypeEnum = {
+    Email: 'email',
+    Slack: 'slack',
+    FreeText: 'free_text'
+} as const;
+
+export type DraftOriginDtoTypeEnum = typeof DraftOriginDtoTypeEnum[keyof typeof DraftOriginDtoTypeEnum];
+
 /**
  * 
  * @export
@@ -353,65 +457,15 @@ export interface ImportFreeText {
 /**
  * 
  * @export
- * @interface ImportTask
+ * @interface ImportTaskResponse
  */
-export interface ImportTask {
+export interface ImportTaskResponse {
     /**
      * 
-     * @type {string}
-     * @memberof ImportTask
+     * @type {Array<TaskDraft>}
+     * @memberof ImportTaskResponse
      */
-    'action': string;
-    /**
-     * 
-     * @type {ImportTaskDate}
-     * @memberof ImportTask
-     */
-    'dueDate': ImportTaskDate;
-    /**
-     * 
-     * @type {ImportTaskUser}
-     * @memberof ImportTask
-     */
-    'owner': ImportTaskUser;
-}
-/**
- * 
- * @export
- * @interface ImportTaskDate
- */
-export interface ImportTaskDate {
-    /**
-     * 
-     * @type {string}
-     * @memberof ImportTaskDate
-     */
-    'dateText': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof ImportTaskDate
-     */
-    'date': string;
-}
-/**
- * 
- * @export
- * @interface ImportTaskUser
- */
-export interface ImportTaskUser {
-    /**
-     * 
-     * @type {string}
-     * @memberof ImportTaskUser
-     */
-    'text': string;
-    /**
-     * 
-     * @type {Array<User>}
-     * @memberof ImportTaskUser
-     */
-    'baseUsers': Array<User>;
+    'drafts': Array<TaskDraft>;
 }
 /**
  * 
@@ -669,6 +723,97 @@ export type TaskStatusEnum = typeof TaskStatusEnum[keyof typeof TaskStatusEnum];
 /**
  * 
  * @export
+ * @interface TaskDraft
+ */
+export interface TaskDraft {
+    /**
+     * 
+     * @type {string}
+     * @memberof TaskDraft
+     */
+    'id': string;
+    /**
+     * 
+     * @type {User}
+     * @memberof TaskDraft
+     */
+    'creator': User;
+    /**
+     * 
+     * @type {string}
+     * @memberof TaskDraft
+     */
+    'creatorId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof TaskDraft
+     */
+    'title': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof TaskDraft
+     */
+    'description'?: string;
+    /**
+     * 
+     * @type {User}
+     * @memberof TaskDraft
+     */
+    'assignee'?: User;
+    /**
+     * 
+     * @type {string}
+     * @memberof TaskDraft
+     */
+    'assigneeId'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof TaskDraft
+     */
+    'assigneeText'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof TaskDraft
+     */
+    'dueDate'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof TaskDraft
+     */
+    'dueDateText'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof TaskDraft
+     */
+    'createdAt': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof TaskDraft
+     */
+    'updatedAt': string;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof TaskDraft
+     */
+    'convertedToTask': boolean;
+    /**
+     * 
+     * @type {DraftOriginDto}
+     * @memberof TaskDraft
+     */
+    'origin'?: DraftOriginDto;
+}
+/**
+ * 
+ * @export
  * @interface UpdateExternalResourceDto
  */
 export interface UpdateExternalResourceDto {
@@ -758,6 +903,37 @@ export interface UpdateSettingsDto {
      * @memberof UpdateSettingsDto
      */
     'teamLogo': string;
+}
+/**
+ * 
+ * @export
+ * @interface UpdateTaskDraftDto
+ */
+export interface UpdateTaskDraftDto {
+    /**
+     * 
+     * @type {string}
+     * @memberof UpdateTaskDraftDto
+     */
+    'assigneeText'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof UpdateTaskDraftDto
+     */
+    'dueDateText'?: string;
+    /**
+     * 
+     * @type {DraftOriginDto}
+     * @memberof UpdateTaskDraftDto
+     */
+    'origin'?: DraftOriginDto;
+    /**
+     * 
+     * @type {string}
+     * @memberof UpdateTaskDraftDto
+     */
+    'id': string;
 }
 /**
  * 
@@ -1291,6 +1467,45 @@ export const ImportApiAxiosParamCreator = function (configuration?: Configuratio
     return {
         /**
          * 
+         * @param {ImportFreeText} importFreeText 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        importTasksControllerCreateDraftsFromFreeText: async (importFreeText: ImportFreeText, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'importFreeText' is not null or undefined
+            assertParamExists('importTasksControllerCreateDraftsFromFreeText', 'importFreeText', importFreeText)
+            const localVarPath = `/import-tasks/free-text`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication bearer required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(importFreeText, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
@@ -1322,45 +1537,6 @@ export const ImportApiAxiosParamCreator = function (configuration?: Configuratio
                 options: localVarRequestOptions,
             };
         },
-        /**
-         * 
-         * @param {ImportFreeText} importFreeText 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        importTasksControllerCreateTasksFromFreeText: async (importFreeText: ImportFreeText, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'importFreeText' is not null or undefined
-            assertParamExists('importTasksControllerCreateTasksFromFreeText', 'importFreeText', importFreeText)
-            const localVarPath = `/import-tasks/free-text`;
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            // authentication bearer required
-            // http bearer authentication required
-            await setBearerAuthToObject(localVarHeaderParameter, configuration)
-
-
-    
-            localVarHeaderParameter['Content-Type'] = 'application/json';
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(importFreeText, localVarRequestOptions, configuration)
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
     }
 };
 
@@ -1373,21 +1549,21 @@ export const ImportApiFp = function(configuration?: Configuration) {
     return {
         /**
          * 
+         * @param {ImportFreeText} importFreeText 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async importTasksControllerCreateDraftsFromFreeText(importFreeText: ImportFreeText, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ImportTaskResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.importTasksControllerCreateDraftsFromFreeText(importFreeText, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+        /**
+         * 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
         async importTasksControllerCreateTasksFromEmails(options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.importTasksControllerCreateTasksFromEmails(options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
-        },
-        /**
-         * 
-         * @param {ImportFreeText} importFreeText 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async importTasksControllerCreateTasksFromFreeText(importFreeText: ImportFreeText, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<ImportTask>>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.importTasksControllerCreateTasksFromFreeText(importFreeText, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
     }
@@ -1402,20 +1578,20 @@ export const ImportApiFactory = function (configuration?: Configuration, basePat
     return {
         /**
          * 
+         * @param {ImportFreeText} importFreeText 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        importTasksControllerCreateDraftsFromFreeText(importFreeText: ImportFreeText, options?: any): AxiosPromise<ImportTaskResponse> {
+            return localVarFp.importTasksControllerCreateDraftsFromFreeText(importFreeText, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
         importTasksControllerCreateTasksFromEmails(options?: any): AxiosPromise<void> {
             return localVarFp.importTasksControllerCreateTasksFromEmails(options).then((request) => request(axios, basePath));
-        },
-        /**
-         * 
-         * @param {ImportFreeText} importFreeText 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        importTasksControllerCreateTasksFromFreeText(importFreeText: ImportFreeText, options?: any): AxiosPromise<Array<ImportTask>> {
-            return localVarFp.importTasksControllerCreateTasksFromFreeText(importFreeText, options).then((request) => request(axios, basePath));
         },
     };
 };
@@ -1429,23 +1605,23 @@ export const ImportApiFactory = function (configuration?: Configuration, basePat
 export class ImportApi extends BaseAPI {
     /**
      * 
+     * @param {ImportFreeText} importFreeText 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ImportApi
+     */
+    public importTasksControllerCreateDraftsFromFreeText(importFreeText: ImportFreeText, options?: AxiosRequestConfig) {
+        return ImportApiFp(this.configuration).importTasksControllerCreateDraftsFromFreeText(importFreeText, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof ImportApi
      */
     public importTasksControllerCreateTasksFromEmails(options?: AxiosRequestConfig) {
         return ImportApiFp(this.configuration).importTasksControllerCreateTasksFromEmails(options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * 
-     * @param {ImportFreeText} importFreeText 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof ImportApi
-     */
-    public importTasksControllerCreateTasksFromFreeText(importFreeText: ImportFreeText, options?: AxiosRequestConfig) {
-        return ImportApiFp(this.configuration).importTasksControllerCreateTasksFromFreeText(importFreeText, options).then((request) => request(this.axios, this.basePath));
     }
 }
 
@@ -2367,6 +2543,590 @@ export class SlackbotApiApi extends BaseAPI {
      */
     public slackbotApiControllerUpdateSettings(updateSettingsDto: UpdateSettingsDto, options?: AxiosRequestConfig) {
         return SlackbotApiApiFp(this.configuration).slackbotApiControllerUpdateSettings(updateSettingsDto, options).then((request) => request(this.axios, this.basePath));
+    }
+}
+
+
+/**
+ * TaskDraftsApi - axios parameter creator
+ * @export
+ */
+export const TaskDraftsApiAxiosParamCreator = function (configuration?: Configuration) {
+    return {
+        /**
+         * 
+         * @param {ConvertDraftsDto} convertDraftsDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        taskDraftsControllerConvertToTasks: async (convertDraftsDto: ConvertDraftsDto, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'convertDraftsDto' is not null or undefined
+            assertParamExists('taskDraftsControllerConvertToTasks', 'convertDraftsDto', convertDraftsDto)
+            const localVarPath = `/task-drafts/convert`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication bearer required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(convertDraftsDto, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {CreateTaskDraftDto} createTaskDraftDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        taskDraftsControllerCreate: async (createTaskDraftDto: CreateTaskDraftDto, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'createTaskDraftDto' is not null or undefined
+            assertParamExists('taskDraftsControllerCreate', 'createTaskDraftDto', createTaskDraftDto)
+            const localVarPath = `/task-drafts`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication bearer required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(createTaskDraftDto, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {Array<CreateTaskDraftDto>} createTaskDraftDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        taskDraftsControllerCreateBulk: async (createTaskDraftDto: Array<CreateTaskDraftDto>, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'createTaskDraftDto' is not null or undefined
+            assertParamExists('taskDraftsControllerCreateBulk', 'createTaskDraftDto', createTaskDraftDto)
+            const localVarPath = `/task-drafts/bulk`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication bearer required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(createTaskDraftDto, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        taskDraftsControllerFindDraftsByCreator: async (options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/task-drafts`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication bearer required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        taskDraftsControllerFindOne: async (id: string, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('taskDraftsControllerFindOne', 'id', id)
+            const localVarPath = `/task-drafts/{id}`
+                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication bearer required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        taskDraftsControllerRemove: async (id: string, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('taskDraftsControllerRemove', 'id', id)
+            const localVarPath = `/task-drafts/{id}`
+                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'DELETE', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication bearer required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {DeleteDraftsBulkDto} deleteDraftsBulkDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        taskDraftsControllerRemoveBulk: async (deleteDraftsBulkDto: DeleteDraftsBulkDto, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'deleteDraftsBulkDto' is not null or undefined
+            assertParamExists('taskDraftsControllerRemoveBulk', 'deleteDraftsBulkDto', deleteDraftsBulkDto)
+            const localVarPath = `/task-drafts/delete-bulk`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication bearer required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(deleteDraftsBulkDto, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {string} id 
+         * @param {UpdateTaskDraftDto} updateTaskDraftDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        taskDraftsControllerUpdate: async (id: string, updateTaskDraftDto: UpdateTaskDraftDto, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('taskDraftsControllerUpdate', 'id', id)
+            // verify required parameter 'updateTaskDraftDto' is not null or undefined
+            assertParamExists('taskDraftsControllerUpdate', 'updateTaskDraftDto', updateTaskDraftDto)
+            const localVarPath = `/task-drafts/{id}`
+                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'PATCH', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication bearer required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(updateTaskDraftDto, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+    }
+};
+
+/**
+ * TaskDraftsApi - functional programming interface
+ * @export
+ */
+export const TaskDraftsApiFp = function(configuration?: Configuration) {
+    const localVarAxiosParamCreator = TaskDraftsApiAxiosParamCreator(configuration)
+    return {
+        /**
+         * 
+         * @param {ConvertDraftsDto} convertDraftsDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async taskDraftsControllerConvertToTasks(convertDraftsDto: ConvertDraftsDto, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ConvertDraftsResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.taskDraftsControllerConvertToTasks(convertDraftsDto, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+        /**
+         * 
+         * @param {CreateTaskDraftDto} createTaskDraftDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async taskDraftsControllerCreate(createTaskDraftDto: CreateTaskDraftDto, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<TaskDraft>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.taskDraftsControllerCreate(createTaskDraftDto, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+        /**
+         * 
+         * @param {Array<CreateTaskDraftDto>} createTaskDraftDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async taskDraftsControllerCreateBulk(createTaskDraftDto: Array<CreateTaskDraftDto>, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<TaskDraft>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.taskDraftsControllerCreateBulk(createTaskDraftDto, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+        /**
+         * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async taskDraftsControllerFindDraftsByCreator(options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<TaskDraft>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.taskDraftsControllerFindDraftsByCreator(options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+        /**
+         * 
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async taskDraftsControllerFindOne(id: string, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<TaskDraft>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.taskDraftsControllerFindOne(id, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+        /**
+         * 
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async taskDraftsControllerRemove(id: string, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.taskDraftsControllerRemove(id, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+        /**
+         * 
+         * @param {DeleteDraftsBulkDto} deleteDraftsBulkDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async taskDraftsControllerRemoveBulk(deleteDraftsBulkDto: DeleteDraftsBulkDto, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.taskDraftsControllerRemoveBulk(deleteDraftsBulkDto, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+        /**
+         * 
+         * @param {string} id 
+         * @param {UpdateTaskDraftDto} updateTaskDraftDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async taskDraftsControllerUpdate(id: string, updateTaskDraftDto: UpdateTaskDraftDto, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.taskDraftsControllerUpdate(id, updateTaskDraftDto, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+    }
+};
+
+/**
+ * TaskDraftsApi - factory interface
+ * @export
+ */
+export const TaskDraftsApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
+    const localVarFp = TaskDraftsApiFp(configuration)
+    return {
+        /**
+         * 
+         * @param {ConvertDraftsDto} convertDraftsDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        taskDraftsControllerConvertToTasks(convertDraftsDto: ConvertDraftsDto, options?: any): AxiosPromise<ConvertDraftsResponseDto> {
+            return localVarFp.taskDraftsControllerConvertToTasks(convertDraftsDto, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {CreateTaskDraftDto} createTaskDraftDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        taskDraftsControllerCreate(createTaskDraftDto: CreateTaskDraftDto, options?: any): AxiosPromise<TaskDraft> {
+            return localVarFp.taskDraftsControllerCreate(createTaskDraftDto, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {Array<CreateTaskDraftDto>} createTaskDraftDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        taskDraftsControllerCreateBulk(createTaskDraftDto: Array<CreateTaskDraftDto>, options?: any): AxiosPromise<Array<TaskDraft>> {
+            return localVarFp.taskDraftsControllerCreateBulk(createTaskDraftDto, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        taskDraftsControllerFindDraftsByCreator(options?: any): AxiosPromise<Array<TaskDraft>> {
+            return localVarFp.taskDraftsControllerFindDraftsByCreator(options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        taskDraftsControllerFindOne(id: string, options?: any): AxiosPromise<TaskDraft> {
+            return localVarFp.taskDraftsControllerFindOne(id, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        taskDraftsControllerRemove(id: string, options?: any): AxiosPromise<void> {
+            return localVarFp.taskDraftsControllerRemove(id, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {DeleteDraftsBulkDto} deleteDraftsBulkDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        taskDraftsControllerRemoveBulk(deleteDraftsBulkDto: DeleteDraftsBulkDto, options?: any): AxiosPromise<void> {
+            return localVarFp.taskDraftsControllerRemoveBulk(deleteDraftsBulkDto, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {string} id 
+         * @param {UpdateTaskDraftDto} updateTaskDraftDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        taskDraftsControllerUpdate(id: string, updateTaskDraftDto: UpdateTaskDraftDto, options?: any): AxiosPromise<void> {
+            return localVarFp.taskDraftsControllerUpdate(id, updateTaskDraftDto, options).then((request) => request(axios, basePath));
+        },
+    };
+};
+
+/**
+ * TaskDraftsApi - object-oriented interface
+ * @export
+ * @class TaskDraftsApi
+ * @extends {BaseAPI}
+ */
+export class TaskDraftsApi extends BaseAPI {
+    /**
+     * 
+     * @param {ConvertDraftsDto} convertDraftsDto 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof TaskDraftsApi
+     */
+    public taskDraftsControllerConvertToTasks(convertDraftsDto: ConvertDraftsDto, options?: AxiosRequestConfig) {
+        return TaskDraftsApiFp(this.configuration).taskDraftsControllerConvertToTasks(convertDraftsDto, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {CreateTaskDraftDto} createTaskDraftDto 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof TaskDraftsApi
+     */
+    public taskDraftsControllerCreate(createTaskDraftDto: CreateTaskDraftDto, options?: AxiosRequestConfig) {
+        return TaskDraftsApiFp(this.configuration).taskDraftsControllerCreate(createTaskDraftDto, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {Array<CreateTaskDraftDto>} createTaskDraftDto 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof TaskDraftsApi
+     */
+    public taskDraftsControllerCreateBulk(createTaskDraftDto: Array<CreateTaskDraftDto>, options?: AxiosRequestConfig) {
+        return TaskDraftsApiFp(this.configuration).taskDraftsControllerCreateBulk(createTaskDraftDto, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof TaskDraftsApi
+     */
+    public taskDraftsControllerFindDraftsByCreator(options?: AxiosRequestConfig) {
+        return TaskDraftsApiFp(this.configuration).taskDraftsControllerFindDraftsByCreator(options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {string} id 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof TaskDraftsApi
+     */
+    public taskDraftsControllerFindOne(id: string, options?: AxiosRequestConfig) {
+        return TaskDraftsApiFp(this.configuration).taskDraftsControllerFindOne(id, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {string} id 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof TaskDraftsApi
+     */
+    public taskDraftsControllerRemove(id: string, options?: AxiosRequestConfig) {
+        return TaskDraftsApiFp(this.configuration).taskDraftsControllerRemove(id, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {DeleteDraftsBulkDto} deleteDraftsBulkDto 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof TaskDraftsApi
+     */
+    public taskDraftsControllerRemoveBulk(deleteDraftsBulkDto: DeleteDraftsBulkDto, options?: AxiosRequestConfig) {
+        return TaskDraftsApiFp(this.configuration).taskDraftsControllerRemoveBulk(deleteDraftsBulkDto, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {string} id 
+     * @param {UpdateTaskDraftDto} updateTaskDraftDto 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof TaskDraftsApi
+     */
+    public taskDraftsControllerUpdate(id: string, updateTaskDraftDto: UpdateTaskDraftDto, options?: AxiosRequestConfig) {
+        return TaskDraftsApiFp(this.configuration).taskDraftsControllerUpdate(id, updateTaskDraftDto, options).then((request) => request(this.axios, this.basePath));
     }
 }
 

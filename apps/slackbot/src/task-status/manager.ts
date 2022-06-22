@@ -19,6 +19,7 @@ import {
 import { PgInstallationStore } from '../installations/installationStore';
 import { Task, User } from '@base/oapigen';
 import { TaskStatuses } from './types';
+import { formatDate, formatDaysOrWeeksUntil } from '@base/utils';
 
 interface TaskStatusJob {
   user: User;
@@ -223,7 +224,14 @@ export class TaskStatusManager {
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: `Hi <@${assignedUserRes.user.id}>, you have a task status update request! <@${taskCreatorUserRes.user.id}> created this task for you which is due in X days/weeks.`,
+          text: `Hi <@${
+            assignedUserRes.user.id
+          }>, you have a task status update request! <@${
+            taskCreatorUserRes.user.id
+          }> created this task for you which is due in ${formatDaysOrWeeksUntil(
+            new Date(),
+            task.dueDate,
+          )}.`,
         },
       },
       {
@@ -239,7 +247,7 @@ export class TaskStatusManager {
         fields: [
           {
             type: 'mrkdwn',
-            text: `*Due Date:*\n${task.dueDate}`,
+            text: `*Due Date:*\n${formatDate(task.dueDate)}`,
           },
           {
             type: 'mrkdwn',
