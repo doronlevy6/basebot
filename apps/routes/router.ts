@@ -1,12 +1,10 @@
 import { SlackbotApiApi as SlackbotApi } from '@base/oapigen';
 import { App } from '@slack/bolt';
-import { EventsHandler } from '../../handlers/events-handler';
+import { EventsHandler } from '../slackbot/src/handlers/events-handler';
 
 export enum SlackBotRoutes {
   TASK_STATUS_SELECT = 'task-status-select',
-  MODAL_SUBMIT = 'settings-submit',
-  MESSAGE_SUBMIT = 'message-submit-action',
-  MESSAGE_FEEDBACK = 'overflow-action',
+  ADD_TASK_LINK = 'enter-task-link',
 }
 
 export const registerSlackbotEvents = (app: App, baseApi: SlackbotApi) => {
@@ -15,4 +13,5 @@ export const registerSlackbotEvents = (app: App, baseApi: SlackbotApi) => {
     SlackBotRoutes.TASK_STATUS_SELECT,
     eventsHandler.handleSelectTaskStatus,
   );
+  app.action(SlackBotRoutes.ADD_TASK_LINK, eventsHandler.handleAddTaskLink);
 };

@@ -23,7 +23,7 @@ export const runTestExample = async (
     profileImage: '',
   };
   const assignee2: User = {
-    id: '7f155beb-3fc1-4d9c-bb32-367075525dd8',
+    id: '5ec77a68-fc4e-4085-a5e8-6a50ee44ead1',
     email: 'lior@base.la',
     organizationId: 'base.la',
     displayName: 'Lior',
@@ -40,13 +40,14 @@ export const runTestExample = async (
   // };
 
   const task = {
-    id: '3',
+    id: '1',
     creator: creator,
     creatorId: creator.id,
     title: 'This is some task!',
     dueDate: 'Tomorrow',
-    assigneeId: '7f155beb-3fc1-4d9c-bb32-367075525dd8',
+    assigneeId: '5ec77a68-fc4e-4085-a5e8-6a50ee44ead1',
     status: 'in progress',
+    links: ['http://www.walla.co.il', 'http://www.gmail.com'],
   } as unknown as Task;
 
   // for (let i = 0; i < 5; i++) {

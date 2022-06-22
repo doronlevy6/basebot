@@ -1,5 +1,6 @@
 import {
   AllMiddlewareArgs,
+  BlockPlainTextInputAction,
   BlockStaticSelectAction,
   SlackAction,
   SlackActionMiddlewareArgs,
@@ -7,4 +8,8 @@ import {
 
 export type BlockStaticSelectWrapper<
   Action extends SlackAction = BlockStaticSelectAction,
+> = AllMiddlewareArgs & SlackActionMiddlewareArgs<Action>;
+
+export type BlockPlainTextInputActionWrapper<
+  Action extends SlackAction = BlockPlainTextInputAction,
 > = AllMiddlewareArgs & SlackActionMiddlewareArgs<Action>;

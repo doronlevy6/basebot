@@ -15,7 +15,7 @@ import { PgInstallationStore } from './installations/installationStore';
 import { TaskStatusManager } from './task-status/manager';
 import { TaskStatusTriggerer } from './task-status/triggerer_tester';
 import { Configuration, SlackbotApiApi as SlackbotApi } from '@base/oapigen';
-import { registerSlackbotEvents } from './installations/routes/router';
+import { registerSlackbotEvents } from '../../routes/router';
 import { runTestExample } from './task-status/tasks_example_test';
 
 const gracefulShutdown = (server: Server) => (signal: string) => {

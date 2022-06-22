@@ -10,6 +10,7 @@ import {
   ActionsBlock,
   Button,
   HeaderBlock,
+  InputBlock,
   PlainTextOption,
   SectionBlock,
   UsersLookupByEmailResponse,
@@ -24,14 +25,14 @@ interface TaskStatusJob {
   task: Task;
 }
 
+type MessageBlocks = SectionBlock | HeaderBlock | ActionsBlock | InputBlock;
+
 interface UpdateMessage {
   organizationId: string;
   channelId: string;
   text: string;
   blocks: MessageBlocks[];
 }
-
-type MessageBlocks = SectionBlock | HeaderBlock | ActionsBlock;
 
 export class TaskStatusManager {
   private queueCfg: IQueueConfig;
@@ -213,6 +214,10 @@ export class TaskStatusManager {
       return option;
     });
 
+    const taskLinks = task.externalLinks?.map((link) => {
+      return `<${link.url}|${link.url}>\n`;
+    });
+
     return [
       {
         type: 'section',
@@ -240,9 +245,18 @@ export class TaskStatusManager {
             type: 'mrkdwn',
             text: `*Title:*\n${task.title}`,
           },
+        ],
+      },
+      {
+        type: 'section',
+        fields: [
           {
             type: 'mrkdwn',
             text: `*Status:*\n${task.status}`,
+          },
+          {
+            type: 'mrkdwn',
+            text: `*Links:*\n${taskLinks}`,
           },
         ],
       },
@@ -256,6 +270,25 @@ export class TaskStatusManager {
           type: 'overflow',
           options: statusesOptions,
           action_id: 'task-status-select',
+        },
+      },
+      {
+        dispatch_action: true,
+        type: 'input',
+        block_id: JSON.stringify({
+          organizationId: baseOrg,
+          assigneeId: baseUser,
+          taskId: task.id,
+        }),
+        element: {
+          type: 'plain_text_input',
+          action_id: 'enter-task-link',
+        },
+        label: {
+          type: 'plain_text',
+
+          text: 'Enter a link to where the task is managed',
+          emoji: true,
         },
       },
     ];

@@ -31,7 +31,8 @@
     "knex": "^2.1.0",
     "pg": "^8.7.3",
     "prom-client": "^14.0.1",
-    "tslib": "^2.4.0"
+    "tslib": "^2.4.0",
+    "validator": "^13.7.0"
   },
   "devDependencies": {
     "@nrwl/cli": "14.1.9",
@@ -44,6 +45,7 @@
     "@types/express": "4.17.13",
     "@types/jest": "27.4.1",
     "@types/node": "^16.11.7",
+    "@types/validator": "^13.7.3",
     "@typescript-eslint/eslint-plugin": "~5.18.0",
     "@typescript-eslint/parser": "~5.18.0",
     "eslint": "~8.12.0",
