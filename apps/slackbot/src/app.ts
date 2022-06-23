@@ -27,6 +27,7 @@ export function createApp(
       'users:read',
       'users:read.email',
       'users.profile:read',
+      'commands',
     ],
     installationStore: installationStore,
     installerOptions: {

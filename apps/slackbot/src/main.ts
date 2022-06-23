@@ -59,6 +59,7 @@ const startApp = async () => {
   const baseApi = new SlackbotApi(
     new Configuration({
       basePath: process.env.BASE_BACKEND_URL,
+      accessToken: process.env.BASE_API_KEY,
     }),
   );
 

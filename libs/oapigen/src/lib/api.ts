@@ -205,6 +205,80 @@ export interface DeleteDraftsBulkDto {
 /**
  * 
  * @export
+ * @interface DeviceToken
+ */
+export interface DeviceToken {
+    /**
+     * 
+     * @type {string}
+     * @memberof DeviceToken
+     */
+    'id': string;
+    /**
+     * 
+     * @type {User}
+     * @memberof DeviceToken
+     */
+    'user': User;
+    /**
+     * 
+     * @type {string}
+     * @memberof DeviceToken
+     */
+    'userId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof DeviceToken
+     */
+    'expoPushToken': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof DeviceToken
+     */
+    'nativePushToken': string;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof DeviceToken
+     */
+    'registered': boolean;
+    /**
+     * 
+     * @type {string}
+     * @memberof DeviceToken
+     */
+    'createdAt': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof DeviceToken
+     */
+    'updatedAt': string;
+}
+/**
+ * 
+ * @export
+ * @interface DeviceTokenDto
+ */
+export interface DeviceTokenDto {
+    /**
+     * 
+     * @type {string}
+     * @memberof DeviceTokenDto
+     */
+    'expoPushToken'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof DeviceTokenDto
+     */
+    'nativePushToken'?: string;
+}
+/**
+ * 
+ * @export
  * @interface DraftOriginDto
  */
 export interface DraftOriginDto {
@@ -444,13 +518,19 @@ export interface HealthControllerCheck503Response {
 /**
  * 
  * @export
- * @interface ImportFreeText
+ * @interface ImportSlackDto
  */
-export interface ImportFreeText {
+export interface ImportSlackDto {
     /**
      * 
      * @type {string}
-     * @memberof ImportFreeText
+     * @memberof ImportSlackDto
+     */
+    'email': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ImportSlackDto
      */
     'text': string;
 }
@@ -554,6 +634,95 @@ export interface OrganizationSettingsDto {
      */
     'slackTeamId'?: string;
 }
+/**
+ * 
+ * @export
+ * @interface RecentActivity
+ */
+export interface RecentActivity {
+    /**
+     * 
+     * @type {string}
+     * @memberof RecentActivity
+     */
+    'id': string;
+    /**
+     * 
+     * @type {Task}
+     * @memberof RecentActivity
+     */
+    'task': Task;
+    /**
+     * 
+     * @type {string}
+     * @memberof RecentActivity
+     */
+    'taskId': string;
+    /**
+     * 
+     * @type {Task}
+     * @memberof RecentActivity
+     */
+    'user': Task;
+    /**
+     * 
+     * @type {string}
+     * @memberof RecentActivity
+     */
+    'userId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof RecentActivity
+     */
+    'type': RecentActivityTypeEnum;
+    /**
+     * 
+     * @type {string}
+     * @memberof RecentActivity
+     */
+    'origin': RecentActivityOriginEnum;
+    /**
+     * 
+     * @type {string}
+     * @memberof RecentActivity
+     */
+    'createdAt': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof RecentActivity
+     */
+    'updatedAt': string;
+    /**
+     * 
+     * @type {object}
+     * @memberof RecentActivity
+     */
+    'data': object;
+}
+
+export const RecentActivityTypeEnum = {
+    Link: 'link',
+    TaskStatusChanged: 'task_status_changed',
+    TicketStatusChanged: 'ticket_status_changed',
+    TaskPostponed: 'task_postponed',
+    TicketPostponed: 'ticket_postponed',
+    AssigneesAdded: 'assignees_added'
+} as const;
+
+export type RecentActivityTypeEnum = typeof RecentActivityTypeEnum[keyof typeof RecentActivityTypeEnum];
+export const RecentActivityOriginEnum = {
+    Null: 'null',
+    Empty: '',
+    ManuallyAdded: 'manually_added',
+    Slack: 'slack',
+    Email: 'email',
+    System: 'system'
+} as const;
+
+export type RecentActivityOriginEnum = typeof RecentActivityOriginEnum[keyof typeof RecentActivityOriginEnum];
+
 /**
  * 
  * @export
@@ -706,6 +875,12 @@ export interface Task {
      * @memberof Task
      */
     'externalTickets': Array<ExternalTicket>;
+    /**
+     * 
+     * @type {Array<RecentActivity>}
+     * @memberof Task
+     */
+    'recentActivityLog': Array<RecentActivity>;
 }
 
 export const TaskStatusEnum = {
@@ -1467,13 +1642,10 @@ export const ImportApiAxiosParamCreator = function (configuration?: Configuratio
     return {
         /**
          * 
-         * @param {ImportFreeText} importFreeText 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        importTasksControllerCreateDraftsFromFreeText: async (importFreeText: ImportFreeText, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'importFreeText' is not null or undefined
-            assertParamExists('importTasksControllerCreateDraftsFromFreeText', 'importFreeText', importFreeText)
+        importTasksControllerCreateDraftsFromFreeText: async (options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/import-tasks/free-text`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -1492,12 +1664,9 @@ export const ImportApiAxiosParamCreator = function (configuration?: Configuratio
 
 
     
-            localVarHeaderParameter['Content-Type'] = 'application/json';
-
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(importFreeText, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -1522,10 +1691,6 @@ export const ImportApiAxiosParamCreator = function (configuration?: Configuratio
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
-            // authentication bearer required
-            // http bearer authentication required
-            await setBearerAuthToObject(localVarHeaderParameter, configuration)
-
 
     
             setSearchParams(localVarUrlObj, localVarQueryParameter);
@@ -1549,12 +1714,11 @@ export const ImportApiFp = function(configuration?: Configuration) {
     return {
         /**
          * 
-         * @param {ImportFreeText} importFreeText 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async importTasksControllerCreateDraftsFromFreeText(importFreeText: ImportFreeText, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ImportTaskResponse>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.importTasksControllerCreateDraftsFromFreeText(importFreeText, options);
+        async importTasksControllerCreateDraftsFromFreeText(options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ImportTaskResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.importTasksControllerCreateDraftsFromFreeText(options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
         /**
@@ -1578,12 +1742,11 @@ export const ImportApiFactory = function (configuration?: Configuration, basePat
     return {
         /**
          * 
-         * @param {ImportFreeText} importFreeText 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        importTasksControllerCreateDraftsFromFreeText(importFreeText: ImportFreeText, options?: any): AxiosPromise<ImportTaskResponse> {
-            return localVarFp.importTasksControllerCreateDraftsFromFreeText(importFreeText, options).then((request) => request(axios, basePath));
+        importTasksControllerCreateDraftsFromFreeText(options?: any): AxiosPromise<ImportTaskResponse> {
+            return localVarFp.importTasksControllerCreateDraftsFromFreeText(options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -1605,13 +1768,12 @@ export const ImportApiFactory = function (configuration?: Configuration, basePat
 export class ImportApi extends BaseAPI {
     /**
      * 
-     * @param {ImportFreeText} importFreeText 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof ImportApi
      */
-    public importTasksControllerCreateDraftsFromFreeText(importFreeText: ImportFreeText, options?: AxiosRequestConfig) {
-        return ImportApiFp(this.configuration).importTasksControllerCreateDraftsFromFreeText(importFreeText, options).then((request) => request(this.axios, this.basePath));
+    public importTasksControllerCreateDraftsFromFreeText(options?: AxiosRequestConfig) {
+        return ImportApiFp(this.configuration).importTasksControllerCreateDraftsFromFreeText(options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -2171,6 +2333,238 @@ export class OrganizationsApi extends BaseAPI {
 
 
 /**
+ * PushNotificationsApi - axios parameter creator
+ * @export
+ */
+export const PushNotificationsApiAxiosParamCreator = function (configuration?: Configuration) {
+    return {
+        /**
+         * 
+         * @param {DeviceTokenDto} deviceTokenDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        pushNotificationsControllerCreateOrUpdate: async (deviceTokenDto: DeviceTokenDto, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'deviceTokenDto' is not null or undefined
+            assertParamExists('pushNotificationsControllerCreateOrUpdate', 'deviceTokenDto', deviceTokenDto)
+            const localVarPath = `/push-notifications`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication bearer required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(deviceTokenDto, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+    }
+};
+
+/**
+ * PushNotificationsApi - functional programming interface
+ * @export
+ */
+export const PushNotificationsApiFp = function(configuration?: Configuration) {
+    const localVarAxiosParamCreator = PushNotificationsApiAxiosParamCreator(configuration)
+    return {
+        /**
+         * 
+         * @param {DeviceTokenDto} deviceTokenDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async pushNotificationsControllerCreateOrUpdate(deviceTokenDto: DeviceTokenDto, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<DeviceToken>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.pushNotificationsControllerCreateOrUpdate(deviceTokenDto, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+    }
+};
+
+/**
+ * PushNotificationsApi - factory interface
+ * @export
+ */
+export const PushNotificationsApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
+    const localVarFp = PushNotificationsApiFp(configuration)
+    return {
+        /**
+         * 
+         * @param {DeviceTokenDto} deviceTokenDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        pushNotificationsControllerCreateOrUpdate(deviceTokenDto: DeviceTokenDto, options?: any): AxiosPromise<DeviceToken> {
+            return localVarFp.pushNotificationsControllerCreateOrUpdate(deviceTokenDto, options).then((request) => request(axios, basePath));
+        },
+    };
+};
+
+/**
+ * PushNotificationsApi - object-oriented interface
+ * @export
+ * @class PushNotificationsApi
+ * @extends {BaseAPI}
+ */
+export class PushNotificationsApi extends BaseAPI {
+    /**
+     * 
+     * @param {DeviceTokenDto} deviceTokenDto 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof PushNotificationsApi
+     */
+    public pushNotificationsControllerCreateOrUpdate(deviceTokenDto: DeviceTokenDto, options?: AxiosRequestConfig) {
+        return PushNotificationsApiFp(this.configuration).pushNotificationsControllerCreateOrUpdate(deviceTokenDto, options).then((request) => request(this.axios, this.basePath));
+    }
+}
+
+
+/**
+ * RecentActivityApi - axios parameter creator
+ * @export
+ */
+export const RecentActivityApiAxiosParamCreator = function (configuration?: Configuration) {
+    return {
+        /**
+         * 
+         * @param {string} taskId 
+         * @param {number} limit 
+         * @param {number} offset 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        recentActivityControllerLoadActivity: async (taskId: string, limit: number, offset: number, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'taskId' is not null or undefined
+            assertParamExists('recentActivityControllerLoadActivity', 'taskId', taskId)
+            // verify required parameter 'limit' is not null or undefined
+            assertParamExists('recentActivityControllerLoadActivity', 'limit', limit)
+            // verify required parameter 'offset' is not null or undefined
+            assertParamExists('recentActivityControllerLoadActivity', 'offset', offset)
+            const localVarPath = `/recent-activity/{taskId}`
+                .replace(`{${"taskId"}}`, encodeURIComponent(String(taskId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication bearer required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+            if (limit !== undefined) {
+                localVarQueryParameter['limit'] = limit;
+            }
+
+            if (offset !== undefined) {
+                localVarQueryParameter['offset'] = offset;
+            }
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+    }
+};
+
+/**
+ * RecentActivityApi - functional programming interface
+ * @export
+ */
+export const RecentActivityApiFp = function(configuration?: Configuration) {
+    const localVarAxiosParamCreator = RecentActivityApiAxiosParamCreator(configuration)
+    return {
+        /**
+         * 
+         * @param {string} taskId 
+         * @param {number} limit 
+         * @param {number} offset 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async recentActivityControllerLoadActivity(taskId: string, limit: number, offset: number, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<RecentActivity>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.recentActivityControllerLoadActivity(taskId, limit, offset, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+    }
+};
+
+/**
+ * RecentActivityApi - factory interface
+ * @export
+ */
+export const RecentActivityApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
+    const localVarFp = RecentActivityApiFp(configuration)
+    return {
+        /**
+         * 
+         * @param {string} taskId 
+         * @param {number} limit 
+         * @param {number} offset 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        recentActivityControllerLoadActivity(taskId: string, limit: number, offset: number, options?: any): AxiosPromise<Array<RecentActivity>> {
+            return localVarFp.recentActivityControllerLoadActivity(taskId, limit, offset, options).then((request) => request(axios, basePath));
+        },
+    };
+};
+
+/**
+ * RecentActivityApi - object-oriented interface
+ * @export
+ * @class RecentActivityApi
+ * @extends {BaseAPI}
+ */
+export class RecentActivityApi extends BaseAPI {
+    /**
+     * 
+     * @param {string} taskId 
+     * @param {number} limit 
+     * @param {number} offset 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof RecentActivityApi
+     */
+    public recentActivityControllerLoadActivity(taskId: string, limit: number, offset: number, options?: AxiosRequestConfig) {
+        return RecentActivityApiFp(this.configuration).recentActivityControllerLoadActivity(taskId, limit, offset, options).then((request) => request(this.axios, this.basePath));
+    }
+}
+
+
+/**
  * SlackbotApiApi - axios parameter creator
  * @export
  */
@@ -2240,6 +2634,45 @@ export const SlackbotApiApiAxiosParamCreator = function (configuration?: Configu
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
             localVarRequestOptions.data = serializeDataIfNeeded(createExternalResourceDto, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {ImportSlackDto} importSlackDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        slackbotApiControllerCreateTasksFromSlackMessage: async (importSlackDto: ImportSlackDto, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'importSlackDto' is not null or undefined
+            assertParamExists('slackbotApiControllerCreateTasksFromSlackMessage', 'importSlackDto', importSlackDto)
+            const localVarPath = `/slackbot-api/create-drafts`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication bearer required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(importSlackDto, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -2391,6 +2824,16 @@ export const SlackbotApiApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
+         * @param {ImportSlackDto} importSlackDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async slackbotApiControllerCreateTasksFromSlackMessage(importSlackDto: ImportSlackDto, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.slackbotApiControllerCreateTasksFromSlackMessage(importSlackDto, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+        /**
+         * 
          * @param {string} id 
          * @param {SlackUpdateTaskDto} slackUpdateTaskDto 
          * @param {*} [options] Override http request option.
@@ -2451,6 +2894,15 @@ export const SlackbotApiApiFactory = function (configuration?: Configuration, ba
         },
         /**
          * 
+         * @param {ImportSlackDto} importSlackDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        slackbotApiControllerCreateTasksFromSlackMessage(importSlackDto: ImportSlackDto, options?: any): AxiosPromise<void> {
+            return localVarFp.slackbotApiControllerCreateTasksFromSlackMessage(importSlackDto, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
          * @param {string} id 
          * @param {SlackUpdateTaskDto} slackUpdateTaskDto 
          * @param {*} [options] Override http request option.
@@ -2508,6 +2960,17 @@ export class SlackbotApiApi extends BaseAPI {
      */
     public slackbotApiControllerCreateExternalResource(createExternalResourceDto: CreateExternalResourceDto, options?: AxiosRequestConfig) {
         return SlackbotApiApiFp(this.configuration).slackbotApiControllerCreateExternalResource(createExternalResourceDto, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {ImportSlackDto} importSlackDto 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof SlackbotApiApi
+     */
+    public slackbotApiControllerCreateTasksFromSlackMessage(importSlackDto: ImportSlackDto, options?: AxiosRequestConfig) {
+        return SlackbotApiApiFp(this.configuration).slackbotApiControllerCreateTasksFromSlackMessage(importSlackDto, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
