@@ -16,7 +16,8 @@
     "clean:local": "docker compose down",
     "ngrok": "ngrok http 3000",
     "ngrok:base": "ngrok http 3000 --subdomain thebase",
-    "codegen": "openapi-generator-cli generate -i https://stg.base.la/oapi-json -o libs/oapigen/src/lib -g typescript-axios --additional-properties=supportsES6=true,npmVersion=8.5.0"
+    "codegen:staging": "openapi-generator-cli generate -i https://stg.base.la/oapi-json -o libs/oapigen/src/lib -g typescript-axios --additional-properties=supportsES6=true,npmVersion=8.5.0",
+    "codegen:local": "openapi-generator-cli generate -i http://localhost:3000/oapi-json -o libs/oapigen/src/lib -g typescript-axios --additional-properties=supportsES6=true,npmVersion=8.5.0"
   },
   "private": true,
   "dependencies": {

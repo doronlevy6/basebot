@@ -11,6 +11,8 @@ export const runTestExample = async (
   //     displayName: 'Coby',
   //     organization: undefined,
   //     externalAuthId: '',
+  //     createdAt: new Date().toString(),
+  //     updatedAt: new Date().toString(),
   // };
 
   const creator = {
@@ -29,6 +31,8 @@ export const runTestExample = async (
     displayName: 'Lior',
     externalAuthId: '',
     profileImage: '',
+    createdAt: new Date().toString(),
+    updatedAt: new Date().toString(),
   };
   // const assignee3 = {
   //     id: 'u_amir',
@@ -37,6 +41,8 @@ export const runTestExample = async (
   //     displayName: 'Amir',
   //     organization: undefined,
   //     externalAuthId: '',
+  //     createdAt: new Date().toString(),
+  //     updatedAt: new Date().toString(),
   // };
 
   const task = {

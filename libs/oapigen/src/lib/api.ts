@@ -22,6 +22,31 @@ import { DUMMY_BASE_URL, assertParamExists, setApiKeyToObject, setBasicAuthToObj
 import { BASE_PATH, COLLECTION_FORMATS, RequestArgs, BaseAPI, RequiredError } from './base';
 
 /**
+ * @type AppVersionsControllerGetAppVersionsDefaultResponseValue
+ * @export
+ */
+export type AppVersionsControllerGetAppVersionsDefaultResponseValue = ClientVersionDto;
+
+/**
+ * 
+ * @export
+ * @interface ClientVersionDto
+ */
+export interface ClientVersionDto {
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof ClientVersionDto
+     */
+    'sortedVersions': Array<string>;
+    /**
+     * 
+     * @type {object}
+     * @memberof ClientVersionDto
+     */
+    'versionToBuildNumberMapping': object;
+}
+/**
  * 
  * @export
  * @interface ConvertDraftsDto
@@ -216,6 +241,12 @@ export interface DeviceToken {
     'id': string;
     /**
      * 
+     * @type {string}
+     * @memberof DeviceToken
+     */
+    'deviceId': string;
+    /**
+     * 
      * @type {User}
      * @memberof DeviceToken
      */
@@ -226,6 +257,12 @@ export interface DeviceToken {
      * @memberof DeviceToken
      */
     'userId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof DeviceToken
+     */
+    'deviceType': DeviceTokenDeviceTypeEnum;
     /**
      * 
      * @type {string}
@@ -257,12 +294,33 @@ export interface DeviceToken {
      */
     'updatedAt': string;
 }
+
+export const DeviceTokenDeviceTypeEnum = {
+    Ios: 'ios',
+    Android: 'android',
+    Unknown: 'unknown'
+} as const;
+
+export type DeviceTokenDeviceTypeEnum = typeof DeviceTokenDeviceTypeEnum[keyof typeof DeviceTokenDeviceTypeEnum];
+
 /**
  * 
  * @export
  * @interface DeviceTokenDto
  */
 export interface DeviceTokenDto {
+    /**
+     * 
+     * @type {string}
+     * @memberof DeviceTokenDto
+     */
+    'deviceType': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof DeviceTokenDto
+     */
+    'deviceId'?: string;
     /**
      * 
      * @type {string}
@@ -518,6 +576,19 @@ export interface HealthControllerCheck503Response {
 /**
  * 
  * @export
+ * @interface ImportFreeTextDto
+ */
+export interface ImportFreeTextDto {
+    /**
+     * 
+     * @type {string}
+     * @memberof ImportFreeTextDto
+     */
+    'text': string;
+}
+/**
+ * 
+ * @export
  * @interface ImportSlackDto
  */
 export interface ImportSlackDto {
@@ -637,6 +708,39 @@ export interface OrganizationSettingsDto {
 /**
  * 
  * @export
+ * @interface PushNotificationDto
+ */
+export interface PushNotificationDto {
+    /**
+     * 
+     * @type {string}
+     * @memberof PushNotificationDto
+     */
+    'notifiedUserId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof PushNotificationDto
+     */
+    'type': PushNotificationDtoTypeEnum;
+    /**
+     * 
+     * @type {object}
+     * @memberof PushNotificationDto
+     */
+    'notificationData': object;
+}
+
+export const PushNotificationDtoTypeEnum = {
+    StatusChanged: 'task_status_changed',
+    DueDateChanged: 'task_due_date_changed'
+} as const;
+
+export type PushNotificationDtoTypeEnum = typeof PushNotificationDtoTypeEnum[keyof typeof PushNotificationDtoTypeEnum];
+
+/**
+ * 
+ * @export
  * @interface RecentActivity
  */
 export interface RecentActivity {
@@ -660,10 +764,10 @@ export interface RecentActivity {
     'taskId': string;
     /**
      * 
-     * @type {Task}
+     * @type {User}
      * @memberof RecentActivity
      */
-    'user': Task;
+    'user': User;
     /**
      * 
      * @type {string}
@@ -856,7 +960,7 @@ export interface Task {
      * @type {string}
      * @memberof Task
      */
-    'dueDate': string;
+    'dueDate'?: string;
     /**
      * 
      * @type {Array<string>}
@@ -881,6 +985,12 @@ export interface Task {
      * @memberof Task
      */
     'recentActivityLog': Array<RecentActivity>;
+    /**
+     * 
+     * @type {string}
+     * @memberof Task
+     */
+    'deletedAt'?: string;
 }
 
 export const TaskStatusEnum = {
@@ -1213,6 +1323,18 @@ export interface User {
      * @memberof User
      */
     'externalAuthId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof User
+     */
+    'createdAt': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof User
+     */
+    'updatedAt': string;
 }
 /**
  * 
@@ -1233,6 +1355,100 @@ export interface UsersImportDto {
      */
     'users': Array<SlackUserDto>;
 }
+
+/**
+ * AppVersionsApi - axios parameter creator
+ * @export
+ */
+export const AppVersionsApiAxiosParamCreator = function (configuration?: Configuration) {
+    return {
+        /**
+         * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        appVersionsControllerGetAppVersions: async (options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/app-versions`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+    }
+};
+
+/**
+ * AppVersionsApi - functional programming interface
+ * @export
+ */
+export const AppVersionsApiFp = function(configuration?: Configuration) {
+    const localVarAxiosParamCreator = AppVersionsApiAxiosParamCreator(configuration)
+    return {
+        /**
+         * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async appVersionsControllerGetAppVersions(options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<object>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.appVersionsControllerGetAppVersions(options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+    }
+};
+
+/**
+ * AppVersionsApi - factory interface
+ * @export
+ */
+export const AppVersionsApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
+    const localVarFp = AppVersionsApiFp(configuration)
+    return {
+        /**
+         * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        appVersionsControllerGetAppVersions(options?: any): AxiosPromise<object> {
+            return localVarFp.appVersionsControllerGetAppVersions(options).then((request) => request(axios, basePath));
+        },
+    };
+};
+
+/**
+ * AppVersionsApi - object-oriented interface
+ * @export
+ * @class AppVersionsApi
+ * @extends {BaseAPI}
+ */
+export class AppVersionsApi extends BaseAPI {
+    /**
+     * 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof AppVersionsApi
+     */
+    public appVersionsControllerGetAppVersions(options?: AxiosRequestConfig) {
+        return AppVersionsApiFp(this.configuration).appVersionsControllerGetAppVersions(options).then((request) => request(this.axios, this.basePath));
+    }
+}
+
 
 /**
  * DefaultApi - axios parameter creator
@@ -1642,10 +1858,13 @@ export const ImportApiAxiosParamCreator = function (configuration?: Configuratio
     return {
         /**
          * 
+         * @param {ImportFreeTextDto} importFreeTextDto 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        importTasksControllerCreateDraftsFromFreeText: async (options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        importTasksControllerCreateDraftsFromFreeText: async (importFreeTextDto: ImportFreeTextDto, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'importFreeTextDto' is not null or undefined
+            assertParamExists('importTasksControllerCreateDraftsFromFreeText', 'importFreeTextDto', importFreeTextDto)
             const localVarPath = `/import-tasks/free-text`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -1664,9 +1883,12 @@ export const ImportApiAxiosParamCreator = function (configuration?: Configuratio
 
 
     
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(importFreeTextDto, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -1714,11 +1936,12 @@ export const ImportApiFp = function(configuration?: Configuration) {
     return {
         /**
          * 
+         * @param {ImportFreeTextDto} importFreeTextDto 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async importTasksControllerCreateDraftsFromFreeText(options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ImportTaskResponse>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.importTasksControllerCreateDraftsFromFreeText(options);
+        async importTasksControllerCreateDraftsFromFreeText(importFreeTextDto: ImportFreeTextDto, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ImportTaskResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.importTasksControllerCreateDraftsFromFreeText(importFreeTextDto, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
         /**
@@ -1742,11 +1965,12 @@ export const ImportApiFactory = function (configuration?: Configuration, basePat
     return {
         /**
          * 
+         * @param {ImportFreeTextDto} importFreeTextDto 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        importTasksControllerCreateDraftsFromFreeText(options?: any): AxiosPromise<ImportTaskResponse> {
-            return localVarFp.importTasksControllerCreateDraftsFromFreeText(options).then((request) => request(axios, basePath));
+        importTasksControllerCreateDraftsFromFreeText(importFreeTextDto: ImportFreeTextDto, options?: any): AxiosPromise<ImportTaskResponse> {
+            return localVarFp.importTasksControllerCreateDraftsFromFreeText(importFreeTextDto, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -1768,12 +1992,13 @@ export const ImportApiFactory = function (configuration?: Configuration, basePat
 export class ImportApi extends BaseAPI {
     /**
      * 
+     * @param {ImportFreeTextDto} importFreeTextDto 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof ImportApi
      */
-    public importTasksControllerCreateDraftsFromFreeText(options?: AxiosRequestConfig) {
-        return ImportApiFp(this.configuration).importTasksControllerCreateDraftsFromFreeText(options).then((request) => request(this.axios, this.basePath));
+    public importTasksControllerCreateDraftsFromFreeText(importFreeTextDto: ImportFreeTextDto, options?: AxiosRequestConfig) {
+        return ImportApiFp(this.configuration).importTasksControllerCreateDraftsFromFreeText(importFreeTextDto, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -4195,7 +4420,7 @@ export const UsersApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async usersControllerUpdate(id: string, body: object, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<string>> {
+        async usersControllerUpdate(id: string, body: object, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<User>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.usersControllerUpdate(id, body, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
@@ -4233,7 +4458,7 @@ export const UsersApiFactory = function (configuration?: Configuration, basePath
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        usersControllerUpdate(id: string, body: object, options?: any): AxiosPromise<string> {
+        usersControllerUpdate(id: string, body: object, options?: any): AxiosPromise<User> {
             return localVarFp.usersControllerUpdate(id, body, options).then((request) => request(axios, basePath));
         },
     };
