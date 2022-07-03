@@ -425,6 +425,18 @@ export interface ExternalLink {
 export interface ExternalTicket {
     /**
      * 
+     * @type {string}
+     * @memberof ExternalTicket
+     */
+    'id': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ExternalTicket
+     */
+    'providerType': string;
+    /**
+     * 
      * @type {Task}
      * @memberof ExternalTicket
      */
@@ -440,7 +452,13 @@ export interface ExternalTicket {
      * @type {string}
      * @memberof ExternalTicket
      */
-    'ticketId': string;
+    'name': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ExternalTicket
+     */
+    'type': string;
     /**
      * 
      * @type {string}
@@ -458,6 +476,12 @@ export interface ExternalTicket {
      * @type {string}
      * @memberof ExternalTicket
      */
+    'assigneeId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ExternalTicket
+     */
     'status': string;
     /**
      * 
@@ -470,18 +494,6 @@ export interface ExternalTicket {
      * @type {string}
      * @memberof ExternalTicket
      */
-    'id': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof ExternalTicket
-     */
-    'providerType': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof ExternalTicket
-     */
     'createdAt': string;
     /**
      * 
@@ -489,6 +501,12 @@ export interface ExternalTicket {
      * @memberof ExternalTicket
      */
     'updatedAt': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ExternalTicket
+     */
+    'updatedFromProviderAt': string;
     /**
      * 
      * @type {string}
