@@ -8,7 +8,6 @@ import {
 } from '@base/queues';
 import {
   ActionsBlock,
-  Button,
   HeaderBlock,
   InputBlock,
   PlainTextOption,
@@ -20,6 +19,7 @@ import { PgInstallationStore } from '../installations/installationStore';
 import { Task, User } from '@base/oapigen';
 import { TaskStatuses } from './types';
 import { formatDate, formatDaysOrWeeksUntil } from '@base/utils';
+import { AnalyticsManager } from '../analytics/analytics-manager';
 
 interface TaskStatusJob {
   user: User;
@@ -101,6 +101,8 @@ export class TaskStatusManager {
       text: job.data.text,
       blocks: job.data.blocks,
     });
+    const user = await client.users.profile.get({ user: job.data.channelId });
+    AnalyticsManager.getInstance().messageSentToUser(user.profile.email);
     logger.info({ msg: 'send task status request', job: job.data });
   }
 

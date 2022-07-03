@@ -371,6 +371,19 @@ export type DraftOriginDtoTypeEnum = typeof DraftOriginDtoTypeEnum[keyof typeof 
 /**
  * 
  * @export
+ * @enum {string}
+ */
+
+export const EventSource = {
+    Slackbot: 'slackbot'
+} as const;
+
+export type EventSource = typeof EventSource[keyof typeof EventSource];
+
+
+/**
+ * 
+ * @export
  * @interface ExternalLink
  */
 export interface ExternalLink {
@@ -594,6 +607,86 @@ export interface HealthControllerCheck503Response {
 /**
  * 
  * @export
+ * @interface IAnalyticsEvent
+ */
+export interface IAnalyticsEvent {
+    /**
+     * 
+     * @type {string}
+     * @memberof IAnalyticsEvent
+     */
+    'name': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof IAnalyticsEvent
+     */
+    'userId'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof IAnalyticsEvent
+     */
+    'orgId'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof IAnalyticsEvent
+     */
+    'timestamp'?: string;
+    /**
+     * 
+     * @type {EventSource}
+     * @memberof IAnalyticsEvent
+     */
+    'eventSource'?: EventSource;
+    /**
+     * 
+     * @type {object}
+     * @memberof IAnalyticsEvent
+     */
+    'properties'?: object;
+}
+/**
+ * 
+ * @export
+ * @interface IAnalyticsIdetitiy
+ */
+export interface IAnalyticsIdetitiy {
+    /**
+     * 
+     * @type {string}
+     * @memberof IAnalyticsIdetitiy
+     */
+    'userId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof IAnalyticsIdetitiy
+     */
+    'orgId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof IAnalyticsIdetitiy
+     */
+    'name': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof IAnalyticsIdetitiy
+     */
+    'createdAt': string;
+    /**
+     * 
+     * @type {object}
+     * @memberof IAnalyticsIdetitiy
+     */
+    'properties'?: object;
+}
+/**
+ * 
+ * @export
  * @interface ImportFreeTextDto
  */
 export interface ImportFreeTextDto {
@@ -662,16 +755,16 @@ export interface Organization {
     'domain': string;
     /**
      * 
-     * @type {Array<User>}
-     * @memberof Organization
-     */
-    'users': Array<User>;
-    /**
-     * 
      * @type {OrganizationSettings}
      * @memberof Organization
      */
     'settings': OrganizationSettings;
+    /**
+     * 
+     * @type {Array<User>}
+     * @memberof Organization
+     */
+    'users': Array<User>;
 }
 /**
  * 

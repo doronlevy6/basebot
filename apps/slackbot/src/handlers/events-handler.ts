@@ -7,6 +7,7 @@ import {
   ViewAction,
 } from '../../../slackbot/common/types';
 import validator from 'validator';
+import { AnalyticsManager } from '../analytics/analytics-manager';
 
 export class EventsHandler {
   private baseApi: SlackbotApi;
@@ -19,6 +20,7 @@ export class EventsHandler {
     body,
     ack,
     say,
+    client,
   }: BlockStaticSelectWrapper) => {
     await ack();
     try {
@@ -35,6 +37,13 @@ export class EventsHandler {
         assigneeId,
         status,
       });
+
+      const user = await client.users.profile.get({ user: body.user.id });
+      AnalyticsManager.getInstance().userInteraction(user.profile.email, {
+        action: 'task_status_update',
+        taskId,
+        status,
+      });
     } catch (e) {
       logger.error(`error in changing status for for task`);
       say(`Error in update task status`);
@@ -43,6 +52,7 @@ export class EventsHandler {
 
   handleAddTaskLink = async ({
     body,
+    client,
     ack,
     say,
   }: BlockPlainTextInputActionWrapper) => {
@@ -64,7 +74,11 @@ export class EventsHandler {
         url: linkUrl,
         assigneeId: assigneeId,
       });
+      const user = await client.users.profile.get({ user: body.user.id });
       say(`Thanks for the update! We will update the task links`);
+      AnalyticsManager.getInstance().userInteraction(user.profile.email, {
+        action: 'add_task_link',
+      });
     } catch (e) {
       logger.error(`error in changing status for for task`);
       say(`Error in update link for the task`);
@@ -129,6 +143,7 @@ export class EventsHandler {
           email: userEMail,
           text: text,
         });
+      AnalyticsManager.getInstance().userCreateDraft(user.profile.email);
       if (res.status >= 200 && res.status <= 299) {
         await client.chat.postMessage({
           channel: body.user.id,

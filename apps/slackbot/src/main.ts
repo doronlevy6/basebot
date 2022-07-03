@@ -17,6 +17,7 @@ import { TaskStatusTriggerer } from './task-status/triggerer_tester';
 import { Configuration, SlackbotApiApi as SlackbotApi } from '@base/oapigen';
 import { registerSlackbotEvents } from '../../routes/router';
 import { runTestExample } from './task-status/tasks_example_test';
+import { AnalyticsManager } from './analytics/analytics-manager';
 
 const gracefulShutdown = (server: Server) => (signal: string) => {
   logger.info('starting shutdown, got signal ' + signal);
@@ -62,6 +63,11 @@ const startApp = async () => {
       accessToken: process.env.BASE_API_KEY,
     }),
   );
+
+  AnalyticsManager.initialize({
+    prefix: `{base:queues:${process.env.ENV || 'local'}}`,
+    ...allQueueCfg,
+  });
 
   const taskStatusManager = new TaskStatusManager(
     {
