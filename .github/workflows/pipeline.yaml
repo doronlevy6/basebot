@@ -165,6 +165,8 @@ jobs:
         run: npm ci
       - name: NPM Build
         run: npm run build ${{ matrix.service }}
+      - name: Reset Multiarch Container
+        run: docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
       - name: Build Image
         if: github.ref == 'refs/heads/main'
         uses: docker/build-push-action@v3
@@ -180,3 +182,4 @@ jobs:
             ${{ steps.ecr-login.outputs.registry }}/${{ matrix.service }}:${{ github.sha }}
           platforms: |
             linux/amd64
+            linux/arm64
