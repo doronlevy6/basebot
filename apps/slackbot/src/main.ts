@@ -18,6 +18,7 @@ import { Configuration, SlackbotApiApi as SlackbotApi } from '@base/oapigen';
 import { registerSlackbotEvents } from '../../routes/router';
 import { runTestExample } from './task-status/tasks_example_test';
 import { AnalyticsManager } from './analytics/analytics-manager';
+import { Messenger } from './messenger/messenger';
 
 const gracefulShutdown = (server: Server) => (signal: string) => {
   logger.info('starting shutdown, got signal ' + signal);
@@ -33,9 +34,18 @@ const gracefulShutdown = (server: Server) => (signal: string) => {
 };
 
 const gracefulShutdownAsync =
-  (importManager: ImportController, taskStatusManager: TaskStatusManager) =>
+  (
+    importManager: ImportController,
+    taskStatusManager: TaskStatusManager,
+    messenger: Messenger,
+  ) =>
   async () => {
-    await Promise.all([importManager.close(), taskStatusManager.close()]);
+    await Promise.all([
+      importManager.close(),
+      taskStatusManager.close(),
+      messenger.close(),
+      AnalyticsManager.close(),
+    ]);
   };
 
 const startApp = async () => {
@@ -82,6 +92,14 @@ const startApp = async () => {
     ...allQueueCfg,
   });
 
+  const messenger = new Messenger(
+    {
+      prefix: `{base:queues:${process.env.ENV || 'local'}}`,
+      ...allQueueCfg,
+    },
+    pgStore,
+  );
+
   const slackApp = createApp(
     pgStore,
     metricsReporter,
@@ -101,6 +119,10 @@ const startApp = async () => {
   if (!ready) {
     throw new Error('TaskStatusManager is not ready');
   }
+  ready = await messenger.isReady();
+  if (!ready) {
+    throw new Error('Messenger is not ready');
+  }
 
   slackApp.use(slackBoltMetricsMiddleware(metricsReporter));
   slackApp.event('message', async ({ event, logger }) => {
@@ -118,7 +140,7 @@ const startApp = async () => {
   process.on('SIGTERM', shutdownHandler);
   process.on(
     'beforeExit',
-    gracefulShutdownAsync(importController, taskStatusManager),
+    gracefulShutdownAsync(importController, taskStatusManager, messenger),
   );
 
   const taskStatusTriggerer = new TaskStatusTriggerer({

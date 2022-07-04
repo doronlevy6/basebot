@@ -59,10 +59,13 @@ export class TaskStatusManager {
       },
     );
 
-    this.messageSenderQueue = createQueue('sendUpdateMessage', this.queueCfg);
+    this.messageSenderQueue = createQueue(
+      'sendTaskUpdateMessage',
+      this.queueCfg,
+    );
 
     this.messageSenderWorker = createQueueWorker(
-      'sendUpdateMessage',
+      'sendTaskUpdateMessage',
       this.queueCfg,
       async (job) => {
         await this.sendMessage(job);
@@ -155,7 +158,7 @@ export class TaskStatusManager {
     const delayMilli = assigneeSlackUserRes.user.tz_offset
       ? this.calculateDelayMilli(assigneeSlackUserRes.user.tz_offset)
       : 0; // If we don't have a TZ then we just use no delay
-    this.messageSenderQueue.queue.add('sendUpdateMessage', message, {
+    this.messageSenderQueue.queue.add('sendTaskUpdateMessage', message, {
       delay: delayMilli,
     });
     logger.info({ msg: 'build task status request', job: job.data });

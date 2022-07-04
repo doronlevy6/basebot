@@ -732,6 +732,43 @@ export interface ImportTaskResponse {
 /**
  * 
  * @export
+ * @interface MessengerMessage
+ */
+export interface MessengerMessage {
+    /**
+     * 
+     * @type {string}
+     * @memberof MessengerMessage
+     */
+    'organizationId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof MessengerMessage
+     */
+    'userEmail'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof MessengerMessage
+     */
+    'channelId'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof MessengerMessage
+     */
+    'text'?: string;
+    /**
+     * 
+     * @type {object}
+     * @memberof MessengerMessage
+     */
+    'blocks'?: object;
+}
+/**
+ * 
+ * @export
  * @interface Organization
  */
 export interface Organization {
@@ -815,6 +852,12 @@ export interface OrganizationSettingsDto {
      * @memberof OrganizationSettingsDto
      */
     'slackTeamId'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof OrganizationSettingsDto
+     */
+    'preferredMessenger'?: string;
 }
 /**
  * 

@@ -18,6 +18,7 @@ class Analytics {
 
   async close() {
     await this.analyticsQueue.queue.close();
+    await this.analyticsQueue.scheduler.close();
   }
 
   private async sendEventToBase(data: IAnalyticsEvent) {
@@ -49,7 +50,7 @@ class Analytics {
 }
 
 export const AnalyticsManager = (function () {
-  let instance;
+  let instance: Analytics;
   return {
     initialize(queueCfg: IQueueConfig) {
       instance = new Analytics(queueCfg);
@@ -61,6 +62,12 @@ export const AnalyticsManager = (function () {
         throw new Error('AnalyticsManager was not initialized');
       }
       return instance;
+    },
+    close: async function () {
+      if (instance == null) {
+        return;
+      }
+      return instance.close();
     },
   };
 })();
