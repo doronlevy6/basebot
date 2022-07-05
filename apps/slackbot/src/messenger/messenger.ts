@@ -72,6 +72,8 @@ export class Messenger {
       text: job.data.text,
       blocks: job.data.blocks as Block[],
     });
+
+    logger.info({ msg: 'send message request', job: job.data });
   }
 
   private async sendToUser(client: WebClient, message: MessengerMessage) {
