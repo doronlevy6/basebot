@@ -62,6 +62,8 @@ export class Messenger {
     );
     const client = new WebClient(installation.bot.token);
 
+    logger.info({ msg: 'send message request', job: job.data });
+
     if (message.userEmail) {
       await this.sendToUser(client, message);
       return;
@@ -72,8 +74,6 @@ export class Messenger {
       text: job.data.text,
       blocks: job.data.blocks as Block[],
     });
-
-    logger.info({ msg: 'send message request', job: job.data });
   }
 
   private async sendToUser(client: WebClient, message: MessengerMessage) {
