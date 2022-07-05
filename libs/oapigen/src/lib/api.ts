@@ -492,10 +492,28 @@ export interface ExternalTicket {
     'assigneeId': string;
     /**
      * 
+     * @type {Array<User>}
+     * @memberof ExternalTicket
+     */
+    'providerAssignees': Array<User>;
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof ExternalTicket
+     */
+    'providerAssigneesIds': Array<string>;
+    /**
+     * 
      * @type {string}
      * @memberof ExternalTicket
      */
-    'status': string;
+    'status': ExternalTicketStatusEnum;
+    /**
+     * 
+     * @type {string}
+     * @memberof ExternalTicket
+     */
+    'providerStatus': string;
     /**
      * 
      * @type {string}
@@ -527,6 +545,14 @@ export interface ExternalTicket {
      */
     'url': string;
 }
+
+export const ExternalTicketStatusEnum = {
+    Done: 'done',
+    InProgress: 'in_progress'
+} as const;
+
+export type ExternalTicketStatusEnum = typeof ExternalTicketStatusEnum[keyof typeof ExternalTicketStatusEnum];
+
 /**
  * 
  * @export
@@ -1895,7 +1921,7 @@ export const ExternalResourcesApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async externalResourcesControllerCreate(createExternalResourceDto: CreateExternalResourceDto, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ExternalLink>> {
+        async externalResourcesControllerCreate(createExternalResourceDto: CreateExternalResourceDto, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<object>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.externalResourcesControllerCreate(createExternalResourceDto, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
@@ -1936,7 +1962,7 @@ export const ExternalResourcesApiFactory = function (configuration?: Configurati
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        externalResourcesControllerCreate(createExternalResourceDto: CreateExternalResourceDto, options?: any): AxiosPromise<ExternalLink> {
+        externalResourcesControllerCreate(createExternalResourceDto: CreateExternalResourceDto, options?: any): AxiosPromise<object> {
             return localVarFp.externalResourcesControllerCreate(createExternalResourceDto, options).then((request) => request(axios, basePath));
         },
         /**
@@ -3197,7 +3223,7 @@ export const SlackbotApiApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async slackbotApiControllerCreateExternalResource(createExternalResourceDto: CreateExternalResourceDto, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ExternalLink>> {
+        async slackbotApiControllerCreateExternalResource(createExternalResourceDto: CreateExternalResourceDto, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<object>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.slackbotApiControllerCreateExternalResource(createExternalResourceDto, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
@@ -3268,7 +3294,7 @@ export const SlackbotApiApiFactory = function (configuration?: Configuration, ba
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        slackbotApiControllerCreateExternalResource(createExternalResourceDto: CreateExternalResourceDto, options?: any): AxiosPromise<ExternalLink> {
+        slackbotApiControllerCreateExternalResource(createExternalResourceDto: CreateExternalResourceDto, options?: any): AxiosPromise<object> {
             return localVarFp.slackbotApiControllerCreateExternalResource(createExternalResourceDto, options).then((request) => request(axios, basePath));
         },
         /**
@@ -3969,6 +3995,111 @@ export class TaskDraftsApi extends BaseAPI {
      */
     public taskDraftsControllerUpdate(id: string, updateTaskDraftDto: UpdateTaskDraftDto, options?: AxiosRequestConfig) {
         return TaskDraftsApiFp(this.configuration).taskDraftsControllerUpdate(id, updateTaskDraftDto, options).then((request) => request(this.axios, this.basePath));
+    }
+}
+
+
+/**
+ * TaskStatusUpdateSchedulerApi - axios parameter creator
+ * @export
+ */
+export const TaskStatusUpdateSchedulerApiAxiosParamCreator = function (configuration?: Configuration) {
+    return {
+        /**
+         * 
+         * @param {string} taskId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        taskStatusUpdateSchedulerControllerRequestStatusUpdate: async (taskId: string, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'taskId' is not null or undefined
+            assertParamExists('taskStatusUpdateSchedulerControllerRequestStatusUpdate', 'taskId', taskId)
+            const localVarPath = `/task-status-update-scheduler/{taskId}`
+                .replace(`{${"taskId"}}`, encodeURIComponent(String(taskId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication bearer required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+    }
+};
+
+/**
+ * TaskStatusUpdateSchedulerApi - functional programming interface
+ * @export
+ */
+export const TaskStatusUpdateSchedulerApiFp = function(configuration?: Configuration) {
+    const localVarAxiosParamCreator = TaskStatusUpdateSchedulerApiAxiosParamCreator(configuration)
+    return {
+        /**
+         * 
+         * @param {string} taskId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async taskStatusUpdateSchedulerControllerRequestStatusUpdate(taskId: string, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.taskStatusUpdateSchedulerControllerRequestStatusUpdate(taskId, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+    }
+};
+
+/**
+ * TaskStatusUpdateSchedulerApi - factory interface
+ * @export
+ */
+export const TaskStatusUpdateSchedulerApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
+    const localVarFp = TaskStatusUpdateSchedulerApiFp(configuration)
+    return {
+        /**
+         * 
+         * @param {string} taskId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        taskStatusUpdateSchedulerControllerRequestStatusUpdate(taskId: string, options?: any): AxiosPromise<void> {
+            return localVarFp.taskStatusUpdateSchedulerControllerRequestStatusUpdate(taskId, options).then((request) => request(axios, basePath));
+        },
+    };
+};
+
+/**
+ * TaskStatusUpdateSchedulerApi - object-oriented interface
+ * @export
+ * @class TaskStatusUpdateSchedulerApi
+ * @extends {BaseAPI}
+ */
+export class TaskStatusUpdateSchedulerApi extends BaseAPI {
+    /**
+     * 
+     * @param {string} taskId 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof TaskStatusUpdateSchedulerApi
+     */
+    public taskStatusUpdateSchedulerControllerRequestStatusUpdate(taskId: string, options?: AxiosRequestConfig) {
+        return TaskStatusUpdateSchedulerApiFp(this.configuration).taskStatusUpdateSchedulerControllerRequestStatusUpdate(taskId, options).then((request) => request(this.axios, this.basePath));
     }
 }
 
