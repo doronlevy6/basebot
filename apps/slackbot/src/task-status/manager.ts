@@ -10,6 +10,8 @@ import {
   ActionsBlock,
   HeaderBlock,
   InputBlock,
+  MrkdwnElement,
+  PlainTextElement,
   PlainTextOption,
   SectionBlock,
   UsersLookupByEmailResponse,
@@ -224,19 +226,33 @@ export class TaskStatusManager {
       return `<${link.url}|${link.url}>\n`;
     });
 
+    const detailsFields: (PlainTextElement | MrkdwnElement)[] = [
+      {
+        type: 'mrkdwn',
+        text: `*Title:*\n${task.title}`,
+      },
+    ];
+
+    let messageText = `Hi <@${assignedUserRes.user.id}>, you have a task status update request! <@${taskCreatorUserRes.user.id}> created this task for you`;
+
+    if (task.dueDate) {
+      detailsFields.unshift({
+        type: 'mrkdwn',
+        text: `*Due Date:*\n${formatDate(task.dueDate)}`,
+      });
+
+      messageText = `${messageText} which is due in ${formatDaysOrWeeksUntil(
+        new Date(),
+        task.dueDate,
+      )}`;
+    }
+
     return [
       {
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: `Hi <@${
-            assignedUserRes.user.id
-          }>, you have a task status update request! <@${
-            taskCreatorUserRes.user.id
-          }> created this task for you which is due in ${formatDaysOrWeeksUntil(
-            new Date(),
-            task.dueDate,
-          )}.`,
+          text: messageText,
         },
       },
       {
@@ -249,16 +265,7 @@ export class TaskStatusManager {
       },
       {
         type: 'section',
-        fields: [
-          {
-            type: 'mrkdwn',
-            text: `*Due Date:*\n${formatDate(task.dueDate)}`,
-          },
-          {
-            type: 'mrkdwn',
-            text: `*Title:*\n${task.title}`,
-          },
-        ],
+        fields: detailsFields,
       },
       {
         type: 'section',
