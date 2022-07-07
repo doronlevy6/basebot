@@ -389,6 +389,12 @@ export type EventSource = typeof EventSource[keyof typeof EventSource];
 export interface ExternalLink {
     /**
      * 
+     * @type {string}
+     * @memberof ExternalLink
+     */
+    'id': string;
+    /**
+     * 
      * @type {Task}
      * @memberof ExternalLink
      */
@@ -399,12 +405,6 @@ export interface ExternalLink {
      * @memberof ExternalLink
      */
     'taskId': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof ExternalLink
-     */
-    'id': string;
     /**
      * 
      * @type {string}
@@ -442,6 +442,12 @@ export interface ExternalTicket {
      * @memberof ExternalTicket
      */
     'id': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ExternalTicket
+     */
+    'ticketId': string;
     /**
      * 
      * @type {string}
@@ -498,12 +504,6 @@ export interface ExternalTicket {
     'providerAssignees': Array<User>;
     /**
      * 
-     * @type {Array<string>}
-     * @memberof ExternalTicket
-     */
-    'providerAssigneesIds': Array<string>;
-    /**
-     * 
      * @type {string}
      * @memberof ExternalTicket
      */
@@ -519,7 +519,7 @@ export interface ExternalTicket {
      * @type {string}
      * @memberof ExternalTicket
      */
-    'dueDate': string;
+    'dueDate'?: string;
     /**
      * 
      * @type {string}
@@ -544,6 +544,12 @@ export interface ExternalTicket {
      * @memberof ExternalTicket
      */
     'url': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ExternalTicket
+     */
+    'spaceId': string;
 }
 
 export const ExternalTicketStatusEnum = {
