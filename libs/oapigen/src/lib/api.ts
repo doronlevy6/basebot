@@ -384,52 +384,81 @@ export type EventSource = typeof EventSource[keyof typeof EventSource];
 /**
  * 
  * @export
- * @interface ExternalLink
+ * @interface ExternalLinkCollateral
  */
-export interface ExternalLink {
+export interface ExternalLinkCollateral {
     /**
      * 
      * @type {string}
-     * @memberof ExternalLink
+     * @memberof ExternalLinkCollateral
      */
     'id': string;
     /**
      * 
      * @type {Task}
-     * @memberof ExternalLink
+     * @memberof ExternalLinkCollateral
      */
     'task': Task;
     /**
      * 
      * @type {string}
-     * @memberof ExternalLink
+     * @memberof ExternalLinkCollateral
      */
     'taskId': string;
     /**
      * 
+     * @type {User}
+     * @memberof ExternalLinkCollateral
+     */
+    'creator': User;
+    /**
+     * 
      * @type {string}
-     * @memberof ExternalLink
+     * @memberof ExternalLinkCollateral
+     */
+    'creatorId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ExternalLinkCollateral
      */
     'providerType': string;
     /**
      * 
      * @type {string}
-     * @memberof ExternalLink
+     * @memberof ExternalLinkCollateral
      */
     'createdAt': string;
     /**
      * 
      * @type {string}
-     * @memberof ExternalLink
+     * @memberof ExternalLinkCollateral
      */
     'updatedAt': string;
     /**
      * 
      * @type {string}
-     * @memberof ExternalLink
+     * @memberof ExternalLinkCollateral
      */
     'url': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ExternalLinkCollateral
+     */
+    'group': ExternalLinkCollateralGroupEnum;
 }
+
+export const ExternalLinkCollateralGroupEnum = {
+    Document: 'document',
+    Presentation: 'presentation',
+    Spreadsheet: 'spreadsheet',
+    NonSpecific: 'non_specific',
+    Unknown: 'unknown'
+} as const;
+
+export type ExternalLinkCollateralGroupEnum = typeof ExternalLinkCollateralGroupEnum[keyof typeof ExternalLinkCollateralGroupEnum];
+
 /**
  * 
  * @export
@@ -1155,10 +1184,10 @@ export interface Task {
     'tags': Array<string>;
     /**
      * 
-     * @type {Array<ExternalLink>}
+     * @type {Array<ExternalLinkCollateral>}
      * @memberof Task
      */
-    'externalLinks': Array<ExternalLink>;
+    'externalLinks': Array<ExternalLinkCollateral>;
     /**
      * 
      * @type {Array<ExternalTicket>}
@@ -1285,39 +1314,27 @@ export interface TaskDraft {
 /**
  * 
  * @export
- * @interface UpdateExternalResourceDto
+ * @interface UpdateAndConvertDraftResponseDto
  */
-export interface UpdateExternalResourceDto {
+export interface UpdateAndConvertDraftResponseDto {
+    /**
+     * 
+     * @type {boolean}
+     * @memberof UpdateAndConvertDraftResponseDto
+     */
+    'ok': boolean;
     /**
      * 
      * @type {string}
-     * @memberof UpdateExternalResourceDto
+     * @memberof UpdateAndConvertDraftResponseDto
      */
-    'taskId': string;
+    'error'?: string;
     /**
      * 
-     * @type {string}
-     * @memberof UpdateExternalResourceDto
+     * @type {Task}
+     * @memberof UpdateAndConvertDraftResponseDto
      */
-    'id': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof UpdateExternalResourceDto
-     */
-    'assigneeId': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof UpdateExternalResourceDto
-     */
-    'providerType'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof UpdateExternalResourceDto
-     */
-    'url': string;
+    'task'?: Task;
 }
 /**
  * 
@@ -1831,86 +1848,6 @@ export const ExternalResourcesApiAxiosParamCreator = function (configuration?: C
                 options: localVarRequestOptions,
             };
         },
-        /**
-         * 
-         * @param {string} id 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        externalResourcesControllerRemove: async (id: string, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'id' is not null or undefined
-            assertParamExists('externalResourcesControllerRemove', 'id', id)
-            const localVarPath = `/external-resources/{id}`
-                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'DELETE', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            // authentication bearer required
-            // http bearer authentication required
-            await setBearerAuthToObject(localVarHeaderParameter, configuration)
-
-
-    
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * 
-         * @param {string} id 
-         * @param {UpdateExternalResourceDto} updateExternalResourceDto 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        externalResourcesControllerUpdate: async (id: string, updateExternalResourceDto: UpdateExternalResourceDto, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'id' is not null or undefined
-            assertParamExists('externalResourcesControllerUpdate', 'id', id)
-            // verify required parameter 'updateExternalResourceDto' is not null or undefined
-            assertParamExists('externalResourcesControllerUpdate', 'updateExternalResourceDto', updateExternalResourceDto)
-            const localVarPath = `/external-resources/{id}`
-                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'PATCH', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            // authentication bearer required
-            // http bearer authentication required
-            await setBearerAuthToObject(localVarHeaderParameter, configuration)
-
-
-    
-            localVarHeaderParameter['Content-Type'] = 'application/json';
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(updateExternalResourceDto, localVarRequestOptions, configuration)
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
     }
 };
 
@@ -1929,27 +1866,6 @@ export const ExternalResourcesApiFp = function(configuration?: Configuration) {
          */
         async externalResourcesControllerCreate(createExternalResourceDto: CreateExternalResourceDto, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<object>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.externalResourcesControllerCreate(createExternalResourceDto, options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
-        },
-        /**
-         * 
-         * @param {string} id 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async externalResourcesControllerRemove(id: string, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.externalResourcesControllerRemove(id, options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
-        },
-        /**
-         * 
-         * @param {string} id 
-         * @param {UpdateExternalResourceDto} updateExternalResourceDto 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async externalResourcesControllerUpdate(id: string, updateExternalResourceDto: UpdateExternalResourceDto, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ExternalLink>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.externalResourcesControllerUpdate(id, updateExternalResourceDto, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
     }
@@ -1971,25 +1887,6 @@ export const ExternalResourcesApiFactory = function (configuration?: Configurati
         externalResourcesControllerCreate(createExternalResourceDto: CreateExternalResourceDto, options?: any): AxiosPromise<object> {
             return localVarFp.externalResourcesControllerCreate(createExternalResourceDto, options).then((request) => request(axios, basePath));
         },
-        /**
-         * 
-         * @param {string} id 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        externalResourcesControllerRemove(id: string, options?: any): AxiosPromise<void> {
-            return localVarFp.externalResourcesControllerRemove(id, options).then((request) => request(axios, basePath));
-        },
-        /**
-         * 
-         * @param {string} id 
-         * @param {UpdateExternalResourceDto} updateExternalResourceDto 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        externalResourcesControllerUpdate(id: string, updateExternalResourceDto: UpdateExternalResourceDto, options?: any): AxiosPromise<ExternalLink> {
-            return localVarFp.externalResourcesControllerUpdate(id, updateExternalResourceDto, options).then((request) => request(axios, basePath));
-        },
     };
 };
 
@@ -2009,29 +1906,6 @@ export class ExternalResourcesApi extends BaseAPI {
      */
     public externalResourcesControllerCreate(createExternalResourceDto: CreateExternalResourceDto, options?: AxiosRequestConfig) {
         return ExternalResourcesApiFp(this.configuration).externalResourcesControllerCreate(createExternalResourceDto, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * 
-     * @param {string} id 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof ExternalResourcesApi
-     */
-    public externalResourcesControllerRemove(id: string, options?: AxiosRequestConfig) {
-        return ExternalResourcesApiFp(this.configuration).externalResourcesControllerRemove(id, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * 
-     * @param {string} id 
-     * @param {UpdateExternalResourceDto} updateExternalResourceDto 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof ExternalResourcesApi
-     */
-    public externalResourcesControllerUpdate(id: string, updateExternalResourceDto: UpdateExternalResourceDto, options?: AxiosRequestConfig) {
-        return ExternalResourcesApiFp(this.configuration).externalResourcesControllerUpdate(id, updateExternalResourceDto, options).then((request) => request(this.axios, this.basePath));
     }
 }
 
@@ -3131,45 +3005,6 @@ export const SlackbotApiApiAxiosParamCreator = function (configuration?: Configu
         },
         /**
          * 
-         * @param {string} id 
-         * @param {UpdateExternalResourceDto} updateExternalResourceDto 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        slackbotApiControllerUpdateExternalResource: async (id: string, updateExternalResourceDto: UpdateExternalResourceDto, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'id' is not null or undefined
-            assertParamExists('slackbotApiControllerUpdateExternalResource', 'id', id)
-            // verify required parameter 'updateExternalResourceDto' is not null or undefined
-            assertParamExists('slackbotApiControllerUpdateExternalResource', 'updateExternalResourceDto', updateExternalResourceDto)
-            const localVarPath = `/slackbot-api/external-resources/{id}`
-                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'PATCH', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-
-    
-            localVarHeaderParameter['Content-Type'] = 'application/json';
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(updateExternalResourceDto, localVarRequestOptions, configuration)
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * 
          * @param {UpdateSettingsDto} updateSettingsDto 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -3229,7 +3064,7 @@ export const SlackbotApiApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async slackbotApiControllerCreateExternalResource(createExternalResourceDto: CreateExternalResourceDto, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<object>> {
+        async slackbotApiControllerCreateExternalResource(createExternalResourceDto: CreateExternalResourceDto, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.slackbotApiControllerCreateExternalResource(createExternalResourceDto, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
@@ -3252,17 +3087,6 @@ export const SlackbotApiApiFp = function(configuration?: Configuration) {
          */
         async slackbotApiControllerUpdate(id: string, slackUpdateTaskDto: SlackUpdateTaskDto, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Task>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.slackbotApiControllerUpdate(id, slackUpdateTaskDto, options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
-        },
-        /**
-         * 
-         * @param {string} id 
-         * @param {UpdateExternalResourceDto} updateExternalResourceDto 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async slackbotApiControllerUpdateExternalResource(id: string, updateExternalResourceDto: UpdateExternalResourceDto, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ExternalLink>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.slackbotApiControllerUpdateExternalResource(id, updateExternalResourceDto, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
         /**
@@ -3300,7 +3124,7 @@ export const SlackbotApiApiFactory = function (configuration?: Configuration, ba
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        slackbotApiControllerCreateExternalResource(createExternalResourceDto: CreateExternalResourceDto, options?: any): AxiosPromise<object> {
+        slackbotApiControllerCreateExternalResource(createExternalResourceDto: CreateExternalResourceDto, options?: any): AxiosPromise<void> {
             return localVarFp.slackbotApiControllerCreateExternalResource(createExternalResourceDto, options).then((request) => request(axios, basePath));
         },
         /**
@@ -3321,16 +3145,6 @@ export const SlackbotApiApiFactory = function (configuration?: Configuration, ba
          */
         slackbotApiControllerUpdate(id: string, slackUpdateTaskDto: SlackUpdateTaskDto, options?: any): AxiosPromise<Task> {
             return localVarFp.slackbotApiControllerUpdate(id, slackUpdateTaskDto, options).then((request) => request(axios, basePath));
-        },
-        /**
-         * 
-         * @param {string} id 
-         * @param {UpdateExternalResourceDto} updateExternalResourceDto 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        slackbotApiControllerUpdateExternalResource(id: string, updateExternalResourceDto: UpdateExternalResourceDto, options?: any): AxiosPromise<ExternalLink> {
-            return localVarFp.slackbotApiControllerUpdateExternalResource(id, updateExternalResourceDto, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -3394,18 +3208,6 @@ export class SlackbotApiApi extends BaseAPI {
      */
     public slackbotApiControllerUpdate(id: string, slackUpdateTaskDto: SlackUpdateTaskDto, options?: AxiosRequestConfig) {
         return SlackbotApiApiFp(this.configuration).slackbotApiControllerUpdate(id, slackUpdateTaskDto, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * 
-     * @param {string} id 
-     * @param {UpdateExternalResourceDto} updateExternalResourceDto 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof SlackbotApiApi
-     */
-    public slackbotApiControllerUpdateExternalResource(id: string, updateExternalResourceDto: UpdateExternalResourceDto, options?: AxiosRequestConfig) {
-        return SlackbotApiApiFp(this.configuration).slackbotApiControllerUpdateExternalResource(id, updateExternalResourceDto, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -3733,6 +3535,45 @@ export const TaskDraftsApiAxiosParamCreator = function (configuration?: Configur
                 options: localVarRequestOptions,
             };
         },
+        /**
+         * 
+         * @param {UpdateTaskDraftDto} updateTaskDraftDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        taskDraftsControllerUpdateAndConverToTask: async (updateTaskDraftDto: UpdateTaskDraftDto, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'updateTaskDraftDto' is not null or undefined
+            assertParamExists('taskDraftsControllerUpdateAndConverToTask', 'updateTaskDraftDto', updateTaskDraftDto)
+            const localVarPath = `/task-drafts/update-and-convert`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication bearer required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(updateTaskDraftDto, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
     }
 };
 
@@ -3823,6 +3664,16 @@ export const TaskDraftsApiFp = function(configuration?: Configuration) {
             const localVarAxiosArgs = await localVarAxiosParamCreator.taskDraftsControllerUpdate(id, updateTaskDraftDto, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
+        /**
+         * 
+         * @param {UpdateTaskDraftDto} updateTaskDraftDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async taskDraftsControllerUpdateAndConverToTask(updateTaskDraftDto: UpdateTaskDraftDto, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<UpdateAndConvertDraftResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.taskDraftsControllerUpdateAndConverToTask(updateTaskDraftDto, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
     }
 };
 
@@ -3904,6 +3755,15 @@ export const TaskDraftsApiFactory = function (configuration?: Configuration, bas
          */
         taskDraftsControllerUpdate(id: string, updateTaskDraftDto: UpdateTaskDraftDto, options?: any): AxiosPromise<void> {
             return localVarFp.taskDraftsControllerUpdate(id, updateTaskDraftDto, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {UpdateTaskDraftDto} updateTaskDraftDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        taskDraftsControllerUpdateAndConverToTask(updateTaskDraftDto: UpdateTaskDraftDto, options?: any): AxiosPromise<UpdateAndConvertDraftResponseDto> {
+            return localVarFp.taskDraftsControllerUpdateAndConverToTask(updateTaskDraftDto, options).then((request) => request(axios, basePath));
         },
     };
 };
@@ -4001,6 +3861,17 @@ export class TaskDraftsApi extends BaseAPI {
      */
     public taskDraftsControllerUpdate(id: string, updateTaskDraftDto: UpdateTaskDraftDto, options?: AxiosRequestConfig) {
         return TaskDraftsApiFp(this.configuration).taskDraftsControllerUpdate(id, updateTaskDraftDto, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {UpdateTaskDraftDto} updateTaskDraftDto 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof TaskDraftsApi
+     */
+    public taskDraftsControllerUpdateAndConverToTask(updateTaskDraftDto: UpdateTaskDraftDto, options?: AxiosRequestConfig) {
+        return TaskDraftsApiFp(this.configuration).taskDraftsControllerUpdateAndConverToTask(updateTaskDraftDto, options).then((request) => request(this.axios, this.basePath));
     }
 }
 
