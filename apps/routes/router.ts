@@ -18,4 +18,9 @@ export const registerSlackbotEvents = (app: App, baseApi: SlackbotApi) => {
   app.shortcut(SlackBotRoutes.CREATE_TASK, eventsHandler.handleCreateTask);
   app.view(SlackBotRoutes.CREATE_TASKS_SUBMIT, eventsHandler.submitCreateTasks);
   app.action(SlackBotRoutes.ADD_TASK_LINK, eventsHandler.handleAddTaskLink);
+
+  // This is the global action handler, which will match all unmatched actions
+  app.action(/.*/, async ({ ack }) => {
+    await ack();
+  });
 };
