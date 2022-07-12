@@ -2,12 +2,13 @@ import { logger } from '@base/logger';
 import { SlackbotApiApi as SlackbotApi } from '@base/oapigen';
 import {
   BlockPlainTextInputActionWrapper,
-  BlockStaticSelectWrapper,
+  BlockButtonWrapper,
   SlackActionWrapper,
   ViewAction,
 } from '../../../slackbot/common/types';
 import validator from 'validator';
 import { AnalyticsManager } from '../analytics/analytics-manager';
+import { snakeToTitleCase } from '@base/utils';
 
 export class EventsHandler {
   private baseApi: SlackbotApi;
@@ -21,17 +22,19 @@ export class EventsHandler {
     ack,
     say,
     client,
-  }: BlockStaticSelectWrapper) => {
+  }: BlockButtonWrapper) => {
     await ack();
     try {
       const { assigneeId, taskId, status } = JSON.parse(
-        body?.actions[0]?.selected_option?.value,
+        body?.actions[0]?.value,
       );
       logger.info(
         `handling task status selecteced for task [${taskId}], assignee [${assigneeId}], status [${status}] `,
       );
       say(
-        `Thanks for the update! We will update the task status to be ${status}`,
+        `Thanks for the update! We will update the task status to be ${snakeToTitleCase(
+          status,
+        )}`,
       );
       await this.baseApi.slackbotApiControllerUpdate(taskId, {
         assigneeId,

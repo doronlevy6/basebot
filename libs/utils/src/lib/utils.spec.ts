@@ -1,4 +1,4 @@
-import { formatDate, formatDaysOrWeeksUntil } from './utils';
+import { formatDate, formatDaysOrWeeksUntil, snakeToTitleCase } from './utils';
 
 describe('utils', () => {
   it('should format date string to MMM D YYYY', () => {
@@ -59,5 +59,13 @@ describe('utils', () => {
     expect(
       formatDaysOrWeeksUntil(new Date('2022-06-22'), '2022-07-23'),
     ).toEqual('4 weeks');
+  });
+
+  it('should title case a snake cased value', () => {
+    expect(snakeToTitleCase('not_started')).toEqual('Not Started');
+    expect(snakeToTitleCase('waiting')).toEqual('Waiting');
+    expect(snakeToTitleCase('on_hold')).toEqual('On Hold');
+    expect(snakeToTitleCase('in_progress')).toEqual('In Progress');
+    expect(snakeToTitleCase('done')).toEqual('Done');
   });
 });

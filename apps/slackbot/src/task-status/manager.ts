@@ -8,19 +8,22 @@ import {
 } from '@base/queues';
 import {
   ActionsBlock,
+  Button,
   HeaderBlock,
   InputBlock,
   MrkdwnElement,
   PlainTextElement,
-  PlainTextOption,
   SectionBlock,
   UsersLookupByEmailResponse,
   WebClient,
 } from '@slack/web-api';
 import { PgInstallationStore } from '../installations/installationStore';
-import { Task, User } from '@base/oapigen';
-import { TaskStatuses } from './types';
-import { formatDate, formatDaysOrWeeksUntil } from '@base/utils';
+import { Task, TaskStatusEnum, User } from '@base/oapigen';
+import {
+  formatDate,
+  formatDaysOrWeeksUntil,
+  snakeToTitleCase,
+} from '@base/utils';
 import { AnalyticsManager } from '../analytics/analytics-manager';
 
 interface TaskStatusJob {
@@ -153,7 +156,7 @@ export class TaskStatusManager {
         job.data.user.id,
         job.data.user.organizationId,
         job.data.task,
-        TaskStatuses,
+        Object.values(TaskStatusEnum),
       ),
     };
 
@@ -206,11 +209,13 @@ export class TaskStatusManager {
     task: Task,
     taskStatuses: string[],
   ): MessageBlocks[] {
-    const statusesOptions = taskStatuses.map((status) => {
-      const option: PlainTextOption = {
+    const buttons = taskStatuses.map((status) => {
+      const button: Button = {
+        type: 'button',
         text: {
           type: 'plain_text',
-          text: status,
+          text: snakeToTitleCase(status),
+          emoji: true,
         },
         value: JSON.stringify({
           organizationId: baseOrg,
@@ -218,8 +223,9 @@ export class TaskStatusManager {
           taskId: task.id,
           status: status,
         }),
+        action_id: `task-status-select-${status}`,
       };
-      return option;
+      return button;
     });
 
     const taskLinks = task.externalLinks?.map((link) => {
@@ -286,11 +292,10 @@ export class TaskStatusManager {
           type: 'mrkdwn',
           text: 'What is the current status of this task?',
         },
-        accessory: {
-          type: 'overflow',
-          options: statusesOptions,
-          action_id: 'task-status-select',
-        },
+      },
+      {
+        type: 'actions',
+        elements: buttons,
       },
       {
         dispatch_action: true,

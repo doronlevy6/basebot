@@ -11,10 +11,7 @@ export enum SlackBotRoutes {
 
 export const registerSlackbotEvents = (app: App, baseApi: SlackbotApi) => {
   const eventsHandler = new EventsHandler(baseApi);
-  app.action(
-    SlackBotRoutes.TASK_STATUS_SELECT,
-    eventsHandler.handleSelectTaskStatus,
-  );
+  app.action(/task-status-select.*/, eventsHandler.handleSelectTaskStatus);
   app.shortcut(SlackBotRoutes.CREATE_TASK, eventsHandler.handleCreateTask);
   app.view(SlackBotRoutes.CREATE_TASKS_SUBMIT, eventsHandler.submitCreateTasks);
   app.action(SlackBotRoutes.ADD_TASK_LINK, eventsHandler.handleAddTaskLink);

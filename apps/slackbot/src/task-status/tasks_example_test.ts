@@ -1,19 +1,25 @@
+import { logger } from '@base/logger';
 import { Task, User } from '@base/oapigen';
 import { TaskStatusTriggerer } from './triggerer_tester';
 // TODO remove function
 export const runTestExample = async (
   taskStatusTriggerer: TaskStatusTriggerer,
 ) => {
-  // const assignee1 = {
-  //     id: 'u_coby',
-  //     email: 'coby@base.la',
-  //     organizationId: 'base.la',
-  //     displayName: 'Coby',
-  //     organization: undefined,
-  //     externalAuthId: '',
-  //     createdAt: new Date().toString(),
-  //     updatedAt: new Date().toString(),
-  // };
+  if (!['development', 'local'].includes(process.env.ENV)) {
+    logger.info(`skipping test status message in env ${process.env.ENV}`);
+    return;
+  }
+
+  const assignee1: User = {
+    id: '08f041ca-ea52-49a4-954b-ad936bf65453',
+    email: 'coby@base.la',
+    organizationId: 'base.la',
+    displayName: 'Coby',
+    externalAuthId: '',
+    createdAt: new Date().toString(),
+    updatedAt: new Date().toString(),
+    profileImage: '',
+  };
 
   const creator = {
     id: 'u_itay',
@@ -24,16 +30,16 @@ export const runTestExample = async (
     externalAuthId: '',
     profileImage: '',
   };
-  const assignee2: User = {
-    id: '5ec77a68-fc4e-4085-a5e8-6a50ee44ead1',
-    email: 'lior@base.la',
-    organizationId: 'base.la',
-    displayName: 'Lior',
-    externalAuthId: '',
-    profileImage: '',
-    createdAt: new Date().toString(),
-    updatedAt: new Date().toString(),
-  };
+  // const assignee2: User = {
+  //   id: '5ec77a68-fc4e-4085-a5e8-6a50ee44ead1',
+  //   email: 'lior@base.la',
+  //   organizationId: 'base.la',
+  //   displayName: 'Lior',
+  //   externalAuthId: '',
+  //   profileImage: '',
+  //   createdAt: new Date().toString(),
+  //   updatedAt: new Date().toString(),
+  // };
   // const assignee3 = {
   //     id: 'u_amir',
   //     email: 'amir@base.la',
@@ -50,15 +56,15 @@ export const runTestExample = async (
     creator: creator,
     creatorId: creator.id,
     title: 'This is some task!',
-    dueDate: 'Tomorrow',
-    assigneeId: '5ec77a68-fc4e-4085-a5e8-6a50ee44ead1',
+    dueDate: new Date().toString(),
+    assigneeId: '08f041ca-ea52-49a4-954b-ad936bf65453',
     status: 'in progress',
     links: ['http://www.walla.co.il', 'http://www.gmail.com'],
   } as unknown as Task;
 
   // for (let i = 0; i < 5; i++) {
   //   await taskStatusTriggerer.addTaskToQueue(assignee1, task);
-  await taskStatusTriggerer.addTaskToQueue(assignee2, task);
+  await taskStatusTriggerer.addTaskToQueue(assignee1, task);
   //   // await taskStatusTriggerer.addTaskToQueue(assignee3, task);
   // }
 };

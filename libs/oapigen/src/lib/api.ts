@@ -1053,13 +1053,13 @@ export interface SlackUpdateTaskDto {
      * @type {string}
      * @memberof SlackUpdateTaskDto
      */
-    'assigneeId': string;
+    'status': SlackUpdateTaskDtoStatusEnum;
     /**
      * 
      * @type {string}
      * @memberof SlackUpdateTaskDto
      */
-    'status': string;
+    'assigneeId': string;
     /**
      * 
      * @type {Array<string>}
@@ -1067,6 +1067,17 @@ export interface SlackUpdateTaskDto {
      */
     'links'?: Array<string>;
 }
+
+export const SlackUpdateTaskDtoStatusEnum = {
+    NotStarted: 'not_started',
+    Waiting: 'waiting',
+    OnHold: 'on_hold',
+    InProgress: 'in_progress',
+    Done: 'done'
+} as const;
+
+export type SlackUpdateTaskDtoStatusEnum = typeof SlackUpdateTaskDtoStatusEnum[keyof typeof SlackUpdateTaskDtoStatusEnum];
+
 /**
  * 
  * @export
@@ -1109,6 +1120,12 @@ export interface Task {
      * @type {string}
      * @memberof Task
      */
+    'status': TaskStatusEnum;
+    /**
+     * 
+     * @type {string}
+     * @memberof Task
+     */
     'id': string;
     /**
      * 
@@ -1128,12 +1145,6 @@ export interface Task {
      * @memberof Task
      */
     'title': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof Task
-     */
-    'status': TaskStatusEnum;
     /**
      * 
      * @type {string}
@@ -1209,8 +1220,6 @@ export interface Task {
 }
 
 export const TaskStatusEnum = {
-    Null: 'null',
-    Empty: '',
     NotStarted: 'not_started',
     Waiting: 'waiting',
     OnHold: 'on_hold',
@@ -1434,6 +1443,12 @@ export interface UpdateTaskDto {
      * @type {string}
      * @memberof UpdateTaskDto
      */
+    'status': UpdateTaskDtoStatusEnum;
+    /**
+     * 
+     * @type {string}
+     * @memberof UpdateTaskDto
+     */
     'id': string;
     /**
      * 
@@ -1441,12 +1456,6 @@ export interface UpdateTaskDto {
      * @memberof UpdateTaskDto
      */
     'title': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof UpdateTaskDto
-     */
-    'status': string;
     /**
      * 
      * @type {string}
@@ -1484,6 +1493,17 @@ export interface UpdateTaskDto {
      */
     'links': Array<string>;
 }
+
+export const UpdateTaskDtoStatusEnum = {
+    NotStarted: 'not_started',
+    Waiting: 'waiting',
+    OnHold: 'on_hold',
+    InProgress: 'in_progress',
+    Done: 'done'
+} as const;
+
+export type UpdateTaskDtoStatusEnum = typeof UpdateTaskDtoStatusEnum[keyof typeof UpdateTaskDtoStatusEnum];
+
 /**
  * 
  * @export
@@ -1864,7 +1884,7 @@ export const ExternalResourcesApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async externalResourcesControllerCreate(createExternalResourceDto: CreateExternalResourceDto, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<object>> {
+        async externalResourcesControllerCreate(createExternalResourceDto: CreateExternalResourceDto, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.externalResourcesControllerCreate(createExternalResourceDto, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
@@ -1884,7 +1904,7 @@ export const ExternalResourcesApiFactory = function (configuration?: Configurati
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        externalResourcesControllerCreate(createExternalResourceDto: CreateExternalResourceDto, options?: any): AxiosPromise<object> {
+        externalResourcesControllerCreate(createExternalResourceDto: CreateExternalResourceDto, options?: any): AxiosPromise<void> {
             return localVarFp.externalResourcesControllerCreate(createExternalResourceDto, options).then((request) => request(axios, basePath));
         },
     };
