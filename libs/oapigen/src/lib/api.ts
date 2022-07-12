@@ -22,6 +22,31 @@ import { DUMMY_BASE_URL, assertParamExists, setApiKeyToObject, setBasicAuthToObj
 import { BASE_PATH, COLLECTION_FORMATS, RequestArgs, BaseAPI, RequiredError } from './base';
 
 /**
+ * 
+ * @export
+ * @interface AddCollateralDto
+ */
+export interface AddCollateralDto {
+    /**
+     * 
+     * @type {string}
+     * @memberof AddCollateralDto
+     */
+    'taskId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof AddCollateralDto
+     */
+    'assigneeId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof AddCollateralDto
+     */
+    'url': string;
+}
+/**
  * @type AppVersionsControllerGetAppVersionsDefaultResponseValue
  * @export
  */
@@ -83,37 +108,6 @@ export interface ConvertDraftsResponseDto {
      * @memberof ConvertDraftsResponseDto
      */
     'tasks'?: Array<Task>;
-}
-/**
- * 
- * @export
- * @interface CreateExternalResourceDto
- */
-export interface CreateExternalResourceDto {
-    /**
-     * 
-     * @type {string}
-     * @memberof CreateExternalResourceDto
-     */
-    'taskId': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof CreateExternalResourceDto
-     */
-    'assigneeId': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof CreateExternalResourceDto
-     */
-    'providerType'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof CreateExternalResourceDto
-     */
-    'url': string;
 }
 /**
  * 
@@ -582,8 +576,11 @@ export interface ExternalTicket {
 }
 
 export const ExternalTicketStatusEnum = {
-    Done: 'done',
-    InProgress: 'in_progress'
+    NotStarted: 'not_started',
+    Waiting: 'waiting',
+    OnHold: 'on_hold',
+    InProgress: 'in_progress',
+    Done: 'done'
 } as const;
 
 export type ExternalTicketStatusEnum = typeof ExternalTicketStatusEnum[keyof typeof ExternalTicketStatusEnum];
@@ -1824,113 +1821,6 @@ export class DefaultApi extends BaseAPI {
 
 
 /**
- * ExternalResourcesApi - axios parameter creator
- * @export
- */
-export const ExternalResourcesApiAxiosParamCreator = function (configuration?: Configuration) {
-    return {
-        /**
-         * 
-         * @param {CreateExternalResourceDto} createExternalResourceDto 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        externalResourcesControllerCreate: async (createExternalResourceDto: CreateExternalResourceDto, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'createExternalResourceDto' is not null or undefined
-            assertParamExists('externalResourcesControllerCreate', 'createExternalResourceDto', createExternalResourceDto)
-            const localVarPath = `/external-resources`;
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            // authentication bearer required
-            // http bearer authentication required
-            await setBearerAuthToObject(localVarHeaderParameter, configuration)
-
-
-    
-            localVarHeaderParameter['Content-Type'] = 'application/json';
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(createExternalResourceDto, localVarRequestOptions, configuration)
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-    }
-};
-
-/**
- * ExternalResourcesApi - functional programming interface
- * @export
- */
-export const ExternalResourcesApiFp = function(configuration?: Configuration) {
-    const localVarAxiosParamCreator = ExternalResourcesApiAxiosParamCreator(configuration)
-    return {
-        /**
-         * 
-         * @param {CreateExternalResourceDto} createExternalResourceDto 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async externalResourcesControllerCreate(createExternalResourceDto: CreateExternalResourceDto, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.externalResourcesControllerCreate(createExternalResourceDto, options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
-        },
-    }
-};
-
-/**
- * ExternalResourcesApi - factory interface
- * @export
- */
-export const ExternalResourcesApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
-    const localVarFp = ExternalResourcesApiFp(configuration)
-    return {
-        /**
-         * 
-         * @param {CreateExternalResourceDto} createExternalResourceDto 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        externalResourcesControllerCreate(createExternalResourceDto: CreateExternalResourceDto, options?: any): AxiosPromise<void> {
-            return localVarFp.externalResourcesControllerCreate(createExternalResourceDto, options).then((request) => request(axios, basePath));
-        },
-    };
-};
-
-/**
- * ExternalResourcesApi - object-oriented interface
- * @export
- * @class ExternalResourcesApi
- * @extends {BaseAPI}
- */
-export class ExternalResourcesApi extends BaseAPI {
-    /**
-     * 
-     * @param {CreateExternalResourceDto} createExternalResourceDto 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof ExternalResourcesApi
-     */
-    public externalResourcesControllerCreate(createExternalResourceDto: CreateExternalResourceDto, options?: AxiosRequestConfig) {
-        return ExternalResourcesApiFp(this.configuration).externalResourcesControllerCreate(createExternalResourceDto, options).then((request) => request(this.axios, this.basePath));
-    }
-}
-
-
-/**
  * ImportApi - axios parameter creator
  * @export
  */
@@ -2877,6 +2767,41 @@ export const SlackbotApiApiAxiosParamCreator = function (configuration?: Configu
     return {
         /**
          * 
+         * @param {AddCollateralDto} addCollateralDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        slackbotApiControllerAddCollateral: async (addCollateralDto: AddCollateralDto, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'addCollateralDto' is not null or undefined
+            assertParamExists('slackbotApiControllerAddCollateral', 'addCollateralDto', addCollateralDto)
+            const localVarPath = `/slackbot-api/collaterals`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(addCollateralDto, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
          * @param {UsersImportDto} usersImportDto 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -2904,41 +2829,6 @@ export const SlackbotApiApiAxiosParamCreator = function (configuration?: Configu
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
             localVarRequestOptions.data = serializeDataIfNeeded(usersImportDto, localVarRequestOptions, configuration)
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * 
-         * @param {CreateExternalResourceDto} createExternalResourceDto 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        slackbotApiControllerCreateExternalResource: async (createExternalResourceDto: CreateExternalResourceDto, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'createExternalResourceDto' is not null or undefined
-            assertParamExists('slackbotApiControllerCreateExternalResource', 'createExternalResourceDto', createExternalResourceDto)
-            const localVarPath = `/slackbot-api/external-resources`;
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-
-    
-            localVarHeaderParameter['Content-Type'] = 'application/json';
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(createExternalResourceDto, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -3070,22 +2960,22 @@ export const SlackbotApiApiFp = function(configuration?: Configuration) {
     return {
         /**
          * 
+         * @param {AddCollateralDto} addCollateralDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async slackbotApiControllerAddCollateral(addCollateralDto: AddCollateralDto, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.slackbotApiControllerAddCollateral(addCollateralDto, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+        /**
+         * 
          * @param {UsersImportDto} usersImportDto 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
         async slackbotApiControllerCreate(usersImportDto: UsersImportDto, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.slackbotApiControllerCreate(usersImportDto, options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
-        },
-        /**
-         * 
-         * @param {CreateExternalResourceDto} createExternalResourceDto 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async slackbotApiControllerCreateExternalResource(createExternalResourceDto: CreateExternalResourceDto, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.slackbotApiControllerCreateExternalResource(createExternalResourceDto, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
         /**
@@ -3131,21 +3021,21 @@ export const SlackbotApiApiFactory = function (configuration?: Configuration, ba
     return {
         /**
          * 
+         * @param {AddCollateralDto} addCollateralDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        slackbotApiControllerAddCollateral(addCollateralDto: AddCollateralDto, options?: any): AxiosPromise<void> {
+            return localVarFp.slackbotApiControllerAddCollateral(addCollateralDto, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
          * @param {UsersImportDto} usersImportDto 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
         slackbotApiControllerCreate(usersImportDto: UsersImportDto, options?: any): AxiosPromise<void> {
             return localVarFp.slackbotApiControllerCreate(usersImportDto, options).then((request) => request(axios, basePath));
-        },
-        /**
-         * 
-         * @param {CreateExternalResourceDto} createExternalResourceDto 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        slackbotApiControllerCreateExternalResource(createExternalResourceDto: CreateExternalResourceDto, options?: any): AxiosPromise<void> {
-            return localVarFp.slackbotApiControllerCreateExternalResource(createExternalResourceDto, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -3187,6 +3077,17 @@ export const SlackbotApiApiFactory = function (configuration?: Configuration, ba
 export class SlackbotApiApi extends BaseAPI {
     /**
      * 
+     * @param {AddCollateralDto} addCollateralDto 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof SlackbotApiApi
+     */
+    public slackbotApiControllerAddCollateral(addCollateralDto: AddCollateralDto, options?: AxiosRequestConfig) {
+        return SlackbotApiApiFp(this.configuration).slackbotApiControllerAddCollateral(addCollateralDto, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
      * @param {UsersImportDto} usersImportDto 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
@@ -3194,17 +3095,6 @@ export class SlackbotApiApi extends BaseAPI {
      */
     public slackbotApiControllerCreate(usersImportDto: UsersImportDto, options?: AxiosRequestConfig) {
         return SlackbotApiApiFp(this.configuration).slackbotApiControllerCreate(usersImportDto, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * 
-     * @param {CreateExternalResourceDto} createExternalResourceDto 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof SlackbotApiApi
-     */
-    public slackbotApiControllerCreateExternalResource(createExternalResourceDto: CreateExternalResourceDto, options?: AxiosRequestConfig) {
-        return SlackbotApiApiFp(this.configuration).slackbotApiControllerCreateExternalResource(createExternalResourceDto, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

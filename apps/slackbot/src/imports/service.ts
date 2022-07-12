@@ -23,6 +23,7 @@ export class ImportService {
     this.backendApi = new SlackbotApi(
       new Configuration({
         basePath: process.env.BASE_BACKEND_URL,
+        accessToken: process.env.BASE_API_KEY,
       }),
     );
   }

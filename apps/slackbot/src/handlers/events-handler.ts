@@ -72,7 +72,8 @@ export class EventsHandler {
       logger.info(
         `handling adding task link for task [${taskId}], link [${linkUrl}]`,
       );
-      await this.baseApi.slackbotApiControllerCreateExternalResource({
+
+      await this.baseApi.slackbotApiControllerAddCollateral({
         taskId,
         url: linkUrl,
         assigneeId: assigneeId,
