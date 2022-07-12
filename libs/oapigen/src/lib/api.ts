@@ -1195,19 +1195,19 @@ export interface Task {
      * @type {Array<ExternalLinkCollateral>}
      * @memberof Task
      */
-    'externalLinks': Array<ExternalLinkCollateral>;
+    'externalLinks'?: Array<ExternalLinkCollateral>;
     /**
      * 
      * @type {Array<ExternalTicket>}
      * @memberof Task
      */
-    'externalTickets': Array<ExternalTicket>;
+    'externalTickets'?: Array<ExternalTicket>;
     /**
      * 
      * @type {Array<RecentActivity>}
      * @memberof Task
      */
-    'recentActivityLog': Array<RecentActivity>;
+    'recentActivityLog'?: Array<RecentActivity>;
     /**
      * 
      * @type {string}
