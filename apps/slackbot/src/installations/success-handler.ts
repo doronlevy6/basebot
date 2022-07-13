@@ -26,10 +26,9 @@ export const installationSucccessHandler: (
       logger.warn(`no domains found for ${JSON.stringify(installation)}`);
     }
 
-    res.writeHead(200, { 'Content-Type': 'text/plain' });
-    res.write(
-      `Thanks for connecting slack to BASE. You can go back to the app now.`,
-    );
+    res.writeHead(302, {
+      Location: 'https://link.base.la',
+    });
     res.end();
   };
 
