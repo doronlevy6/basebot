@@ -60,25 +60,31 @@ export class Messenger {
     const installation = await this.installationStore.fetchInstallationByBaseId(
       message.organizationId,
     );
-    const client = new WebClient(installation.bot.token);
+    const client = new WebClient(installation.bot?.token);
 
     logger.info({ msg: 'send message request', job: job.data });
 
     if (message.userEmail) {
-      await this.sendToUser(client, message);
+      await this.sendToUser(client, message, message.userEmail);
       return;
     }
 
-    await client.chat.postMessage({
-      channel: job.data.channelId,
-      text: job.data.text,
-      blocks: job.data.blocks as Block[],
-    });
+    if (message.channelId) {
+      await client.chat.postMessage({
+        channel: message.channelId,
+        text: job.data.text,
+        blocks: job.data.blocks as Block[],
+      });
+    }
   }
 
-  private async sendToUser(client: WebClient, message: MessengerMessage) {
+  private async sendToUser(
+    client: WebClient,
+    message: MessengerMessage,
+    email: string,
+  ) {
     const slackUserRes = await client.users.lookupByEmail({
-      email: message.userEmail,
+      email: email,
     });
     if (slackUserRes.error) {
       throw new Error(
@@ -87,6 +93,10 @@ export class Messenger {
     }
 
     if (!slackUserRes.ok) {
+      throw new Error(`Error getting slack user by email when sending message`);
+    }
+
+    if (!slackUserRes.user?.id) {
       throw new Error(`Error getting slack user by email when sending message`);
     }
 

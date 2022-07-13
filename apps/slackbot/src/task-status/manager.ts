@@ -103,13 +103,19 @@ export class TaskStatusManager {
     const installation = await this.installationStore.fetchInstallationByBaseId(
       job.data.organizationId,
     );
-    const client = new WebClient(installation.bot.token);
+    const client = new WebClient(installation.bot?.token);
     client.chat.postMessage({
       channel: job.data.channelId,
       text: job.data.text,
       blocks: job.data.blocks,
     });
     const user = await client.users.profile.get({ user: job.data.channelId });
+    if (!user.profile?.email) {
+      logger.warn(
+        `unable to send user interaction for analytics without user profile`,
+      );
+      return;
+    }
     AnalyticsManager.getInstance().messageSentToUser(user.profile.email);
     logger.info({ msg: 'send task status request', job: job.data });
   }
@@ -119,7 +125,7 @@ export class TaskStatusManager {
       job.data.user.organizationId,
     );
 
-    const client = new WebClient(installation.bot.token);
+    const client = new WebClient(installation.bot?.token);
     const assigneeSlackUserRes = await client.users.lookupByEmail({
       email: job.data.user.email,
     });
@@ -127,6 +133,10 @@ export class TaskStatusManager {
       throw new Error(
         `Error getting assigned user by email in slack: ${assigneeSlackUserRes.error}`,
       );
+    }
+
+    if (!assigneeSlackUserRes.user?.id) {
+      throw new Error(`Error getting assigned user by email in slack`);
     }
 
     if (!assigneeSlackUserRes.ok) {
@@ -143,6 +153,10 @@ export class TaskStatusManager {
     }
 
     if (!taskCreatorSlackUserRes.ok) {
+      throw new Error(`Error getting task creator user by email in slack`);
+    }
+
+    if (!taskCreatorSlackUserRes.user?.id) {
       throw new Error(`Error getting task creator user by email in slack`);
     }
 
@@ -228,9 +242,22 @@ export class TaskStatusManager {
       return button;
     });
 
-    const taskLinks = task.externalLinks?.map((link) => {
-      return `<${link.url}|${link.url}>\n`;
-    });
+    const statusAndLinks: MrkdwnElement[] = [
+      {
+        type: 'mrkdwn',
+        text: `*Status:*\n${snakeToTitleCase(task.status)}`,
+      },
+    ];
+
+    if (task.externalLinks) {
+      const taskLinks = task.externalLinks?.map((link) => {
+        return `<${link.url}|${link.url}>\n`;
+      });
+      statusAndLinks.push({
+        type: 'mrkdwn',
+        text: `*Links:*\n${taskLinks}`,
+      });
+    }
 
     const detailsFields: (PlainTextElement | MrkdwnElement)[] = [
       {
@@ -239,10 +266,10 @@ export class TaskStatusManager {
       },
     ];
 
-    let messageText = `Hi <@${assignedUserRes.user.id}>, you have a task status update request! <@${taskCreatorUserRes.user.id}> created this task for you`;
+    let messageText = `Hi <@${assignedUserRes.user?.id}>, you have a task status update request! <@${taskCreatorUserRes.user?.id}> created this task for you`;
 
     if (task.dueDate) {
-      detailsFields.unshift({
+      detailsFields.push({
         type: 'mrkdwn',
         text: `*Due Date:*\n${formatDate(task.dueDate)}`,
       });
@@ -275,16 +302,7 @@ export class TaskStatusManager {
       },
       {
         type: 'section',
-        fields: [
-          {
-            type: 'mrkdwn',
-            text: `*Status:*\n${task.status}`,
-          },
-          {
-            type: 'mrkdwn',
-            text: `*Links:*\n${taskLinks}`,
-          },
-        ],
+        fields: statusAndLinks,
       },
       {
         type: 'section',

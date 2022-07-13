@@ -66,6 +66,11 @@ export class ImportService {
       });
     }
 
+    if (!usersRes.members) {
+      logger.warn('no members found to send to import');
+      return;
+    }
+
     await this.sendUsers(usersRes.members, job.metadata.slackTeamEmailDomains);
 
     logger.debug(`Imported ${usersRes.members.length} users`);
@@ -73,14 +78,18 @@ export class ImportService {
 
   private async sendUsers(members: Member[], teamDomains: string[]) {
     const users: SlackUserDto[] = members
-      .filter((user) => !user.is_bot && user.profile.email)
+      .filter((user) => !user.is_bot && user.profile?.email)
       .map((user) => ({
-        email: user.profile.email,
+        email: user.profile?.email || '',
         displayName:
-          user.profile.display_name || user.profile.real_name || user.name,
-        profileImage: user.profile.image_512,
-        timezoneOffset: user.tz_offset,
-      }));
+          user.profile?.display_name ||
+          user.profile?.real_name ||
+          user.name ||
+          '',
+        profileImage: user.profile?.image_512 || '',
+        timezoneOffset: user.tz_offset || 0,
+      }))
+      .filter((user) => user.email); // Post filter to ensure all users have emails
 
     if (!users.length) {
       logger.debug({ msg: 'All import users filtered out' });

@@ -13,6 +13,9 @@
     "lib": ["es2017", "dom"],
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
+    "strictNullChecks": true,
+    "noImplicitAny": false,
+    "strictBindCallApply": true,
     "baseUrl": ".",
     "paths": {
       "@base/env": ["libs/env/src/index.ts"],

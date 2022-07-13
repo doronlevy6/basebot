@@ -95,7 +95,7 @@ export class PgInstallationStore implements InstallationStore {
   async storeInstallation<AuthVersion extends 'v1' | 'v2'>(
     installation: Installation<AuthVersion, boolean>,
   ): Promise<void> {
-    const client = new WebClient(installation.bot.token);
+    const client = new WebClient(installation.bot?.token);
     const teamInfoRes = await client.team.info({});
     if (teamInfoRes.error) {
       throw new Error(
@@ -107,7 +107,7 @@ export class PgInstallationStore implements InstallationStore {
       throw new Error(`Error getting team info in store installation on slack`);
     }
 
-    const domains = teamInfoRes.team.email_domain.split(',');
+    const domains = teamInfoRes.team?.email_domain?.split(',') || [];
     let saved = false;
     for (let i = 0; i < domains.length; i++) {
       const domain = domains[i];

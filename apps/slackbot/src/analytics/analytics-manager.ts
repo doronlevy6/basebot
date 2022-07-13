@@ -55,7 +55,9 @@ export const AnalyticsManager = (function () {
     initialize(queueCfg: IQueueConfig) {
       instance = new Analytics(queueCfg);
       instance.startQueue();
-      instance.constructor = null;
+      instance.constructor = () => {
+        return;
+      };
     },
     getInstance: function (): Analytics {
       if (instance == null) {

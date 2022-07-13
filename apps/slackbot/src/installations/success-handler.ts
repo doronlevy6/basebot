@@ -10,10 +10,21 @@ export const installationSucccessHandler: (
 ) => CallbackOptions['successAsync'] =
   (importController, baseApi) =>
   async (installation, installOptions, req, res) => {
-    const { domains, logo, displayName } = await fetchTeamDomains(installation);
+    const { domains, logo, displayName } =
+      (await fetchTeamDomains(installation)) || {};
 
-    updateSettings(domains, installation, baseApi, logo.image_230, displayName);
-    startImport(domains, installation, importController);
+    if (domains) {
+      updateSettings(
+        domains,
+        installation,
+        baseApi,
+        logo?.image_230 || '',
+        displayName || '',
+      );
+      startImport(domains, installation, importController);
+    } else {
+      logger.warn(`no domains found for ${JSON.stringify(installation)}`);
+    }
 
     res.writeHead(200, { 'Content-Type': 'text/plain' });
     res.write(
@@ -33,7 +44,7 @@ const updateSettings = async (
     await baseApi.slackbotApiControllerUpdateSettings({
       teamDisplayName: teamDisplayName,
       teamDomains: teamDomains,
-      teamId: installation.team.id,
+      teamId: installation.team?.id || '',
       teamLogo,
     });
   } catch (err) {
@@ -46,8 +57,8 @@ const startImport = async (
   installation: Installation,
   importController: ImportController,
 ) => {
-  const token = installation.bot.token;
-  const teamId = installation.team.id;
+  const token = installation.bot?.token || '';
+  const teamId = installation.team?.id || '';
   importController.startImport({
     token,
     slackTeamEmailDomains: teamDomains,
@@ -56,7 +67,7 @@ const startImport = async (
 };
 
 const fetchTeamDomains = async (installation: Installation) => {
-  const client = new WebClient(installation.bot.token);
+  const client = new WebClient(installation.bot?.token);
   const teamInfoRes = await client.team.info();
 
   if (teamInfoRes.error || !teamInfoRes.ok) {
@@ -72,10 +83,10 @@ const fetchTeamDomains = async (installation: Installation) => {
     team: teamInfoRes.team,
   });
 
-  const domains = teamInfoRes.team.email_domain.split(',');
+  const domains = teamInfoRes.team?.email_domain?.split(',') || [];
   return {
     domains,
-    logo: teamInfoRes.team.icon,
-    displayName: teamInfoRes.team.name,
+    logo: teamInfoRes.team?.icon,
+    displayName: teamInfoRes.team?.name,
   };
 };

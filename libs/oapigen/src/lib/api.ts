@@ -1458,13 +1458,13 @@ export interface TaskDueDateChangeNotification {
      * @type {object}
      * @memberof TaskDueDateChangeNotification
      */
-    'previousDueDate': object;
+    'previousDueDate'?: object;
     /**
      * 
      * @type {object}
      * @memberof TaskDueDateChangeNotification
      */
-    'currentDueDate': object;
+    'currentDueDate'?: object;
 }
 /**
  * 
@@ -1477,13 +1477,13 @@ export interface TaskPostponement {
      * @type {string}
      * @memberof TaskPostponement
      */
-    'previousDueDate': string;
+    'previousDueDate'?: string;
     /**
      * 
      * @type {string}
      * @memberof TaskPostponement
      */
-    'currentDueDate': string;
+    'currentDueDate'?: string;
     /**
      * 
      * @type {number}
@@ -1588,13 +1588,13 @@ export interface TicketPostponement {
      * @type {string}
      * @memberof TicketPostponement
      */
-    'previousDueDate': string;
+    'previousDueDate'?: string;
     /**
      * 
      * @type {string}
      * @memberof TicketPostponement
      */
-    'currentDueDate': string;
+    'currentDueDate'?: string;
 }
 /**
  * 
@@ -2788,7 +2788,7 @@ export const OrganizationsApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async organizationsControllerFindOne(id: string, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Organization>> {
+        async organizationsControllerFindOne(id: string, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<object>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.organizationsControllerFindOne(id, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
@@ -2809,7 +2809,7 @@ export const OrganizationsApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async organizationsControllerUpdate(id: string, updateOrganizationDto: UpdateOrganizationDto, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Organization>> {
+        async organizationsControllerUpdate(id: string, updateOrganizationDto: UpdateOrganizationDto, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<object>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.organizationsControllerUpdate(id, updateOrganizationDto, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
@@ -2846,7 +2846,7 @@ export const OrganizationsApiFactory = function (configuration?: Configuration, 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        organizationsControllerFindOne(id: string, options?: any): AxiosPromise<Organization> {
+        organizationsControllerFindOne(id: string, options?: any): AxiosPromise<object> {
             return localVarFp.organizationsControllerFindOne(id, options).then((request) => request(axios, basePath));
         },
         /**
@@ -2865,7 +2865,7 @@ export const OrganizationsApiFactory = function (configuration?: Configuration, 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        organizationsControllerUpdate(id: string, updateOrganizationDto: UpdateOrganizationDto, options?: any): AxiosPromise<Organization> {
+        organizationsControllerUpdate(id: string, updateOrganizationDto: UpdateOrganizationDto, options?: any): AxiosPromise<object> {
             return localVarFp.organizationsControllerUpdate(id, updateOrganizationDto, options).then((request) => request(axios, basePath));
         },
     };
@@ -3947,7 +3947,7 @@ export const TaskDraftsApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async taskDraftsControllerFindOne(id: string, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<TaskDraft>> {
+        async taskDraftsControllerFindOne(id: string, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<object>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.taskDraftsControllerFindOne(id, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
@@ -4043,7 +4043,7 @@ export const TaskDraftsApiFactory = function (configuration?: Configuration, bas
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        taskDraftsControllerFindOne(id: string, options?: any): AxiosPromise<TaskDraft> {
+        taskDraftsControllerFindOne(id: string, options?: any): AxiosPromise<object> {
             return localVarFp.taskDraftsControllerFindOne(id, options).then((request) => request(axios, basePath));
         },
         /**
@@ -4889,7 +4889,7 @@ export const UsersApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async usersControllerFindOne(id: string, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<User>> {
+        async usersControllerFindOne(id: string, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<object>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.usersControllerFindOne(id, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
@@ -4900,7 +4900,7 @@ export const UsersApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async usersControllerUpdate(id: string, body: object, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<User>> {
+        async usersControllerUpdate(id: string, body: object, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<object>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.usersControllerUpdate(id, body, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
@@ -4928,7 +4928,7 @@ export const UsersApiFactory = function (configuration?: Configuration, basePath
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        usersControllerFindOne(id: string, options?: any): AxiosPromise<User> {
+        usersControllerFindOne(id: string, options?: any): AxiosPromise<object> {
             return localVarFp.usersControllerFindOne(id, options).then((request) => request(axios, basePath));
         },
         /**
@@ -4938,7 +4938,7 @@ export const UsersApiFactory = function (configuration?: Configuration, basePath
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        usersControllerUpdate(id: string, body: object, options?: any): AxiosPromise<User> {
+        usersControllerUpdate(id: string, body: object, options?: any): AxiosPromise<object> {
             return localVarFp.usersControllerUpdate(id, body, options).then((request) => request(axios, basePath));
         },
     };

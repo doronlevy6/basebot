@@ -52,19 +52,22 @@ const startApp = async () => {
   const metricsReporter = new PrometheusReporter();
 
   const allQueueCfg = {
-    host: process.env.REDIS_HOST,
-    port: parseInt(process.env.REDIS_PORT, 10),
+    host: process.env.REDIS_HOST || 'localhost',
+    port: parseInt(process.env.REDIS_PORT || '6379', 10),
     password: process.env.REDIS_PASSWORD || '',
     cluster: process.env.REDIS_CLUSTER === 'true',
   };
 
   const pgStore = new PgInstallationStore(metricsReporter, {
-    host: process.env.DB_HOST,
-    port: parseInt(process.env.DB_PORT, 10),
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_DATABASE,
-    synchronize: ['development', 'local'].includes(process.env.ENV),
+    host: process.env.DB_HOST || 'localhost',
+    port: parseInt(process.env.DB_PORT || '5432', 10),
+    user: process.env.DB_USER || '',
+    password: process.env.DB_PASSWORD || '',
+    database: process.env.DB_DATABASE || '',
+    synchronize: ['development', 'local'].includes(
+      process.env.ENV ||
+        'local' /* We are defaulting to local env to be explicit */,
+    ),
   });
 
   const baseApi = new SlackbotApi(

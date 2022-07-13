@@ -42,7 +42,13 @@ export class EventsHandler {
       });
 
       const user = await client.users.profile.get({ user: body.user.id });
-      AnalyticsManager.getInstance().userInteraction(user.profile.email, {
+      if (!user.profile?.email) {
+        logger.warn(
+          `unable to send user interaction for analytics without user profile`,
+        );
+        return;
+      }
+      AnalyticsManager.getInstance().userInteraction(user?.profile.email, {
         action: 'task_status_update',
         taskId,
         status,
@@ -80,6 +86,14 @@ export class EventsHandler {
       });
       const user = await client.users.profile.get({ user: body.user.id });
       say(`Thanks for the update! We will update the task links`);
+
+      if (!user.profile?.email) {
+        logger.warn(
+          `unable to send user interaction for analytics without user profile`,
+        );
+        return;
+      }
+
       AnalyticsManager.getInstance().userInteraction(user.profile.email, {
         action: 'add_task_link',
       });
@@ -140,6 +154,11 @@ export class EventsHandler {
     try {
       await ack();
       const user = await client.users.profile.get({ user: body.user.id });
+      if (!user.profile?.email) {
+        logger.warn(`unable to submit a new task without user profile`);
+        return;
+      }
+
       const userEMail = user.profile.email;
       const text = payload.private_metadata;
       const res =

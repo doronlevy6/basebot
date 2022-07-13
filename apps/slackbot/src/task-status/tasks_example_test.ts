@@ -5,7 +5,7 @@ import { TaskStatusTriggerer } from './triggerer_tester';
 export const runTestExample = async (
   taskStatusTriggerer: TaskStatusTriggerer,
 ) => {
-  if (!['development', 'local'].includes(process.env.ENV)) {
+  if (!['development', 'local'].includes(process.env.ENV || 'local')) {
     logger.info(`skipping test status message in env ${process.env.ENV}`);
     return;
   }
