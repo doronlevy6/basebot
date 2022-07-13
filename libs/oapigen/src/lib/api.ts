@@ -55,6 +55,19 @@ export type AppVersionsControllerGetAppVersionsDefaultResponseValue = ClientVers
 /**
  * 
  * @export
+ * @interface AssigneesAdded
+ */
+export interface AssigneesAdded {
+    /**
+     * 
+     * @type {Array<MicroUser>}
+     * @memberof AssigneesAdded
+     */
+    'assignees': Array<MicroUser>;
+}
+/**
+ * 
+ * @export
  * @interface ClientVersionDto
  */
 export interface ClientVersionDto {
@@ -790,6 +803,31 @@ export interface ImportTaskResponse {
 /**
  * 
  * @export
+ * @interface Link
+ */
+export interface Link {
+    /**
+     * 
+     * @type {string}
+     * @memberof Link
+     */
+    'url': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof Link
+     */
+    'group': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof Link
+     */
+    'provider': string;
+}
+/**
+ * 
+ * @export
  * @interface MessengerMessage
  */
 export interface MessengerMessage {
@@ -823,6 +861,37 @@ export interface MessengerMessage {
      * @memberof MessengerMessage
      */
     'blocks'?: object;
+}
+/**
+ * 
+ * @export
+ * @interface MicroUser
+ */
+export interface MicroUser {
+    /**
+     * 
+     * @type {string}
+     * @memberof MicroUser
+     */
+    'userId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof MicroUser
+     */
+    'imageId'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof MicroUser
+     */
+    'imageUrl'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof MicroUser
+     */
+    'displayName': string;
 }
 /**
  * 
@@ -925,6 +994,12 @@ export interface OrganizationSettingsDto {
 export interface PushNotificationDto {
     /**
      * 
+     * @type {PushNotificationDtoNotificationData}
+     * @memberof PushNotificationDto
+     */
+    'notificationData': PushNotificationDtoNotificationData;
+    /**
+     * 
      * @type {string}
      * @memberof PushNotificationDto
      */
@@ -935,12 +1010,6 @@ export interface PushNotificationDto {
      * @memberof PushNotificationDto
      */
     'type': PushNotificationDtoTypeEnum;
-    /**
-     * 
-     * @type {object}
-     * @memberof PushNotificationDto
-     */
-    'notificationData': object;
 }
 
 export const PushNotificationDtoTypeEnum = {
@@ -951,11 +1020,23 @@ export const PushNotificationDtoTypeEnum = {
 export type PushNotificationDtoTypeEnum = typeof PushNotificationDtoTypeEnum[keyof typeof PushNotificationDtoTypeEnum];
 
 /**
+ * @type PushNotificationDtoNotificationData
+ * @export
+ */
+export type PushNotificationDtoNotificationData = TaskDueDateChangeNotification | TaskStatusChangeNotification;
+
+/**
  * 
  * @export
  * @interface RecentActivity
  */
 export interface RecentActivity {
+    /**
+     * 
+     * @type {RecentActivityData}
+     * @memberof RecentActivity
+     */
+    'data': RecentActivityData;
     /**
      * 
      * @type {string}
@@ -1010,12 +1091,6 @@ export interface RecentActivity {
      * @memberof RecentActivity
      */
     'updatedAt': string;
-    /**
-     * 
-     * @type {object}
-     * @memberof RecentActivity
-     */
-    'data': object;
 }
 
 export const RecentActivityTypeEnum = {
@@ -1038,6 +1113,12 @@ export const RecentActivityOriginEnum = {
 } as const;
 
 export type RecentActivityOriginEnum = typeof RecentActivityOriginEnum[keyof typeof RecentActivityOriginEnum];
+
+/**
+ * @type RecentActivityData
+ * @export
+ */
+export type RecentActivityData = AssigneesAdded | Link | TaskPostponement | TaskStatusChange | TicketPostponement | TicketStatusChange;
 
 /**
  * 
@@ -1229,6 +1310,31 @@ export type TaskStatusEnum = typeof TaskStatusEnum[keyof typeof TaskStatusEnum];
 /**
  * 
  * @export
+ * @interface TaskChangeNotification
+ */
+export interface TaskChangeNotification {
+    /**
+     * 
+     * @type {string}
+     * @memberof TaskChangeNotification
+     */
+    'taskId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof TaskChangeNotification
+     */
+    'taskTitle': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof TaskChangeNotification
+     */
+    'taskDescription': string;
+}
+/**
+ * 
+ * @export
  * @interface TaskDraft
  */
 export interface TaskDraft {
@@ -1316,6 +1422,210 @@ export interface TaskDraft {
      * @memberof TaskDraft
      */
     'origin'?: DraftOriginDto;
+}
+/**
+ * 
+ * @export
+ * @interface TaskDueDateChangeNotification
+ */
+export interface TaskDueDateChangeNotification {
+    /**
+     * 
+     * @type {string}
+     * @memberof TaskDueDateChangeNotification
+     */
+    'taskId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof TaskDueDateChangeNotification
+     */
+    'taskTitle': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof TaskDueDateChangeNotification
+     */
+    'taskDescription': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof TaskDueDateChangeNotification
+     */
+    'changerId': string;
+    /**
+     * 
+     * @type {object}
+     * @memberof TaskDueDateChangeNotification
+     */
+    'previousDueDate': object;
+    /**
+     * 
+     * @type {object}
+     * @memberof TaskDueDateChangeNotification
+     */
+    'currentDueDate': object;
+}
+/**
+ * 
+ * @export
+ * @interface TaskPostponement
+ */
+export interface TaskPostponement {
+    /**
+     * 
+     * @type {string}
+     * @memberof TaskPostponement
+     */
+    'previousDueDate': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof TaskPostponement
+     */
+    'currentDueDate': string;
+    /**
+     * 
+     * @type {number}
+     * @memberof TaskPostponement
+     */
+    'changeTime': number;
+}
+/**
+ * 
+ * @export
+ * @interface TaskStatusChange
+ */
+export interface TaskStatusChange {
+    /**
+     * 
+     * @type {string}
+     * @memberof TaskStatusChange
+     */
+    'previousStatus': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof TaskStatusChange
+     */
+    'currentStatus': string;
+    /**
+     * 
+     * @type {number}
+     * @memberof TaskStatusChange
+     */
+    'changeTime': number;
+}
+/**
+ * 
+ * @export
+ * @interface TaskStatusChangeNotification
+ */
+export interface TaskStatusChangeNotification {
+    /**
+     * 
+     * @type {string}
+     * @memberof TaskStatusChangeNotification
+     */
+    'taskId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof TaskStatusChangeNotification
+     */
+    'taskTitle': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof TaskStatusChangeNotification
+     */
+    'taskDescription': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof TaskStatusChangeNotification
+     */
+    'changerId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof TaskStatusChangeNotification
+     */
+    'changeTrigger'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof TaskStatusChangeNotification
+     */
+    'previousStatus': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof TaskStatusChangeNotification
+     */
+    'currentStatus': string;
+}
+/**
+ * 
+ * @export
+ * @interface TicketPostponement
+ */
+export interface TicketPostponement {
+    /**
+     * 
+     * @type {string}
+     * @memberof TicketPostponement
+     */
+    'ticketId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof TicketPostponement
+     */
+    'provider': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof TicketPostponement
+     */
+    'previousDueDate': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof TicketPostponement
+     */
+    'currentDueDate': string;
+}
+/**
+ * 
+ * @export
+ * @interface TicketStatusChange
+ */
+export interface TicketStatusChange {
+    /**
+     * 
+     * @type {string}
+     * @memberof TicketStatusChange
+     */
+    'ticketId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof TicketStatusChange
+     */
+    'provider': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof TicketStatusChange
+     */
+    'previousStatus': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof TicketStatusChange
+     */
+    'currentStatus': string;
 }
 /**
  * 
