@@ -4422,16 +4422,12 @@ export const TasksApiAxiosParamCreator = function (configuration?: Configuration
         },
         /**
          * 
-         * @param {number} limit 
-         * @param {number} offset 
+         * @param {number} [limit] 
+         * @param {number} [offset] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        tasksControllerFindTasksByCreator: async (limit: number, offset: number, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'limit' is not null or undefined
-            assertParamExists('tasksControllerFindTasksByCreator', 'limit', limit)
-            // verify required parameter 'offset' is not null or undefined
-            assertParamExists('tasksControllerFindTasksByCreator', 'offset', offset)
+        tasksControllerFindTasksByCreator: async (limit?: number, offset?: number, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/tasks`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -4589,12 +4585,12 @@ export const TasksApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
-         * @param {number} limit 
-         * @param {number} offset 
+         * @param {number} [limit] 
+         * @param {number} [offset] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async tasksControllerFindTasksByCreator(limit: number, offset: number, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<Task>>> {
+        async tasksControllerFindTasksByCreator(limit?: number, offset?: number, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<Task>>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.tasksControllerFindTasksByCreator(limit, offset, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
@@ -4658,12 +4654,12 @@ export const TasksApiFactory = function (configuration?: Configuration, basePath
         },
         /**
          * 
-         * @param {number} limit 
-         * @param {number} offset 
+         * @param {number} [limit] 
+         * @param {number} [offset] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        tasksControllerFindTasksByCreator(limit: number, offset: number, options?: any): AxiosPromise<Array<Task>> {
+        tasksControllerFindTasksByCreator(limit?: number, offset?: number, options?: any): AxiosPromise<Array<Task>> {
             return localVarFp.tasksControllerFindTasksByCreator(limit, offset, options).then((request) => request(axios, basePath));
         },
         /**
@@ -4730,13 +4726,13 @@ export class TasksApi extends BaseAPI {
 
     /**
      * 
-     * @param {number} limit 
-     * @param {number} offset 
+     * @param {number} [limit] 
+     * @param {number} [offset] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof TasksApi
      */
-    public tasksControllerFindTasksByCreator(limit: number, offset: number, options?: AxiosRequestConfig) {
+    public tasksControllerFindTasksByCreator(limit?: number, offset?: number, options?: AxiosRequestConfig) {
         return TasksApiFp(this.configuration).tasksControllerFindTasksByCreator(limit, offset, options).then((request) => request(this.axios, this.basePath));
     }
 
