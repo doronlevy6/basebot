@@ -9,6 +9,7 @@ import {
 import validator from 'validator';
 import { AnalyticsManager } from '../analytics/analytics-manager';
 import { snakeToTitleCase } from '@base/utils';
+import { ActionsBlock, SectionBlock } from '@slack/web-api';
 
 export class EventsHandler {
   private baseApi: SlackbotApi;
@@ -167,10 +168,40 @@ export class EventsHandler {
           text: text,
         });
       AnalyticsManager.getInstance().userCreateDraft(user.profile.email);
+
+      const button: ActionsBlock = {
+        type: 'actions',
+        elements: [
+          {
+            type: 'button',
+            style: 'primary',
+            text: {
+              type: 'plain_text',
+              text: 'Open The App',
+              emoji: true,
+            },
+            value: 'click_to_open_app',
+            url: 'https://link.base.la/tasks/drafts',
+            action_id: 'click-to-open-app-action',
+          },
+        ],
+      };
+
+      const textMessage = `We've created a task for you in the system, check out the base app to see all of your tasks!`;
+
+      const section: SectionBlock = {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: textMessage,
+        },
+      };
+
       if (res.status >= 200 && res.status <= 299) {
         await client.chat.postMessage({
           channel: body.user.id,
-          text: `We have received your message, check out base app to see your tasks!`,
+          text: textMessage,
+          blocks: [section, button],
         });
       }
     } catch (e) {
