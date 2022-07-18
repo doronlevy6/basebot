@@ -36,6 +36,7 @@ export function createApp(
         successAsync: installationSucccessHandler(importController, baseApi),
         failure: installationFailureHandler,
       },
+      stateVerification: false, // Necessary in order to handle the Add To Slack from the app directory, which doesn't have state.
     },
   });
 }
