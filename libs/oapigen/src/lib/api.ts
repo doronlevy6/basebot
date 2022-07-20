@@ -171,6 +171,48 @@ export interface CreateTaskDraftDto {
      * @memberof CreateTaskDraftDto
      */
     'origin'?: DraftOriginDto;
+    /**
+     * 
+     * @type {string}
+     * @memberof CreateTaskDraftDto
+     */
+    'title'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof CreateTaskDraftDto
+     */
+    'description'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof CreateTaskDraftDto
+     */
+    'assigneeId'?: string;
+    /**
+     * 
+     * @type {Array<ExternalTicket>}
+     * @memberof CreateTaskDraftDto
+     */
+    'externalTickets'?: Array<ExternalTicket>;
+    /**
+     * 
+     * @type {string}
+     * @memberof CreateTaskDraftDto
+     */
+    'dueDate'?: string;
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof CreateTaskDraftDto
+     */
+    'tags'?: Array<string>;
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof CreateTaskDraftDto
+     */
+    'links'?: Array<string>;
 }
 /**
  * 
@@ -1131,7 +1173,7 @@ export interface SlackUpdateTaskDto {
      * @type {string}
      * @memberof SlackUpdateTaskDto
      */
-    'status': SlackUpdateTaskDtoStatusEnum;
+    'status'?: SlackUpdateTaskDtoStatusEnum;
     /**
      * 
      * @type {string}
@@ -1140,10 +1182,46 @@ export interface SlackUpdateTaskDto {
     'assigneeId': string;
     /**
      * 
+     * @type {string}
+     * @memberof SlackUpdateTaskDto
+     */
+    'title'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof SlackUpdateTaskDto
+     */
+    'description'?: string;
+    /**
+     * 
+     * @type {Array<ExternalTicket>}
+     * @memberof SlackUpdateTaskDto
+     */
+    'externalTickets'?: Array<ExternalTicket>;
+    /**
+     * 
+     * @type {string}
+     * @memberof SlackUpdateTaskDto
+     */
+    'dueDate'?: string;
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof SlackUpdateTaskDto
+     */
+    'tags'?: Array<string>;
+    /**
+     * 
      * @type {Array<string>}
      * @memberof SlackUpdateTaskDto
      */
     'links'?: Array<string>;
+    /**
+     * 
+     * @type {string}
+     * @memberof SlackUpdateTaskDto
+     */
+    'id'?: string;
 }
 
 export const SlackUpdateTaskDtoStatusEnum = {
@@ -1568,6 +1646,31 @@ export interface TaskStatusChangeNotification {
 /**
  * 
  * @export
+ * @interface TaskStatusUpdateRequestDto
+ */
+export interface TaskStatusUpdateRequestDto {
+    /**
+     * 
+     * @type {User}
+     * @memberof TaskStatusUpdateRequestDto
+     */
+    'user': User;
+    /**
+     * 
+     * @type {Task}
+     * @memberof TaskStatusUpdateRequestDto
+     */
+    'task': Task;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof TaskStatusUpdateRequestDto
+     */
+    'firstTimeAsking': boolean;
+}
+/**
+ * 
+ * @export
  * @interface TicketPostponement
  */
 export interface TicketPostponement {
@@ -1737,6 +1840,48 @@ export interface UpdateTaskDraftDto {
      * @type {string}
      * @memberof UpdateTaskDraftDto
      */
+    'title'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof UpdateTaskDraftDto
+     */
+    'description'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof UpdateTaskDraftDto
+     */
+    'assigneeId'?: string;
+    /**
+     * 
+     * @type {Array<ExternalTicket>}
+     * @memberof UpdateTaskDraftDto
+     */
+    'externalTickets'?: Array<ExternalTicket>;
+    /**
+     * 
+     * @type {string}
+     * @memberof UpdateTaskDraftDto
+     */
+    'dueDate'?: string;
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof UpdateTaskDraftDto
+     */
+    'tags'?: Array<string>;
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof UpdateTaskDraftDto
+     */
+    'links'?: Array<string>;
+    /**
+     * 
+     * @type {string}
+     * @memberof UpdateTaskDraftDto
+     */
     'id': string;
 }
 /**
@@ -1750,7 +1895,7 @@ export interface UpdateTaskDto {
      * @type {string}
      * @memberof UpdateTaskDto
      */
-    'status': UpdateTaskDtoStatusEnum;
+    'status'?: UpdateTaskDtoStatusEnum;
     /**
      * 
      * @type {string}
@@ -1762,43 +1907,43 @@ export interface UpdateTaskDto {
      * @type {string}
      * @memberof UpdateTaskDto
      */
-    'title': string;
+    'title'?: string;
     /**
      * 
      * @type {string}
      * @memberof UpdateTaskDto
      */
-    'description': string;
+    'description'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof UpdateTaskDto
+     */
+    'assigneeId'?: string;
     /**
      * 
      * @type {Array<ExternalTicket>}
      * @memberof UpdateTaskDto
      */
-    'externalTickets': Array<ExternalTicket>;
+    'externalTickets'?: Array<ExternalTicket>;
     /**
      * 
      * @type {string}
      * @memberof UpdateTaskDto
      */
-    'assigneeId': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof UpdateTaskDto
-     */
-    'dueDate': string;
+    'dueDate'?: string;
     /**
      * 
      * @type {Array<string>}
      * @memberof UpdateTaskDto
      */
-    'tags': Array<string>;
+    'tags'?: Array<string>;
     /**
      * 
      * @type {Array<string>}
      * @memberof UpdateTaskDto
      */
-    'links': Array<string>;
+    'links'?: Array<string>;
 }
 
 export const UpdateTaskDtoStatusEnum = {

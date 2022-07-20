@@ -18,7 +18,11 @@ import {
   WebClient,
 } from '@slack/web-api';
 import { PgInstallationStore } from '../installations/installationStore';
-import { Task, TaskStatusEnum, User } from '@base/oapigen';
+import {
+  Task,
+  TaskStatusEnum,
+  TaskStatusUpdateRequestDto,
+} from '@base/oapigen';
 import {
   formatDate,
   formatDaysOrWeeksUntil,
@@ -26,12 +30,11 @@ import {
 } from '@base/utils';
 import { AnalyticsManager } from '../analytics/analytics-manager';
 
-interface TaskStatusJob {
-  user: User;
-  task: Task;
-}
-
 type MessageBlocks = SectionBlock | HeaderBlock | ActionsBlock | InputBlock;
+
+const firstTimeExcludedStatuses = [TaskStatusEnum.NotStarted].map((s) =>
+  s.toString(),
+);
 
 interface UpdateMessage {
   organizationId: string;
@@ -120,7 +123,7 @@ export class TaskStatusManager {
     logger.info({ msg: 'send task status request', job: job.data });
   }
 
-  private async requestTaskStatus(job: Job<TaskStatusJob>) {
+  private async requestTaskStatus(job: Job<TaskStatusUpdateRequestDto>) {
     const installation = await this.installationStore.fetchInstallationByBaseId(
       job.data.user.organizationId,
     );
@@ -171,6 +174,7 @@ export class TaskStatusManager {
         job.data.user.organizationId,
         job.data.task,
         Object.values(TaskStatusEnum),
+        job.data.firstTimeAsking,
       ),
     };
 
@@ -222,25 +226,34 @@ export class TaskStatusManager {
     baseOrg: string,
     task: Task,
     taskStatuses: string[],
+    firstTime: boolean,
   ): MessageBlocks[] {
-    const buttons = taskStatuses.map((status) => {
-      const button: Button = {
-        type: 'button',
-        text: {
-          type: 'plain_text',
-          text: snakeToTitleCase(status),
-          emoji: true,
-        },
-        value: JSON.stringify({
-          organizationId: baseOrg,
-          assigneeId: baseUser,
-          taskId: task.id,
-          status: status,
-        }),
-        action_id: `task-status-select-${status}`,
-      };
-      return button;
-    });
+    const buttons = taskStatuses
+      .map((status) => {
+        if (firstTime && firstTimeExcludedStatuses.includes(status)) {
+          return;
+        }
+
+        const button: Button = {
+          type: 'button',
+          text: {
+            type: 'plain_text',
+            text: snakeToTitleCase(status),
+            emoji: true,
+          },
+          value: JSON.stringify({
+            organizationId: baseOrg,
+            assigneeId: baseUser,
+            taskId: task.id,
+            status: status,
+            firstTime: firstTime,
+          }),
+          action_id: `task-status-select-${status}`,
+        };
+
+        return button;
+      })
+      .filter((b) => b) as Button[];
 
     const statusAndLinks: MrkdwnElement[] = [
       {
@@ -266,7 +279,7 @@ export class TaskStatusManager {
       },
     ];
 
-    let messageText = `Hi <@${assignedUserRes.user?.id}>, you have a task status update request! <@${taskCreatorUserRes.user?.id}> created this task for you`;
+    let messageText = `Hi <@${assignedUserRes.user?.id}>, do you have an update for <@${taskCreatorUserRes.user?.id}> regarding this task`;
 
     if (task.dueDate) {
       detailsFields.push({
@@ -277,10 +290,14 @@ export class TaskStatusManager {
       messageText = `${messageText} which is due in ${formatDaysOrWeeksUntil(
         new Date(),
         task.dueDate,
-      )}`;
+      )}?`;
     }
 
-    return [
+    if (firstTime) {
+      messageText = `Hi <@${assignedUserRes.user?.id}>, you just got a new request from <@${taskCreatorUserRes.user?.id}>, please acknowledge by updating the status`;
+    }
+
+    const messageBlocks: MessageBlocks[] = [
       {
         type: 'section',
         text: {
@@ -298,12 +315,20 @@ export class TaskStatusManager {
       },
       {
         type: 'section',
+        block_id: 'task-general-details',
         fields: detailsFields,
       },
-      {
+    ];
+
+    if (!firstTime) {
+      messageBlocks.push({
         type: 'section',
         fields: statusAndLinks,
-      },
+        block_id: 'status-and-links',
+      });
+    }
+
+    messageBlocks.push(
       {
         type: 'section',
         text: {
@@ -314,8 +339,12 @@ export class TaskStatusManager {
       {
         type: 'actions',
         elements: buttons,
+        block_id: 'status-update-buttons',
       },
-      {
+    );
+
+    if (!firstTime) {
+      messageBlocks.push({
         dispatch_action: true,
         type: 'input',
         block_id: JSON.stringify({
@@ -329,11 +358,12 @@ export class TaskStatusManager {
         },
         label: {
           type: 'plain_text',
-
           text: 'Enter a link to where the task is managed',
           emoji: true,
         },
-      },
-    ];
+      });
+    }
+
+    return messageBlocks;
   }
 }

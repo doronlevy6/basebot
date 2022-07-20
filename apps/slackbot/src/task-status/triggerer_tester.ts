@@ -31,10 +31,11 @@ export class TaskStatusTriggerer {
     await this.taskStatusQueue.scheduler.close();
   }
 
-  async addTaskToQueue(user: User, task: Task) {
+  async addTaskToQueue(user: User, task: Task, firstTimeAsking: boolean) {
     await this.taskStatusQueue.queue.add('taskStatusRequest', {
       user: user,
       task: task,
+      firstTimeAsking: firstTimeAsking,
     });
   }
 }

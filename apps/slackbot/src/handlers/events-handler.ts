@@ -9,7 +9,7 @@ import {
 import validator from 'validator';
 import { AnalyticsManager } from '../analytics/analytics-manager';
 import { snakeToTitleCase } from '@base/utils';
-import { ActionsBlock, SectionBlock } from '@slack/web-api';
+import { ActionsBlock, Block, Button, SectionBlock } from '@slack/web-api';
 
 export class EventsHandler {
   private baseApi: SlackbotApi;
@@ -22,24 +22,116 @@ export class EventsHandler {
     body,
     ack,
     say,
+    respond,
     client,
   }: BlockButtonWrapper) => {
     await ack();
     try {
-      const { assigneeId, taskId, status } = JSON.parse(
-        body?.actions[0]?.value,
-      );
+      const { organizationId, assigneeId, taskId, status, firstTime } =
+        JSON.parse(body?.actions[0]?.value);
       logger.info(
         `handling task status selecteced for task [${taskId}], assignee [${assigneeId}], status [${status}] `,
       );
-      say(
-        `Thanks for the update! We will update the task status to be ${snakeToTitleCase(
-          status,
-        )}`,
-      );
+
+      const originalMessageBlocks = body.message?.blocks as Block[];
+
+      let taskDetailsSectionBlockIdx: number | undefined;
+      originalMessageBlocks.find((b, idx, _) => {
+        if (b.block_id == 'task-general-details') {
+          taskDetailsSectionBlockIdx = idx;
+          return true;
+        }
+        return false;
+      }) as SectionBlock | undefined;
+      if (!taskDetailsSectionBlockIdx) {
+        throw new Error(
+          'unable to find task details section block when parsing message body',
+        );
+      }
+
+      const statusSectionBlock = originalMessageBlocks.find((b) => {
+        return b.block_id == 'status-and-links';
+      }) as SectionBlock | undefined;
+      if (!firstTime && !statusSectionBlock?.fields) {
+        throw new Error(
+          'unable to find status section block when parsing message body',
+        );
+      }
+
+      if (!firstTime && statusSectionBlock?.fields) {
+        for (let i = 0; i < statusSectionBlock.fields.length; i++) {
+          const field = statusSectionBlock.fields[i];
+          if (field.text.includes('*Status:*')) {
+            field.text = `*Status:*\n${snakeToTitleCase(status)}`;
+          }
+        }
+      } else if (firstTime) {
+        originalMessageBlocks.splice(taskDetailsSectionBlockIdx + 1, 0, {
+          type: 'section',
+          fields: [
+            {
+              type: 'mrkdwn',
+              text: `*Status:*\n${snakeToTitleCase(status)}`,
+            },
+          ],
+          block_id: 'status-and-links',
+        } as Block);
+      }
+
+      const actionsBlock = originalMessageBlocks.find(
+        (b) => b.block_id == 'status-update-buttons',
+      ) as ActionsBlock | undefined;
+      if (!actionsBlock) {
+        throw new Error(
+          'unable to find actions block when parsing message body',
+        );
+      }
+
+      for (let i = 0; i < actionsBlock.elements.length; i++) {
+        const button = actionsBlock.elements[i] as Button;
+        if (button.value) {
+          const value = JSON.parse(button.value);
+          value.firstTime = false;
+          button.value = JSON.stringify(value);
+        }
+        if (button.action_id?.includes(status)) {
+          button.style = 'primary';
+          continue;
+        }
+        button.style = undefined;
+      }
+
       await this.baseApi.slackbotApiControllerUpdate(taskId, {
         assigneeId,
         status,
+      });
+
+      if (firstTime) {
+        originalMessageBlocks.push({
+          dispatch_action: true,
+          type: 'input',
+          block_id: JSON.stringify({
+            organizationId: organizationId,
+            assigneeId: assigneeId,
+            taskId: taskId,
+          }),
+          element: {
+            type: 'plain_text_input',
+            action_id: 'enter-task-link',
+          },
+          label: {
+            type: 'plain_text',
+            text: 'Do you have a link that we can use to help track this task?',
+            emoji: true,
+          },
+        } as Block);
+      }
+
+      await respond({
+        replace_original: true,
+        response_type: 'in_channel',
+        text: body.message?.text,
+        blocks: originalMessageBlocks,
       });
 
       const user = await client.users.profile.get({ user: body.user.id });
@@ -55,7 +147,7 @@ export class EventsHandler {
         status,
       });
     } catch (e) {
-      logger.error(`error in changing status for for task`);
+      logger.error({ msg: `error in changing status for for task`, error: e });
       say(`Error in update task status`);
     }
   };
@@ -65,6 +157,7 @@ export class EventsHandler {
     client,
     ack,
     say,
+    respond,
   }: BlockPlainTextInputActionWrapper) => {
     await ack();
     const linkUrl = body.actions[0]?.value;
@@ -85,8 +178,41 @@ export class EventsHandler {
         url: linkUrl,
         assigneeId: assigneeId,
       });
+
+      const originalMessageBlocks = body.message?.blocks as Block[];
+
+      const statusAndLinksSectionBlock = originalMessageBlocks.find((b) => {
+        return b.block_id == 'status-and-links';
+      }) as SectionBlock | undefined;
+      if (!statusAndLinksSectionBlock) {
+        throw new Error(
+          'unable to find status and links section block when parsing message body',
+        );
+      }
+      if (!statusAndLinksSectionBlock.fields) {
+        throw new Error(
+          'unable to find status and links section block when parsing message body',
+        );
+      }
+
+      const taskLink = `<${linkUrl}|${linkUrl}>\n`;
+      if (statusAndLinksSectionBlock.fields.length === 1) {
+        statusAndLinksSectionBlock.fields.push({
+          type: 'mrkdwn',
+          text: `*Links:*\n${taskLink}`,
+        });
+      } else {
+        statusAndLinksSectionBlock.fields[1].text = `${statusAndLinksSectionBlock.fields[1].text}${taskLink}`;
+      }
+
+      await respond({
+        replace_original: true,
+        response_type: 'in_channel',
+        text: body.message?.text,
+        blocks: originalMessageBlocks,
+      });
+
       const user = await client.users.profile.get({ user: body.user.id });
-      say(`Thanks for the update! We will update the task links`);
 
       if (!user.profile?.email) {
         logger.warn(
@@ -132,17 +258,8 @@ export class EventsHandler {
               type: 'section',
               text: {
                 type: 'mrkdwn',
-                text: 'We will create tasks in base for you :grin:\n\n',
+                text: 'Tap "Create tasks" and a draft will be waiting for you in the Base app for review\n\n',
               },
-            },
-            {
-              type: 'context',
-              elements: [
-                {
-                  type: 'mrkdwn',
-                  text: 'Enter base app to see the tasks',
-                },
-              ],
             },
           ],
         },

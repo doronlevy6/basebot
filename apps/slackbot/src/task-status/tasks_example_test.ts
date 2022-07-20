@@ -58,13 +58,13 @@ export const runTestExample = async (
     title: 'This is some task!',
     dueDate: new Date().toString(),
     assigneeId: '08f041ca-ea52-49a4-954b-ad936bf65453',
-    status: 'in progress',
+    status: 'in_progress',
     links: ['http://www.walla.co.il', 'http://www.gmail.com'],
   } as unknown as Task;
 
   // for (let i = 0; i < 5; i++) {
   //   await taskStatusTriggerer.addTaskToQueue(assignee1, task);
-  await taskStatusTriggerer.addTaskToQueue(assignee1, task);
+  await taskStatusTriggerer.addTaskToQueue(assignee1, task, true);
   //   // await taskStatusTriggerer.addTaskToQueue(assignee3, task);
   // }
 };
