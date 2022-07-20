@@ -1177,6 +1177,25 @@ export type RecentActivityData = AssigneesAdded | Link | TaskPostponement | Task
 /**
  * 
  * @export
+ * @interface ReportBugDto
+ */
+export interface ReportBugDto {
+    /**
+     * 
+     * @type {string}
+     * @memberof ReportBugDto
+     */
+    'deviceId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ReportBugDto
+     */
+    'description': string;
+}
+/**
+ * 
+ * @export
  * @interface SlackUpdateTaskDto
  */
 export interface SlackUpdateTaskDto {
@@ -2133,6 +2152,113 @@ export class AppVersionsApi extends BaseAPI {
      */
     public appVersionsControllerGetAppVersions(options?: AxiosRequestConfig) {
         return AppVersionsApiFp(this.configuration).appVersionsControllerGetAppVersions(options).then((request) => request(this.axios, this.basePath));
+    }
+}
+
+
+/**
+ * BugReportingApi - axios parameter creator
+ * @export
+ */
+export const BugReportingApiAxiosParamCreator = function (configuration?: Configuration) {
+    return {
+        /**
+         * 
+         * @param {ReportBugDto} reportBugDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        bugReportingControllerReportBug: async (reportBugDto: ReportBugDto, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'reportBugDto' is not null or undefined
+            assertParamExists('bugReportingControllerReportBug', 'reportBugDto', reportBugDto)
+            const localVarPath = `/bug-reporting/report`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication bearer required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(reportBugDto, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+    }
+};
+
+/**
+ * BugReportingApi - functional programming interface
+ * @export
+ */
+export const BugReportingApiFp = function(configuration?: Configuration) {
+    const localVarAxiosParamCreator = BugReportingApiAxiosParamCreator(configuration)
+    return {
+        /**
+         * 
+         * @param {ReportBugDto} reportBugDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async bugReportingControllerReportBug(reportBugDto: ReportBugDto, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.bugReportingControllerReportBug(reportBugDto, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+    }
+};
+
+/**
+ * BugReportingApi - factory interface
+ * @export
+ */
+export const BugReportingApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
+    const localVarFp = BugReportingApiFp(configuration)
+    return {
+        /**
+         * 
+         * @param {ReportBugDto} reportBugDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        bugReportingControllerReportBug(reportBugDto: ReportBugDto, options?: any): AxiosPromise<void> {
+            return localVarFp.bugReportingControllerReportBug(reportBugDto, options).then((request) => request(axios, basePath));
+        },
+    };
+};
+
+/**
+ * BugReportingApi - object-oriented interface
+ * @export
+ * @class BugReportingApi
+ * @extends {BaseAPI}
+ */
+export class BugReportingApi extends BaseAPI {
+    /**
+     * 
+     * @param {ReportBugDto} reportBugDto 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof BugReportingApi
+     */
+    public bugReportingControllerReportBug(reportBugDto: ReportBugDto, options?: AxiosRequestConfig) {
+        return BugReportingApiFp(this.configuration).bugReportingControllerReportBug(reportBugDto, options).then((request) => request(this.axios, this.basePath));
     }
 }
 
