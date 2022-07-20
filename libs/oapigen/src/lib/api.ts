@@ -496,6 +496,12 @@ export interface ExternalLinkCollateral {
      * @memberof ExternalLinkCollateral
      */
     'group': ExternalLinkCollateralGroupEnum;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ExternalLinkCollateral
+     */
+    'taskIsDeleted': boolean;
 }
 
 export const ExternalLinkCollateralGroupEnum = {
@@ -628,6 +634,12 @@ export interface ExternalTicket {
      * @memberof ExternalTicket
      */
     'spaceId': string;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ExternalTicket
+     */
+    'taskIsDeleted': boolean;
 }
 
 export const ExternalTicketStatusEnum = {
