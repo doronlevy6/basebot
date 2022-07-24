@@ -202,7 +202,13 @@ export class EventsHandler {
           text: `*Links:*\n${taskLink}`,
         });
       } else {
-        statusAndLinksSectionBlock.fields[1].text = `${statusAndLinksSectionBlock.fields[1].text}${taskLink}`;
+        const currentLinks = statusAndLinksSectionBlock.fields[1].text
+          .split('\n')
+          .filter((l) => l.startsWith('http'));
+        currentLinks.push(taskLink);
+        statusAndLinksSectionBlock.fields[1].text = `*Links:*\n${[
+          ...new Set(currentLinks),
+        ].join('\n')}`;
       }
 
       await respond({
