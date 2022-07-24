@@ -26,8 +26,10 @@ export const installationSucccessHandler: (
       logger.warn(`no domains found for ${JSON.stringify(installation)}`);
     }
 
+    const params = new URLSearchParams();
+    params.set('from', `slack_success`);
     res.writeHead(302, {
-      Location: 'https://link.base.la',
+      Location: `https://link.base.la?${params.toString()}`,
     });
     res.end();
   };

@@ -11,6 +11,7 @@ export const installationFailureHandler: CallbackOptions['failure'] = (
     'error',
     `We've failed connecting your slack account to BASE. Please try again.`,
   );
+  params.set('from', 'slack_failure');
 
   res.writeHead(302, {
     Location: `https://link.base.la?${params.toString()}`,
