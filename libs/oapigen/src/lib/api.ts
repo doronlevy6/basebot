@@ -92,6 +92,12 @@ export interface ClientVersionDto {
 export interface Collateral {
     /**
      * 
+     * @type {CollateralData}
+     * @memberof Collateral
+     */
+    'data': CollateralData;
+    /**
+     * 
      * @type {string}
      * @memberof Collateral
      */
@@ -107,7 +113,7 @@ export interface Collateral {
      * @type {string}
      * @memberof Collateral
      */
-    'type': string;
+    'type': CollateralTypeEnum;
     /**
      * 
      * @type {string}
@@ -156,13 +162,23 @@ export interface Collateral {
      * @memberof Collateral
      */
     'updatedAt': string;
-    /**
-     * 
-     * @type {object}
-     * @memberof Collateral
-     */
-    'data': object;
 }
+
+export const CollateralTypeEnum = {
+    Link: 'link',
+    File: 'file',
+    Ticket: 'ticket',
+    Unknown: 'unknown'
+} as const;
+
+export type CollateralTypeEnum = typeof CollateralTypeEnum[keyof typeof CollateralTypeEnum];
+
+/**
+ * @type CollateralData
+ * @export
+ */
+export type CollateralData = LinkCollateral | TicketCollateral;
+
 /**
  * 
  * @export
@@ -958,6 +974,36 @@ export interface Link {
      */
     'provider': string;
 }
+/**
+ * 
+ * @export
+ * @interface LinkCollateral
+ */
+export interface LinkCollateral {
+    /**
+     * 
+     * @type {string}
+     * @memberof LinkCollateral
+     */
+    'url': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof LinkCollateral
+     */
+    'group': LinkCollateralGroupEnum;
+}
+
+export const LinkCollateralGroupEnum = {
+    Document: 'document',
+    Presentation: 'presentation',
+    Spreadsheet: 'spreadsheet',
+    NonSpecific: 'non_specific',
+    Unknown: 'unknown'
+} as const;
+
+export type LinkCollateralGroupEnum = typeof LinkCollateralGroupEnum[keyof typeof LinkCollateralGroupEnum];
+
 /**
  * 
  * @export
@@ -1784,6 +1830,78 @@ export interface TaskStatusUpdateRequestDto {
      */
     'firstTimeAsking': boolean;
 }
+/**
+ * 
+ * @export
+ * @interface TicketCollateral
+ */
+export interface TicketCollateral {
+    /**
+     * 
+     * @type {string}
+     * @memberof TicketCollateral
+     */
+    'ticketId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof TicketCollateral
+     */
+    'spaceId'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof TicketCollateral
+     */
+    'url': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof TicketCollateral
+     */
+    'name': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof TicketCollateral
+     */
+    'type': string;
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof TicketCollateral
+     */
+    'providerAssigneesEmails'?: Array<string>;
+    /**
+     * 
+     * @type {string}
+     * @memberof TicketCollateral
+     */
+    'status': TicketCollateralStatusEnum;
+    /**
+     * 
+     * @type {string}
+     * @memberof TicketCollateral
+     */
+    'providerStatus'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof TicketCollateral
+     */
+    'dueDate'?: string;
+}
+
+export const TicketCollateralStatusEnum = {
+    NotStarted: 'not_started',
+    Waiting: 'waiting',
+    OnHold: 'on_hold',
+    InProgress: 'in_progress',
+    Done: 'done'
+} as const;
+
+export type TicketCollateralStatusEnum = typeof TicketCollateralStatusEnum[keyof typeof TicketCollateralStatusEnum];
+
 /**
  * 
  * @export
