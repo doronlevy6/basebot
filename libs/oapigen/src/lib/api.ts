@@ -286,6 +286,12 @@ export interface CreateTaskDraftDto {
     'assigneeId'?: string;
     /**
      * 
+     * @type {Array<User>}
+     * @memberof CreateTaskDraftDto
+     */
+    'contributors'?: Array<User>;
+    /**
+     * 
      * @type {Array<ExternalTicket>}
      * @memberof CreateTaskDraftDto
      */
@@ -333,6 +339,12 @@ export interface CreateTaskDto {
      * @memberof CreateTaskDto
      */
     'assigneeId': string;
+    /**
+     * 
+     * @type {Array<User>}
+     * @memberof CreateTaskDto
+     */
+    'contributors'?: Array<User>;
     /**
      * 
      * @type {Array<ExternalTicket>}
@@ -1350,6 +1362,12 @@ export interface SlackUpdateTaskDto {
     'description'?: string;
     /**
      * 
+     * @type {Array<User>}
+     * @memberof SlackUpdateTaskDto
+     */
+    'contributors'?: Array<User>;
+    /**
+     * 
      * @type {Array<ExternalTicket>}
      * @memberof SlackUpdateTaskDto
      */
@@ -1481,6 +1499,12 @@ export interface Task {
      * @memberof Task
      */
     'assigneeId': string;
+    /**
+     * 
+     * @type {Array<User>}
+     * @memberof Task
+     */
+    'contributors': Array<User>;
     /**
      * 
      * @type {string}
@@ -2089,6 +2113,12 @@ export interface UpdateTaskDraftDto {
     'assigneeId'?: string;
     /**
      * 
+     * @type {Array<User>}
+     * @memberof UpdateTaskDraftDto
+     */
+    'contributors'?: Array<User>;
+    /**
+     * 
      * @type {Array<ExternalTicket>}
      * @memberof UpdateTaskDraftDto
      */
@@ -2154,6 +2184,12 @@ export interface UpdateTaskDto {
      * @memberof UpdateTaskDto
      */
     'assigneeId'?: string;
+    /**
+     * 
+     * @type {Array<User>}
+     * @memberof UpdateTaskDto
+     */
+    'contributors'?: Array<User>;
     /**
      * 
      * @type {Array<ExternalTicket>}
