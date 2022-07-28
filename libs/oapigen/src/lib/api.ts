@@ -87,6 +87,85 @@ export interface ClientVersionDto {
 /**
  * 
  * @export
+ * @interface Collateral
+ */
+export interface Collateral {
+    /**
+     * 
+     * @type {string}
+     * @memberof Collateral
+     */
+    'id': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof Collateral
+     */
+    'provider': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof Collateral
+     */
+    'type': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof Collateral
+     */
+    'url': string;
+    /**
+     * 
+     * @type {Task}
+     * @memberof Collateral
+     */
+    'task': Task;
+    /**
+     * 
+     * @type {string}
+     * @memberof Collateral
+     */
+    'taskId': string;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof Collateral
+     */
+    'taskIsDeleted': boolean;
+    /**
+     * 
+     * @type {User}
+     * @memberof Collateral
+     */
+    'creator': User;
+    /**
+     * 
+     * @type {string}
+     * @memberof Collateral
+     */
+    'creatorId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof Collateral
+     */
+    'createdAt': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof Collateral
+     */
+    'updatedAt': string;
+    /**
+     * 
+     * @type {object}
+     * @memberof Collateral
+     */
+    'data': object;
+}
+/**
+ * 
+ * @export
  * @interface ConvertDraftsDto
  */
 export interface ConvertDraftsDto {
@@ -1392,6 +1471,12 @@ export interface Task {
      * @memberof Task
      */
     'externalTickets'?: Array<ExternalTicket>;
+    /**
+     * 
+     * @type {Array<Collateral>}
+     * @memberof Task
+     */
+    'collaterals'?: Array<Collateral>;
     /**
      * 
      * @type {Array<RecentActivity>}

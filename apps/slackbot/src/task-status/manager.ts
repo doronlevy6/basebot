@@ -262,8 +262,8 @@ export class TaskStatusManager {
       },
     ];
 
-    if (task.externalLinks) {
-      const taskLinks = task.externalLinks?.map((link) => {
+    if (task.collaterals) {
+      const taskLinks = task.collaterals?.map((link) => {
         return `<${link.url}|${link.url}>\n`;
       });
       statusAndLinks.push({
