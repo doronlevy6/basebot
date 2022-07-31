@@ -304,12 +304,6 @@ export interface CreateTaskDraftDto {
     'contributors'?: Array<User>;
     /**
      * 
-     * @type {Array<ExternalTicket>}
-     * @memberof CreateTaskDraftDto
-     */
-    'externalTickets'?: Array<ExternalTicket>;
-    /**
-     * 
      * @type {string}
      * @memberof CreateTaskDraftDto
      */
@@ -320,12 +314,6 @@ export interface CreateTaskDraftDto {
      * @memberof CreateTaskDraftDto
      */
     'tags'?: Array<string>;
-    /**
-     * 
-     * @type {Array<string>}
-     * @memberof CreateTaskDraftDto
-     */
-    'links'?: Array<string>;
 }
 /**
  * 
@@ -359,12 +347,6 @@ export interface CreateTaskDto {
     'contributors'?: Array<User>;
     /**
      * 
-     * @type {Array<ExternalTicket>}
-     * @memberof CreateTaskDto
-     */
-    'externalTickets'?: Array<ExternalTicket>;
-    /**
-     * 
      * @type {string}
      * @memberof CreateTaskDto
      */
@@ -375,12 +357,6 @@ export interface CreateTaskDto {
      * @memberof CreateTaskDto
      */
     'tags'?: Array<string>;
-    /**
-     * 
-     * @type {Array<string>}
-     * @memberof CreateTaskDto
-     */
-    'links'?: Array<string>;
 }
 /**
  * 
@@ -548,228 +524,6 @@ export const EventSource = {
 
 export type EventSource = typeof EventSource[keyof typeof EventSource];
 
-
-/**
- * 
- * @export
- * @interface ExternalLinkCollateral
- */
-export interface ExternalLinkCollateral {
-    /**
-     * 
-     * @type {string}
-     * @memberof ExternalLinkCollateral
-     */
-    'id': string;
-    /**
-     * 
-     * @type {Task}
-     * @memberof ExternalLinkCollateral
-     */
-    'task': Task;
-    /**
-     * 
-     * @type {string}
-     * @memberof ExternalLinkCollateral
-     */
-    'taskId': string;
-    /**
-     * 
-     * @type {User}
-     * @memberof ExternalLinkCollateral
-     */
-    'creator': User;
-    /**
-     * 
-     * @type {string}
-     * @memberof ExternalLinkCollateral
-     */
-    'creatorId': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof ExternalLinkCollateral
-     */
-    'providerType': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof ExternalLinkCollateral
-     */
-    'createdAt': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof ExternalLinkCollateral
-     */
-    'updatedAt': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof ExternalLinkCollateral
-     */
-    'url': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof ExternalLinkCollateral
-     */
-    'group': ExternalLinkCollateralGroupEnum;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ExternalLinkCollateral
-     */
-    'taskIsDeleted': boolean;
-}
-
-export const ExternalLinkCollateralGroupEnum = {
-    Document: 'document',
-    Presentation: 'presentation',
-    Spreadsheet: 'spreadsheet',
-    NonSpecific: 'non_specific',
-    Unknown: 'unknown'
-} as const;
-
-export type ExternalLinkCollateralGroupEnum = typeof ExternalLinkCollateralGroupEnum[keyof typeof ExternalLinkCollateralGroupEnum];
-
-/**
- * 
- * @export
- * @interface ExternalTicket
- */
-export interface ExternalTicket {
-    /**
-     * 
-     * @type {string}
-     * @memberof ExternalTicket
-     */
-    'id': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof ExternalTicket
-     */
-    'ticketId': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof ExternalTicket
-     */
-    'providerType': string;
-    /**
-     * 
-     * @type {Task}
-     * @memberof ExternalTicket
-     */
-    'task': Task;
-    /**
-     * 
-     * @type {string}
-     * @memberof ExternalTicket
-     */
-    'taskId': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof ExternalTicket
-     */
-    'name': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof ExternalTicket
-     */
-    'type': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof ExternalTicket
-     */
-    'parentTicketId': string;
-    /**
-     * 
-     * @type {User}
-     * @memberof ExternalTicket
-     */
-    'assignee': User;
-    /**
-     * 
-     * @type {string}
-     * @memberof ExternalTicket
-     */
-    'assigneeId': string;
-    /**
-     * 
-     * @type {Array<User>}
-     * @memberof ExternalTicket
-     */
-    'providerAssignees': Array<User>;
-    /**
-     * 
-     * @type {string}
-     * @memberof ExternalTicket
-     */
-    'status': ExternalTicketStatusEnum;
-    /**
-     * 
-     * @type {string}
-     * @memberof ExternalTicket
-     */
-    'providerStatus': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof ExternalTicket
-     */
-    'dueDate'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof ExternalTicket
-     */
-    'createdAt': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof ExternalTicket
-     */
-    'updatedAt': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof ExternalTicket
-     */
-    'updatedFromProviderAt': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof ExternalTicket
-     */
-    'url': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof ExternalTicket
-     */
-    'spaceId': string;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ExternalTicket
-     */
-    'taskIsDeleted': boolean;
-}
-
-export const ExternalTicketStatusEnum = {
-    NotStarted: 'not_started',
-    Waiting: 'waiting',
-    OnHold: 'on_hold',
-    InProgress: 'in_progress',
-    Done: 'done'
-} as const;
-
-export type ExternalTicketStatusEnum = typeof ExternalTicketStatusEnum[keyof typeof ExternalTicketStatusEnum];
 
 /**
  * 
@@ -1430,12 +1184,6 @@ export interface SlackUpdateTaskDto {
     'contributors'?: Array<User>;
     /**
      * 
-     * @type {Array<ExternalTicket>}
-     * @memberof SlackUpdateTaskDto
-     */
-    'externalTickets'?: Array<ExternalTicket>;
-    /**
-     * 
      * @type {string}
      * @memberof SlackUpdateTaskDto
      */
@@ -1446,12 +1194,6 @@ export interface SlackUpdateTaskDto {
      * @memberof SlackUpdateTaskDto
      */
     'tags'?: Array<string>;
-    /**
-     * 
-     * @type {Array<string>}
-     * @memberof SlackUpdateTaskDto
-     */
-    'links'?: Array<string>;
     /**
      * 
      * @type {string}
@@ -1591,18 +1333,6 @@ export interface Task {
      * @memberof Task
      */
     'tags': Array<string>;
-    /**
-     * 
-     * @type {Array<ExternalLinkCollateral>}
-     * @memberof Task
-     */
-    'externalLinks'?: Array<ExternalLinkCollateral>;
-    /**
-     * 
-     * @type {Array<ExternalTicket>}
-     * @memberof Task
-     */
-    'externalTickets'?: Array<ExternalTicket>;
     /**
      * 
      * @type {Array<Collateral>}
@@ -2181,12 +1911,6 @@ export interface UpdateTaskDraftDto {
     'contributors'?: Array<User>;
     /**
      * 
-     * @type {Array<ExternalTicket>}
-     * @memberof UpdateTaskDraftDto
-     */
-    'externalTickets'?: Array<ExternalTicket>;
-    /**
-     * 
      * @type {string}
      * @memberof UpdateTaskDraftDto
      */
@@ -2197,12 +1921,6 @@ export interface UpdateTaskDraftDto {
      * @memberof UpdateTaskDraftDto
      */
     'tags'?: Array<string>;
-    /**
-     * 
-     * @type {Array<string>}
-     * @memberof UpdateTaskDraftDto
-     */
-    'links'?: Array<string>;
     /**
      * 
      * @type {string}
@@ -2254,12 +1972,6 @@ export interface UpdateTaskDto {
     'contributors'?: Array<User>;
     /**
      * 
-     * @type {Array<ExternalTicket>}
-     * @memberof UpdateTaskDto
-     */
-    'externalTickets'?: Array<ExternalTicket>;
-    /**
-     * 
      * @type {string}
      * @memberof UpdateTaskDto
      */
@@ -2270,12 +1982,6 @@ export interface UpdateTaskDto {
      * @memberof UpdateTaskDto
      */
     'tags'?: Array<string>;
-    /**
-     * 
-     * @type {Array<string>}
-     * @memberof UpdateTaskDto
-     */
-    'links'?: Array<string>;
 }
 
 export const UpdateTaskDtoStatusEnum = {
