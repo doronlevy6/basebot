@@ -7,6 +7,7 @@ export enum SlackBotRoutes {
   CREATE_TASK = 'create_tasks',
   CREATE_TASKS_SUBMIT = 'create-tasks-submit',
   ADD_TASK_LINK = 'enter-task-link',
+  OAUTH_CONNECT = 'add-links-oauth-submit',
 }
 
 export const registerSlackbotEvents = (app: App, baseApi: SlackbotApi) => {
@@ -14,10 +15,13 @@ export const registerSlackbotEvents = (app: App, baseApi: SlackbotApi) => {
   app.action(/task-status-select.*/, eventsHandler.handleSelectTaskStatus);
   app.shortcut(SlackBotRoutes.CREATE_TASK, eventsHandler.handleCreateTask);
   app.view(SlackBotRoutes.CREATE_TASKS_SUBMIT, eventsHandler.submitCreateTasks);
+  app.view(SlackBotRoutes.OAUTH_CONNECT, onlyAck);
   app.action(SlackBotRoutes.ADD_TASK_LINK, eventsHandler.handleAddTaskLink);
 
   // This is the global action handler, which will match all unmatched actions
-  app.action(/.*/, async ({ ack }) => {
-    await ack();
-  });
+  app.action(/.*/, onlyAck);
+};
+
+const onlyAck = async ({ ack }) => {
+  await ack();
 };

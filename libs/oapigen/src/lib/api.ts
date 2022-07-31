@@ -140,6 +140,18 @@ export interface Collateral {
     'taskIsDeleted': boolean;
     /**
      * 
+     * @type {boolean}
+     * @memberof Collateral
+     */
+    'refreshable': boolean;
+    /**
+     * 
+     * @type {string}
+     * @memberof Collateral
+     */
+    'lastSync'?: string;
+    /**
+     * 
      * @type {User}
      * @memberof Collateral
      */
@@ -177,7 +189,7 @@ export type CollateralTypeEnum = typeof CollateralTypeEnum[keyof typeof Collater
  * @type CollateralData
  * @export
  */
-export type CollateralData = LinkCollateral | TicketCollateral;
+export type CollateralData = ForbiddenTicketCollateral | LinkCollateral | TicketCollateral;
 
 /**
  * 
@@ -759,6 +771,56 @@ export const ExternalTicketStatusEnum = {
 
 export type ExternalTicketStatusEnum = typeof ExternalTicketStatusEnum[keyof typeof ExternalTicketStatusEnum];
 
+/**
+ * 
+ * @export
+ * @interface ForbiddenTicketCollateral
+ */
+export interface ForbiddenTicketCollateral {
+    /**
+     * 
+     * @type {string}
+     * @memberof ForbiddenTicketCollateral
+     */
+    'ticketId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ForbiddenTicketCollateral
+     */
+    'spaceId'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ForbiddenTicketCollateral
+     */
+    'url': string;
+}
+/**
+ * 
+ * @export
+ * @interface GenerateRedirectDto
+ */
+export interface GenerateRedirectDto {
+    /**
+     * 
+     * @type {string}
+     * @memberof GenerateRedirectDto
+     */
+    'provider': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof GenerateRedirectDto
+     */
+    'organizationId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof GenerateRedirectDto
+     */
+    'userId': string;
+}
 /**
  * 
  * @export
@@ -3806,6 +3868,92 @@ export const SlackbotApiApiAxiosParamCreator = function (configuration?: Configu
         },
         /**
          * 
+         * @param {GenerateRedirectDto} generateRedirectDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        slackbotApiControllerGenerateOauthRedirect: async (generateRedirectDto: GenerateRedirectDto, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'generateRedirectDto' is not null or undefined
+            assertParamExists('slackbotApiControllerGenerateOauthRedirect', 'generateRedirectDto', generateRedirectDto)
+            const localVarPath = `/slackbot-api/oauth`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication bearer required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(generateRedirectDto, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {string} userId 
+         * @param {string} orgId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        slackbotApiControllerGetUserProviders: async (userId: string, orgId: string, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'userId' is not null or undefined
+            assertParamExists('slackbotApiControllerGetUserProviders', 'userId', userId)
+            // verify required parameter 'orgId' is not null or undefined
+            assertParamExists('slackbotApiControllerGetUserProviders', 'orgId', orgId)
+            const localVarPath = `/slackbot-api/oauth/providers`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication bearer required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+            if (userId !== undefined) {
+                localVarQueryParameter['userId'] = userId;
+            }
+
+            if (orgId !== undefined) {
+                localVarQueryParameter['orgId'] = orgId;
+            }
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
          * @param {string} id 
          * @param {SlackUpdateTaskDto} slackUpdateTaskDto 
          * @param {*} [options] Override http request option.
@@ -3920,6 +4068,27 @@ export const SlackbotApiApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
+         * @param {GenerateRedirectDto} generateRedirectDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async slackbotApiControllerGenerateOauthRedirect(generateRedirectDto: GenerateRedirectDto, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<string>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.slackbotApiControllerGenerateOauthRedirect(generateRedirectDto, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+        /**
+         * 
+         * @param {string} userId 
+         * @param {string} orgId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async slackbotApiControllerGetUserProviders(userId: string, orgId: string, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<string>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.slackbotApiControllerGetUserProviders(userId, orgId, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+        /**
+         * 
          * @param {string} id 
          * @param {SlackUpdateTaskDto} slackUpdateTaskDto 
          * @param {*} [options] Override http request option.
@@ -3975,6 +4144,25 @@ export const SlackbotApiApiFactory = function (configuration?: Configuration, ba
          */
         slackbotApiControllerCreateTasksFromSlackMessage(importSlackDto: ImportSlackDto, options?: any): AxiosPromise<void> {
             return localVarFp.slackbotApiControllerCreateTasksFromSlackMessage(importSlackDto, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {GenerateRedirectDto} generateRedirectDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        slackbotApiControllerGenerateOauthRedirect(generateRedirectDto: GenerateRedirectDto, options?: any): AxiosPromise<string> {
+            return localVarFp.slackbotApiControllerGenerateOauthRedirect(generateRedirectDto, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {string} userId 
+         * @param {string} orgId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        slackbotApiControllerGetUserProviders(userId: string, orgId: string, options?: any): AxiosPromise<Array<string>> {
+            return localVarFp.slackbotApiControllerGetUserProviders(userId, orgId, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -4036,6 +4224,29 @@ export class SlackbotApiApi extends BaseAPI {
      */
     public slackbotApiControllerCreateTasksFromSlackMessage(importSlackDto: ImportSlackDto, options?: AxiosRequestConfig) {
         return SlackbotApiApiFp(this.configuration).slackbotApiControllerCreateTasksFromSlackMessage(importSlackDto, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {GenerateRedirectDto} generateRedirectDto 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof SlackbotApiApi
+     */
+    public slackbotApiControllerGenerateOauthRedirect(generateRedirectDto: GenerateRedirectDto, options?: AxiosRequestConfig) {
+        return SlackbotApiApiFp(this.configuration).slackbotApiControllerGenerateOauthRedirect(generateRedirectDto, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {string} userId 
+     * @param {string} orgId 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof SlackbotApiApi
+     */
+    public slackbotApiControllerGetUserProviders(userId: string, orgId: string, options?: AxiosRequestConfig) {
+        return SlackbotApiApiFp(this.configuration).slackbotApiControllerGetUserProviders(userId, orgId, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

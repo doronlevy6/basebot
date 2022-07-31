@@ -9,7 +9,13 @@ import {
 import validator from 'validator';
 import { AnalyticsManager } from '../analytics/analytics-manager';
 import { snakeToTitleCase } from '@base/utils';
-import { ActionsBlock, Block, Button, SectionBlock } from '@slack/web-api';
+import {
+  ActionsBlock,
+  Block,
+  Button,
+  SectionBlock,
+  WebClient,
+} from '@slack/web-api';
 
 export class EventsHandler {
   private baseApi: SlackbotApi;
@@ -168,7 +174,9 @@ export class EventsHandler {
     }
 
     try {
-      const { assigneeId, taskId } = JSON.parse(body?.actions[0]?.block_id);
+      const { assigneeId, taskId, organizationId } = JSON.parse(
+        body?.actions[0]?.block_id,
+      );
       logger.info(
         `handling adding task link for task [${taskId}], link [${linkUrl}]`,
       );
@@ -178,6 +186,14 @@ export class EventsHandler {
         url: linkUrl,
         assigneeId: assigneeId,
       });
+
+      this.tryOauthForUser(
+        assigneeId,
+        organizationId,
+        linkUrl,
+        body.trigger_id,
+        client,
+      );
 
       const originalMessageBlocks = body.message?.blocks as Block[];
 
@@ -235,6 +251,103 @@ export class EventsHandler {
       say(`Error in update link for the task`);
     }
   };
+
+  tryOauthForUser = async (
+    userId: string,
+    orgId: string,
+    linkUrl: string,
+    triggerId: string,
+    client: WebClient,
+  ) => {
+    try {
+      const detectedProvider = this.tryDetectLinkUrl(linkUrl);
+      if (!detectedProvider) {
+        return;
+      }
+
+      const userProviders = await (
+        await this.baseApi.slackbotApiControllerGetUserProviders(userId, orgId)
+      ).data;
+
+      if (userProviders.includes(detectedProvider)) {
+        return;
+      }
+
+      const oauthRedirectUrl = (
+        await this.baseApi.slackbotApiControllerGenerateOauthRedirect({
+          provider: detectedProvider,
+          organizationId: orgId,
+          userId: userId,
+        })
+      ).data;
+
+      await client.views.open({
+        trigger_id: triggerId,
+        view: {
+          private_metadata: '',
+          callback_id: 'add-links-oauth-submit',
+          type: 'modal',
+          title: {
+            type: 'plain_text',
+            text: `Base & ${snakeToTitleCase(detectedProvider)}`,
+          },
+          close: {
+            type: 'plain_text',
+            text: 'Connect Later',
+          },
+          submit: {
+            type: 'plain_text',
+            text: 'Done',
+          },
+          blocks: [
+            {
+              type: 'section',
+              text: {
+                type: 'mrkdwn',
+                text: `Let Base update your progress automatically by connecting ${snakeToTitleCase(
+                  detectedProvider,
+                )}\n\n`,
+              },
+            },
+            {
+              type: 'actions',
+              elements: [
+                {
+                  type: 'button',
+                  style: 'primary',
+                  text: {
+                    type: 'plain_text',
+                    text: 'Connect now',
+                    emoji: true,
+                  },
+                  value: 'click_to_open_oauth',
+                  url: oauthRedirectUrl,
+                  action_id: 'click-to-open-oauth-action',
+                },
+              ],
+            },
+          ],
+        },
+      });
+    } catch (error) {
+      logger.error({
+        msg: `Error creating modal for OAuth Connect`,
+        error: error.stack,
+      });
+    }
+  };
+
+  tryDetectLinkUrl = (linkUrl: string): string | undefined => {
+    const parsed = new URL(linkUrl);
+    if (parsed.hostname.includes('app.asana.com')) {
+      return 'asana';
+    }
+
+    if (parsed.hostname.includes('monday.com')) {
+      return 'monday';
+    }
+  };
+
   handleCreateTask = async ({
     shortcut,
     ack,
