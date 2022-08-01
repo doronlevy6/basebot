@@ -24,6 +24,37 @@ import { BASE_PATH, COLLECTION_FORMATS, RequestArgs, BaseAPI, RequiredError } fr
 /**
  * 
  * @export
+ * @interface AcknowledgeTaskDto
+ */
+export interface AcknowledgeTaskDto {
+    /**
+     * 
+     * @type {boolean}
+     * @memberof AcknowledgeTaskDto
+     */
+    'acknowledged': boolean;
+    /**
+     * 
+     * @type {string}
+     * @memberof AcknowledgeTaskDto
+     */
+    'taskId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof AcknowledgeTaskDto
+     */
+    'organizationId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof AcknowledgeTaskDto
+     */
+    'userId': string;
+}
+/**
+ * 
+ * @export
  * @interface AddCollateralDto
  */
 export interface AddCollateralDto {
@@ -1101,6 +1132,7 @@ export interface RecentActivity {
 }
 
 export const RecentActivityTypeEnum = {
+    TaskAcknowledged: 'task_acknowledged',
     Link: 'link',
     TaskStatusChanged: 'task_status_changed',
     TicketStatusChanged: 'ticket_status_changed',
@@ -1125,7 +1157,7 @@ export type RecentActivityOriginEnum = typeof RecentActivityOriginEnum[keyof typ
  * @type RecentActivityData
  * @export
  */
-export type RecentActivityData = AssigneesAdded | Link | TaskPostponement | TaskStatusChange | TicketPostponement | TicketStatusChange;
+export type RecentActivityData = AssigneesAdded | Link | TaskAcknowledged | TaskPostponement | TaskStatusChange | TicketPostponement | TicketStatusChange;
 
 /**
  * 
@@ -1366,6 +1398,19 @@ export type TaskStatusEnum = typeof TaskStatusEnum[keyof typeof TaskStatusEnum];
 /**
  * 
  * @export
+ * @interface TaskAcknowledged
+ */
+export interface TaskAcknowledged {
+    /**
+     * 
+     * @type {boolean}
+     * @memberof TaskAcknowledged
+     */
+    'acknowledged': boolean;
+}
+/**
+ * 
+ * @export
  * @interface TaskChangeNotification
  */
 export interface TaskChangeNotification {
@@ -1550,6 +1595,139 @@ export interface TaskPostponement {
 /**
  * 
  * @export
+ * @interface TaskResponseDto
+ */
+export interface TaskResponseDto {
+    /**
+     * 
+     * @type {TaskResponseDtoTask}
+     * @memberof TaskResponseDto
+     */
+    'task': TaskResponseDtoTask | null;
+}
+/**
+ * 
+ * @export
+ * @interface TaskResponseDtoTask
+ */
+export interface TaskResponseDtoTask {
+    /**
+     * 
+     * @type {string}
+     * @memberof TaskResponseDtoTask
+     */
+    'status': TaskResponseDtoTaskStatusEnum;
+    /**
+     * 
+     * @type {string}
+     * @memberof TaskResponseDtoTask
+     */
+    'id': string;
+    /**
+     * 
+     * @type {User}
+     * @memberof TaskResponseDtoTask
+     */
+    'creator': User;
+    /**
+     * 
+     * @type {string}
+     * @memberof TaskResponseDtoTask
+     */
+    'creatorId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof TaskResponseDtoTask
+     */
+    'title': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof TaskResponseDtoTask
+     */
+    'description': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof TaskResponseDtoTask
+     */
+    'followers': string;
+    /**
+     * 
+     * @type {User}
+     * @memberof TaskResponseDtoTask
+     */
+    'assignee': User;
+    /**
+     * 
+     * @type {string}
+     * @memberof TaskResponseDtoTask
+     */
+    'assigneeId': string;
+    /**
+     * 
+     * @type {Array<User>}
+     * @memberof TaskResponseDtoTask
+     */
+    'contributors': Array<User>;
+    /**
+     * 
+     * @type {string}
+     * @memberof TaskResponseDtoTask
+     */
+    'createdAt': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof TaskResponseDtoTask
+     */
+    'updatedAt': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof TaskResponseDtoTask
+     */
+    'dueDate'?: string;
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof TaskResponseDtoTask
+     */
+    'tags': Array<string>;
+    /**
+     * 
+     * @type {Array<Collateral>}
+     * @memberof TaskResponseDtoTask
+     */
+    'collaterals'?: Array<Collateral>;
+    /**
+     * 
+     * @type {Array<RecentActivity>}
+     * @memberof TaskResponseDtoTask
+     */
+    'recentActivityLog'?: Array<RecentActivity>;
+    /**
+     * 
+     * @type {string}
+     * @memberof TaskResponseDtoTask
+     */
+    'deletedAt'?: string;
+}
+
+export const TaskResponseDtoTaskStatusEnum = {
+    NotStarted: 'not_started',
+    Waiting: 'waiting',
+    OnHold: 'on_hold',
+    InProgress: 'in_progress',
+    Done: 'done'
+} as const;
+
+export type TaskResponseDtoTaskStatusEnum = typeof TaskResponseDtoTaskStatusEnum[keyof typeof TaskResponseDtoTaskStatusEnum];
+
+/**
+ * 
+ * @export
  * @interface TaskStatusChange
  */
 export interface TaskStatusChange {
@@ -1620,31 +1798,6 @@ export interface TaskStatusChangeNotification {
      * @memberof TaskStatusChangeNotification
      */
     'currentStatus': string;
-}
-/**
- * 
- * @export
- * @interface TaskStatusUpdateRequestDto
- */
-export interface TaskStatusUpdateRequestDto {
-    /**
-     * 
-     * @type {User}
-     * @memberof TaskStatusUpdateRequestDto
-     */
-    'user': User;
-    /**
-     * 
-     * @type {Task}
-     * @memberof TaskStatusUpdateRequestDto
-     */
-    'task': Task;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof TaskStatusUpdateRequestDto
-     */
-    'firstTimeAsking': boolean;
 }
 /**
  * 
@@ -2591,6 +2744,43 @@ export const OauthPublicApiAxiosParamCreator = function (configuration?: Configu
     return {
         /**
          * 
+         * @param {string} provider 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        oauthPublicControllerGenerateAuthRedirect: async (provider: string, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'provider' is not null or undefined
+            assertParamExists('oauthPublicControllerGenerateAuthRedirect', 'provider', provider)
+            const localVarPath = `/oauth-public/{provider}`
+                .replace(`{${"provider"}}`, encodeURIComponent(String(provider)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication bearer required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
@@ -2634,6 +2824,16 @@ export const OauthPublicApiFp = function(configuration?: Configuration) {
     return {
         /**
          * 
+         * @param {string} provider 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async oauthPublicControllerGenerateAuthRedirect(provider: string, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<string>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.oauthPublicControllerGenerateAuthRedirect(provider, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+        /**
+         * 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
@@ -2653,6 +2853,15 @@ export const OauthPublicApiFactory = function (configuration?: Configuration, ba
     return {
         /**
          * 
+         * @param {string} provider 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        oauthPublicControllerGenerateAuthRedirect(provider: string, options?: any): AxiosPromise<string> {
+            return localVarFp.oauthPublicControllerGenerateAuthRedirect(provider, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
@@ -2669,6 +2878,17 @@ export const OauthPublicApiFactory = function (configuration?: Configuration, ba
  * @extends {BaseAPI}
  */
 export class OauthPublicApi extends BaseAPI {
+    /**
+     * 
+     * @param {string} provider 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof OauthPublicApi
+     */
+    public oauthPublicControllerGenerateAuthRedirect(provider: string, options?: AxiosRequestConfig) {
+        return OauthPublicApiFp(this.configuration).oauthPublicControllerGenerateAuthRedirect(provider, options).then((request) => request(this.axios, this.basePath));
+    }
+
     /**
      * 
      * @param {*} [options] Override http request option.
@@ -3465,6 +3685,45 @@ export const SlackbotApiApiAxiosParamCreator = function (configuration?: Configu
     return {
         /**
          * 
+         * @param {AcknowledgeTaskDto} acknowledgeTaskDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        slackbotApiControllerAcknowledgeTask: async (acknowledgeTaskDto: AcknowledgeTaskDto, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'acknowledgeTaskDto' is not null or undefined
+            assertParamExists('slackbotApiControllerAcknowledgeTask', 'acknowledgeTaskDto', acknowledgeTaskDto)
+            const localVarPath = `/slackbot-api/task/acknowledge`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication bearer required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(acknowledgeTaskDto, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
          * @param {AddCollateralDto} addCollateralDto 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -3483,6 +3742,10 @@ export const SlackbotApiApiAxiosParamCreator = function (configuration?: Configu
             const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
+
+            // authentication bearer required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
 
     
@@ -3518,6 +3781,10 @@ export const SlackbotApiApiAxiosParamCreator = function (configuration?: Configu
             const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
+
+            // authentication bearer required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
 
     
@@ -3683,6 +3950,10 @@ export const SlackbotApiApiAxiosParamCreator = function (configuration?: Configu
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
+            // authentication bearer required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
 
     
             localVarHeaderParameter['Content-Type'] = 'application/json';
@@ -3718,6 +3989,10 @@ export const SlackbotApiApiAxiosParamCreator = function (configuration?: Configu
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
+            // authentication bearer required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
 
     
             localVarHeaderParameter['Content-Type'] = 'application/json';
@@ -3744,11 +4019,21 @@ export const SlackbotApiApiFp = function(configuration?: Configuration) {
     return {
         /**
          * 
+         * @param {AcknowledgeTaskDto} acknowledgeTaskDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async slackbotApiControllerAcknowledgeTask(acknowledgeTaskDto: AcknowledgeTaskDto, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<TaskResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.slackbotApiControllerAcknowledgeTask(acknowledgeTaskDto, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+        /**
+         * 
          * @param {AddCollateralDto} addCollateralDto 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async slackbotApiControllerAddCollateral(addCollateralDto: AddCollateralDto, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+        async slackbotApiControllerAddCollateral(addCollateralDto: AddCollateralDto, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<TaskResponseDto>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.slackbotApiControllerAddCollateral(addCollateralDto, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
@@ -3800,7 +4085,7 @@ export const SlackbotApiApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async slackbotApiControllerUpdate(id: string, slackUpdateTaskDto: SlackUpdateTaskDto, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Task>> {
+        async slackbotApiControllerUpdate(id: string, slackUpdateTaskDto: SlackUpdateTaskDto, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<TaskResponseDto>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.slackbotApiControllerUpdate(id, slackUpdateTaskDto, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
@@ -3826,11 +4111,20 @@ export const SlackbotApiApiFactory = function (configuration?: Configuration, ba
     return {
         /**
          * 
+         * @param {AcknowledgeTaskDto} acknowledgeTaskDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        slackbotApiControllerAcknowledgeTask(acknowledgeTaskDto: AcknowledgeTaskDto, options?: any): AxiosPromise<TaskResponseDto> {
+            return localVarFp.slackbotApiControllerAcknowledgeTask(acknowledgeTaskDto, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
          * @param {AddCollateralDto} addCollateralDto 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        slackbotApiControllerAddCollateral(addCollateralDto: AddCollateralDto, options?: any): AxiosPromise<void> {
+        slackbotApiControllerAddCollateral(addCollateralDto: AddCollateralDto, options?: any): AxiosPromise<TaskResponseDto> {
             return localVarFp.slackbotApiControllerAddCollateral(addCollateralDto, options).then((request) => request(axios, basePath));
         },
         /**
@@ -3877,7 +4171,7 @@ export const SlackbotApiApiFactory = function (configuration?: Configuration, ba
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        slackbotApiControllerUpdate(id: string, slackUpdateTaskDto: SlackUpdateTaskDto, options?: any): AxiosPromise<Task> {
+        slackbotApiControllerUpdate(id: string, slackUpdateTaskDto: SlackUpdateTaskDto, options?: any): AxiosPromise<TaskResponseDto> {
             return localVarFp.slackbotApiControllerUpdate(id, slackUpdateTaskDto, options).then((request) => request(axios, basePath));
         },
         /**
@@ -3899,6 +4193,17 @@ export const SlackbotApiApiFactory = function (configuration?: Configuration, ba
  * @extends {BaseAPI}
  */
 export class SlackbotApiApi extends BaseAPI {
+    /**
+     * 
+     * @param {AcknowledgeTaskDto} acknowledgeTaskDto 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof SlackbotApiApi
+     */
+    public slackbotApiControllerAcknowledgeTask(acknowledgeTaskDto: AcknowledgeTaskDto, options?: AxiosRequestConfig) {
+        return SlackbotApiApiFp(this.configuration).slackbotApiControllerAcknowledgeTask(acknowledgeTaskDto, options).then((request) => request(this.axios, this.basePath));
+    }
+
     /**
      * 
      * @param {AddCollateralDto} addCollateralDto 
@@ -4629,111 +4934,6 @@ export class TaskDraftsApi extends BaseAPI {
      */
     public taskDraftsControllerUpdateAndConverToTask(updateTaskDraftDto: UpdateTaskDraftDto, options?: AxiosRequestConfig) {
         return TaskDraftsApiFp(this.configuration).taskDraftsControllerUpdateAndConverToTask(updateTaskDraftDto, options).then((request) => request(this.axios, this.basePath));
-    }
-}
-
-
-/**
- * TaskStatusUpdateSchedulerApi - axios parameter creator
- * @export
- */
-export const TaskStatusUpdateSchedulerApiAxiosParamCreator = function (configuration?: Configuration) {
-    return {
-        /**
-         * 
-         * @param {string} taskId 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        taskStatusUpdateSchedulerControllerRequestStatusUpdate: async (taskId: string, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'taskId' is not null or undefined
-            assertParamExists('taskStatusUpdateSchedulerControllerRequestStatusUpdate', 'taskId', taskId)
-            const localVarPath = `/task-status-update-scheduler/{taskId}`
-                .replace(`{${"taskId"}}`, encodeURIComponent(String(taskId)));
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            // authentication bearer required
-            // http bearer authentication required
-            await setBearerAuthToObject(localVarHeaderParameter, configuration)
-
-
-    
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-    }
-};
-
-/**
- * TaskStatusUpdateSchedulerApi - functional programming interface
- * @export
- */
-export const TaskStatusUpdateSchedulerApiFp = function(configuration?: Configuration) {
-    const localVarAxiosParamCreator = TaskStatusUpdateSchedulerApiAxiosParamCreator(configuration)
-    return {
-        /**
-         * 
-         * @param {string} taskId 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async taskStatusUpdateSchedulerControllerRequestStatusUpdate(taskId: string, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.taskStatusUpdateSchedulerControllerRequestStatusUpdate(taskId, options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
-        },
-    }
-};
-
-/**
- * TaskStatusUpdateSchedulerApi - factory interface
- * @export
- */
-export const TaskStatusUpdateSchedulerApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
-    const localVarFp = TaskStatusUpdateSchedulerApiFp(configuration)
-    return {
-        /**
-         * 
-         * @param {string} taskId 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        taskStatusUpdateSchedulerControllerRequestStatusUpdate(taskId: string, options?: any): AxiosPromise<void> {
-            return localVarFp.taskStatusUpdateSchedulerControllerRequestStatusUpdate(taskId, options).then((request) => request(axios, basePath));
-        },
-    };
-};
-
-/**
- * TaskStatusUpdateSchedulerApi - object-oriented interface
- * @export
- * @class TaskStatusUpdateSchedulerApi
- * @extends {BaseAPI}
- */
-export class TaskStatusUpdateSchedulerApi extends BaseAPI {
-    /**
-     * 
-     * @param {string} taskId 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof TaskStatusUpdateSchedulerApi
-     */
-    public taskStatusUpdateSchedulerControllerRequestStatusUpdate(taskId: string, options?: AxiosRequestConfig) {
-        return TaskStatusUpdateSchedulerApiFp(this.configuration).taskStatusUpdateSchedulerControllerRequestStatusUpdate(taskId, options).then((request) => request(this.axios, this.basePath));
     }
 }
 

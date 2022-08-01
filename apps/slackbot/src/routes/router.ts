@@ -1,6 +1,6 @@
 import { SlackbotApiApi as SlackbotApi } from '@base/oapigen';
 import { App } from '@slack/bolt';
-import { EventsHandler } from '../slackbot/src/handlers/events-handler';
+import { EventsHandler } from '../handlers/events-handler';
 
 export enum SlackBotRoutes {
   TASK_STATUS_SELECT = 'task-status-select',
@@ -8,11 +8,13 @@ export enum SlackBotRoutes {
   CREATE_TASKS_SUBMIT = 'create-tasks-submit',
   ADD_TASK_LINK = 'enter-task-link',
   OAUTH_CONNECT = 'add-links-oauth-submit',
+  TASK_ACKNOWLEDGE_SELECT = 'task-acknowledge',
 }
 
 export const registerSlackbotEvents = (app: App, baseApi: SlackbotApi) => {
   const eventsHandler = new EventsHandler(baseApi);
   app.action(/task-status-select.*/, eventsHandler.handleSelectTaskStatus);
+  app.action(/task-acknowledge.*/, eventsHandler.handleTaskAcknowledge);
   app.shortcut(SlackBotRoutes.CREATE_TASK, eventsHandler.handleCreateTask);
   app.view(SlackBotRoutes.CREATE_TASKS_SUBMIT, eventsHandler.submitCreateTasks);
   app.view(SlackBotRoutes.OAUTH_CONNECT, onlyAck);

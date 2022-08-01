@@ -1,11 +1,13 @@
-import { App, CustomRoute } from '@slack/bolt';
-import { httpMetricsEndpoint, IReporter } from '@base/metrics';
+import { App } from '@slack/bolt';
+import { IReporter } from '@base/metrics';
 import { logger, BoltWrapper } from '@base/logger';
 import { PgInstallationStore } from './installations/installationStore';
 import { installationSucccessHandler } from './installations/success-handler';
 import { installationFailureHandler } from './installations/failure-handler';
 import { ImportController } from './imports/controller';
 import { SlackbotApiApi as SlackbotApi } from '@base/oapigen';
+import { healthRoute } from './routes/health-route';
+import { metricsRoute } from './routes/metrics-route';
 
 export function createApp(
   installationStore: PgInstallationStore,
@@ -39,38 +41,3 @@ export function createApp(
     },
   });
 }
-
-const healthRoute = (): CustomRoute => ({
-  path: '/health',
-  method: ['GET'],
-  handler: async (_, res) => {
-    res.writeHead(200);
-    const healthRes = {
-      status: 'ok',
-      info: {
-        serviceInfo: {
-          status: 'up',
-          env: process.env.ENV,
-          version: process.env.VERSION,
-          tag: process.env.TAG,
-        },
-      },
-      error: {},
-      details: {
-        serviceInfo: {
-          status: 'up',
-          env: process.env.ENV,
-          version: process.env.VERSION,
-          tag: process.env.TAG,
-        },
-      },
-    };
-    res.end(JSON.stringify(healthRes));
-  },
-});
-
-const metricsRoute = (metricsReporter: IReporter): CustomRoute => ({
-  path: '/metrics',
-  method: ['GET'],
-  handler: httpMetricsEndpoint(metricsReporter),
-});

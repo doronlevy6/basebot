@@ -1,21 +1,17 @@
 import { logger } from '@base/logger';
-import { SlackbotApiApi as SlackbotApi } from '@base/oapigen';
+import { SlackbotApiApi as SlackbotApi, Task } from '@base/oapigen';
+import validator from 'validator';
 import {
-  BlockPlainTextInputActionWrapper,
   BlockButtonWrapper,
+  BlockPlainTextInputActionWrapper,
   SlackActionWrapper,
   ViewAction,
 } from '../../../slackbot/common/types';
-import validator from 'validator';
 import { AnalyticsManager } from '../analytics/analytics-manager';
 import { snakeToTitleCase } from '@base/utils';
-import {
-  ActionsBlock,
-  Block,
-  Button,
-  SectionBlock,
-  WebClient,
-} from '@slack/web-api';
+import { ActionsBlock, SectionBlock, WebClient } from '@slack/web-api';
+import { TaskView } from '../tasks/view';
+import { AcknowledgementStatus, ITaskViewProps } from '../tasks/view/types';
 
 export class EventsHandler {
   private baseApi: SlackbotApi;
@@ -24,147 +20,83 @@ export class EventsHandler {
     this.baseApi = baseApi;
   }
 
-  handleSelectTaskStatus = async ({
-    body,
-    ack,
-    say,
-    respond,
-    client,
-  }: BlockButtonWrapper) => {
+  handleSelectTaskStatus = async (params: BlockButtonWrapper) => {
+    const { body, ack, say } = params;
     await ack();
     try {
-      const { organizationId, assigneeId, taskId, status, firstTime } =
-        JSON.parse(body?.actions[0]?.value);
+      const { organizationId, assigneeId, taskId, status } = JSON.parse(
+        body?.actions[0]?.value,
+      );
+
       logger.info(
         `handling task status selecteced for task [${taskId}], assignee [${assigneeId}], status [${status}] `,
       );
 
-      const originalMessageBlocks = body.message?.blocks as Block[];
-
-      let taskDetailsSectionBlockIdx: number | undefined;
-      originalMessageBlocks.find((b, idx, _) => {
-        if (b.block_id == 'task-general-details') {
-          taskDetailsSectionBlockIdx = idx;
-          return true;
-        }
-        return false;
-      }) as SectionBlock | undefined;
-      if (!taskDetailsSectionBlockIdx) {
-        throw new Error(
-          'unable to find task details section block when parsing message body',
-        );
-      }
-
-      const statusSectionBlock = originalMessageBlocks.find((b) => {
-        return b.block_id == 'status-and-links';
-      }) as SectionBlock | undefined;
-      if (!firstTime && !statusSectionBlock?.fields) {
-        throw new Error(
-          'unable to find status section block when parsing message body',
-        );
-      }
-
-      if (!firstTime && statusSectionBlock?.fields) {
-        for (let i = 0; i < statusSectionBlock.fields.length; i++) {
-          const field = statusSectionBlock.fields[i];
-          if (field.text.includes('*Status:*')) {
-            field.text = `*Status:*\n${snakeToTitleCase(status)}`;
-          }
-        }
-      } else if (firstTime) {
-        originalMessageBlocks.splice(taskDetailsSectionBlockIdx + 1, 0, {
-          type: 'section',
-          fields: [
-            {
-              type: 'mrkdwn',
-              text: `*Status:*\n${snakeToTitleCase(status)}`,
-            },
-          ],
-          block_id: 'status-and-links',
-        } as Block);
-      }
-
-      const actionsBlock = originalMessageBlocks.find(
-        (b) => b.block_id == 'status-update-buttons',
-      ) as ActionsBlock | undefined;
-      if (!actionsBlock) {
-        throw new Error(
-          'unable to find actions block when parsing message body',
-        );
-      }
-
-      for (let i = 0; i < actionsBlock.elements.length; i++) {
-        const button = actionsBlock.elements[i] as Button;
-        if (button.value) {
-          const value = JSON.parse(button.value);
-          value.firstTime = false;
-          button.value = JSON.stringify(value);
-        }
-        if (button.action_id?.includes(status)) {
-          button.style = 'primary';
-          continue;
-        }
-        button.style = undefined;
-      }
-
-      await this.baseApi.slackbotApiControllerUpdate(taskId, {
+      const res = await this.baseApi.slackbotApiControllerUpdate(taskId, {
         assigneeId,
         status,
       });
 
-      if (firstTime) {
-        originalMessageBlocks.push({
-          dispatch_action: true,
-          type: 'input',
-          block_id: JSON.stringify({
-            organizationId: organizationId,
-            assigneeId: assigneeId,
-            taskId: taskId,
-          }),
-          element: {
-            type: 'plain_text_input',
-            action_id: 'enter-task-link',
-          },
-          label: {
-            type: 'plain_text',
-            text: 'Do you have a link that we can use to help track this task?',
-            emoji: true,
-          },
-        } as Block);
+      if (!res.data.task) {
+        throw new Error(`unable to find task with id [${taskId}]`);
       }
 
-      await respond({
-        replace_original: true,
-        response_type: 'in_channel',
-        text: body.message?.text,
-        blocks: originalMessageBlocks,
-      });
-
-      const user = await client.users.profile.get({ user: body.user.id });
-      if (!user.profile?.email) {
-        logger.warn(
-          `unable to send user interaction for analytics without user profile`,
-        );
-        return;
-      }
-      AnalyticsManager.getInstance().userInteraction(user?.profile.email, {
-        action: 'task_status_update',
-        taskId,
-        status,
-      });
+      await this.updateTaskAndSendEvent(
+        params,
+        { assigneeId, task: res.data.task, organizationId },
+        { action: 'task_status_update' },
+      );
     } catch (e) {
       logger.error({ msg: `error in changing status for for task`, error: e });
       say(`Error in update task status`);
     }
   };
 
-  handleAddTaskLink = async ({
-    body,
-    client,
-    ack,
-    say,
-    respond,
-  }: BlockPlainTextInputActionWrapper) => {
+  handleTaskAcknowledge = async (params: BlockButtonWrapper) => {
+    const { body, ack, say } = params;
+    await ack();
+
+    try {
+      const { organizationId, assigneeId, taskId, actionId } = JSON.parse(
+        body?.actions[0]?.value,
+      );
+      logger.info(
+        `handling task ack for task [${taskId}], assignee [${assigneeId}], status [${actionId}] `,
+      );
+
+      const status =
+        actionId === AcknowledgementStatus.Declined
+          ? AcknowledgementStatus.Declined
+          : AcknowledgementStatus.Acknowledged;
+
+      const res = await this.baseApi.slackbotApiControllerAcknowledgeTask({
+        userId: assigneeId,
+        organizationId,
+        taskId,
+        acknowledged: status === AcknowledgementStatus.Acknowledged,
+      });
+
+      if (!res.data.task) {
+        throw new Error(`unable to find task with id [${taskId}]`);
+      }
+
+      await this.updateTaskAndSendEvent(
+        params,
+        { assigneeId, task: res.data.task, organizationId },
+        { action: 'task_acknowledged' },
+        { acknowledgementStatus: actionId as AcknowledgementStatus },
+      );
+    } catch (e) {
+      logger.error({
+        msg: `error in changing acknowledgement for task`,
+        error: e,
+      });
+      say(`Error in acknowledging task`);
+    }
+  };
+
+  handleAddTaskLink = async (params: BlockPlainTextInputActionWrapper) => {
+    const { body, ack, say, client } = params;
     await ack();
     const linkUrl = body.actions[0]?.value;
     if (!validator.isURL(linkUrl)) {
@@ -181,11 +113,15 @@ export class EventsHandler {
         `handling adding task link for task [${taskId}], link [${linkUrl}]`,
       );
 
-      await this.baseApi.slackbotApiControllerAddCollateral({
+      const res = await this.baseApi.slackbotApiControllerAddCollateral({
         taskId,
         url: linkUrl,
         assigneeId: assigneeId,
       });
+
+      if (!res.data.task) {
+        throw new Error(`unable to find task with id [${taskId}]`);
+      }
 
       this.tryOauthForUser(
         assigneeId,
@@ -195,57 +131,16 @@ export class EventsHandler {
         client,
       );
 
-      const originalMessageBlocks = body.message?.blocks as Block[];
-
-      const statusAndLinksSectionBlock = originalMessageBlocks.find((b) => {
-        return b.block_id == 'status-and-links';
-      }) as SectionBlock | undefined;
-      if (!statusAndLinksSectionBlock) {
-        throw new Error(
-          'unable to find status and links section block when parsing message body',
-        );
-      }
-      if (!statusAndLinksSectionBlock.fields) {
-        throw new Error(
-          'unable to find status and links section block when parsing message body',
-        );
-      }
-
-      const taskLink = `<${linkUrl}|${linkUrl}>\n`;
-      if (statusAndLinksSectionBlock.fields.length === 1) {
-        statusAndLinksSectionBlock.fields.push({
-          type: 'mrkdwn',
-          text: `*Links:*\n${taskLink}`,
-        });
-      } else {
-        const currentLinks = statusAndLinksSectionBlock.fields[1].text
-          .split('\n')
-          .filter((l) => l.startsWith('http'));
-        currentLinks.push(taskLink);
-        statusAndLinksSectionBlock.fields[1].text = `*Links:*\n${[
-          ...new Set(currentLinks),
-        ].join('\n')}`;
-      }
-
-      await respond({
-        replace_original: true,
-        response_type: 'in_channel',
-        text: body.message?.text,
-        blocks: originalMessageBlocks,
-      });
-
-      const user = await client.users.profile.get({ user: body.user.id });
-
-      if (!user.profile?.email) {
-        logger.warn(
-          `unable to send user interaction for analytics without user profile`,
-        );
-        return;
-      }
-
-      AnalyticsManager.getInstance().userInteraction(user.profile.email, {
-        action: 'add_task_link',
-      });
+      await this.updateTaskAndSendEvent(
+        params,
+        {
+          assigneeId,
+          task: res.data.task,
+          organizationId,
+        },
+        { action: 'add_task_link' },
+        { extraCollaterals: [linkUrl] },
+      );
     } catch (e) {
       logger.error(`error in changing status for for task`);
       say(`Error in update link for the task`);
@@ -337,7 +232,7 @@ export class EventsHandler {
     }
   };
 
-  tryDetectLinkUrl = (linkUrl: string): string | undefined => {
+  private tryDetectLinkUrl = (linkUrl: string): string | undefined => {
     const parsed = new URL(linkUrl);
     if (parsed.hostname.includes('app.asana.com')) {
       return 'asana';
@@ -346,6 +241,67 @@ export class EventsHandler {
     if (parsed.hostname.includes('monday.com')) {
       return 'monday';
     }
+  };
+
+  private updateTaskAndSendEvent = async (
+    {
+      client,
+      body,
+      respond,
+    }: BlockButtonWrapper | BlockPlainTextInputActionWrapper,
+    data: {
+      organizationId: string;
+      assigneeId: string;
+      task: Task;
+    },
+    analytics: { action: string; data?: Record<string, string> },
+    viewOverrides?: Partial<ITaskViewProps>,
+  ) => {
+    const { organizationId, assigneeId, task } = data;
+    const slackUserId = body.user.id;
+
+    const creator = await client.users.lookupByEmail({
+      email: task.creator.email,
+    });
+    if (!creator.user?.id) {
+      logger.error(`Can't update message without creator id`);
+      return;
+    }
+
+    const taskView = TaskView({
+      assignee: {
+        id: slackUserId,
+      },
+      creator: {
+        id: creator.user.id,
+      },
+      baseOrgId: organizationId,
+      baseUserId: assigneeId,
+      task,
+      acknowledgementStatus: AcknowledgementStatus.Acknowledged,
+      ...viewOverrides,
+    });
+
+    await respond({
+      replace_original: true,
+      response_type: 'in_channel',
+      text: body.message?.text,
+      blocks: taskView.blocks,
+    });
+
+    const user = await client.users.profile.get({ user: slackUserId });
+    if (!user.profile?.email) {
+      logger.warn(
+        `unable to send user interaction for analytics without user profile`,
+      );
+      return;
+    }
+    AnalyticsManager.getInstance().userInteraction(user?.profile.email, {
+      action: analytics.action,
+      taskId: task.id,
+      status: task.status,
+      ...analytics.data,
+    });
   };
 
   handleCreateTask = async ({

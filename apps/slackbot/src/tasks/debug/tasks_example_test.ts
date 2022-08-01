@@ -1,4 +1,3 @@
-import { logger } from '@base/logger';
 import { Task, User } from '@base/oapigen';
 import { TaskStatusTriggerer } from './triggerer_tester';
 // TODO remove function
@@ -6,15 +5,15 @@ export const runTestExample = async (
   taskStatusTriggerer: TaskStatusTriggerer,
 ) => {
   if (!['development', 'local'].includes(process.env.ENV || 'local')) {
-    logger.info(`skipping test status message in env ${process.env.ENV}`);
+    console.log(`skipping test status message in env ${process.env.ENV}`);
     return;
   }
 
   const assignee1: User = {
-    id: '08f041ca-ea52-49a4-954b-ad936bf65453',
-    email: 'coby@base.la',
+    id: 'zsuo1hyz4cxqk271u649g',
+    email: 'itay@base.la',
     organizationId: 'base.la',
-    displayName: 'Coby',
+    displayName: 'Itay',
     externalAuthId: '',
     createdAt: new Date().toString(),
     updatedAt: new Date().toString(),
@@ -22,10 +21,10 @@ export const runTestExample = async (
   };
 
   const creator = {
-    id: 'u_itay',
-    email: 'itay@base.la',
+    id: 'lowpi01g4l6288euibxgx',
+    email: 'coby@base.la',
     organizationId: 'base.la',
-    displayName: 'Itay',
+    displayName: 'Coby',
     organization: undefined,
     externalAuthId: '',
     profileImage: '',
@@ -52,12 +51,12 @@ export const runTestExample = async (
   // };
 
   const task = {
-    id: '1',
+    id: '9n145fst1k0wu0kep5owh',
     creator: creator,
     creatorId: creator.id,
     title: 'This is some task!',
     dueDate: new Date().toString(),
-    assigneeId: '08f041ca-ea52-49a4-954b-ad936bf65453',
+    assigneeId: assignee1.id,
     status: 'in_progress',
     links: ['http://www.walla.co.il', 'http://www.gmail.com'],
   } as unknown as Task;
@@ -67,4 +66,19 @@ export const runTestExample = async (
   await taskStatusTriggerer.addTaskToQueue(assignee1, task, true);
   //   // await taskStatusTriggerer.addTaskToQueue(assignee3, task);
   // }
+};
+
+export const runDebugMessage = async () => {
+  console.log('Starting debug message');
+
+  const allQueueCfg = {
+    host: process.env.REDIS_HOST || 'localhost',
+    port: parseInt(process.env.REDIS_PORT || '6379', 10),
+    password: process.env.REDIS_PASSWORD || '',
+    cluster: process.env.REDIS_CLUSTER === 'true',
+    prefix: `{base:queues:${process.env.ENV || 'local'}}`,
+  };
+
+  const taskStatusTriggerer = new TaskStatusTriggerer(allQueueCfg);
+  runTestExample(taskStatusTriggerer);
 };

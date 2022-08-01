@@ -8,17 +8,15 @@ loadEnvs(environment, ['configs', 'secrets']);
 
 import { logger } from '@base/logger';
 import { PrometheusReporter, slackBoltMetricsMiddleware } from '@base/metrics';
+import { Configuration, SlackbotApiApi as SlackbotApi } from '@base/oapigen';
 import { Server } from 'http';
-import { createApp } from './app';
+import { AnalyticsManager } from './analytics/analytics-manager';
 import { ImportController } from './imports/controller';
 import { PgInstallationStore } from './installations/installationStore';
-import { TaskStatusManager } from './task-status/manager';
-import { TaskStatusTriggerer } from './task-status/triggerer_tester';
-import { Configuration, SlackbotApiApi as SlackbotApi } from '@base/oapigen';
-import { registerSlackbotEvents } from '../../routes/router';
-import { runTestExample } from './task-status/tasks_example_test';
-import { AnalyticsManager } from './analytics/analytics-manager';
 import { Messenger } from './messenger/messenger';
+import { registerSlackbotEvents } from './routes/router';
+import { createApp } from './slack-bolt-app';
+import { TasksManager } from './tasks/manager';
 
 const gracefulShutdown = (server: Server) => (signal: string) => {
   logger.info('starting shutdown, got signal ' + signal);
@@ -36,7 +34,7 @@ const gracefulShutdown = (server: Server) => (signal: string) => {
 const gracefulShutdownAsync =
   (
     importManager: ImportController,
-    taskStatusManager: TaskStatusManager,
+    taskStatusManager: TasksManager,
     messenger: Messenger,
   ) =>
   async () => {
@@ -56,6 +54,7 @@ const startApp = async () => {
     port: parseInt(process.env.REDIS_PORT || '6379', 10),
     password: process.env.REDIS_PASSWORD || '',
     cluster: process.env.REDIS_CLUSTER === 'true',
+    prefix: `{base:queues:${process.env.ENV || 'local'}}`,
   };
 
   const pgStore = new PgInstallationStore(metricsReporter, {
@@ -77,31 +76,13 @@ const startApp = async () => {
     }),
   );
 
-  AnalyticsManager.initialize({
-    prefix: `{base:queues:${process.env.ENV || 'local'}}`,
-    ...allQueueCfg,
-  });
+  AnalyticsManager.initialize(allQueueCfg);
 
-  const taskStatusManager = new TaskStatusManager(
-    {
-      prefix: `{base:queues:${process.env.ENV || 'local'}}`,
-      ...allQueueCfg,
-    },
-    pgStore,
-  );
+  const taskStatusManager = new TasksManager(allQueueCfg, pgStore);
 
-  const importController = new ImportController({
-    prefix: `{base:queues:${process.env.ENV || 'local'}}`,
-    ...allQueueCfg,
-  });
+  const importController = new ImportController(allQueueCfg);
 
-  const messenger = new Messenger(
-    {
-      prefix: `{base:queues:${process.env.ENV || 'local'}}`,
-      ...allQueueCfg,
-    },
-    pgStore,
-  );
+  const messenger = new Messenger(allQueueCfg, pgStore);
 
   const slackApp = createApp(
     pgStore,
@@ -145,16 +126,6 @@ const startApp = async () => {
     'beforeExit',
     gracefulShutdownAsync(importController, taskStatusManager, messenger),
   );
-
-  const taskStatusTriggerer = new TaskStatusTriggerer({
-    prefix: `{base:queues:${process.env.ENV || 'local'}}`,
-    ...allQueueCfg,
-  });
-  ready = await taskStatusTriggerer.isReady();
-  if (!ready) {
-    throw new Error('TaskStatusTriggerer is not ready');
-  }
-  runTestExample(taskStatusTriggerer);
 };
 
 startApp();
