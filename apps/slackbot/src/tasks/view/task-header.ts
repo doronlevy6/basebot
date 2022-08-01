@@ -8,7 +8,7 @@ export const TaskHeaderText = ({
 }: ITaskViewProps): string => {
   return `Hi ${UserLink(assignee.id)}, ${UserLink(
     creator.id,
-  )} has invited you to collaborate on the following:`;
+  )} has invited you to collaborate using Base.`;
 };
 
 export const TaskHeaderBlock = (props: ITaskViewProps): MessageBlocks => {
@@ -16,7 +16,14 @@ export const TaskHeaderBlock = (props: ITaskViewProps): MessageBlocks => {
     type: 'section',
     text: {
       type: 'mrkdwn',
-      text: [TaskHeaderText(props)].join('\n\n'),
+      text: [
+        TaskHeaderText(props),
+        `Base is a first of it's kind tool build got managers to help run their teams better.
+  
+      ${UserLink(
+        props.creator.id,
+      )} added you as a contributor on the following:`,
+      ].join('\n'),
     },
   };
 };
