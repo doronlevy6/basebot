@@ -69,12 +69,6 @@ export interface AddCollateralDto {
      * @type {string}
      * @memberof AddCollateralDto
      */
-    'assigneeId': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof AddCollateralDto
-     */
     'url': string;
 }
 /**
@@ -1177,6 +1171,31 @@ export interface ReportBugDto {
      * @memberof ReportBugDto
      */
     'description': string;
+}
+/**
+ * 
+ * @export
+ * @interface SlackAddCollateralDto
+ */
+export interface SlackAddCollateralDto {
+    /**
+     * 
+     * @type {string}
+     * @memberof SlackAddCollateralDto
+     */
+    'assigneeId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof SlackAddCollateralDto
+     */
+    'taskId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof SlackAddCollateralDto
+     */
+    'url': string;
 }
 /**
  * 
@@ -2419,6 +2438,271 @@ export class BugReportingApi extends BaseAPI {
      */
     public bugReportingControllerReportBug(reportBugDto: ReportBugDto, options?: AxiosRequestConfig) {
         return BugReportingApiFp(this.configuration).bugReportingControllerReportBug(reportBugDto, options).then((request) => request(this.axios, this.basePath));
+    }
+}
+
+
+/**
+ * CollateralsApi - axios parameter creator
+ * @export
+ */
+export const CollateralsApiAxiosParamCreator = function (configuration?: Configuration) {
+    return {
+        /**
+         * 
+         * @param {AddCollateralDto} addCollateralDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        collateralsControllerAddCollateral: async (addCollateralDto: AddCollateralDto, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'addCollateralDto' is not null or undefined
+            assertParamExists('collateralsControllerAddCollateral', 'addCollateralDto', addCollateralDto)
+            const localVarPath = `/collaterals`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication bearer required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(addCollateralDto, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {string} id 
+         * @param {boolean} [loadTask] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        collateralsControllerGetCollateral: async (id: string, loadTask?: boolean, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('collateralsControllerGetCollateral', 'id', id)
+            const localVarPath = `/collaterals/{id}`
+                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication bearer required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+            if (loadTask !== undefined) {
+                localVarQueryParameter['loadTask'] = loadTask;
+            }
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {string} taskId 
+         * @param {number} [limit] 
+         * @param {number} [offset] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        collateralsControllerLoadActivity: async (taskId: string, limit?: number, offset?: number, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'taskId' is not null or undefined
+            assertParamExists('collateralsControllerLoadActivity', 'taskId', taskId)
+            const localVarPath = `/collaterals/task/{taskId}`
+                .replace(`{${"taskId"}}`, encodeURIComponent(String(taskId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication bearer required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+            if (limit !== undefined) {
+                localVarQueryParameter['limit'] = limit;
+            }
+
+            if (offset !== undefined) {
+                localVarQueryParameter['offset'] = offset;
+            }
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+    }
+};
+
+/**
+ * CollateralsApi - functional programming interface
+ * @export
+ */
+export const CollateralsApiFp = function(configuration?: Configuration) {
+    const localVarAxiosParamCreator = CollateralsApiAxiosParamCreator(configuration)
+    return {
+        /**
+         * 
+         * @param {AddCollateralDto} addCollateralDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async collateralsControllerAddCollateral(addCollateralDto: AddCollateralDto, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<string>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.collateralsControllerAddCollateral(addCollateralDto, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+        /**
+         * 
+         * @param {string} id 
+         * @param {boolean} [loadTask] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async collateralsControllerGetCollateral(id: string, loadTask?: boolean, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Collateral>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.collateralsControllerGetCollateral(id, loadTask, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+        /**
+         * 
+         * @param {string} taskId 
+         * @param {number} [limit] 
+         * @param {number} [offset] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async collateralsControllerLoadActivity(taskId: string, limit?: number, offset?: number, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<Collateral>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.collateralsControllerLoadActivity(taskId, limit, offset, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+    }
+};
+
+/**
+ * CollateralsApi - factory interface
+ * @export
+ */
+export const CollateralsApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
+    const localVarFp = CollateralsApiFp(configuration)
+    return {
+        /**
+         * 
+         * @param {AddCollateralDto} addCollateralDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        collateralsControllerAddCollateral(addCollateralDto: AddCollateralDto, options?: any): AxiosPromise<string> {
+            return localVarFp.collateralsControllerAddCollateral(addCollateralDto, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {string} id 
+         * @param {boolean} [loadTask] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        collateralsControllerGetCollateral(id: string, loadTask?: boolean, options?: any): AxiosPromise<Collateral> {
+            return localVarFp.collateralsControllerGetCollateral(id, loadTask, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {string} taskId 
+         * @param {number} [limit] 
+         * @param {number} [offset] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        collateralsControllerLoadActivity(taskId: string, limit?: number, offset?: number, options?: any): AxiosPromise<Array<Collateral>> {
+            return localVarFp.collateralsControllerLoadActivity(taskId, limit, offset, options).then((request) => request(axios, basePath));
+        },
+    };
+};
+
+/**
+ * CollateralsApi - object-oriented interface
+ * @export
+ * @class CollateralsApi
+ * @extends {BaseAPI}
+ */
+export class CollateralsApi extends BaseAPI {
+    /**
+     * 
+     * @param {AddCollateralDto} addCollateralDto 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof CollateralsApi
+     */
+    public collateralsControllerAddCollateral(addCollateralDto: AddCollateralDto, options?: AxiosRequestConfig) {
+        return CollateralsApiFp(this.configuration).collateralsControllerAddCollateral(addCollateralDto, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {string} id 
+     * @param {boolean} [loadTask] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof CollateralsApi
+     */
+    public collateralsControllerGetCollateral(id: string, loadTask?: boolean, options?: AxiosRequestConfig) {
+        return CollateralsApiFp(this.configuration).collateralsControllerGetCollateral(id, loadTask, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {string} taskId 
+     * @param {number} [limit] 
+     * @param {number} [offset] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof CollateralsApi
+     */
+    public collateralsControllerLoadActivity(taskId: string, limit?: number, offset?: number, options?: AxiosRequestConfig) {
+        return CollateralsApiFp(this.configuration).collateralsControllerLoadActivity(taskId, limit, offset, options).then((request) => request(this.axios, this.basePath));
     }
 }
 
@@ -3724,13 +4008,13 @@ export const SlackbotApiApiAxiosParamCreator = function (configuration?: Configu
         },
         /**
          * 
-         * @param {AddCollateralDto} addCollateralDto 
+         * @param {SlackAddCollateralDto} slackAddCollateralDto 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        slackbotApiControllerAddCollateral: async (addCollateralDto: AddCollateralDto, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'addCollateralDto' is not null or undefined
-            assertParamExists('slackbotApiControllerAddCollateral', 'addCollateralDto', addCollateralDto)
+        slackbotApiControllerAddCollateral: async (slackAddCollateralDto: SlackAddCollateralDto, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'slackAddCollateralDto' is not null or undefined
+            assertParamExists('slackbotApiControllerAddCollateral', 'slackAddCollateralDto', slackAddCollateralDto)
             const localVarPath = `/slackbot-api/collaterals`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -3754,7 +4038,7 @@ export const SlackbotApiApiAxiosParamCreator = function (configuration?: Configu
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(addCollateralDto, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(slackAddCollateralDto, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -4029,12 +4313,12 @@ export const SlackbotApiApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
-         * @param {AddCollateralDto} addCollateralDto 
+         * @param {SlackAddCollateralDto} slackAddCollateralDto 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async slackbotApiControllerAddCollateral(addCollateralDto: AddCollateralDto, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<TaskResponseDto>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.slackbotApiControllerAddCollateral(addCollateralDto, options);
+        async slackbotApiControllerAddCollateral(slackAddCollateralDto: SlackAddCollateralDto, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<TaskResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.slackbotApiControllerAddCollateral(slackAddCollateralDto, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
         /**
@@ -4120,12 +4404,12 @@ export const SlackbotApiApiFactory = function (configuration?: Configuration, ba
         },
         /**
          * 
-         * @param {AddCollateralDto} addCollateralDto 
+         * @param {SlackAddCollateralDto} slackAddCollateralDto 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        slackbotApiControllerAddCollateral(addCollateralDto: AddCollateralDto, options?: any): AxiosPromise<TaskResponseDto> {
-            return localVarFp.slackbotApiControllerAddCollateral(addCollateralDto, options).then((request) => request(axios, basePath));
+        slackbotApiControllerAddCollateral(slackAddCollateralDto: SlackAddCollateralDto, options?: any): AxiosPromise<TaskResponseDto> {
+            return localVarFp.slackbotApiControllerAddCollateral(slackAddCollateralDto, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -4206,13 +4490,13 @@ export class SlackbotApiApi extends BaseAPI {
 
     /**
      * 
-     * @param {AddCollateralDto} addCollateralDto 
+     * @param {SlackAddCollateralDto} slackAddCollateralDto 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof SlackbotApiApi
      */
-    public slackbotApiControllerAddCollateral(addCollateralDto: AddCollateralDto, options?: AxiosRequestConfig) {
-        return SlackbotApiApiFp(this.configuration).slackbotApiControllerAddCollateral(addCollateralDto, options).then((request) => request(this.axios, this.basePath));
+    public slackbotApiControllerAddCollateral(slackAddCollateralDto: SlackAddCollateralDto, options?: AxiosRequestConfig) {
+        return SlackbotApiApiFp(this.configuration).slackbotApiControllerAddCollateral(slackAddCollateralDto, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
