@@ -24,7 +24,7 @@ export const taskStatusUpdateHandler =
       );
 
       const res = await baseApi.slackbotApiControllerUpdate(taskId, {
-        assigneeId,
+        userId: assigneeId,
         status,
       });
 

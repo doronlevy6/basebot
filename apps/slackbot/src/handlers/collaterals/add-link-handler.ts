@@ -37,7 +37,7 @@ export const addLinkHandler =
       const res = await baseApi.slackbotApiControllerAddCollateral({
         taskId,
         url: linkUrl,
-        assigneeId: assigneeId,
+        userId: assigneeId,
       });
 
       if (!res.data.task) {

@@ -80,19 +80,6 @@ export type AppVersionsControllerGetAppVersionsDefaultResponseValue = ClientVers
 /**
  * 
  * @export
- * @interface AssigneesAdded
- */
-export interface AssigneesAdded {
-    /**
-     * 
-     * @type {Array<MicroUser>}
-     * @memberof AssigneesAdded
-     */
-    'assignees': Array<MicroUser>;
-}
-/**
- * 
- * @export
  * @interface ClientVersionDto
  */
 export interface ClientVersionDto {
@@ -219,6 +206,19 @@ export type CollateralData = ForbiddenTicketCollateral | LinkCollateral | Ticket
 /**
  * 
  * @export
+ * @interface ContributorsChanged
+ */
+export interface ContributorsChanged {
+    /**
+     * 
+     * @type {Array<MicroUser>}
+     * @memberof ContributorsChanged
+     */
+    'contributors': Array<MicroUser>;
+}
+/**
+ * 
+ * @export
  * @interface ConvertDraftsDto
  */
 export interface ConvertDraftsDto {
@@ -317,16 +317,10 @@ export interface CreateTaskDraftDto {
     'description'?: string;
     /**
      * 
-     * @type {string}
+     * @type {Array<string>}
      * @memberof CreateTaskDraftDto
      */
-    'assigneeId'?: string;
-    /**
-     * 
-     * @type {Array<User>}
-     * @memberof CreateTaskDraftDto
-     */
-    'contributors'?: Array<User>;
+    'contributorsIds'?: Array<string>;
     /**
      * 
      * @type {string}
@@ -360,16 +354,10 @@ export interface CreateTaskDto {
     'description'?: string;
     /**
      * 
-     * @type {string}
+     * @type {Array<string>}
      * @memberof CreateTaskDto
      */
-    'assigneeId': string;
-    /**
-     * 
-     * @type {Array<User>}
-     * @memberof CreateTaskDto
-     */
-    'contributors'?: Array<User>;
+    'contributorsIds': Array<string>;
     /**
      * 
      * @type {string}
@@ -1133,7 +1121,8 @@ export const RecentActivityTypeEnum = {
     TaskPostponed: 'task_postponed',
     TicketAdded: 'ticket_added',
     TicketPostponed: 'ticket_postponed',
-    AssigneesAdded: 'assignees_added'
+    ContributorsAdded: 'contributors_added',
+    ContributorsRemoved: 'contributors_removed'
 } as const;
 
 export type RecentActivityTypeEnum = typeof RecentActivityTypeEnum[keyof typeof RecentActivityTypeEnum];
@@ -1152,7 +1141,7 @@ export type RecentActivityOriginEnum = typeof RecentActivityOriginEnum[keyof typ
  * @type RecentActivityData
  * @export
  */
-export type RecentActivityData = AssigneesAdded | Link | TaskAcknowledged | TaskPostponement | TaskStatusChange | Ticket | TicketPostponement | TicketStatusChange;
+export type RecentActivityData = ContributorsChanged | Link | TaskAcknowledged | TaskPostponement | TaskStatusChange | Ticket | TicketPostponement | TicketStatusChange;
 
 /**
  * 
@@ -1184,7 +1173,7 @@ export interface SlackAddCollateralDto {
      * @type {string}
      * @memberof SlackAddCollateralDto
      */
-    'assigneeId': string;
+    'userId': string;
     /**
      * 
      * @type {string}
@@ -1215,7 +1204,7 @@ export interface SlackUpdateTaskDto {
      * @type {string}
      * @memberof SlackUpdateTaskDto
      */
-    'assigneeId': string;
+    'userId': string;
     /**
      * 
      * @type {string}
@@ -1230,10 +1219,10 @@ export interface SlackUpdateTaskDto {
     'description'?: string;
     /**
      * 
-     * @type {Array<User>}
+     * @type {Array<string>}
      * @memberof SlackUpdateTaskDto
      */
-    'contributors'?: Array<User>;
+    'contributorsIds'?: Array<string>;
     /**
      * 
      * @type {string}
@@ -1345,22 +1334,16 @@ export interface Task {
     'followers': string;
     /**
      * 
-     * @type {User}
-     * @memberof Task
-     */
-    'assignee': User;
-    /**
-     * 
-     * @type {string}
-     * @memberof Task
-     */
-    'assigneeId': string;
-    /**
-     * 
      * @type {Array<User>}
      * @memberof Task
      */
     'contributors': Array<User>;
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof Task
+     */
+    'contributorsIds': Array<string>;
     /**
      * 
      * @type {string}
@@ -1694,22 +1677,16 @@ export interface TaskResponseDtoTask {
     'followers': string;
     /**
      * 
-     * @type {User}
-     * @memberof TaskResponseDtoTask
-     */
-    'assignee': User;
-    /**
-     * 
-     * @type {string}
-     * @memberof TaskResponseDtoTask
-     */
-    'assigneeId': string;
-    /**
-     * 
      * @type {Array<User>}
      * @memberof TaskResponseDtoTask
      */
     'contributors': Array<User>;
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof TaskResponseDtoTask
+     */
+    'contributorsIds': Array<string>;
     /**
      * 
      * @type {string}
@@ -2116,16 +2093,10 @@ export interface UpdateTaskDraftDto {
     'description'?: string;
     /**
      * 
-     * @type {string}
+     * @type {Array<string>}
      * @memberof UpdateTaskDraftDto
      */
-    'assigneeId'?: string;
-    /**
-     * 
-     * @type {Array<User>}
-     * @memberof UpdateTaskDraftDto
-     */
-    'contributors'?: Array<User>;
+    'contributorsIds'?: Array<string>;
     /**
      * 
      * @type {string}
@@ -2177,16 +2148,10 @@ export interface UpdateTaskDto {
     'description'?: string;
     /**
      * 
-     * @type {string}
+     * @type {Array<string>}
      * @memberof UpdateTaskDto
      */
-    'assigneeId'?: string;
-    /**
-     * 
-     * @type {Array<User>}
-     * @memberof UpdateTaskDto
-     */
-    'contributors'?: Array<User>;
+    'contributorsIds'?: Array<string>;
     /**
      * 
      * @type {string}
@@ -5353,49 +5318,12 @@ export const TasksApiAxiosParamCreator = function (configuration?: Configuration
         },
         /**
          * 
-         * @param {string} id 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        tasksControllerFindOne: async (id: string, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'id' is not null or undefined
-            assertParamExists('tasksControllerFindOne', 'id', id)
-            const localVarPath = `/tasks/{id}`
-                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            // authentication bearer required
-            // http bearer authentication required
-            await setBearerAuthToObject(localVarHeaderParameter, configuration)
-
-
-    
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * 
          * @param {number} [limit] 
          * @param {number} [offset] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        tasksControllerFindTasksByCreator: async (limit?: number, offset?: number, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        tasksControllerFindAllUserTasks: async (limit?: number, offset?: number, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/tasks`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -5419,6 +5347,43 @@ export const TasksApiAxiosParamCreator = function (configuration?: Configuration
             if (offset !== undefined) {
                 localVarQueryParameter['offset'] = offset;
             }
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        tasksControllerFindOne: async (id: string, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('tasksControllerFindOne', 'id', id)
+            const localVarPath = `/tasks/{id}`
+                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication bearer required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
 
     
@@ -5543,23 +5508,23 @@ export const TasksApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
+         * @param {number} [limit] 
+         * @param {number} [offset] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async tasksControllerFindAllUserTasks(limit?: number, offset?: number, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<Task>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.tasksControllerFindAllUserTasks(limit, offset, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+        /**
+         * 
          * @param {string} id 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
         async tasksControllerFindOne(id: string, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Task>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.tasksControllerFindOne(id, options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
-        },
-        /**
-         * 
-         * @param {number} [limit] 
-         * @param {number} [offset] 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async tasksControllerFindTasksByCreator(limit?: number, offset?: number, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<Task>>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.tasksControllerFindTasksByCreator(limit, offset, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
         /**
@@ -5613,22 +5578,22 @@ export const TasksApiFactory = function (configuration?: Configuration, basePath
         },
         /**
          * 
+         * @param {number} [limit] 
+         * @param {number} [offset] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        tasksControllerFindAllUserTasks(limit?: number, offset?: number, options?: any): AxiosPromise<Array<Task>> {
+            return localVarFp.tasksControllerFindAllUserTasks(limit, offset, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
          * @param {string} id 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
         tasksControllerFindOne(id: string, options?: any): AxiosPromise<Task> {
             return localVarFp.tasksControllerFindOne(id, options).then((request) => request(axios, basePath));
-        },
-        /**
-         * 
-         * @param {number} [limit] 
-         * @param {number} [offset] 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        tasksControllerFindTasksByCreator(limit?: number, offset?: number, options?: any): AxiosPromise<Array<Task>> {
-            return localVarFp.tasksControllerFindTasksByCreator(limit, offset, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -5683,6 +5648,18 @@ export class TasksApi extends BaseAPI {
 
     /**
      * 
+     * @param {number} [limit] 
+     * @param {number} [offset] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof TasksApi
+     */
+    public tasksControllerFindAllUserTasks(limit?: number, offset?: number, options?: AxiosRequestConfig) {
+        return TasksApiFp(this.configuration).tasksControllerFindAllUserTasks(limit, offset, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
      * @param {string} id 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
@@ -5690,18 +5667,6 @@ export class TasksApi extends BaseAPI {
      */
     public tasksControllerFindOne(id: string, options?: AxiosRequestConfig) {
         return TasksApiFp(this.configuration).tasksControllerFindOne(id, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * 
-     * @param {number} [limit] 
-     * @param {number} [offset] 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof TasksApi
-     */
-    public tasksControllerFindTasksByCreator(limit?: number, offset?: number, options?: AxiosRequestConfig) {
-        return TasksApiFp(this.configuration).tasksControllerFindTasksByCreator(limit, offset, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
