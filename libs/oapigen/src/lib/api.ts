@@ -1131,6 +1131,7 @@ export const RecentActivityTypeEnum = {
     TaskStatusChanged: 'task_status_changed',
     TicketStatusChanged: 'ticket_status_changed',
     TaskPostponed: 'task_postponed',
+    TicketAdded: 'ticket_added',
     TicketPostponed: 'ticket_postponed',
     AssigneesAdded: 'assignees_added'
 } as const;
@@ -1151,7 +1152,7 @@ export type RecentActivityOriginEnum = typeof RecentActivityOriginEnum[keyof typ
  * @type RecentActivityData
  * @export
  */
-export type RecentActivityData = AssigneesAdded | Link | TaskAcknowledged | TaskPostponement | TaskStatusChange | TicketPostponement | TicketStatusChange;
+export type RecentActivityData = AssigneesAdded | Link | TaskAcknowledged | TaskPostponement | TaskStatusChange | Ticket | TicketPostponement | TicketStatusChange;
 
 /**
  * 
@@ -1589,6 +1590,25 @@ export interface TaskDueDateChangeNotification {
 /**
  * 
  * @export
+ * @interface TaskMessageDto
+ */
+export interface TaskMessageDto {
+    /**
+     * 
+     * @type {Task}
+     * @memberof TaskMessageDto
+     */
+    'task': Task;
+    /**
+     * 
+     * @type {User}
+     * @memberof TaskMessageDto
+     */
+    'user': User;
+}
+/**
+ * 
+ * @export
  * @interface TaskPostponement
  */
 export interface TaskPostponement {
@@ -1821,6 +1841,25 @@ export interface TaskStatusChangeNotification {
 /**
  * 
  * @export
+ * @interface Ticket
+ */
+export interface Ticket {
+    /**
+     * 
+     * @type {string}
+     * @memberof Ticket
+     */
+    'collateralId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof Ticket
+     */
+    'provider': string;
+}
+/**
+ * 
+ * @export
  * @interface TicketCollateral
  */
 export interface TicketCollateral {
@@ -1865,7 +1904,7 @@ export interface TicketCollateral {
      * @type {string}
      * @memberof TicketCollateral
      */
-    'status': TicketCollateralStatusEnum;
+    'status'?: TicketCollateralStatusEnum;
     /**
      * 
      * @type {string}
@@ -1878,6 +1917,12 @@ export interface TicketCollateral {
      * @memberof TicketCollateral
      */
     'dueDate'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof TicketCollateral
+     */
+    'updatedAt'?: string;
 }
 
 export const TicketCollateralStatusEnum = {

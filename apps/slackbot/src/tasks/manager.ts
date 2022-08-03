@@ -1,5 +1,5 @@
 import { logger } from '@base/logger';
-import { Task, User } from '@base/oapigen';
+import { TaskMessageDto } from '@base/oapigen';
 import {
   createQueue,
   createQueueWorker,
@@ -26,11 +26,6 @@ export type MessageBlocks =
   | ActionsBlock
   | InputBlock
   | ContextBlock;
-
-interface TaskJobData {
-  user: User;
-  task: Task;
-}
 
 export class TasksManager {
   private queueCfg: IQueueConfig;
@@ -122,7 +117,7 @@ export class TasksManager {
     }
   }
 
-  private async requestTaskStatus(job: Job<TaskJobData>) {
+  private async requestTaskStatus(job: Job<TaskMessageDto>) {
     logger.debug({ msg: 'requesting task status', data: job.data });
 
     const installation = await this.installationStore.fetchInstallationByBaseId(
