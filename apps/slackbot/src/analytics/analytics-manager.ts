@@ -27,6 +27,14 @@ class Analytics {
     await this.analyticsQueue.queue.add('slack_events', data);
   }
 
+  modalView(type: string, baseUserId: string, properties?: ExtraParams) {
+    this.sendEventToBase({
+      userId: baseUserId,
+      name: 'slack_modal_view',
+      properties: { ...properties, type },
+    });
+  }
+
   messageSentToUser(email: string, extraParams?: ExtraParams) {
     this.sendEventToBase({
       name: 'message_sent_to_user',

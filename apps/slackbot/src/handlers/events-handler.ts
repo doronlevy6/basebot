@@ -1,17 +1,14 @@
 import { logger } from '@base/logger';
-import { SlackbotApiApi as SlackbotApi, Task } from '@base/oapigen';
-import validator from 'validator';
+import { SlackbotApiApi as SlackbotApi } from '@base/oapigen';
+import { ActionsBlock, SectionBlock } from '@slack/web-api';
 import {
   BlockButtonWrapper,
-  BlockPlainTextInputActionWrapper,
   SlackActionWrapper,
   ViewAction,
 } from '../../../slackbot/common/types';
 import { AnalyticsManager } from '../analytics/analytics-manager';
-import { snakeToTitleCase } from '@base/utils';
-import { ActionsBlock, SectionBlock, WebClient } from '@slack/web-api';
-import { TaskView } from '../tasks/view';
-import { AcknowledgementStatus, ITaskViewProps } from '../tasks/view/types';
+import { AcknowledgementStatus } from '../tasks/view/types';
+import { updateTaskAndSendEvent } from './update-task-message';
 
 export class EventsHandler {
   private baseApi: SlackbotApi;
@@ -19,38 +16,6 @@ export class EventsHandler {
   constructor(baseApi: SlackbotApi) {
     this.baseApi = baseApi;
   }
-
-  handleSelectTaskStatus = async (params: BlockButtonWrapper) => {
-    const { body, ack, say } = params;
-    await ack();
-    try {
-      const { organizationId, assigneeId, taskId, status } = JSON.parse(
-        body?.actions[0]?.value,
-      );
-
-      logger.info(
-        `handling task status selecteced for task [${taskId}], assignee [${assigneeId}], status [${status}] `,
-      );
-
-      const res = await this.baseApi.slackbotApiControllerUpdate(taskId, {
-        assigneeId,
-        status,
-      });
-
-      if (!res.data.task) {
-        throw new Error(`unable to find task with id [${taskId}]`);
-      }
-
-      await this.updateTaskAndSendEvent(
-        params,
-        { assigneeId, task: res.data.task, organizationId },
-        { action: 'task_status_update' },
-      );
-    } catch (e) {
-      logger.error({ msg: `error in changing status for for task`, error: e });
-      say(`Error in update task status`);
-    }
-  };
 
   handleTaskAcknowledge = async (params: BlockButtonWrapper) => {
     const { body, ack, say } = params;
@@ -77,12 +42,25 @@ export class EventsHandler {
       });
 
       if (!res.data.task) {
-        throw new Error(`unable to find task with id [${taskId}]`);
+        logger.error(`unable to find task with id [${taskId}]`);
+        return;
       }
 
-      await this.updateTaskAndSendEvent(
+      const { message, channel } = body;
+      if (!message || !channel) {
+        logger.error("Can't update slack message with out id or channel");
+        return;
+      }
+
+      await updateTaskAndSendEvent(
         params,
-        { assigneeId, task: res.data.task, organizationId },
+        {
+          assigneeId,
+          task: res.data.task,
+          organizationId,
+          channelId: channel.id,
+          messageTs: message.ts,
+        },
         { action: 'task_acknowledged' },
         { acknowledgementStatus: actionId as AcknowledgementStatus },
       );
@@ -93,215 +71,6 @@ export class EventsHandler {
       });
       say(`Error in acknowledging task`);
     }
-  };
-
-  handleAddTaskLink = async (params: BlockPlainTextInputActionWrapper) => {
-    const { body, ack, say, client } = params;
-    await ack();
-    const linkUrl = body.actions[0]?.value;
-    if (!validator.isURL(linkUrl)) {
-      logger.info(`invalid url in task link`);
-      say(`Invalid url - please enter a correct link for the task`);
-      return;
-    }
-
-    try {
-      const { assigneeId, taskId, organizationId } = JSON.parse(
-        body?.actions[0]?.block_id,
-      );
-      logger.info(
-        `handling adding task link for task [${taskId}], link [${linkUrl}]`,
-      );
-
-      const res = await this.baseApi.slackbotApiControllerAddCollateral({
-        taskId,
-        url: linkUrl,
-        assigneeId: assigneeId,
-      });
-
-      if (!res.data.task) {
-        throw new Error(`unable to find task with id [${taskId}]`);
-      }
-
-      this.tryOauthForUser(
-        assigneeId,
-        organizationId,
-        linkUrl,
-        body.trigger_id,
-        client,
-      );
-
-      await this.updateTaskAndSendEvent(
-        params,
-        {
-          assigneeId,
-          task: res.data.task,
-          organizationId,
-        },
-        { action: 'add_task_link' },
-        { extraCollaterals: [linkUrl] },
-      );
-    } catch (e) {
-      logger.error(`error in changing status for for task`);
-      say(`Error in update link for the task`);
-    }
-  };
-
-  tryOauthForUser = async (
-    userId: string,
-    orgId: string,
-    linkUrl: string,
-    triggerId: string,
-    client: WebClient,
-  ) => {
-    try {
-      const detectedProvider = this.tryDetectLinkUrl(linkUrl);
-      if (!detectedProvider) {
-        return;
-      }
-
-      const userProviders = await (
-        await this.baseApi.slackbotApiControllerGetUserProviders(userId, orgId)
-      ).data;
-
-      if (userProviders.includes(detectedProvider)) {
-        return;
-      }
-
-      const oauthRedirectUrl = (
-        await this.baseApi.slackbotApiControllerGenerateOauthRedirect({
-          provider: detectedProvider,
-          organizationId: orgId,
-          userId: userId,
-        })
-      ).data;
-
-      await client.views.open({
-        trigger_id: triggerId,
-        view: {
-          private_metadata: '',
-          callback_id: 'add-links-oauth-submit',
-          type: 'modal',
-          title: {
-            type: 'plain_text',
-            text: `Base & ${snakeToTitleCase(detectedProvider)}`,
-          },
-          close: {
-            type: 'plain_text',
-            text: 'Connect Later',
-          },
-          submit: {
-            type: 'plain_text',
-            text: 'Done',
-          },
-          blocks: [
-            {
-              type: 'section',
-              text: {
-                type: 'mrkdwn',
-                text: `Let Base update your progress automatically by connecting ${snakeToTitleCase(
-                  detectedProvider,
-                )}\n\n`,
-              },
-            },
-            {
-              type: 'actions',
-              elements: [
-                {
-                  type: 'button',
-                  style: 'primary',
-                  text: {
-                    type: 'plain_text',
-                    text: 'Connect now',
-                    emoji: true,
-                  },
-                  value: 'click_to_open_oauth',
-                  url: oauthRedirectUrl,
-                  action_id: 'click-to-open-oauth-action',
-                },
-              ],
-            },
-          ],
-        },
-      });
-    } catch (error) {
-      logger.error({
-        msg: `Error creating modal for OAuth Connect`,
-        error: error.stack,
-      });
-    }
-  };
-
-  private tryDetectLinkUrl = (linkUrl: string): string | undefined => {
-    const parsed = new URL(linkUrl);
-    if (parsed.hostname.includes('app.asana.com')) {
-      return 'asana';
-    }
-
-    if (parsed.hostname.includes('monday.com')) {
-      return 'monday';
-    }
-  };
-
-  private updateTaskAndSendEvent = async (
-    {
-      client,
-      body,
-      respond,
-    }: BlockButtonWrapper | BlockPlainTextInputActionWrapper,
-    data: {
-      organizationId: string;
-      assigneeId: string;
-      task: Task;
-    },
-    analytics: { action: string; data?: Record<string, string> },
-    viewOverrides?: Partial<ITaskViewProps>,
-  ) => {
-    const { organizationId, assigneeId, task } = data;
-    const slackUserId = body.user.id;
-
-    const creator = await client.users.lookupByEmail({
-      email: task.creator.email,
-    });
-    if (!creator.user?.id) {
-      logger.error(`Can't update message without creator id`);
-      return;
-    }
-
-    const taskView = TaskView({
-      assignee: {
-        id: slackUserId,
-      },
-      creator: {
-        id: creator.user.id,
-      },
-      baseOrgId: organizationId,
-      baseUserId: assigneeId,
-      task,
-      acknowledgementStatus: AcknowledgementStatus.Acknowledged,
-      ...viewOverrides,
-    });
-
-    await respond({
-      replace_original: true,
-      response_type: 'in_channel',
-      text: body.message?.text,
-      blocks: taskView.blocks,
-    });
-
-    const user = await client.users.profile.get({ user: slackUserId });
-    if (!user.profile?.email) {
-      logger.warn(
-        `unable to send user interaction for analytics without user profile`,
-      );
-      return;
-    }
-    AnalyticsManager.getInstance().userInteraction(user?.profile.email, {
-      action: analytics.action,
-      taskId: task.id,
-      status: task.status,
-      ...analytics.data,
-    });
   };
 
   handleCreateTask = async ({

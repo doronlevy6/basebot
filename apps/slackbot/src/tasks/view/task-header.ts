@@ -19,8 +19,7 @@ export const TaskHeaderBlock = (props: ITaskViewProps): MessageBlocks => {
       text: [
         TaskHeaderText(props),
         `Base is a first of it's kind tool build got managers to help run their teams better.
-  
-      ${UserLink(
+      \n${UserLink(
         props.creator.id,
       )} added you as a contributor on the following:`,
       ].join('\n'),

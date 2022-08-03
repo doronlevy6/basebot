@@ -1,8 +1,7 @@
 import { MessageBlocks } from '../manager';
 import { SlackMessageSenderMetadata } from '../types';
 import { AcknowledgeAction } from './acknowledge-action';
-import { AddLinkActionBlock } from './add-link-action-block';
-import { StatusActionBlocks } from './status-action-block';
+import { TaskActions } from './task-actions';
 import { TaskDetails } from './task-details';
 import { TaskFooter } from './task-footer';
 import { TaskHeaderBlock, TaskHeaderText } from './task-header';
@@ -27,15 +26,13 @@ const getFormattedBlocks = (props: ITaskViewProps): MessageBlocks[] => {
     TaskHeaderBlock(props),
     TaskTitleBlock(task.title),
     ...AcknowledgeAction(props),
-    TaskDetails(props),
   ];
 
   if (acknowledgementStatus) {
-    messageBlocks.push(...StatusActionBlocks(props));
-    messageBlocks.push(AddLinkActionBlock(props));
+    messageBlocks.push(...TaskActions(props));
+    messageBlocks.push(TaskDetails(props));
+    messageBlocks.push(TaskFooter(props));
   }
-
-  messageBlocks.push(TaskFooter(props));
 
   return messageBlocks;
 };

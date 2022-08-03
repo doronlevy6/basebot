@@ -28,7 +28,7 @@ export const AcknowledgeAction = (props: ITaskViewProps): MessageBlocks[] => {
       type: 'section',
       text: {
         type: 'mrkdwn',
-        text: 'Base is a first of its kind managers’ tool to help them run their teams better.\nPlease reply by choosing any of the following:',
+        text: `Please reply by choosing any of the following:`,
       },
     },
     {

@@ -111,7 +111,6 @@ export class TasksManager {
       logger.info({ msg: 'send task status request', job: job.data });
     } catch (e) {
       logger.error({ msg: 'error sending message', data: job.data, error: e });
-      logger.error(job.data.blocks);
     }
   }
 

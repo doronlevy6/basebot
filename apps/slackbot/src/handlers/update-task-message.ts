@@ -1,0 +1,85 @@
+import { logger } from '@base/logger';
+import { Task } from '@base/oapigen';
+import { WebClient } from '@slack/web-api';
+import {
+  BlockButtonWrapper,
+  BlockPlainTextInputActionWrapper,
+  ViewAction,
+} from '../../../slackbot/common/types';
+import { AnalyticsManager } from '../analytics/analytics-manager';
+import { TaskView } from '../tasks/view';
+import { AcknowledgementStatus, ITaskViewProps } from '../tasks/view/types';
+
+export const updateTaskAndSendEvent = async (
+  {
+    client,
+    body,
+  }: BlockButtonWrapper | BlockPlainTextInputActionWrapper | ViewAction,
+  data: {
+    organizationId: string;
+    assigneeId: string;
+    task: Task;
+    messageTs: string;
+    channelId: string;
+  },
+  analytics: { action: string; data?: Record<string, string> },
+  viewOverrides?: Partial<ITaskViewProps>,
+) => {
+  const { organizationId, assigneeId, task, channelId, messageTs } = data;
+  const slackUserId = body.user.id;
+
+  const creator = await client.users.lookupByEmail({
+    email: task.creator.email,
+  });
+
+  if (!creator.user?.id) {
+    logger.error(`Can't update message without creator id`);
+    return;
+  }
+
+  const taskView = TaskView({
+    assignee: {
+      id: slackUserId,
+    },
+    creator: {
+      id: creator.user.id,
+    },
+    baseOrgId: organizationId,
+    baseUserId: assigneeId,
+    task,
+    acknowledgementStatus: AcknowledgementStatus.Acknowledged,
+    ...viewOverrides,
+  });
+
+  await client.chat.update({
+    ts: messageTs,
+    channel: channelId,
+    blocks: taskView.blocks,
+  });
+
+  sendEvent(
+    client,
+    { slackUserId, action: analytics.action, taskId: task.id },
+    analytics.data,
+  );
+};
+
+const sendEvent = async (
+  client: WebClient,
+  data: { slackUserId: string; action: string; taskId: string },
+  extraData?: Record<string, string>,
+) => {
+  const { action, slackUserId, taskId } = data;
+  const user = await client.users.profile.get({ user: slackUserId });
+  if (!user.profile?.email) {
+    logger.warn(
+      `unable to send user interaction for analytics without user profile`,
+    );
+    return;
+  }
+  AnalyticsManager.getInstance().userInteraction(user?.profile.email, {
+    action,
+    taskId: taskId,
+    ...extraData,
+  });
+};

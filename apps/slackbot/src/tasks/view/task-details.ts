@@ -24,8 +24,10 @@ export const TaskDetails = ({
   }
 
   const allCollaterals = [
-    ...(extraCollaterals ?? []),
-    ...(task.collaterals?.map((c) => c.url) ?? []),
+    ...new Set([
+      ...(extraCollaterals ?? []),
+      ...(task.collaterals?.map((c) => c.url) ?? []),
+    ]),
   ];
   if (allCollaterals.length) {
     const taskLinks = allCollaterals.map((link) => `<${link}|${link}>\n`);
