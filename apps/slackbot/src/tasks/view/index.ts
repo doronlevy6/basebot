@@ -28,7 +28,7 @@ const getFormattedBlocks = (props: ITaskViewProps): MessageBlocks[] => {
     ...AcknowledgeAction(props),
   ];
 
-  if (acknowledgementStatus) {
+  if (acknowledgementStatus === 'acknowledged') {
     messageBlocks.push(TaskDetails(props));
     messageBlocks.push(...TaskActions(props));
     messageBlocks.push(TaskFooter(props));
