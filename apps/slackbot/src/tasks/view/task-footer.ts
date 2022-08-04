@@ -2,6 +2,8 @@ import { MessageBlocks } from '../manager';
 import { ITaskViewProps } from './types';
 import { UserLink } from './user-link';
 
+const DOWNLOAD_LINK = 'https://base.la/subscribe-to-beta.';
+
 export const TaskFooter = ({ creator }: ITaskViewProps): MessageBlocks => {
   return {
     type: 'context',
@@ -10,7 +12,7 @@ export const TaskFooter = ({ creator }: ITaskViewProps): MessageBlocks => {
         type: 'mrkdwn',
         text: `Check out Base yourself. See this task the way ${UserLink(
           creator.id,
-        )} and the entire team sees it - easily update, or add new activities & tasks yourself. <${'https://link.base.la'}|download app>.`,
+        )} and the entire team sees it - easily update, or add new activities & tasks yourself. <${DOWNLOAD_LINK}|download app>.`,
       },
     ],
   };
