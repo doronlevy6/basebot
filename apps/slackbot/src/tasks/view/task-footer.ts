@@ -2,7 +2,7 @@ import { MessageBlocks } from '../manager';
 import { ITaskViewProps } from './types';
 import { UserLink } from './user-link';
 
-const DOWNLOAD_LINK = 'https://base.la/subscribe-to-beta.';
+const DOWNLOAD_LINK = 'https://www.base.la/subsribe-to-beta';
 
 export const TaskFooter = ({ creator }: ITaskViewProps): MessageBlocks => {
   return {
