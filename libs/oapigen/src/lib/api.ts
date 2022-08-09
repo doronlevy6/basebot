@@ -1034,7 +1034,8 @@ export interface PushNotificationDto {
 
 export const PushNotificationDtoTypeEnum = {
     StatusChanged: 'task_status_changed',
-    DueDateChanged: 'task_due_date_changed'
+    DueDateChanged: 'task_due_date_changed',
+    Declined: 'task_declined'
 } as const;
 
 export type PushNotificationDtoTypeEnum = typeof PushNotificationDtoTypeEnum[keyof typeof PushNotificationDtoTypeEnum];
@@ -1435,6 +1436,49 @@ export interface TaskChangeNotification {
      * @memberof TaskChangeNotification
      */
     'taskDescription': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof TaskChangeNotification
+     */
+    'changerId': string;
+}
+/**
+ * 
+ * @export
+ * @interface TaskDeclinedNotification
+ */
+export interface TaskDeclinedNotification {
+    /**
+     * 
+     * @type {string}
+     * @memberof TaskDeclinedNotification
+     */
+    'taskId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof TaskDeclinedNotification
+     */
+    'taskTitle': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof TaskDeclinedNotification
+     */
+    'taskDescription': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof TaskDeclinedNotification
+     */
+    'changerId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof TaskDeclinedNotification
+     */
+    'declinerId': string;
 }
 /**
  * 
