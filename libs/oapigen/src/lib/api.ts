@@ -186,6 +186,12 @@ export interface Collateral {
      * @memberof Collateral
      */
     'updatedAt': string;
+    /**
+     * 
+     * @type {Array<DiscussionMessage>}
+     * @memberof Collateral
+     */
+    'discussionMessages'?: Array<DiscussionMessage>;
 }
 
 export const CollateralTypeEnum = {
@@ -494,6 +500,97 @@ export interface DeviceTokenDto {
 /**
  * 
  * @export
+ * @interface DiscussionMessage
+ */
+export interface DiscussionMessage {
+    /**
+     * 
+     * @type {string}
+     * @memberof DiscussionMessage
+     */
+    'id': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof DiscussionMessage
+     */
+    'parentId'?: string;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof DiscussionMessage
+     */
+    'externalOrigin': boolean;
+    /**
+     * 
+     * @type {User}
+     * @memberof DiscussionMessage
+     */
+    'creator': User;
+    /**
+     * 
+     * @type {string}
+     * @memberof DiscussionMessage
+     */
+    'creatorId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof DiscussionMessage
+     */
+    'sanitizedText': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof DiscussionMessage
+     */
+    'rawText': string;
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof DiscussionMessage
+     */
+    'detectedLinks': Array<string>;
+    /**
+     * 
+     * @type {Task}
+     * @memberof DiscussionMessage
+     */
+    'task': Task;
+    /**
+     * 
+     * @type {string}
+     * @memberof DiscussionMessage
+     */
+    'taskId': string;
+    /**
+     * 
+     * @type {Task}
+     * @memberof DiscussionMessage
+     */
+    'collateral': Task;
+    /**
+     * 
+     * @type {string}
+     * @memberof DiscussionMessage
+     */
+    'collateralId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof DiscussionMessage
+     */
+    'createdAt': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof DiscussionMessage
+     */
+    'updatedAt': string;
+}
+/**
+ * 
+ * @export
  * @interface DraftOriginDto
  */
 export interface DraftOriginDto {
@@ -587,6 +684,31 @@ export interface GenerateRedirectDto {
      * @memberof GenerateRedirectDto
      */
     'userId': string;
+}
+/**
+ * 
+ * @export
+ * @interface GeneratedInsight
+ */
+export interface GeneratedInsight {
+    /**
+     * 
+     * @type {string}
+     * @memberof GeneratedInsight
+     */
+    'collateralId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof GeneratedInsight
+     */
+    'discussionMessageId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof GeneratedInsight
+     */
+    'insight': string;
 }
 /**
  * 
@@ -1112,6 +1234,12 @@ export interface RecentActivity {
      * @memberof RecentActivity
      */
     'updatedAt': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof RecentActivity
+     */
+    'flag': RecentActivityFlagEnum;
 }
 
 export const RecentActivityTypeEnum = {
@@ -1123,7 +1251,8 @@ export const RecentActivityTypeEnum = {
     TicketAdded: 'ticket_added',
     TicketPostponed: 'ticket_postponed',
     ContributorsAdded: 'contributors_added',
-    ContributorsRemoved: 'contributors_removed'
+    ContributorsRemoved: 'contributors_removed',
+    GeneratedInsight: 'generated_insight'
 } as const;
 
 export type RecentActivityTypeEnum = typeof RecentActivityTypeEnum[keyof typeof RecentActivityTypeEnum];
@@ -1137,12 +1266,20 @@ export const RecentActivityOriginEnum = {
 } as const;
 
 export type RecentActivityOriginEnum = typeof RecentActivityOriginEnum[keyof typeof RecentActivityOriginEnum];
+export const RecentActivityFlagEnum = {
+    Null: 'null',
+    Empty: '',
+    Highlight: 'highlight',
+    Risk: 'risk'
+} as const;
+
+export type RecentActivityFlagEnum = typeof RecentActivityFlagEnum[keyof typeof RecentActivityFlagEnum];
 
 /**
  * @type RecentActivityData
  * @export
  */
-export type RecentActivityData = ContributorsChanged | Link | TaskAcknowledged | TaskPostponement | TaskStatusChange | Ticket | TicketPostponement | TicketStatusChange;
+export type RecentActivityData = ContributorsChanged | GeneratedInsight | Link | TaskAcknowledged | TaskPostponement | TaskStatusChange | Ticket | TicketPostponement | TicketStatusChange;
 
 /**
  * 
@@ -1375,6 +1512,12 @@ export interface Task {
      * @memberof Task
      */
     'collaterals'?: Array<Collateral>;
+    /**
+     * 
+     * @type {Array<DiscussionMessage>}
+     * @memberof Task
+     */
+    'discussionMessages'?: Array<DiscussionMessage>;
     /**
      * 
      * @type {Array<RecentActivity>}
@@ -1761,6 +1904,12 @@ export interface TaskResponseDtoTask {
      * @memberof TaskResponseDtoTask
      */
     'collaterals'?: Array<Collateral>;
+    /**
+     * 
+     * @type {Array<DiscussionMessage>}
+     * @memberof TaskResponseDtoTask
+     */
+    'discussionMessages'?: Array<DiscussionMessage>;
     /**
      * 
      * @type {Array<RecentActivity>}
@@ -2912,6 +3061,293 @@ export class DefaultApi extends BaseAPI {
 
 
 /**
+ * DiscussionsApi - axios parameter creator
+ * @export
+ */
+export const DiscussionsApiAxiosParamCreator = function (configuration?: Configuration) {
+    return {
+        /**
+         * 
+         * @param {string} id 
+         * @param {boolean} [loadTask] 
+         * @param {boolean} [loadCollateral] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        discussionsControllerFindOne: async (id: string, loadTask?: boolean, loadCollateral?: boolean, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('discussionsControllerFindOne', 'id', id)
+            const localVarPath = `/discussions/{id}`
+                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication bearer required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+            if (loadTask !== undefined) {
+                localVarQueryParameter['loadTask'] = loadTask;
+            }
+
+            if (loadCollateral !== undefined) {
+                localVarQueryParameter['loadCollateral'] = loadCollateral;
+            }
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {string} collateralId 
+         * @param {number} [limit] 
+         * @param {number} [offset] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        discussionsControllerLoadDiscussionsByCollateral: async (collateralId: string, limit?: number, offset?: number, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'collateralId' is not null or undefined
+            assertParamExists('discussionsControllerLoadDiscussionsByCollateral', 'collateralId', collateralId)
+            const localVarPath = `/discussions/collateral/{collateralId}`
+                .replace(`{${"collateralId"}}`, encodeURIComponent(String(collateralId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication bearer required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+            if (limit !== undefined) {
+                localVarQueryParameter['limit'] = limit;
+            }
+
+            if (offset !== undefined) {
+                localVarQueryParameter['offset'] = offset;
+            }
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {string} taskId 
+         * @param {number} [limit] 
+         * @param {number} [offset] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        discussionsControllerLoadDiscussionsByTask: async (taskId: string, limit?: number, offset?: number, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'taskId' is not null or undefined
+            assertParamExists('discussionsControllerLoadDiscussionsByTask', 'taskId', taskId)
+            const localVarPath = `/discussions/task/{taskId}`
+                .replace(`{${"taskId"}}`, encodeURIComponent(String(taskId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication bearer required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+            if (limit !== undefined) {
+                localVarQueryParameter['limit'] = limit;
+            }
+
+            if (offset !== undefined) {
+                localVarQueryParameter['offset'] = offset;
+            }
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+    }
+};
+
+/**
+ * DiscussionsApi - functional programming interface
+ * @export
+ */
+export const DiscussionsApiFp = function(configuration?: Configuration) {
+    const localVarAxiosParamCreator = DiscussionsApiAxiosParamCreator(configuration)
+    return {
+        /**
+         * 
+         * @param {string} id 
+         * @param {boolean} [loadTask] 
+         * @param {boolean} [loadCollateral] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async discussionsControllerFindOne(id: string, loadTask?: boolean, loadCollateral?: boolean, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<DiscussionMessage>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.discussionsControllerFindOne(id, loadTask, loadCollateral, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+        /**
+         * 
+         * @param {string} collateralId 
+         * @param {number} [limit] 
+         * @param {number} [offset] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async discussionsControllerLoadDiscussionsByCollateral(collateralId: string, limit?: number, offset?: number, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<DiscussionMessage>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.discussionsControllerLoadDiscussionsByCollateral(collateralId, limit, offset, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+        /**
+         * 
+         * @param {string} taskId 
+         * @param {number} [limit] 
+         * @param {number} [offset] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async discussionsControllerLoadDiscussionsByTask(taskId: string, limit?: number, offset?: number, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<DiscussionMessage>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.discussionsControllerLoadDiscussionsByTask(taskId, limit, offset, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+    }
+};
+
+/**
+ * DiscussionsApi - factory interface
+ * @export
+ */
+export const DiscussionsApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
+    const localVarFp = DiscussionsApiFp(configuration)
+    return {
+        /**
+         * 
+         * @param {string} id 
+         * @param {boolean} [loadTask] 
+         * @param {boolean} [loadCollateral] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        discussionsControllerFindOne(id: string, loadTask?: boolean, loadCollateral?: boolean, options?: any): AxiosPromise<DiscussionMessage> {
+            return localVarFp.discussionsControllerFindOne(id, loadTask, loadCollateral, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {string} collateralId 
+         * @param {number} [limit] 
+         * @param {number} [offset] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        discussionsControllerLoadDiscussionsByCollateral(collateralId: string, limit?: number, offset?: number, options?: any): AxiosPromise<Array<DiscussionMessage>> {
+            return localVarFp.discussionsControllerLoadDiscussionsByCollateral(collateralId, limit, offset, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {string} taskId 
+         * @param {number} [limit] 
+         * @param {number} [offset] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        discussionsControllerLoadDiscussionsByTask(taskId: string, limit?: number, offset?: number, options?: any): AxiosPromise<Array<DiscussionMessage>> {
+            return localVarFp.discussionsControllerLoadDiscussionsByTask(taskId, limit, offset, options).then((request) => request(axios, basePath));
+        },
+    };
+};
+
+/**
+ * DiscussionsApi - object-oriented interface
+ * @export
+ * @class DiscussionsApi
+ * @extends {BaseAPI}
+ */
+export class DiscussionsApi extends BaseAPI {
+    /**
+     * 
+     * @param {string} id 
+     * @param {boolean} [loadTask] 
+     * @param {boolean} [loadCollateral] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DiscussionsApi
+     */
+    public discussionsControllerFindOne(id: string, loadTask?: boolean, loadCollateral?: boolean, options?: AxiosRequestConfig) {
+        return DiscussionsApiFp(this.configuration).discussionsControllerFindOne(id, loadTask, loadCollateral, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {string} collateralId 
+     * @param {number} [limit] 
+     * @param {number} [offset] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DiscussionsApi
+     */
+    public discussionsControllerLoadDiscussionsByCollateral(collateralId: string, limit?: number, offset?: number, options?: AxiosRequestConfig) {
+        return DiscussionsApiFp(this.configuration).discussionsControllerLoadDiscussionsByCollateral(collateralId, limit, offset, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {string} taskId 
+     * @param {number} [limit] 
+     * @param {number} [offset] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DiscussionsApi
+     */
+    public discussionsControllerLoadDiscussionsByTask(taskId: string, limit?: number, offset?: number, options?: AxiosRequestConfig) {
+        return DiscussionsApiFp(this.configuration).discussionsControllerLoadDiscussionsByTask(taskId, limit, offset, options).then((request) => request(this.axios, this.basePath));
+    }
+}
+
+
+/**
  * ImportApi - axios parameter creator
  * @export
  */
@@ -3122,6 +3558,35 @@ export const OauthPublicApiAxiosParamCreator = function (configuration?: Configu
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
+        oauthPublicControllerGetAvailableProviders: async (options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/oauth-public/available-providers`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
         oauthPublicControllerGetUserProviders: async (options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/oauth-public/my-providers`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
@@ -3132,6 +3597,43 @@ export const OauthPublicApiAxiosParamCreator = function (configuration?: Configu
             }
 
             const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication bearer required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {string} provider 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        oauthPublicControllerSendProviderInvite: async (provider: string, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'provider' is not null or undefined
+            assertParamExists('oauthPublicControllerSendProviderInvite', 'provider', provider)
+            const localVarPath = `/oauth-public/oauth-redirect-mail/{provider}`
+                .replace(`{${"provider"}}`, encodeURIComponent(String(provider)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
@@ -3175,8 +3677,27 @@ export const OauthPublicApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
+        async oauthPublicControllerGetAvailableProviders(options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<string>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.oauthPublicControllerGetAvailableProviders(options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+        /**
+         * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
         async oauthPublicControllerGetUserProviders(options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<string>>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.oauthPublicControllerGetUserProviders(options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+        /**
+         * 
+         * @param {string} provider 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async oauthPublicControllerSendProviderInvite(provider: string, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.oauthPublicControllerSendProviderInvite(provider, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
     }
@@ -3203,8 +3724,25 @@ export const OauthPublicApiFactory = function (configuration?: Configuration, ba
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
+        oauthPublicControllerGetAvailableProviders(options?: any): AxiosPromise<Array<string>> {
+            return localVarFp.oauthPublicControllerGetAvailableProviders(options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
         oauthPublicControllerGetUserProviders(options?: any): AxiosPromise<Array<string>> {
             return localVarFp.oauthPublicControllerGetUserProviders(options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {string} provider 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        oauthPublicControllerSendProviderInvite(provider: string, options?: any): AxiosPromise<void> {
+            return localVarFp.oauthPublicControllerSendProviderInvite(provider, options).then((request) => request(axios, basePath));
         },
     };
 };
@@ -3233,8 +3771,29 @@ export class OauthPublicApi extends BaseAPI {
      * @throws {RequiredError}
      * @memberof OauthPublicApi
      */
+    public oauthPublicControllerGetAvailableProviders(options?: AxiosRequestConfig) {
+        return OauthPublicApiFp(this.configuration).oauthPublicControllerGetAvailableProviders(options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof OauthPublicApi
+     */
     public oauthPublicControllerGetUserProviders(options?: AxiosRequestConfig) {
         return OauthPublicApiFp(this.configuration).oauthPublicControllerGetUserProviders(options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {string} provider 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof OauthPublicApi
+     */
+    public oauthPublicControllerSendProviderInvite(provider: string, options?: AxiosRequestConfig) {
+        return OauthPublicApiFp(this.configuration).oauthPublicControllerSendProviderInvite(provider, options).then((request) => request(this.axios, this.basePath));
     }
 }
 
