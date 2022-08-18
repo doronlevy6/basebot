@@ -8,5 +8,9 @@ export const tryDetectLinkUrl = (linkUrl: string) => {
     return 'monday';
   }
 
+  if (parsed.hostname.includes('.atlassian.net')) {
+    return 'jira';
+  }
+
   return null;
 };
