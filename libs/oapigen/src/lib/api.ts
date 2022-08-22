@@ -1157,7 +1157,8 @@ export interface PushNotificationDto {
 export const PushNotificationDtoTypeEnum = {
     StatusChanged: 'task_status_changed',
     DueDateChanged: 'task_due_date_changed',
-    Declined: 'task_declined'
+    Declined: 'task_declined',
+    Changed: 'task_changed'
 } as const;
 
 export type PushNotificationDtoTypeEnum = typeof PushNotificationDtoTypeEnum[keyof typeof PushNotificationDtoTypeEnum];
@@ -1262,7 +1263,8 @@ export const RecentActivityOriginEnum = {
     ManuallyAdded: 'manually_added',
     Slack: 'slack',
     Email: 'email',
-    System: 'system'
+    System: 'system',
+    Admin: 'admin'
 } as const;
 
 export type RecentActivityOriginEnum = typeof RecentActivityOriginEnum[keyof typeof RecentActivityOriginEnum];
