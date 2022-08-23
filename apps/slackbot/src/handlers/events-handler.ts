@@ -142,7 +142,7 @@ export class EventsHandler {
               emoji: true,
             },
             value: 'click_to_open_app',
-            url: 'https://link.base.la/tasks/drafts',
+            url: 'https://link.base.la/drafts',
             action_id: 'click-to-open-app-action',
           },
         ],
