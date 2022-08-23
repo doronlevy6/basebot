@@ -70,6 +70,12 @@ export interface AddCollateralDto {
      * @memberof AddCollateralDto
      */
     'url': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof AddCollateralDto
+     */
+    'creatorComment'?: string;
 }
 /**
  * @type AppVersionsControllerGetAppVersionsDefaultResponseValue
@@ -192,6 +198,12 @@ export interface Collateral {
      * @memberof Collateral
      */
     'discussionMessages'?: Array<DiscussionMessage>;
+    /**
+     * 
+     * @type {string}
+     * @memberof Collateral
+     */
+    'creatorComment'?: string;
 }
 
 export const CollateralTypeEnum = {
@@ -323,6 +335,12 @@ export interface CreateTaskDraftDto {
     'description'?: string;
     /**
      * 
+     * @type {string}
+     * @memberof CreateTaskDraftDto
+     */
+    'ownerId'?: string;
+    /**
+     * 
      * @type {Array<string>}
      * @memberof CreateTaskDraftDto
      */
@@ -333,12 +351,6 @@ export interface CreateTaskDraftDto {
      * @memberof CreateTaskDraftDto
      */
     'dueDate'?: string;
-    /**
-     * 
-     * @type {Array<string>}
-     * @memberof CreateTaskDraftDto
-     */
-    'tags'?: Array<string>;
 }
 /**
  * 
@@ -360,22 +372,22 @@ export interface CreateTaskDto {
     'description'?: string;
     /**
      * 
+     * @type {string}
+     * @memberof CreateTaskDto
+     */
+    'ownerId'?: string;
+    /**
+     * 
      * @type {Array<string>}
      * @memberof CreateTaskDto
      */
-    'contributorsIds': Array<string>;
+    'contributorsIds'?: Array<string>;
     /**
      * 
      * @type {string}
      * @memberof CreateTaskDto
      */
     'dueDate'?: string;
-    /**
-     * 
-     * @type {Array<string>}
-     * @memberof CreateTaskDto
-     */
-    'tags'?: Array<string>;
 }
 /**
  * 
@@ -1131,6 +1143,25 @@ export interface OrganizationSettingsDto {
 /**
  * 
  * @export
+ * @interface OwnerChanged
+ */
+export interface OwnerChanged {
+    /**
+     * 
+     * @type {MicroUser}
+     * @memberof OwnerChanged
+     */
+    'previousOwner'?: MicroUser;
+    /**
+     * 
+     * @type {MicroUser}
+     * @memberof OwnerChanged
+     */
+    'currentOwner'?: MicroUser;
+}
+/**
+ * 
+ * @export
  * @interface PushNotificationDto
  */
 export interface PushNotificationDto {
@@ -1253,6 +1284,9 @@ export const RecentActivityTypeEnum = {
     TicketPostponed: 'ticket_postponed',
     ContributorsAdded: 'contributors_added',
     ContributorsRemoved: 'contributors_removed',
+    OwnerSet: 'owner_set',
+    OwnerChanged: 'owner_changed',
+    OwnerRemoved: 'owner_removed',
     GeneratedInsight: 'generated_insight'
 } as const;
 
@@ -1281,7 +1315,7 @@ export type RecentActivityFlagEnum = typeof RecentActivityFlagEnum[keyof typeof 
  * @type RecentActivityData
  * @export
  */
-export type RecentActivityData = ContributorsChanged | GeneratedInsight | Link | TaskAcknowledged | TaskPostponement | TaskStatusChange | Ticket | TicketPostponement | TicketStatusChange;
+export type RecentActivityData = ContributorsChanged | GeneratedInsight | Link | OwnerChanged | TaskAcknowledged | TaskPostponement | TaskStatusChange | Ticket | TicketPostponement | TicketStatusChange;
 
 /**
  * 
@@ -1326,6 +1360,12 @@ export interface SlackAddCollateralDto {
      * @memberof SlackAddCollateralDto
      */
     'url': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof SlackAddCollateralDto
+     */
+    'creatorComment'?: string;
 }
 /**
  * 
@@ -1359,6 +1399,12 @@ export interface SlackUpdateTaskDto {
     'description'?: string;
     /**
      * 
+     * @type {string}
+     * @memberof SlackUpdateTaskDto
+     */
+    'ownerId'?: string;
+    /**
+     * 
      * @type {Array<string>}
      * @memberof SlackUpdateTaskDto
      */
@@ -1369,12 +1415,6 @@ export interface SlackUpdateTaskDto {
      * @memberof SlackUpdateTaskDto
      */
     'dueDate'?: string;
-    /**
-     * 
-     * @type {Array<string>}
-     * @memberof SlackUpdateTaskDto
-     */
-    'tags'?: Array<string>;
     /**
      * 
      * @type {string}
@@ -1456,6 +1496,18 @@ export interface Task {
     'creatorId': string;
     /**
      * 
+     * @type {User}
+     * @memberof Task
+     */
+    'owner'?: User;
+    /**
+     * 
+     * @type {string}
+     * @memberof Task
+     */
+    'ownerId'?: string;
+    /**
+     * 
      * @type {string}
      * @memberof Task
      */
@@ -1468,22 +1520,16 @@ export interface Task {
     'description': string;
     /**
      * 
-     * @type {string}
-     * @memberof Task
-     */
-    'followers': string;
-    /**
-     * 
      * @type {Array<User>}
      * @memberof Task
      */
-    'contributors': Array<User>;
+    'contributors'?: Array<User>;
     /**
      * 
      * @type {Array<string>}
      * @memberof Task
      */
-    'contributorsIds': Array<string>;
+    'contributorsIds'?: Array<string>;
     /**
      * 
      * @type {string}
@@ -1502,12 +1548,6 @@ export interface Task {
      * @memberof Task
      */
     'dueDate'?: string;
-    /**
-     * 
-     * @type {Array<string>}
-     * @memberof Task
-     */
-    'tags': Array<string>;
     /**
      * 
      * @type {Array<Collateral>}
@@ -1848,6 +1888,18 @@ export interface TaskResponseDtoTask {
     'creatorId': string;
     /**
      * 
+     * @type {User}
+     * @memberof TaskResponseDtoTask
+     */
+    'owner'?: User;
+    /**
+     * 
+     * @type {string}
+     * @memberof TaskResponseDtoTask
+     */
+    'ownerId'?: string;
+    /**
+     * 
      * @type {string}
      * @memberof TaskResponseDtoTask
      */
@@ -1860,22 +1912,16 @@ export interface TaskResponseDtoTask {
     'description': string;
     /**
      * 
-     * @type {string}
-     * @memberof TaskResponseDtoTask
-     */
-    'followers': string;
-    /**
-     * 
      * @type {Array<User>}
      * @memberof TaskResponseDtoTask
      */
-    'contributors': Array<User>;
+    'contributors'?: Array<User>;
     /**
      * 
      * @type {Array<string>}
      * @memberof TaskResponseDtoTask
      */
-    'contributorsIds': Array<string>;
+    'contributorsIds'?: Array<string>;
     /**
      * 
      * @type {string}
@@ -1894,12 +1940,6 @@ export interface TaskResponseDtoTask {
      * @memberof TaskResponseDtoTask
      */
     'dueDate'?: string;
-    /**
-     * 
-     * @type {Array<string>}
-     * @memberof TaskResponseDtoTask
-     */
-    'tags': Array<string>;
     /**
      * 
      * @type {Array<Collateral>}
@@ -2288,6 +2328,12 @@ export interface UpdateTaskDraftDto {
     'description'?: string;
     /**
      * 
+     * @type {string}
+     * @memberof UpdateTaskDraftDto
+     */
+    'ownerId'?: string;
+    /**
+     * 
      * @type {Array<string>}
      * @memberof UpdateTaskDraftDto
      */
@@ -2298,12 +2344,6 @@ export interface UpdateTaskDraftDto {
      * @memberof UpdateTaskDraftDto
      */
     'dueDate'?: string;
-    /**
-     * 
-     * @type {Array<string>}
-     * @memberof UpdateTaskDraftDto
-     */
-    'tags'?: Array<string>;
     /**
      * 
      * @type {string}
@@ -2343,6 +2383,12 @@ export interface UpdateTaskDto {
     'description'?: string;
     /**
      * 
+     * @type {string}
+     * @memberof UpdateTaskDto
+     */
+    'ownerId'?: string;
+    /**
+     * 
      * @type {Array<string>}
      * @memberof UpdateTaskDto
      */
@@ -2353,12 +2399,6 @@ export interface UpdateTaskDto {
      * @memberof UpdateTaskDto
      */
     'dueDate'?: string;
-    /**
-     * 
-     * @type {Array<string>}
-     * @memberof UpdateTaskDto
-     */
-    'tags'?: Array<string>;
 }
 
 export const UpdateTaskDtoStatusEnum = {

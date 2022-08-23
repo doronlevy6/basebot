@@ -14,6 +14,7 @@ export enum SlackBotRoutes {
   CREATE_TASKS_SUBMIT = 'create-tasks-submit',
   ADD_TASK_LINK_MODAL = 'add-task-link-modal',
   ADD_TASK_LINK = 'enter-task-link',
+  ADD_TASK_LINK_COMMENT = 'enter-task-link-comment',
   OAUTH_CONNECT = 'add-links-oauth-submit',
   TASK_ACKNOWLEDGE_SELECT = 'task-acknowledge',
 }

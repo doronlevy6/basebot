@@ -72,6 +72,21 @@ export const AddLinkModal =
                 emoji: true,
               },
             },
+            {
+              block_id: 'link-comment',
+              type: 'input',
+              optional: true,
+              element: {
+                type: 'plain_text_input',
+                multiline: true,
+                action_id: SlackBotRoutes.ADD_TASK_LINK_COMMENT,
+              },
+              label: {
+                type: 'plain_text',
+                text: 'Add a comment to give some context to the given link (optional)',
+                emoji: true,
+              },
+            },
           ],
         },
       });

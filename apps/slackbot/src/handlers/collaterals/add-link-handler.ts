@@ -19,6 +19,11 @@ export const addLinkHandler =
         SlackBotRoutes.ADD_TASK_LINK
       ].value;
 
+      const linkComment =
+        Object.values(body.view.state.values)[1][
+          SlackBotRoutes.ADD_TASK_LINK_COMMENT
+        ].value || undefined; // Needs `|| undefined` because it comes back as null and we want it as undefined
+
       if (!linkUrl || !validator.isURL(linkUrl)) {
         logger.error(`invalid url in task link`);
         await ack({
@@ -31,13 +36,14 @@ export const addLinkHandler =
       await ack();
 
       logger.info(
-        `handling adding task link for task [${taskId}], link [${linkUrl}]`,
+        `handling adding task link for task [${taskId}], link [${linkUrl}], link comment: ${linkComment}`,
       );
 
       const res = await baseApi.slackbotApiControllerAddCollateral({
         taskId,
         url: linkUrl,
         userId: assigneeId,
+        creatorComment: linkComment,
       });
 
       if (!res.data.task) {
