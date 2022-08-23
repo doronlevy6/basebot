@@ -895,6 +895,19 @@ export interface ImportFreeTextDto {
 /**
  * 
  * @export
+ * @interface ImportRefreshJob
+ */
+export interface ImportRefreshJob {
+    /**
+     * 
+     * @type {Organization}
+     * @memberof ImportRefreshJob
+     */
+    'organization': Organization;
+}
+/**
+ * 
+ * @export
  * @interface ImportSlackDto
  */
 export interface ImportSlackDto {

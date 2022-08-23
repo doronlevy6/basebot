@@ -1,28 +1,34 @@
 import { logger } from '@base/logger';
+import { ImportRefreshJob } from '@base/oapigen';
 import {
   createQueue,
   createQueueWorker,
   IQueueConfig,
   QueueWrapper,
 } from '@base/queues';
-import { Worker } from 'bullmq';
+import { Job, Worker } from 'bullmq';
+import { PgInstallationStore } from '../installations/installationStore';
 import { ImportService } from './service';
 import { ImportJob, ImportJobMetadata, ImportTaskType } from './types';
 
 const QUEUE_NAME = 'slackImport';
+const REFRESH_QUEUE_NAME = 'slackImportRefresh';
 
 export class ImportController {
   private queueCfg: IQueueConfig;
   private queueWrapper: QueueWrapper;
   private worker: Worker;
+  private refreshWorker: Worker<ImportRefreshJob>;
   private importService: ImportService;
+  private installationStore: PgInstallationStore;
 
-  constructor(queueCfg: IQueueConfig) {
+  constructor(queueCfg: IQueueConfig, installationStore: PgInstallationStore) {
     this.queueCfg = queueCfg;
     this.queueWrapper = createQueue(QUEUE_NAME, queueCfg);
     this.importService = new ImportService(async (name, job) => {
       await this.queueWrapper.queue.add(name, job);
     });
+    this.installationStore = installationStore;
   }
 
   async isReady(): Promise<boolean> {
@@ -34,6 +40,7 @@ export class ImportController {
     await this.queueWrapper.queue.close();
     await this.queueWrapper.scheduler.close();
     await this.worker.close();
+    await this.refreshWorker.close();
   }
 
   async startImport(metadata: ImportJobMetadata) {
@@ -66,5 +73,24 @@ export class ImportController {
     this.worker = createQueueWorker(QUEUE_NAME, this.queueCfg, async (job) => {
       await this.importService.handleImportJob(job.data);
     });
+
+    this.refreshWorker = createQueueWorker(
+      REFRESH_QUEUE_NAME,
+      this.queueCfg,
+      async (job: Job<ImportRefreshJob>) => {
+        const installation =
+          await this.installationStore.fetchInstallationByBaseId(
+            job.data.organization.id,
+          );
+
+        const token = installation.bot?.token || '';
+        const teamId = installation.team?.id || '';
+        this.startImport({
+          token,
+          slackTeamEmailDomains: [job.data.organization.domain],
+          slackTeamId: teamId,
+        });
+      },
+    );
   }
 }

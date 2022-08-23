@@ -80,7 +80,7 @@ const startApp = async () => {
 
   const taskStatusManager = new TasksManager(allQueueCfg, pgStore);
 
-  const importController = new ImportController(allQueueCfg);
+  const importController = new ImportController(allQueueCfg, pgStore);
 
   const messenger = new Messenger(allQueueCfg, pgStore);
 
