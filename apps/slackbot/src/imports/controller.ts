@@ -78,18 +78,29 @@ export class ImportController {
       REFRESH_QUEUE_NAME,
       this.queueCfg,
       async (job: Job<ImportRefreshJob>) => {
-        const installation =
-          await this.installationStore.fetchInstallationByBaseId(
-            job.data.organization.id,
-          );
+        try {
+          const installation =
+            await this.installationStore.fetchInstallationByBaseId(
+              job.data.organization.id,
+            );
 
-        const token = installation.bot?.token || '';
-        const teamId = installation.team?.id || '';
-        this.startImport({
-          token,
-          slackTeamEmailDomains: [job.data.organization.domain],
-          slackTeamId: teamId,
-        });
+          const token = installation.bot?.token || '';
+          const teamId = installation.team?.id || '';
+          this.startImport({
+            token,
+            slackTeamEmailDomains: [job.data.organization.domain],
+            slackTeamId: teamId,
+          });
+        } catch (error) {
+          if (
+            (error as Error).message
+              .toLowerCase()
+              .includes('no installation found')
+          ) {
+            return;
+          }
+          throw error;
+        }
       },
     );
   }
