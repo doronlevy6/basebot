@@ -6,6 +6,9 @@ vendor/
 local-experiments/
 .env
 
+# Docker Compose Override
+docker-compose.override.yml
+
 # compiled output
 /dist
 /tmp

@@ -4,7 +4,10 @@ export const tryDetectLinkUrl = (linkUrl: string) => {
     return 'asana';
   }
 
-  if (parsed.hostname.includes('monday.com')) {
+  if (
+    parsed.hostname.includes('monday.com') ||
+    parsed.hostname.includes('mondaycom.page.link') // The monday applinks
+  ) {
     return 'monday';
   }
 
