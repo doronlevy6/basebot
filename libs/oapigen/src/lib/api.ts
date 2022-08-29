@@ -314,6 +314,12 @@ export interface CreateTaskDraftDto {
      * @type {string}
      * @memberof CreateTaskDraftDto
      */
+    'ownerText'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof CreateTaskDraftDto
+     */
     'dueDateText'?: string;
     /**
      * 
@@ -321,6 +327,12 @@ export interface CreateTaskDraftDto {
      * @memberof CreateTaskDraftDto
      */
     'origin'?: DraftOriginDto;
+    /**
+     * 
+     * @type {Array<ImportTaskUser>}
+     * @memberof CreateTaskDraftDto
+     */
+    'possibleContributors'?: Array<ImportTaskUser>;
     /**
      * 
      * @type {string}
@@ -940,6 +952,86 @@ export interface ImportTaskResponse {
 /**
  * 
  * @export
+ * @interface ImportTaskUser
+ */
+export interface ImportTaskUser {
+    /**
+     * 
+     * @type {string}
+     * @memberof ImportTaskUser
+     */
+    'text'?: string;
+    /**
+     * 
+     * @type {Array<User>}
+     * @memberof ImportTaskUser
+     */
+    'baseUsers'?: Array<User>;
+}
+/**
+ * 
+ * @export
+ * @interface InsightCreatedNotification
+ */
+export interface InsightCreatedNotification {
+    /**
+     * 
+     * @type {string}
+     * @memberof InsightCreatedNotification
+     */
+    'taskId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof InsightCreatedNotification
+     */
+    'taskTitle': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof InsightCreatedNotification
+     */
+    'taskDescription': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof InsightCreatedNotification
+     */
+    'changerId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof InsightCreatedNotification
+     */
+    'insight': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof InsightCreatedNotification
+     */
+    'recent_activity_id': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof InsightCreatedNotification
+     */
+    'flag'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof InsightCreatedNotification
+     */
+    'discussionMessageId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof InsightCreatedNotification
+     */
+    'collateral_id': string;
+}
+/**
+ * 
+ * @export
  * @interface Link
  */
 export interface Link {
@@ -1199,10 +1291,12 @@ export interface PushNotificationDto {
 }
 
 export const PushNotificationDtoTypeEnum = {
-    StatusChanged: 'task_status_changed',
-    DueDateChanged: 'task_due_date_changed',
-    Declined: 'task_declined',
-    Changed: 'task_changed'
+    TaskStatusChanged: 'task_status_changed',
+    TaskDueDateChanged: 'task_due_date_changed',
+    TaskDeclined: 'task_declined',
+    InsightCreated: 'insight_created',
+    TaskChanged: 'task_changed',
+    TaskOwnerChanged: 'task_owner_changed'
 } as const;
 
 export type PushNotificationDtoTypeEnum = typeof PushNotificationDtoTypeEnum[keyof typeof PushNotificationDtoTypeEnum];
@@ -1768,6 +1862,36 @@ export interface TaskDraft {
      * @memberof TaskDraft
      */
     'origin'?: DraftOriginDto;
+    /**
+     * 
+     * @type {User}
+     * @memberof TaskDraft
+     */
+    'owner'?: User;
+    /**
+     * 
+     * @type {string}
+     * @memberof TaskDraft
+     */
+    'ownerId'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof TaskDraft
+     */
+    'ownerText'?: string;
+    /**
+     * 
+     * @type {Array<ImportTaskUser>}
+     * @memberof TaskDraft
+     */
+    'possibleContributors'?: Array<ImportTaskUser>;
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof TaskDraft
+     */
+    'contributorIds'?: Array<string>;
 }
 /**
  * 
@@ -1830,6 +1954,55 @@ export interface TaskMessageDto {
      * @memberof TaskMessageDto
      */
     'user': User;
+}
+/**
+ * 
+ * @export
+ * @interface TaskOwnerChangeNotification
+ */
+export interface TaskOwnerChangeNotification {
+    /**
+     * 
+     * @type {string}
+     * @memberof TaskOwnerChangeNotification
+     */
+    'taskId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof TaskOwnerChangeNotification
+     */
+    'taskTitle': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof TaskOwnerChangeNotification
+     */
+    'taskDescription': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof TaskOwnerChangeNotification
+     */
+    'changerId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof TaskOwnerChangeNotification
+     */
+    'changeTrigger'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof TaskOwnerChangeNotification
+     */
+    'previousOwnerId'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof TaskOwnerChangeNotification
+     */
+    'currentOwnerId'?: string;
 }
 /**
  * 
@@ -2320,6 +2493,12 @@ export interface UpdateTaskDraftDto {
      * @type {string}
      * @memberof UpdateTaskDraftDto
      */
+    'ownerText'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof UpdateTaskDraftDto
+     */
     'dueDateText'?: string;
     /**
      * 
@@ -2327,6 +2506,12 @@ export interface UpdateTaskDraftDto {
      * @memberof UpdateTaskDraftDto
      */
     'origin'?: DraftOriginDto;
+    /**
+     * 
+     * @type {Array<ImportTaskUser>}
+     * @memberof UpdateTaskDraftDto
+     */
+    'possibleContributors'?: Array<ImportTaskUser>;
     /**
      * 
      * @type {string}
