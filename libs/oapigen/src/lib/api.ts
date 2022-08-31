@@ -1009,7 +1009,7 @@ export interface InsightCreatedNotification {
      * @type {string}
      * @memberof InsightCreatedNotification
      */
-    'recent_activity_id': string;
+    'recentActivityId': string;
     /**
      * 
      * @type {string}
@@ -1027,7 +1027,7 @@ export interface InsightCreatedNotification {
      * @type {string}
      * @memberof InsightCreatedNotification
      */
-    'collateral_id': string;
+    'collateralId': string;
 }
 /**
  * 
@@ -1084,6 +1084,19 @@ export const LinkCollateralGroupEnum = {
 
 export type LinkCollateralGroupEnum = typeof LinkCollateralGroupEnum[keyof typeof LinkCollateralGroupEnum];
 
+/**
+ * 
+ * @export
+ * @interface MarkAllAsAll
+ */
+export interface MarkAllAsAll {
+    /**
+     * 
+     * @type {string}
+     * @memberof MarkAllAsAll
+     */
+    'untilTime': string;
+}
 /**
  * 
  * @export
@@ -1305,7 +1318,7 @@ export type PushNotificationDtoTypeEnum = typeof PushNotificationDtoTypeEnum[key
  * @type PushNotificationDtoNotificationData
  * @export
  */
-export type PushNotificationDtoNotificationData = TaskDueDateChangeNotification | TaskStatusChangeNotification;
+export type PushNotificationDtoNotificationData = InsightCreatedNotification | TaskDueDateChangeNotification | TaskStatusChangeNotification;
 
 /**
  * 
@@ -4697,6 +4710,76 @@ export const RecentActivityApiAxiosParamCreator = function (configuration?: Conf
     return {
         /**
          * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        recentActivityControllerCountUnseen: async (options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/recent-activity/unseen`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication bearer required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {string} taskId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        recentActivityControllerCountUnseenOnTask: async (taskId: string, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'taskId' is not null or undefined
+            assertParamExists('recentActivityControllerCountUnseenOnTask', 'taskId', taskId)
+            const localVarPath = `/recent-activity/{taskId}/unseen`
+                .replace(`{${"taskId"}}`, encodeURIComponent(String(taskId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication bearer required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
          * @param {string} taskId 
          * @param {number} limit 
          * @param {number} offset 
@@ -4746,6 +4829,88 @@ export const RecentActivityApiAxiosParamCreator = function (configuration?: Conf
                 options: localVarRequestOptions,
             };
         },
+        /**
+         * 
+         * @param {MarkAllAsAll} markAllAsAll 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        recentActivityControllerMarkAllPersonalizedAsAll: async (markAllAsAll: MarkAllAsAll, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'markAllAsAll' is not null or undefined
+            assertParamExists('recentActivityControllerMarkAllPersonalizedAsAll', 'markAllAsAll', markAllAsAll)
+            const localVarPath = `/recent-activity/mark-as-all`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication bearer required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(markAllAsAll, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {string} taskId 
+         * @param {MarkAllAsAll} markAllAsAll 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        recentActivityControllerMarkAllPersonalizedOnTaskAsAll: async (taskId: string, markAllAsAll: MarkAllAsAll, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'taskId' is not null or undefined
+            assertParamExists('recentActivityControllerMarkAllPersonalizedOnTaskAsAll', 'taskId', taskId)
+            // verify required parameter 'markAllAsAll' is not null or undefined
+            assertParamExists('recentActivityControllerMarkAllPersonalizedOnTaskAsAll', 'markAllAsAll', markAllAsAll)
+            const localVarPath = `/recent-activity/{taskId}/mark-as-all`
+                .replace(`{${"taskId"}}`, encodeURIComponent(String(taskId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication bearer required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(markAllAsAll, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
     }
 };
 
@@ -4758,6 +4923,25 @@ export const RecentActivityApiFp = function(configuration?: Configuration) {
     return {
         /**
          * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async recentActivityControllerCountUnseen(options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<number>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.recentActivityControllerCountUnseen(options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+        /**
+         * 
+         * @param {string} taskId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async recentActivityControllerCountUnseenOnTask(taskId: string, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<number>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.recentActivityControllerCountUnseenOnTask(taskId, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+        /**
+         * 
          * @param {string} taskId 
          * @param {number} limit 
          * @param {number} offset 
@@ -4766,6 +4950,27 @@ export const RecentActivityApiFp = function(configuration?: Configuration) {
          */
         async recentActivityControllerLoadActivity(taskId: string, limit: number, offset: number, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<RecentActivity>>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.recentActivityControllerLoadActivity(taskId, limit, offset, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+        /**
+         * 
+         * @param {MarkAllAsAll} markAllAsAll 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async recentActivityControllerMarkAllPersonalizedAsAll(markAllAsAll: MarkAllAsAll, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.recentActivityControllerMarkAllPersonalizedAsAll(markAllAsAll, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+        /**
+         * 
+         * @param {string} taskId 
+         * @param {MarkAllAsAll} markAllAsAll 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async recentActivityControllerMarkAllPersonalizedOnTaskAsAll(taskId: string, markAllAsAll: MarkAllAsAll, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.recentActivityControllerMarkAllPersonalizedOnTaskAsAll(taskId, markAllAsAll, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
     }
@@ -4780,6 +4985,23 @@ export const RecentActivityApiFactory = function (configuration?: Configuration,
     return {
         /**
          * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        recentActivityControllerCountUnseen(options?: any): AxiosPromise<number> {
+            return localVarFp.recentActivityControllerCountUnseen(options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {string} taskId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        recentActivityControllerCountUnseenOnTask(taskId: string, options?: any): AxiosPromise<number> {
+            return localVarFp.recentActivityControllerCountUnseenOnTask(taskId, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
          * @param {string} taskId 
          * @param {number} limit 
          * @param {number} offset 
@@ -4788,6 +5010,25 @@ export const RecentActivityApiFactory = function (configuration?: Configuration,
          */
         recentActivityControllerLoadActivity(taskId: string, limit: number, offset: number, options?: any): AxiosPromise<Array<RecentActivity>> {
             return localVarFp.recentActivityControllerLoadActivity(taskId, limit, offset, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {MarkAllAsAll} markAllAsAll 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        recentActivityControllerMarkAllPersonalizedAsAll(markAllAsAll: MarkAllAsAll, options?: any): AxiosPromise<void> {
+            return localVarFp.recentActivityControllerMarkAllPersonalizedAsAll(markAllAsAll, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {string} taskId 
+         * @param {MarkAllAsAll} markAllAsAll 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        recentActivityControllerMarkAllPersonalizedOnTaskAsAll(taskId: string, markAllAsAll: MarkAllAsAll, options?: any): AxiosPromise<void> {
+            return localVarFp.recentActivityControllerMarkAllPersonalizedOnTaskAsAll(taskId, markAllAsAll, options).then((request) => request(axios, basePath));
         },
     };
 };
@@ -4801,6 +5042,27 @@ export const RecentActivityApiFactory = function (configuration?: Configuration,
 export class RecentActivityApi extends BaseAPI {
     /**
      * 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof RecentActivityApi
+     */
+    public recentActivityControllerCountUnseen(options?: AxiosRequestConfig) {
+        return RecentActivityApiFp(this.configuration).recentActivityControllerCountUnseen(options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {string} taskId 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof RecentActivityApi
+     */
+    public recentActivityControllerCountUnseenOnTask(taskId: string, options?: AxiosRequestConfig) {
+        return RecentActivityApiFp(this.configuration).recentActivityControllerCountUnseenOnTask(taskId, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
      * @param {string} taskId 
      * @param {number} limit 
      * @param {number} offset 
@@ -4810,6 +5072,29 @@ export class RecentActivityApi extends BaseAPI {
      */
     public recentActivityControllerLoadActivity(taskId: string, limit: number, offset: number, options?: AxiosRequestConfig) {
         return RecentActivityApiFp(this.configuration).recentActivityControllerLoadActivity(taskId, limit, offset, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {MarkAllAsAll} markAllAsAll 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof RecentActivityApi
+     */
+    public recentActivityControllerMarkAllPersonalizedAsAll(markAllAsAll: MarkAllAsAll, options?: AxiosRequestConfig) {
+        return RecentActivityApiFp(this.configuration).recentActivityControllerMarkAllPersonalizedAsAll(markAllAsAll, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {string} taskId 
+     * @param {MarkAllAsAll} markAllAsAll 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof RecentActivityApi
+     */
+    public recentActivityControllerMarkAllPersonalizedOnTaskAsAll(taskId: string, markAllAsAll: MarkAllAsAll, options?: AxiosRequestConfig) {
+        return RecentActivityApiFp(this.configuration).recentActivityControllerMarkAllPersonalizedOnTaskAsAll(taskId, markAllAsAll, options).then((request) => request(this.axios, this.basePath));
     }
 }
 
