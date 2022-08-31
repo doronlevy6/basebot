@@ -649,6 +649,243 @@ export type DraftOriginDtoTypeEnum = typeof DraftOriginDtoTypeEnum[keyof typeof 
 /**
  * 
  * @export
+ * @interface EnrichedRecentActivity
+ */
+export interface EnrichedRecentActivity {
+    /**
+     * 
+     * @type {RecentActivityData}
+     * @memberof EnrichedRecentActivity
+     */
+    'data': RecentActivityData;
+    /**
+     * 
+     * @type {string}
+     * @memberof EnrichedRecentActivity
+     */
+    'id': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof EnrichedRecentActivity
+     */
+    'taskId': string;
+    /**
+     * 
+     * @type {User}
+     * @memberof EnrichedRecentActivity
+     */
+    'user': User;
+    /**
+     * 
+     * @type {string}
+     * @memberof EnrichedRecentActivity
+     */
+    'userId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof EnrichedRecentActivity
+     */
+    'type': EnrichedRecentActivityTypeEnum;
+    /**
+     * 
+     * @type {string}
+     * @memberof EnrichedRecentActivity
+     */
+    'origin': EnrichedRecentActivityOriginEnum;
+    /**
+     * 
+     * @type {string}
+     * @memberof EnrichedRecentActivity
+     */
+    'createdAt': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof EnrichedRecentActivity
+     */
+    'updatedAt': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof EnrichedRecentActivity
+     */
+    'flag': EnrichedRecentActivityFlagEnum;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof EnrichedRecentActivity
+     */
+    'seen': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof EnrichedRecentActivity
+     */
+    'read': boolean;
+}
+
+export const EnrichedRecentActivityTypeEnum = {
+    TaskAcknowledged: 'task_acknowledged',
+    Link: 'link',
+    TaskStatusChanged: 'task_status_changed',
+    TicketStatusChanged: 'ticket_status_changed',
+    TaskPostponed: 'task_postponed',
+    TicketAdded: 'ticket_added',
+    TicketPostponed: 'ticket_postponed',
+    ContributorsAdded: 'contributors_added',
+    ContributorsRemoved: 'contributors_removed',
+    OwnerSet: 'owner_set',
+    OwnerChanged: 'owner_changed',
+    OwnerRemoved: 'owner_removed',
+    GeneratedInsight: 'generated_insight'
+} as const;
+
+export type EnrichedRecentActivityTypeEnum = typeof EnrichedRecentActivityTypeEnum[keyof typeof EnrichedRecentActivityTypeEnum];
+export const EnrichedRecentActivityOriginEnum = {
+    Null: 'null',
+    Empty: '',
+    ManuallyAdded: 'manually_added',
+    Slack: 'slack',
+    Email: 'email',
+    System: 'system',
+    Admin: 'admin'
+} as const;
+
+export type EnrichedRecentActivityOriginEnum = typeof EnrichedRecentActivityOriginEnum[keyof typeof EnrichedRecentActivityOriginEnum];
+export const EnrichedRecentActivityFlagEnum = {
+    Null: 'null',
+    Empty: '',
+    Highlight: 'highlight',
+    Risk: 'risk'
+} as const;
+
+export type EnrichedRecentActivityFlagEnum = typeof EnrichedRecentActivityFlagEnum[keyof typeof EnrichedRecentActivityFlagEnum];
+
+/**
+ * 
+ * @export
+ * @interface EnrichedTask
+ */
+export interface EnrichedTask {
+    /**
+     * 
+     * @type {string}
+     * @memberof EnrichedTask
+     */
+    'status': EnrichedTaskStatusEnum;
+    /**
+     * 
+     * @type {number}
+     * @memberof EnrichedTask
+     */
+    'unseenRecentActivitiesCount': number;
+    /**
+     * 
+     * @type {Array<EnrichedRecentActivity>}
+     * @memberof EnrichedTask
+     */
+    'recentActivityLog': Array<EnrichedRecentActivity>;
+    /**
+     * 
+     * @type {string}
+     * @memberof EnrichedTask
+     */
+    'id': string;
+    /**
+     * 
+     * @type {User}
+     * @memberof EnrichedTask
+     */
+    'creator': User;
+    /**
+     * 
+     * @type {string}
+     * @memberof EnrichedTask
+     */
+    'creatorId': string;
+    /**
+     * 
+     * @type {User}
+     * @memberof EnrichedTask
+     */
+    'owner'?: User;
+    /**
+     * 
+     * @type {string}
+     * @memberof EnrichedTask
+     */
+    'ownerId'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof EnrichedTask
+     */
+    'title': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof EnrichedTask
+     */
+    'description': string;
+    /**
+     * 
+     * @type {Array<User>}
+     * @memberof EnrichedTask
+     */
+    'contributors'?: Array<User>;
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof EnrichedTask
+     */
+    'contributorsIds'?: Array<string>;
+    /**
+     * 
+     * @type {string}
+     * @memberof EnrichedTask
+     */
+    'createdAt': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof EnrichedTask
+     */
+    'updatedAt': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof EnrichedTask
+     */
+    'dueDate'?: string;
+    /**
+     * 
+     * @type {Array<Collateral>}
+     * @memberof EnrichedTask
+     */
+    'collaterals'?: Array<Collateral>;
+    /**
+     * 
+     * @type {string}
+     * @memberof EnrichedTask
+     */
+    'deletedAt'?: string;
+}
+
+export const EnrichedTaskStatusEnum = {
+    NotStarted: 'not_started',
+    Waiting: 'waiting',
+    OnHold: 'on_hold',
+    InProgress: 'in_progress',
+    Done: 'done'
+} as const;
+
+export type EnrichedTaskStatusEnum = typeof EnrichedTaskStatusEnum[keyof typeof EnrichedTaskStatusEnum];
+
+/**
+ * 
+ * @export
  * @enum {string}
  */
 
@@ -1584,6 +1821,102 @@ export interface SlackUserDto {
      */
     'timezoneOffset': number;
 }
+/**
+ * 
+ * @export
+ * @interface SlimPersonalizedTask
+ */
+export interface SlimPersonalizedTask {
+    /**
+     * 
+     * @type {string}
+     * @memberof SlimPersonalizedTask
+     */
+    'status': SlimPersonalizedTaskStatusEnum;
+    /**
+     * 
+     * @type {number}
+     * @memberof SlimPersonalizedTask
+     */
+    'unseenRecentActivitiesCount': number;
+    /**
+     * 
+     * @type {string}
+     * @memberof SlimPersonalizedTask
+     */
+    'id': string;
+    /**
+     * 
+     * @type {User}
+     * @memberof SlimPersonalizedTask
+     */
+    'creator': User;
+    /**
+     * 
+     * @type {string}
+     * @memberof SlimPersonalizedTask
+     */
+    'creatorId': string;
+    /**
+     * 
+     * @type {User}
+     * @memberof SlimPersonalizedTask
+     */
+    'owner'?: User;
+    /**
+     * 
+     * @type {string}
+     * @memberof SlimPersonalizedTask
+     */
+    'ownerId'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof SlimPersonalizedTask
+     */
+    'title': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof SlimPersonalizedTask
+     */
+    'description': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof SlimPersonalizedTask
+     */
+    'createdAt': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof SlimPersonalizedTask
+     */
+    'updatedAt': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof SlimPersonalizedTask
+     */
+    'dueDate'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof SlimPersonalizedTask
+     */
+    'deletedAt'?: string;
+}
+
+export const SlimPersonalizedTaskStatusEnum = {
+    NotStarted: 'not_started',
+    Waiting: 'waiting',
+    OnHold: 'on_hold',
+    InProgress: 'in_progress',
+    Done: 'done'
+} as const;
+
+export type SlimPersonalizedTaskStatusEnum = typeof SlimPersonalizedTaskStatusEnum[keyof typeof SlimPersonalizedTaskStatusEnum];
+
 /**
  * 
  * @export
@@ -3759,6 +4092,187 @@ export class ImportApi extends BaseAPI {
      */
     public importTasksControllerCreateTasksFromEmails(options?: AxiosRequestConfig) {
         return ImportApiFp(this.configuration).importTasksControllerCreateTasksFromEmails(options).then((request) => request(this.axios, this.basePath));
+    }
+}
+
+
+/**
+ * MobileApi - axios parameter creator
+ * @export
+ */
+export const MobileApiAxiosParamCreator = function (configuration?: Configuration) {
+    return {
+        /**
+         * 
+         * @param {string} taskId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        mobileBffControllerFindOneOfMyTasks: async (taskId: string, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'taskId' is not null or undefined
+            assertParamExists('mobileBffControllerFindOneOfMyTasks', 'taskId', taskId)
+            const localVarPath = `/mobile/my-tasks/{taskId}`
+                .replace(`{${"taskId"}}`, encodeURIComponent(String(taskId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication bearer required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {number} [limit] 
+         * @param {number} [offset] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        mobileBffControllerMyTasks: async (limit?: number, offset?: number, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/mobile/my-tasks`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication bearer required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+            if (limit !== undefined) {
+                localVarQueryParameter['limit'] = limit;
+            }
+
+            if (offset !== undefined) {
+                localVarQueryParameter['offset'] = offset;
+            }
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+    }
+};
+
+/**
+ * MobileApi - functional programming interface
+ * @export
+ */
+export const MobileApiFp = function(configuration?: Configuration) {
+    const localVarAxiosParamCreator = MobileApiAxiosParamCreator(configuration)
+    return {
+        /**
+         * 
+         * @param {string} taskId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async mobileBffControllerFindOneOfMyTasks(taskId: string, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<EnrichedTask>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.mobileBffControllerFindOneOfMyTasks(taskId, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+        /**
+         * 
+         * @param {number} [limit] 
+         * @param {number} [offset] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async mobileBffControllerMyTasks(limit?: number, offset?: number, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<SlimPersonalizedTask>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.mobileBffControllerMyTasks(limit, offset, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+    }
+};
+
+/**
+ * MobileApi - factory interface
+ * @export
+ */
+export const MobileApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
+    const localVarFp = MobileApiFp(configuration)
+    return {
+        /**
+         * 
+         * @param {string} taskId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        mobileBffControllerFindOneOfMyTasks(taskId: string, options?: any): AxiosPromise<EnrichedTask> {
+            return localVarFp.mobileBffControllerFindOneOfMyTasks(taskId, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {number} [limit] 
+         * @param {number} [offset] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        mobileBffControllerMyTasks(limit?: number, offset?: number, options?: any): AxiosPromise<Array<SlimPersonalizedTask>> {
+            return localVarFp.mobileBffControllerMyTasks(limit, offset, options).then((request) => request(axios, basePath));
+        },
+    };
+};
+
+/**
+ * MobileApi - object-oriented interface
+ * @export
+ * @class MobileApi
+ * @extends {BaseAPI}
+ */
+export class MobileApi extends BaseAPI {
+    /**
+     * 
+     * @param {string} taskId 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof MobileApi
+     */
+    public mobileBffControllerFindOneOfMyTasks(taskId: string, options?: AxiosRequestConfig) {
+        return MobileApiFp(this.configuration).mobileBffControllerFindOneOfMyTasks(taskId, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {number} [limit] 
+     * @param {number} [offset] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof MobileApi
+     */
+    public mobileBffControllerMyTasks(limit?: number, offset?: number, options?: AxiosRequestConfig) {
+        return MobileApiFp(this.configuration).mobileBffControllerMyTasks(limit, offset, options).then((request) => request(this.axios, this.basePath));
     }
 }
 
