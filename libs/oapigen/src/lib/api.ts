@@ -660,6 +660,18 @@ export interface EnrichedRecentActivity {
     'data': RecentActivityData;
     /**
      * 
+     * @type {boolean}
+     * @memberof EnrichedRecentActivity
+     */
+    'seen': boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof EnrichedRecentActivity
+     */
+    'read': boolean;
+    /**
+     * 
      * @type {string}
      * @memberof EnrichedRecentActivity
      */
@@ -712,18 +724,6 @@ export interface EnrichedRecentActivity {
      * @memberof EnrichedRecentActivity
      */
     'flag': EnrichedRecentActivityFlagEnum;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof EnrichedRecentActivity
-     */
-    'seen': boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof EnrichedRecentActivity
-     */
-    'read': boolean;
 }
 
 export const EnrichedRecentActivityTypeEnum = {
