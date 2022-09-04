@@ -404,6 +404,49 @@ export interface CreateTaskDto {
 /**
  * 
  * @export
+ * @interface CreateTaskWithCollateralsDto
+ */
+export interface CreateTaskWithCollateralsDto {
+    /**
+     * 
+     * @type {string}
+     * @memberof CreateTaskWithCollateralsDto
+     */
+    'title': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof CreateTaskWithCollateralsDto
+     */
+    'description'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof CreateTaskWithCollateralsDto
+     */
+    'ownerId'?: string;
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof CreateTaskWithCollateralsDto
+     */
+    'contributorsIds'?: Array<string>;
+    /**
+     * 
+     * @type {string}
+     * @memberof CreateTaskWithCollateralsDto
+     */
+    'dueDate'?: string;
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof CreateTaskWithCollateralsDto
+     */
+    'urls'?: Array<string>;
+}
+/**
+ * 
+ * @export
  * @interface DeleteDraftsBulkDto
  */
 export interface DeleteDraftsBulkDto {
@@ -729,6 +772,8 @@ export interface EnrichedRecentActivity {
 export const EnrichedRecentActivityTypeEnum = {
     TaskAcknowledged: 'task_acknowledged',
     Link: 'link',
+    TaskTitleChanged: 'task_title_changed',
+    TaskDescriptionChanged: 'task_description_changed',
     TaskStatusChanged: 'task_status_changed',
     TicketStatusChanged: 'ticket_status_changed',
     TaskPostponed: 'task_postponed',
@@ -787,6 +832,12 @@ export interface EnrichedTask {
      * @memberof EnrichedTask
      */
     'recentActivityLog': Array<EnrichedRecentActivity>;
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof EnrichedTask
+     */
+    'collateralsIds'?: Array<string>;
     /**
      * 
      * @type {string}
@@ -1634,6 +1685,8 @@ export interface RecentActivity {
 export const RecentActivityTypeEnum = {
     TaskAcknowledged: 'task_acknowledged',
     Link: 'link',
+    TaskTitleChanged: 'task_title_changed',
+    TaskDescriptionChanged: 'task_description_changed',
     TaskStatusChanged: 'task_status_changed',
     TicketStatusChanged: 'ticket_status_changed',
     TaskPostponed: 'task_postponed',
@@ -1672,7 +1725,7 @@ export type RecentActivityFlagEnum = typeof RecentActivityFlagEnum[keyof typeof 
  * @type RecentActivityData
  * @export
  */
-export type RecentActivityData = ContributorsChanged | GeneratedInsight | Link | OwnerChanged | TaskAcknowledged | TaskPostponement | TaskStatusChange | Ticket | TicketPostponement | TicketStatusChange;
+export type RecentActivityData = ContributorsChanged | GeneratedInsight | Link | OwnerChanged | TaskAcknowledged | TaskDescriptionChanged | TaskPostponement | TaskStatusChange | TaskTitleChanged | Ticket | TicketPostponement | TicketStatusChange;
 
 /**
  * 
@@ -2117,6 +2170,31 @@ export interface TaskDeclinedNotification {
      * @memberof TaskDeclinedNotification
      */
     'declinerId': string;
+}
+/**
+ * 
+ * @export
+ * @interface TaskDescriptionChanged
+ */
+export interface TaskDescriptionChanged {
+    /**
+     * 
+     * @type {string}
+     * @memberof TaskDescriptionChanged
+     */
+    'previousDescription': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof TaskDescriptionChanged
+     */
+    'currentDescription': string;
+    /**
+     * 
+     * @type {number}
+     * @memberof TaskDescriptionChanged
+     */
+    'changeTime': number;
 }
 /**
  * 
@@ -2581,6 +2659,31 @@ export interface TaskStatusChangeNotification {
      * @memberof TaskStatusChangeNotification
      */
     'currentStatus': string;
+}
+/**
+ * 
+ * @export
+ * @interface TaskTitleChanged
+ */
+export interface TaskTitleChanged {
+    /**
+     * 
+     * @type {string}
+     * @memberof TaskTitleChanged
+     */
+    'previousTitle': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof TaskTitleChanged
+     */
+    'currentTitle': string;
+    /**
+     * 
+     * @type {number}
+     * @memberof TaskTitleChanged
+     */
+    'changeTime': number;
 }
 /**
  * 
@@ -4104,6 +4207,45 @@ export const MobileApiAxiosParamCreator = function (configuration?: Configuratio
     return {
         /**
          * 
+         * @param {CreateTaskWithCollateralsDto} createTaskWithCollateralsDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        mobileBffControllerCreate: async (createTaskWithCollateralsDto: CreateTaskWithCollateralsDto, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'createTaskWithCollateralsDto' is not null or undefined
+            assertParamExists('mobileBffControllerCreate', 'createTaskWithCollateralsDto', createTaskWithCollateralsDto)
+            const localVarPath = `/mobile/tasks`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication bearer required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(createTaskWithCollateralsDto, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
          * @param {string} taskId 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -4194,6 +4336,16 @@ export const MobileApiFp = function(configuration?: Configuration) {
     return {
         /**
          * 
+         * @param {CreateTaskWithCollateralsDto} createTaskWithCollateralsDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async mobileBffControllerCreate(createTaskWithCollateralsDto: CreateTaskWithCollateralsDto, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<EnrichedTask>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.mobileBffControllerCreate(createTaskWithCollateralsDto, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+        /**
+         * 
          * @param {string} taskId 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -4225,6 +4377,15 @@ export const MobileApiFactory = function (configuration?: Configuration, basePat
     return {
         /**
          * 
+         * @param {CreateTaskWithCollateralsDto} createTaskWithCollateralsDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        mobileBffControllerCreate(createTaskWithCollateralsDto: CreateTaskWithCollateralsDto, options?: any): AxiosPromise<EnrichedTask> {
+            return localVarFp.mobileBffControllerCreate(createTaskWithCollateralsDto, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
          * @param {string} taskId 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -4252,6 +4413,17 @@ export const MobileApiFactory = function (configuration?: Configuration, basePat
  * @extends {BaseAPI}
  */
 export class MobileApi extends BaseAPI {
+    /**
+     * 
+     * @param {CreateTaskWithCollateralsDto} createTaskWithCollateralsDto 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof MobileApi
+     */
+    public mobileBffControllerCreate(createTaskWithCollateralsDto: CreateTaskWithCollateralsDto, options?: AxiosRequestConfig) {
+        return MobileApiFp(this.configuration).mobileBffControllerCreate(createTaskWithCollateralsDto, options).then((request) => request(this.axios, this.basePath));
+    }
+
     /**
      * 
      * @param {string} taskId 
