@@ -78,6 +78,61 @@ export interface AddCollateralDto {
     'creatorComment'?: string;
 }
 /**
+ * 
+ * @export
+ * @interface AddDiscussionFromSlackDto
+ */
+export interface AddDiscussionFromSlackDto {
+    /**
+     * 
+     * @type {string}
+     * @memberof AddDiscussionFromSlackDto
+     */
+    'externalId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof AddDiscussionFromSlackDto
+     */
+    'externalParentId'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof AddDiscussionFromSlackDto
+     */
+    'creatorEmail': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof AddDiscussionFromSlackDto
+     */
+    'rawText': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof AddDiscussionFromSlackDto
+     */
+    'sanitizedText'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof AddDiscussionFromSlackDto
+     */
+    'taskId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof AddDiscussionFromSlackDto
+     */
+    'createdAt'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof AddDiscussionFromSlackDto
+     */
+    'updatedAt'?: string;
+}
+/**
  * @type AppVersionsControllerGetAppVersionsDefaultResponseValue
  * @export
  */
@@ -632,16 +687,16 @@ export interface DiscussionMessage {
     'taskId': string;
     /**
      * 
-     * @type {Task}
+     * @type {Collateral}
      * @memberof DiscussionMessage
      */
-    'collateral': Task;
+    'collateral'?: Collateral;
     /**
      * 
      * @type {string}
      * @memberof DiscussionMessage
      */
-    'collateralId': string;
+    'collateralId'?: string;
     /**
      * 
      * @type {string}
@@ -772,8 +827,6 @@ export interface EnrichedRecentActivity {
 export const EnrichedRecentActivityTypeEnum = {
     TaskAcknowledged: 'task_acknowledged',
     Link: 'link',
-    TaskTitleChanged: 'task_title_changed',
-    TaskDescriptionChanged: 'task_description_changed',
     TaskStatusChanged: 'task_status_changed',
     TicketStatusChanged: 'ticket_status_changed',
     TaskPostponed: 'task_postponed',
@@ -1685,8 +1738,6 @@ export interface RecentActivity {
 export const RecentActivityTypeEnum = {
     TaskAcknowledged: 'task_acknowledged',
     Link: 'link',
-    TaskTitleChanged: 'task_title_changed',
-    TaskDescriptionChanged: 'task_description_changed',
     TaskStatusChanged: 'task_status_changed',
     TicketStatusChanged: 'ticket_status_changed',
     TaskPostponed: 'task_postponed',
@@ -1725,7 +1776,7 @@ export type RecentActivityFlagEnum = typeof RecentActivityFlagEnum[keyof typeof 
  * @type RecentActivityData
  * @export
  */
-export type RecentActivityData = ContributorsChanged | GeneratedInsight | Link | OwnerChanged | TaskAcknowledged | TaskDescriptionChanged | TaskPostponement | TaskStatusChange | TaskTitleChanged | Ticket | TicketPostponement | TicketStatusChange;
+export type RecentActivityData = ContributorsChanged | GeneratedInsight | Link | OwnerChanged | TaskAcknowledged | TaskPostponement | TaskStatusChange | Ticket | TicketPostponement | TicketStatusChange;
 
 /**
  * 
@@ -1776,6 +1827,19 @@ export interface SlackAddCollateralDto {
      * @memberof SlackAddCollateralDto
      */
     'creatorComment'?: string;
+}
+/**
+ * 
+ * @export
+ * @interface SlackGetTasksDto
+ */
+export interface SlackGetTasksDto {
+    /**
+     * 
+     * @type {string}
+     * @memberof SlackGetTasksDto
+     */
+    'userEmail': string;
 }
 /**
  * 
@@ -1934,6 +1998,12 @@ export interface SlimPersonalizedTask {
      * @memberof SlimPersonalizedTask
      */
     'description': string;
+    /**
+     * 
+     * @type {Array<User>}
+     * @memberof SlimPersonalizedTask
+     */
+    'contributors'?: Array<User>;
     /**
      * 
      * @type {string}
@@ -2170,31 +2240,6 @@ export interface TaskDeclinedNotification {
      * @memberof TaskDeclinedNotification
      */
     'declinerId': string;
-}
-/**
- * 
- * @export
- * @interface TaskDescriptionChanged
- */
-export interface TaskDescriptionChanged {
-    /**
-     * 
-     * @type {string}
-     * @memberof TaskDescriptionChanged
-     */
-    'previousDescription': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof TaskDescriptionChanged
-     */
-    'currentDescription': string;
-    /**
-     * 
-     * @type {number}
-     * @memberof TaskDescriptionChanged
-     */
-    'changeTime': number;
 }
 /**
  * 
@@ -2663,27 +2708,15 @@ export interface TaskStatusChangeNotification {
 /**
  * 
  * @export
- * @interface TaskTitleChanged
+ * @interface TasksResponseDto
  */
-export interface TaskTitleChanged {
+export interface TasksResponseDto {
     /**
      * 
-     * @type {string}
-     * @memberof TaskTitleChanged
+     * @type {Array<Task>}
+     * @memberof TasksResponseDto
      */
-    'previousTitle': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof TaskTitleChanged
-     */
-    'currentTitle': string;
-    /**
-     * 
-     * @type {number}
-     * @memberof TaskTitleChanged
-     */
-    'changeTime': number;
+    'tasks': Array<Task>;
 }
 /**
  * 
@@ -5871,6 +5904,45 @@ export const SlackbotApiApiAxiosParamCreator = function (configuration?: Configu
         },
         /**
          * 
+         * @param {AddDiscussionFromSlackDto} addDiscussionFromSlackDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        slackbotApiControllerAddDiscussion: async (addDiscussionFromSlackDto: AddDiscussionFromSlackDto, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'addDiscussionFromSlackDto' is not null or undefined
+            assertParamExists('slackbotApiControllerAddDiscussion', 'addDiscussionFromSlackDto', addDiscussionFromSlackDto)
+            const localVarPath = `/slackbot-api/discussions`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication bearer required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(addDiscussionFromSlackDto, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
          * @param {UsersImportDto} usersImportDto 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -5988,6 +6060,45 @@ export const SlackbotApiApiAxiosParamCreator = function (configuration?: Configu
         },
         /**
          * 
+         * @param {SlackGetTasksDto} slackGetTasksDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        slackbotApiControllerGetTasks: async (slackGetTasksDto: SlackGetTasksDto, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'slackGetTasksDto' is not null or undefined
+            assertParamExists('slackbotApiControllerGetTasks', 'slackGetTasksDto', slackGetTasksDto)
+            const localVarPath = `/slackbot-api/tasks`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication bearer required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(slackGetTasksDto, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
          * @param {string} userId 
          * @param {string} orgId 
          * @param {*} [options] Override http request option.
@@ -6045,7 +6156,7 @@ export const SlackbotApiApiAxiosParamCreator = function (configuration?: Configu
             assertParamExists('slackbotApiControllerUpdate', 'id', id)
             // verify required parameter 'slackUpdateTaskDto' is not null or undefined
             assertParamExists('slackbotApiControllerUpdate', 'slackUpdateTaskDto', slackUpdateTaskDto)
-            const localVarPath = `/slackbot-api/task/{id}`
+            const localVarPath = `/slackbot-api/tasks/{id}`
                 .replace(`{${"id"}}`, encodeURIComponent(String(id)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -6147,6 +6258,16 @@ export const SlackbotApiApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
+         * @param {AddDiscussionFromSlackDto} addDiscussionFromSlackDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async slackbotApiControllerAddDiscussion(addDiscussionFromSlackDto: AddDiscussionFromSlackDto, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.slackbotApiControllerAddDiscussion(addDiscussionFromSlackDto, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+        /**
+         * 
          * @param {UsersImportDto} usersImportDto 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -6173,6 +6294,16 @@ export const SlackbotApiApiFp = function(configuration?: Configuration) {
          */
         async slackbotApiControllerGenerateOauthRedirect(generateRedirectDto: GenerateRedirectDto, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<string>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.slackbotApiControllerGenerateOauthRedirect(generateRedirectDto, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+        /**
+         * 
+         * @param {SlackGetTasksDto} slackGetTasksDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async slackbotApiControllerGetTasks(slackGetTasksDto: SlackGetTasksDto, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<TasksResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.slackbotApiControllerGetTasks(slackGetTasksDto, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
         /**
@@ -6237,6 +6368,15 @@ export const SlackbotApiApiFactory = function (configuration?: Configuration, ba
         },
         /**
          * 
+         * @param {AddDiscussionFromSlackDto} addDiscussionFromSlackDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        slackbotApiControllerAddDiscussion(addDiscussionFromSlackDto: AddDiscussionFromSlackDto, options?: any): AxiosPromise<void> {
+            return localVarFp.slackbotApiControllerAddDiscussion(addDiscussionFromSlackDto, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
          * @param {UsersImportDto} usersImportDto 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -6261,6 +6401,15 @@ export const SlackbotApiApiFactory = function (configuration?: Configuration, ba
          */
         slackbotApiControllerGenerateOauthRedirect(generateRedirectDto: GenerateRedirectDto, options?: any): AxiosPromise<string> {
             return localVarFp.slackbotApiControllerGenerateOauthRedirect(generateRedirectDto, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {SlackGetTasksDto} slackGetTasksDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        slackbotApiControllerGetTasks(slackGetTasksDto: SlackGetTasksDto, options?: any): AxiosPromise<TasksResponseDto> {
+            return localVarFp.slackbotApiControllerGetTasks(slackGetTasksDto, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -6325,6 +6474,17 @@ export class SlackbotApiApi extends BaseAPI {
 
     /**
      * 
+     * @param {AddDiscussionFromSlackDto} addDiscussionFromSlackDto 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof SlackbotApiApi
+     */
+    public slackbotApiControllerAddDiscussion(addDiscussionFromSlackDto: AddDiscussionFromSlackDto, options?: AxiosRequestConfig) {
+        return SlackbotApiApiFp(this.configuration).slackbotApiControllerAddDiscussion(addDiscussionFromSlackDto, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
      * @param {UsersImportDto} usersImportDto 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
@@ -6354,6 +6514,17 @@ export class SlackbotApiApi extends BaseAPI {
      */
     public slackbotApiControllerGenerateOauthRedirect(generateRedirectDto: GenerateRedirectDto, options?: AxiosRequestConfig) {
         return SlackbotApiApiFp(this.configuration).slackbotApiControllerGenerateOauthRedirect(generateRedirectDto, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {SlackGetTasksDto} slackGetTasksDto 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof SlackbotApiApi
+     */
+    public slackbotApiControllerGetTasks(slackGetTasksDto: SlackGetTasksDto, options?: AxiosRequestConfig) {
+        return SlackbotApiApiFp(this.configuration).slackbotApiControllerGetTasks(slackGetTasksDto, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
