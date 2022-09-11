@@ -12,6 +12,7 @@ export const AddDiscussionModal =
       await ack();
 
       const { message, channel, user, team } = body;
+      logger.info(`Opening add discussoion modal for ${message.user}`);
       if (!message?.ts || !channel?.id || !message.text || !message.user) {
         logger.error({
           msg: "Can't open add discussion modal without id or channel",
@@ -34,7 +35,7 @@ export const AddDiscussionModal =
         return;
       }
 
-      logger.debug(
+      logger.info(
         `Getting tasks for discussions modal ${user.id} ${userProfile.profile.email}`,
       );
 
