@@ -81,6 +81,6 @@ export const addLinkHandler =
       );
     } catch (err) {
       // TODO: update modal view with error
-      logger.error(`Failed loading task status update modal: ${err}`);
+      logger.error(`Add link handler error: ${err}`);
     }
   };

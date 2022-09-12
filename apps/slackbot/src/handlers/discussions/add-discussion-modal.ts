@@ -5,6 +5,8 @@ import { SlackActionWrapper } from '../../../common/types';
 import { SlackBotRoutes } from '../../routes/router';
 import { ADD_DISCUSSION_TASK_ID, IAddDiscussionPrivateMetadata } from './types';
 
+const MODAL_OPTION_MAX_CHARS = 75;
+
 export const AddDiscussionModal =
   (baseApi: SlackbotApiApi) =>
   async ({ ack, client, body, shortcut }: SlackActionWrapper) => {
@@ -55,7 +57,7 @@ export const AddDiscussionModal =
       const tasksOptions: PlainTextOption[] = data.tasks.map((task) => ({
         text: {
           type: 'plain_text',
-          text: task.title,
+          text: task.title.substring(0, MODAL_OPTION_MAX_CHARS),
           emoji: true,
         },
         value: task.id,

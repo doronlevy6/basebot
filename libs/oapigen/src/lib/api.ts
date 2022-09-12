@@ -88,6 +88,12 @@ export interface AddDiscussionFromSlackDto {
      * @type {string}
      * @memberof AddDiscussionFromSlackDto
      */
+    'link'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof AddDiscussionFromSlackDto
+     */
     'externalId': string;
     /**
      * 
@@ -622,6 +628,37 @@ export interface DeviceTokenDto {
 /**
  * 
  * @export
+ * @interface DiscussionAdded
+ */
+export interface DiscussionAdded {
+    /**
+     * 
+     * @type {string}
+     * @memberof DiscussionAdded
+     */
+    'discussionMessageId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof DiscussionAdded
+     */
+    'text': string;
+    /**
+     * 
+     * @type {number}
+     * @memberof DiscussionAdded
+     */
+    'createdAt': number;
+    /**
+     * 
+     * @type {string}
+     * @memberof DiscussionAdded
+     */
+    'link'?: string;
+}
+/**
+ * 
+ * @export
  * @interface DiscussionMessage
  */
 export interface DiscussionMessage {
@@ -827,6 +864,8 @@ export interface EnrichedRecentActivity {
 export const EnrichedRecentActivityTypeEnum = {
     TaskAcknowledged: 'task_acknowledged',
     Link: 'link',
+    TaskTitleChanged: 'task_title_changed',
+    TaskDescriptionChanged: 'task_description_changed',
     TaskStatusChanged: 'task_status_changed',
     TicketStatusChanged: 'ticket_status_changed',
     TaskPostponed: 'task_postponed',
@@ -837,7 +876,8 @@ export const EnrichedRecentActivityTypeEnum = {
     OwnerSet: 'owner_set',
     OwnerChanged: 'owner_changed',
     OwnerRemoved: 'owner_removed',
-    GeneratedInsight: 'generated_insight'
+    GeneratedInsight: 'generated_insight',
+    DiscussionAdded: 'discussion_added'
 } as const;
 
 export type EnrichedRecentActivityTypeEnum = typeof EnrichedRecentActivityTypeEnum[keyof typeof EnrichedRecentActivityTypeEnum];
@@ -1061,12 +1101,6 @@ export interface GeneratedInsight {
      * @type {string}
      * @memberof GeneratedInsight
      */
-    'collateralId': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof GeneratedInsight
-     */
     'discussionMessageId': string;
     /**
      * 
@@ -1074,6 +1108,12 @@ export interface GeneratedInsight {
      * @memberof GeneratedInsight
      */
     'insight': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof GeneratedInsight
+     */
+    'collateralId'?: string;
 }
 /**
  * 
@@ -1650,7 +1690,8 @@ export const PushNotificationDtoTypeEnum = {
     TaskDeclined: 'task_declined',
     InsightCreated: 'insight_created',
     TaskChanged: 'task_changed',
-    TaskOwnerChanged: 'task_owner_changed'
+    TaskOwnerChanged: 'task_owner_changed',
+    DiscussionAdded: 'discussion_added'
 } as const;
 
 export type PushNotificationDtoTypeEnum = typeof PushNotificationDtoTypeEnum[keyof typeof PushNotificationDtoTypeEnum];
@@ -1738,6 +1779,8 @@ export interface RecentActivity {
 export const RecentActivityTypeEnum = {
     TaskAcknowledged: 'task_acknowledged',
     Link: 'link',
+    TaskTitleChanged: 'task_title_changed',
+    TaskDescriptionChanged: 'task_description_changed',
     TaskStatusChanged: 'task_status_changed',
     TicketStatusChanged: 'ticket_status_changed',
     TaskPostponed: 'task_postponed',
@@ -1748,7 +1791,8 @@ export const RecentActivityTypeEnum = {
     OwnerSet: 'owner_set',
     OwnerChanged: 'owner_changed',
     OwnerRemoved: 'owner_removed',
-    GeneratedInsight: 'generated_insight'
+    GeneratedInsight: 'generated_insight',
+    DiscussionAdded: 'discussion_added'
 } as const;
 
 export type RecentActivityTypeEnum = typeof RecentActivityTypeEnum[keyof typeof RecentActivityTypeEnum];
@@ -1776,7 +1820,7 @@ export type RecentActivityFlagEnum = typeof RecentActivityFlagEnum[keyof typeof 
  * @type RecentActivityData
  * @export
  */
-export type RecentActivityData = ContributorsChanged | GeneratedInsight | Link | OwnerChanged | TaskAcknowledged | TaskPostponement | TaskStatusChange | Ticket | TicketPostponement | TicketStatusChange;
+export type RecentActivityData = ContributorsChanged | DiscussionAdded | GeneratedInsight | Link | OwnerChanged | TaskAcknowledged | TaskDescriptionChanged | TaskPostponement | TaskStatusChange | TaskTitleChanged | Ticket | TicketPostponement | TicketStatusChange;
 
 /**
  * 
@@ -2244,6 +2288,31 @@ export interface TaskDeclinedNotification {
 /**
  * 
  * @export
+ * @interface TaskDescriptionChanged
+ */
+export interface TaskDescriptionChanged {
+    /**
+     * 
+     * @type {string}
+     * @memberof TaskDescriptionChanged
+     */
+    'previousDescription': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof TaskDescriptionChanged
+     */
+    'currentDescription': string;
+    /**
+     * 
+     * @type {number}
+     * @memberof TaskDescriptionChanged
+     */
+    'changeTime': number;
+}
+/**
+ * 
+ * @export
  * @interface TaskDraft
  */
 export interface TaskDraft {
@@ -2704,6 +2773,31 @@ export interface TaskStatusChangeNotification {
      * @memberof TaskStatusChangeNotification
      */
     'currentStatus': string;
+}
+/**
+ * 
+ * @export
+ * @interface TaskTitleChanged
+ */
+export interface TaskTitleChanged {
+    /**
+     * 
+     * @type {string}
+     * @memberof TaskTitleChanged
+     */
+    'previousTitle': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof TaskTitleChanged
+     */
+    'currentTitle': string;
+    /**
+     * 
+     * @type {number}
+     * @memberof TaskTitleChanged
+     */
+    'changeTime': number;
 }
 /**
  * 
@@ -4316,6 +4410,49 @@ export const MobileApiAxiosParamCreator = function (configuration?: Configuratio
         },
         /**
          * 
+         * @param {string} taskId 
+         * @param {MarkAllAsAll} markAllAsAll 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        mobileBffControllerMarkTasksAsAll: async (taskId: string, markAllAsAll: MarkAllAsAll, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'taskId' is not null or undefined
+            assertParamExists('mobileBffControllerMarkTasksAsAll', 'taskId', taskId)
+            // verify required parameter 'markAllAsAll' is not null or undefined
+            assertParamExists('mobileBffControllerMarkTasksAsAll', 'markAllAsAll', markAllAsAll)
+            const localVarPath = `/mobile/my-tasks/{taskId}/mark-as-all`
+                .replace(`{${"taskId"}}`, encodeURIComponent(String(taskId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication bearer required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(markAllAsAll, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
          * @param {number} [limit] 
          * @param {number} [offset] 
          * @param {*} [options] Override http request option.
@@ -4389,6 +4526,17 @@ export const MobileApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
+         * @param {string} taskId 
+         * @param {MarkAllAsAll} markAllAsAll 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async mobileBffControllerMarkTasksAsAll(taskId: string, markAllAsAll: MarkAllAsAll, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.mobileBffControllerMarkTasksAsAll(taskId, markAllAsAll, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+        /**
+         * 
          * @param {number} [limit] 
          * @param {number} [offset] 
          * @param {*} [options] Override http request option.
@@ -4425,6 +4573,16 @@ export const MobileApiFactory = function (configuration?: Configuration, basePat
          */
         mobileBffControllerFindOneOfMyTasks(taskId: string, options?: any): AxiosPromise<EnrichedTask> {
             return localVarFp.mobileBffControllerFindOneOfMyTasks(taskId, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {string} taskId 
+         * @param {MarkAllAsAll} markAllAsAll 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        mobileBffControllerMarkTasksAsAll(taskId: string, markAllAsAll: MarkAllAsAll, options?: any): AxiosPromise<void> {
+            return localVarFp.mobileBffControllerMarkTasksAsAll(taskId, markAllAsAll, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -4466,6 +4624,18 @@ export class MobileApi extends BaseAPI {
      */
     public mobileBffControllerFindOneOfMyTasks(taskId: string, options?: AxiosRequestConfig) {
         return MobileApiFp(this.configuration).mobileBffControllerFindOneOfMyTasks(taskId, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {string} taskId 
+     * @param {MarkAllAsAll} markAllAsAll 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof MobileApi
+     */
+    public mobileBffControllerMarkTasksAsAll(taskId: string, markAllAsAll: MarkAllAsAll, options?: AxiosRequestConfig) {
+        return MobileApiFp(this.configuration).mobileBffControllerMarkTasksAsAll(taskId, markAllAsAll, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

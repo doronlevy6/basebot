@@ -17,7 +17,14 @@ export const addDiscussionHandler =
       const { messageTs, channelId, rawText, messageCreatorId, teamId } =
         JSON.parse(view.private_metadata) as IAddDiscussionPrivateMetadata;
 
-      const user = await client.users.profile.get({ user: messageCreatorId });
+      const [user, linkRes] = await Promise.all([
+        client.users.profile.get({ user: messageCreatorId }),
+        client.chat.getPermalink({
+          message_ts: messageTs,
+          channel: channelId,
+        }),
+      ]);
+
       if (!user.profile?.email) {
         logger.warn(`unable to submit a new discussion without user profile`);
         return;
@@ -28,9 +35,10 @@ export const addDiscussionHandler =
         externalId: `${teamId}:${channelId}:${messageTs}`,
         rawText,
         taskId,
+        link: linkRes.permalink,
       });
     } catch (err) {
       // TODO: update modal view with error
-      logger.error(`Failed loading task status update modal: ${err}`);
+      logger.error(`Add discussion handler error: ${err}`);
     }
   };
