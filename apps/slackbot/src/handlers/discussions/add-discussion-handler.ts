@@ -14,10 +14,16 @@ export const addDiscussionHandler =
         Object.values(body.view.state.values)[0][ADD_DISCUSSION_TASK_ID]
           .selected_option?.value || '';
 
-      const { messageTs, channelId, rawText, messageCreatorId, teamId } =
-        JSON.parse(view.private_metadata) as IAddDiscussionPrivateMetadata;
+      const {
+        messageTs,
+        channelId,
+        rawText,
+        messageCreatorId,
+        teamId,
+        shortcutActorEmail,
+      } = JSON.parse(view.private_metadata) as IAddDiscussionPrivateMetadata;
 
-      const [user, linkRes] = await Promise.all([
+      const [messageCreator, linkRes] = await Promise.all([
         client.users.profile.get({ user: messageCreatorId }),
         client.chat.getPermalink({
           message_ts: messageTs,
@@ -25,13 +31,14 @@ export const addDiscussionHandler =
         }),
       ]);
 
-      if (!user.profile?.email) {
+      if (!messageCreator.profile?.email) {
         logger.warn(`unable to submit a new discussion without user profile`);
         return;
       }
 
       await baseApi.slackbotApiControllerAddDiscussion({
-        creatorEmail: user.profile.email,
+        creatorEmail: shortcutActorEmail,
+        originalCreatorEmail: messageCreator.profile.email,
         externalId: `${teamId}:${channelId}:${messageTs}`,
         rawText,
         taskId,

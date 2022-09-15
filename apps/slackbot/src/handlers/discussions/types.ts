@@ -3,6 +3,7 @@ export interface IAddDiscussionPrivateMetadata {
   channelId: string;
   teamId?: string;
   messageCreatorId: string;
+  shortcutActorEmail: string;
   rawText: string;
 }
 

@@ -23,14 +23,6 @@ export const AddDiscussionModal =
         return;
       }
 
-      const metadata: IAddDiscussionPrivateMetadata = {
-        messageTs: message.ts,
-        channelId: channel.id,
-        teamId: team?.id,
-        rawText: message.text,
-        messageCreatorId: message.user,
-      };
-
       const userProfile = await client.users.profile.get({ user: user.id });
       if (!userProfile.profile?.email) {
         logger.warn(`unable to open modal without user profile ${user.id}`);
@@ -62,6 +54,15 @@ export const AddDiscussionModal =
         },
         value: task.id,
       }));
+
+      const metadata: IAddDiscussionPrivateMetadata = {
+        messageTs: message.ts,
+        channelId: channel.id,
+        teamId: team?.id,
+        rawText: message.text,
+        messageCreatorId: message.user,
+        shortcutActorEmail: userProfile.profile.email,
+      };
 
       await client.views.open({
         trigger_id: shortcut.trigger_id,

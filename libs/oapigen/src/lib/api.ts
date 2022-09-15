@@ -94,6 +94,12 @@ export interface AddDiscussionFromSlackDto {
      * @type {string}
      * @memberof AddDiscussionFromSlackDto
      */
+    'originalCreatorEmail': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof AddDiscussionFromSlackDto
+     */
     'externalId': string;
     /**
      * 
@@ -649,6 +655,12 @@ export interface DiscussionAdded {
      * @memberof DiscussionAdded
      */
     'createdAt': number;
+    /**
+     * 
+     * @type {MicroUser}
+     * @memberof DiscussionAdded
+     */
+    'originalMessageCreator': MicroUser;
     /**
      * 
      * @type {string}
@@ -2492,6 +2504,18 @@ export interface TaskMessageDto {
      * @memberof TaskMessageDto
      */
     'user': User;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof TaskMessageDto
+     */
+    'isCreator'?: boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof TaskMessageDto
+     */
+    'isOwner'?: boolean;
 }
 /**
  * 
