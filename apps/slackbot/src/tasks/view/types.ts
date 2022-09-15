@@ -9,6 +9,9 @@ export interface ITaskViewProps {
   assignee: {
     id: string;
   };
+  owner?: {
+    id: string;
+  };
   creator: {
     id: string;
   };

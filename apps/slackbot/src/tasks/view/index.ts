@@ -1,3 +1,4 @@
+import { checkUserTaskRole, UserTaskRole } from '@base/utils';
 import { MessageBlocks } from '../manager';
 import { SlackMessageSenderMetadata } from '../types';
 import { AcknowledgeAction } from './acknowledge-action';
@@ -20,18 +21,25 @@ export const TaskView = (props: ITaskViewProps): SlackMessageSenderMetadata => {
 };
 
 const getFormattedBlocks = (props: ITaskViewProps): MessageBlocks[] => {
-  const { task, acknowledgementStatus } = props;
-
+  const { baseUserId, task, acknowledgementStatus } = props;
+  const userTaskRole = checkUserTaskRole(baseUserId, task);
+  const shouldShowAcknowledge =
+    userTaskRole === UserTaskRole.owner ||
+    userTaskRole === UserTaskRole.contributor;
   const messageBlocks: MessageBlocks[] = [
     TaskHeaderBlock(props),
     TaskTitleBlock(task.title),
-    ...AcknowledgeAction(props),
   ];
 
-  if (acknowledgementStatus === 'acknowledged') {
-    messageBlocks.push(TaskDetails(props));
+  if (shouldShowAcknowledge) {
+    messageBlocks.push(...AcknowledgeAction(props));
+    if (acknowledgementStatus === 'acknowledged') {
+      messageBlocks.push(TaskDetails(props));
+      messageBlocks.push(...TaskActions(props));
+      messageBlocks.push(TaskFooter(props));
+    }
+  } else {
     messageBlocks.push(...TaskActions(props));
-    messageBlocks.push(TaskFooter(props));
   }
 
   return messageBlocks;

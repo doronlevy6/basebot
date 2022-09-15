@@ -1,4 +1,12 @@
+import { Task } from '@base/oapigen';
 import * as day from 'dayjs';
+
+export enum UserTaskRole {
+  creatorAndOwner,
+  creator,
+  owner,
+  contributor,
+}
 
 export const formatDate = (date: Date | string): string => {
   const dayDate = day(date);
@@ -39,4 +47,16 @@ export const delimToTitleCase = (
     .split(splitDelim)
     .map((word) => word[0].toUpperCase() + word.slice(1).toLowerCase())
     .join(joinDelim);
+};
+
+export const checkUserTaskRole = (userId: string, task: Task): UserTaskRole => {
+  if (userId === task.creatorId && userId === task.ownerId) {
+    return UserTaskRole.creatorAndOwner;
+  } else if (userId === task.creatorId) {
+    return UserTaskRole.creator;
+  } else if (userId === task.ownerId) {
+    return UserTaskRole.owner;
+  } else {
+    return UserTaskRole.contributor;
+  }
 };

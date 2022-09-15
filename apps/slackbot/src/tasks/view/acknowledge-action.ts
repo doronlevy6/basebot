@@ -6,7 +6,7 @@ import { AcknowledgementStatus, ITaskViewProps } from './types';
 export const AcknowledgeAction = (props: ITaskViewProps): MessageBlocks[] => {
   const { acknowledgementStatus } = props;
   const acknowledgeButton = Button(
-    `I'm on it`,
+    `Accept invitation`,
     AcknowledgementStatus.Acknowledged,
     acknowledgementStatus === AcknowledgementStatus.Acknowledged
       ? 'primary'

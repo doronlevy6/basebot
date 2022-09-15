@@ -125,14 +125,24 @@ export class TasksManager {
     );
     const client = new WebClient(installation.bot?.token);
 
-    const [assigneeRes, creatorRes] = await Promise.all([
+    const lookupByEmails = [
       client.users.lookupByEmail({
         email: job.data.user.email,
       }),
       client.users.lookupByEmail({
         email: job.data.task.creator.email,
       }),
-    ]);
+    ];
+    job.data.task.owner &&
+      lookupByEmails.push(
+        client.users.lookupByEmail({
+          email: job.data.task.owner.email,
+        }),
+      );
+
+    const [assigneeRes, creatorRes, ownerRes] = await Promise.all(
+      lookupByEmails,
+    );
 
     if (assigneeRes.error || !assigneeRes.user?.id || !assigneeRes.ok) {
       throw new Error(
@@ -145,9 +155,20 @@ export class TasksManager {
         `Error getting task creator user by email in slack: ${creatorRes.error}`,
       );
     }
+
+    if (
+      job.data.task.owner &&
+      (ownerRes.error || !ownerRes.user?.id || !ownerRes.ok)
+    ) {
+      throw new Error(
+        `Error getting task owner user by email in slack: ${ownerRes.error}`,
+      );
+    }
+
     const message = TaskView({
       assignee: { id: assigneeRes.user.id },
       creator: { id: creatorRes.user.id },
+      owner: ownerRes?.user?.id ? { id: ownerRes.user.id } : undefined,
       baseOrgId: job.data.user.organizationId,
       baseUserId: job.data.user.id,
       task: job.data.task,

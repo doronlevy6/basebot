@@ -9,17 +9,114 @@ export const runTestExample = async (
     return;
   }
 
-  const assignee1: User = {
-    id: 'zsuo1hyz4cxqk271u649g',
-    email: 'itay@base.la',
+  // const assignee1: User = {
+  //   id: 'zsuo1hyz4cxqk271u649g',
+  //   email: 'itay@base.la',
+  //   organizationId: 'base.la',
+  //   displayName: 'Itay',
+  //   externalAuthId: '',
+  //   createdAt: new Date().toString(),
+  //   updatedAt: new Date().toString(),
+  //   profileImage: '',
+  // };
+  const assignee2: User = {
+    id: 'vplipbpvetug00ct0k3a5',
     organizationId: 'base.la',
-    displayName: 'Itay',
-    externalAuthId: '',
-    createdAt: new Date().toString(),
-    updatedAt: new Date().toString(),
-    profileImage: '',
+    externalAuthId: 'google-oauth2|115235453267616289442',
+    email: 'lior@base.la',
+    displayName: 'Lior Nussbaum',
+    profileImage:
+      'https://avatars.slack-edge.com/2021-12-26/2907466138016_9079261c8bb67bca883c_512.png',
+    createdAt: '2022-09-13T12:41:29.987Z',
+    updatedAt: '2022-09-13T12:41:29.987Z',
   };
 
+  const task2: Task = {
+    id: 'hlivcswko63w6g27noec0',
+    creatorId: 'vplipbpvetug00ct0k3a5',
+    ownerId: 'vplipbpvetug00ct0k3a5',
+    title: 'Test8',
+    status: 'not_started',
+    description: '',
+    createdAt: '2022-09-13T15:22:11.240Z',
+    updatedAt: '2022-09-13T15:22:11.240Z',
+    dueDate: '',
+    deletedAt: '',
+    creator: {
+      id: 'vplipbpvetug00ct0k3a5',
+      organizationId: 'base.la',
+      externalAuthId: 'google-oauth2|115235453267616289442',
+      email: 'lior@base.la',
+      displayName: 'Lior Nussbaum',
+      profileImage:
+        'https://avatars.slack-edge.com/2021-12-26/2907466138016_9079261c8bb67bca883c_512.png',
+      createdAt: '2022-09-13T12:41:29.987Z',
+      updatedAt: '2022-09-13T12:41:29.987Z',
+    },
+    owner: {
+      id: 'vplipbpvetug00ct0k3a5',
+      organizationId: 'base.la',
+      externalAuthId: 'google-oauth2|115235453267616289442',
+      email: 'lior@base.la',
+      displayName: 'Lior Nussbaum',
+      profileImage:
+        'https://avatars.slack-edge.com/2021-12-26/2907466138016_9079261c8bb67bca883c_512.png',
+      createdAt: '2022-09-13T12:41:29.987Z',
+      updatedAt: '2022-09-13T12:41:29.987Z',
+    },
+    contributors: [
+      {
+        id: 'zn5oovynuntmsj38ndd5c',
+        organizationId: 'base.la',
+        externalAuthId: '',
+        email: 'itay@base.la',
+        displayName: 'Itay Dressler',
+        profileImage:
+          'https://avatars.slack-edge.com/2021-12-20/2874814678129_22cb21074b7d49226585_512.jpg',
+        createdAt: '2022-09-13T12:43:23.664Z',
+        updatedAt: '2022-09-13T12:43:23.664Z',
+      },
+      {
+        id: 'cjhau4a0fcrr9paks4ibr',
+        organizationId: 'base.la',
+        externalAuthId: '',
+        email: 'coby@base.la',
+        displayName: 'Coby Benveniste',
+        profileImage:
+          'https://avatars.slack-edge.com/2021-12-26/2868886783847_6c3ffb6679f42356f017_512.png',
+        createdAt: '2022-09-13T12:43:23.664Z',
+        updatedAt: '2022-09-13T12:43:23.664Z',
+      },
+      {
+        id: 'tmkd7dkq274tr0iu3066g',
+        organizationId: 'base.la',
+        externalAuthId: '',
+        email: 'moran@base.la',
+        displayName: 'Moran Shimron',
+        profileImage:
+          'https://secure.gravatar.com/avatar/497d294fbf3f9c36947e049846a8d7d4.jpg?s=512&d=https%3A%2F%2Fa.slack-edge.com%2Fdf10d%2Fimg%2Favatars%2Fava_0021-512.png',
+        createdAt: '2022-09-13T12:43:23.664Z',
+        updatedAt: '2022-09-13T12:43:23.664Z',
+      },
+      {
+        id: 'vplipbpvetug00ct0k3a5',
+        organizationId: 'base.la',
+        externalAuthId: 'google-oauth2|115235453267616289442',
+        email: 'lior@base.la',
+        displayName: 'Lior Nussbaum',
+        profileImage:
+          'https://avatars.slack-edge.com/2021-12-26/2907466138016_9079261c8bb67bca883c_512.png',
+        createdAt: '2022-09-13T12:41:29.987Z',
+        updatedAt: '2022-09-13T12:41:29.987Z',
+      },
+    ],
+    contributorsIds: [
+      'cjhau4a0fcrr9paks4ibr',
+      'tmkd7dkq274tr0iu3066g',
+      'vplipbpvetug00ct0k3a5',
+      'zn5oovynuntmsj38ndd5c',
+    ],
+  };
   const creator = {
     id: 'lowpi01g4l6288euibxgx',
     email: 'coby@base.la',
@@ -50,20 +147,20 @@ export const runTestExample = async (
   //     updatedAt: new Date().toString(),
   // };
 
-  const task = {
-    id: '9n145fst1k0wu0kep5owh',
-    creator: creator,
-    creatorId: creator.id,
-    title: 'This is some task!',
-    dueDate: new Date().toString(),
-    assigneeId: assignee1.id,
-    status: 'in_progress',
-    links: ['http://www.walla.co.il', 'http://www.gmail.com'],
-  } as unknown as Task;
+  // const task = {
+  //   id: '9n145fst1k0wu0kep5owh',
+  //   creator: creator,
+  //   creatorId: creator.id,
+  //   title: 'This is some task!',
+  //   dueDate: new Date().toString(),
+  //   assigneeId: assignee1.id,
+  //   status: 'in_progress',
+  //   links: ['http://www.walla.co.il', 'http://www.gmail.com'],
+  // } as unknown as Task;
 
   // for (let i = 0; i < 5; i++) {
   //   await taskStatusTriggerer.addTaskToQueue(assignee1, task);
-  await taskStatusTriggerer.addTaskToQueue(assignee1, task, true);
+  await taskStatusTriggerer.addTaskToQueue(assignee2, task2, true);
   //   // await taskStatusTriggerer.addTaskToQueue(assignee3, task);
   // }
 };

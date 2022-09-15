@@ -28,13 +28,31 @@ export const updateTaskAndSendEvent = async (
   const { organizationId, assigneeId, task, channelId, messageTs } = data;
   const slackUserId = body.user.id;
 
-  const creator = await client.users.lookupByEmail({
-    email: task.creator.email,
-  });
+  const lookupByEmails = [
+    client.users.lookupByEmail({
+      email: task.creator.email,
+    }),
+  ];
 
-  if (!creator.user?.id) {
-    logger.error(`Can't update message without creator id`);
-    return;
+  task.owner &&
+    lookupByEmails.push(
+      client.users.lookupByEmail({
+        email: task.owner.email,
+      }),
+    );
+
+  const [creatorRes, ownerRes] = await Promise.all(lookupByEmails);
+
+  if (creatorRes.error || !creatorRes.user?.id || !creatorRes.ok) {
+    throw new Error(
+      `Failed to update message when trying to get task creator by email : ${creatorRes.error}`,
+    );
+  }
+
+  if (task.owner && (ownerRes.error || !ownerRes.user?.id || !ownerRes.ok)) {
+    throw new Error(
+      `Failed to update message when trying to get task owner by email : ${ownerRes.error}`,
+    );
   }
 
   const taskView = TaskView({
@@ -42,8 +60,9 @@ export const updateTaskAndSendEvent = async (
       id: slackUserId,
     },
     creator: {
-      id: creator.user.id,
+      id: creatorRes.user.id,
     },
+    owner: ownerRes?.user?.id ? { id: ownerRes.user.id } : undefined,
     baseOrgId: organizationId,
     baseUserId: assigneeId,
     task,
