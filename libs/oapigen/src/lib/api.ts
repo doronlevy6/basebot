@@ -277,6 +277,7 @@ export const CollateralTypeEnum = {
     Link: 'link',
     File: 'file',
     Ticket: 'ticket',
+    Calendar: 'calendar',
     Unknown: 'unknown'
 } as const;
 
@@ -286,7 +287,7 @@ export type CollateralTypeEnum = typeof CollateralTypeEnum[keyof typeof Collater
  * @type CollateralData
  * @export
  */
-export type CollateralData = ForbiddenTicketCollateral | LinkCollateral | TicketCollateral;
+export type CollateralData = CalendarCollateral | ForbiddenTicketCollateral | LinkCollateral | TicketCollateral;
 
 /**
  * 
@@ -2963,6 +2964,12 @@ export interface TicketPostponement {
      * @memberof TicketPostponement
      */
     'currentDueDate'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof TicketPostponement
+     */
+    'collateralId': string;
 }
 /**
  * 
@@ -2994,6 +3001,12 @@ export interface TicketStatusChange {
      * @memberof TicketStatusChange
      */
     'currentStatus': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof TicketStatusChange
+     */
+    'collateralId': string;
 }
 /**
  * 

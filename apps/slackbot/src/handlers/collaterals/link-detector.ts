@@ -15,5 +15,9 @@ export const tryDetectLinkUrl = (linkUrl: string) => {
     return 'jira';
   }
 
+  if (parsed.hostname.includes('calendar.google.com')) {
+    return 'google-calendar';
+  }
+
   return null;
 };
