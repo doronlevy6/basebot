@@ -153,6 +153,119 @@ export type AppVersionsControllerGetAppVersionsDefaultResponseValue = ClientVers
 /**
  * 
  * @export
+ * @interface CalendarAttendee
+ */
+export interface CalendarAttendee {
+    /**
+     * 
+     * @type {string}
+     * @memberof CalendarAttendee
+     */
+    'email': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof CalendarAttendee
+     */
+    'status': CalendarAttendeeStatusEnum;
+    /**
+     * 
+     * @type {string}
+     * @memberof CalendarAttendee
+     */
+    'displayName'?: string;
+}
+
+export const CalendarAttendeeStatusEnum = {
+    Accepted: 'accepted',
+    Declined: 'declined',
+    NeedsAction: 'needsAction'
+} as const;
+
+export type CalendarAttendeeStatusEnum = typeof CalendarAttendeeStatusEnum[keyof typeof CalendarAttendeeStatusEnum];
+
+/**
+ * 
+ * @export
+ * @interface CalendarCollateral
+ */
+export interface CalendarCollateral {
+    /**
+     * 
+     * @type {string}
+     * @memberof CalendarCollateral
+     */
+    'id': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof CalendarCollateral
+     */
+    'calendarId'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof CalendarCollateral
+     */
+    'title': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof CalendarCollateral
+     */
+    'status': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof CalendarCollateral
+     */
+    'description'?: string;
+    /**
+     * 
+     * @type {Array<CalendarAttendee>}
+     * @memberof CalendarCollateral
+     */
+    'attendees': Array<CalendarAttendee>;
+    /**
+     * 
+     * @type {string}
+     * @memberof CalendarCollateral
+     */
+    'reccuringEventId'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof CalendarCollateral
+     */
+    'location'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof CalendarCollateral
+     */
+    'startDate'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof CalendarCollateral
+     */
+    'endDate'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof CalendarCollateral
+     */
+    'createdAt'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof CalendarCollateral
+     */
+    'updatedAt'?: string;
+}
+/**
+ * 
+ * @export
  * @interface ClientVersionDto
  */
 export interface ClientVersionDto {
@@ -277,6 +390,7 @@ export const CollateralTypeEnum = {
     Link: 'link',
     File: 'file',
     Ticket: 'ticket',
+    Calendar: 'calendar',
     Unknown: 'unknown'
 } as const;
 
@@ -286,7 +400,7 @@ export type CollateralTypeEnum = typeof CollateralTypeEnum[keyof typeof Collater
  * @type CollateralData
  * @export
  */
-export type CollateralData = ForbiddenTicketCollateral | LinkCollateral | TicketCollateral;
+export type CollateralData = CalendarCollateral | ForbiddenTicketCollateral | LinkCollateral | TicketCollateral;
 
 /**
  * 
@@ -2963,6 +3077,12 @@ export interface TicketPostponement {
      * @memberof TicketPostponement
      */
     'currentDueDate'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof TicketPostponement
+     */
+    'collateralId': string;
 }
 /**
  * 
@@ -2994,6 +3114,12 @@ export interface TicketStatusChange {
      * @memberof TicketStatusChange
      */
     'currentStatus': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof TicketStatusChange
+     */
+    'collateralId': string;
 }
 /**
  * 
