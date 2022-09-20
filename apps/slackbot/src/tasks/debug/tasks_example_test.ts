@@ -117,6 +117,7 @@ export const runTestExample = async (
       'zn5oovynuntmsj38ndd5c',
     ],
   };
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const creator = {
     id: 'lowpi01g4l6288euibxgx',
     email: 'coby@base.la',

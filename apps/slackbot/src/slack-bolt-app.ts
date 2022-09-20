@@ -30,6 +30,7 @@ export function createApp(
       'users:read.email',
       'users.profile:read',
       'commands',
+      'channels:history',
     ],
     installationStore: installationStore,
     installerOptions: {
