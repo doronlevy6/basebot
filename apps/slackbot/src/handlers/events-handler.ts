@@ -187,7 +187,7 @@ export class EventsHandler {
       const channelId = payload.channel.id;
       const messageReplies: Message[] = [];
 
-      if (!payload.message.user) {
+      if (!payload.message.user && !payload.message['bot_id']) {
         throw new Error('cannot extract user from empty user');
       }
 
@@ -241,8 +241,16 @@ export class EventsHandler {
         ...new Set(messagesWithText.map((m) => m.user)),
       ].filter((u) => u) as string[];
 
+      const messageBotIds: string[] = [
+        ...new Set(messagesWithText.map((m) => m.bot_id)),
+      ].filter((u) => u) as string[];
+
       const userInfoReses = await Promise.all(
         messageUserIds.map((u) => client.users.info({ user: u })),
+      );
+
+      const botInfoReses = await Promise.all(
+        messageBotIds.map((u) => client.bots.info({ bot: u })),
       );
 
       const userNames = messagesWithText.map((m) => {
@@ -256,10 +264,30 @@ export class EventsHandler {
 
           return uir.user.id === m.user;
         });
-        if (!userInfo || !userInfo.user) {
-          throw new Error(`no user information found for user ${m.user}`);
+        if (userInfo && userInfo.user) {
+          return userInfo.user.name;
         }
-        return userInfo.user.name;
+
+        const botInfo = botInfoReses.find((uir) => {
+          if (uir.error) {
+            throw new Error(`message bot user error: ${uir.error}`);
+          }
+          if (!uir.ok || !uir.bot) {
+            throw new Error('message bot user not ok');
+          }
+
+          return uir.bot.id === m.bot_id;
+        });
+
+        if (!botInfo || !botInfo.bot) {
+          throw new Error(
+            `no user information or bot information found for user ${
+              m.user || m.bot_id
+            }`,
+          );
+        }
+
+        return botInfo.bot.name;
       }) as string[];
 
       logger.info(
