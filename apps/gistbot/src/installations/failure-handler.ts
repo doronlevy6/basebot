@@ -13,9 +13,9 @@ export const installationFailureHandler: CallbackOptions['failure'] = (
   );
   params.set('from', 'slack_failure');
 
-  // TODO: Redirect to Gistbot Page instead of link.base.la
+  // TODO: Redirect to Gistbot Page instead of www.base.la
   res.writeHead(302, {
-    Location: `https://link.base.la?${params.toString()}`,
+    Location: `https://www.base.la/slack-failure`,
   });
   res.end();
 };
