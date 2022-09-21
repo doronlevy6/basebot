@@ -3,6 +3,7 @@
   "version": 2,
   "projects": {
     "env": "libs/env",
+    "gistbot": "apps/gistbot",
     "logger": "libs/logger",
     "metrics": "libs/metrics",
     "oapigen": "libs/oapigen",
