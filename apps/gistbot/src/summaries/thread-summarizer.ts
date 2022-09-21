@@ -2,6 +2,7 @@ import { SlackActionWrapper } from '../slack/types';
 import { Message } from '@slack/web-api/dist/response/ConversationsRepliesResponse';
 import { UserLink } from '../slack/components/user-link';
 import axios from 'axios';
+import { addToChannelInstructions } from '../slack/add-to-channel';
 
 export const threadSummarizationHandler = async ({
   shortcut,
@@ -155,7 +156,17 @@ export const threadSummarizationHandler = async ({
       });
     }
   } catch (error) {
-    logger.error(error);
+    logger.error(`error in thread summarization: ${error.stack}`);
+
+    if ((error as Error).message.toLowerCase().includes('not_in_channel')) {
+      await addToChannelInstructions(client, shortcut.trigger_id, {
+        channelId: payload.channel.id,
+        channelName: payload.channel.name,
+        currentUser: payload.user.id,
+      });
+      return;
+    }
+
     await client.chat.postMessage({
       channel: shortcut.user.id,
       text: `We had an error processing the summarization: ${error.message}`,
