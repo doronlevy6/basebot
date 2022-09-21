@@ -25,6 +25,7 @@ export function createApp(
       'users.profile:read',
       'commands',
       'channels:history',
+      'channels:join',
     ],
     installationStore: installationStore,
     installerOptions: {
