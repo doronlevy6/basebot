@@ -5,7 +5,6 @@ import {
   InstallationQuery,
   InstallationStore,
 } from '@slack/bolt';
-import { WebClient } from '@slack/web-api';
 import knex, { Knex } from 'knex';
 
 export interface PgConfig {
@@ -76,19 +75,15 @@ export class PgInstallationStore implements InstallationStore {
       logger.info('attempting to synchronize tables');
       await this.db
         .raw(`CREATE TABLE IF NOT EXISTS gistbot_slack_enterprise_installations (
-        slack_id varchar(36) NOT NULL,
-        base_id varchar(36) NOT NULL UNIQUE,
+        slack_id varchar(36) NOT NULL PRIMARY KEY,
         raw jsonb NOT NULL
-      );
-      CREATE INDEX IF NOT EXISTS gistbot_slack_enterprise_installations_slack_id ON gistbot_slack_enterprise_installations (slack_id);`);
+      );`);
 
       await this.db
         .raw(`CREATE TABLE IF NOT EXISTS gistbot_slack_installations (
-        slack_id varchar(36) NOT NULL,
-        base_id varchar(36) NOT NULL UNIQUE,
+        slack_id varchar(36) NOT NULL PRIMARY KEY,
         raw jsonb NOT NULL
-      );
-      CREATE INDEX IF NOT EXISTS gistbot_slack_installations_slack_id ON gistbot_slack_installations (slack_id);`);
+      );`);
     }
 
     return true;
@@ -97,60 +92,32 @@ export class PgInstallationStore implements InstallationStore {
   async storeInstallation<AuthVersion extends 'v1' | 'v2'>(
     installation: Installation<AuthVersion, boolean>,
   ): Promise<void> {
-    const client = new WebClient(installation.bot?.token);
-    const teamInfoRes = await client.team.info({});
-    if (teamInfoRes.error) {
-      throw new Error(
-        `Error getting team info in store installation on slack: ${teamInfoRes.error}`,
-      );
+    if (
+      installation.isEnterpriseInstall &&
+      installation.enterprise !== undefined
+    ) {
+      await this.db('gistbot_slack_enterprise_installations')
+        .insert({
+          slack_id: installation.enterprise.id,
+          raw: installation,
+        })
+        .onConflict('slack_id')
+        .merge(['raw']);
+      this.metricsReporter.incrementCounter('stored_installations_total', 1, {
+        enterprise: 'true',
+      });
     }
-
-    if (!teamInfoRes.ok) {
-      throw new Error(`Error getting team info in store installation on slack`);
-    }
-
-    const domains = teamInfoRes.team?.email_domain?.split(',') || [];
-    let saved = false;
-    for (let i = 0; i < domains.length; i++) {
-      const domain = domains[i];
-
-      if (
-        installation.isEnterpriseInstall &&
-        installation.enterprise !== undefined
-      ) {
-        await this.db('gistbot_slack_enterprise_installations')
-          .insert({
-            slack_id: installation.enterprise.id,
-            base_id: domain,
-            raw: installation,
-          })
-          .onConflict('base_id')
-          .merge(['raw', 'slack_id']);
-        this.metricsReporter.incrementCounter('stored_installations_total', 1, {
-          enterprise: 'true',
-        });
-        saved = true;
-        continue;
-      }
-      if (installation.team !== undefined) {
-        await this.db('gistbot_slack_installations')
-          .insert({
-            slack_id: installation.team.id,
-            base_id: domain,
-            raw: installation,
-          })
-          .onConflict('base_id')
-          .merge(['raw', 'slack_id']);
-        this.metricsReporter.incrementCounter('stored_installations_total', 1, {
-          enterprise: 'false',
-        });
-
-        saved = true;
-      }
-    }
-
-    if (!saved) {
-      throw new Error('Failed saving installation data to installationStore');
+    if (installation.team !== undefined) {
+      await this.db('gistbot_slack_installations')
+        .insert({
+          slack_id: installation.team.id,
+          raw: installation,
+        })
+        .onConflict('slack_id')
+        .merge(['raw']);
+      this.metricsReporter.incrementCounter('stored_installations_total', 1, {
+        enterprise: 'false',
+      });
     }
   }
 
@@ -186,31 +153,6 @@ export class PgInstallationStore implements InstallationStore {
       return res[0].raw as Installation<'v1' | 'v2', boolean>;
     }
     throw new Error('Failed fetching installation');
-  }
-
-  async fetchInstallationByBaseId(
-    base_id: string,
-  ): Promise<Installation<'v1' | 'v2', boolean>> {
-    let enterprise = 'true';
-    let res = await this.db
-      .select('raw')
-      .from('gistbot_slack_enterprise_installations')
-      .where({ base_id: base_id });
-    if (!res || res.length == 0) {
-      res = await this.db
-        .select('raw')
-        .from('gistbot_slack_installations')
-        .where({ base_id: base_id });
-      enterprise = 'false';
-    }
-    if (!res || res.length == 0) {
-      throw new Error('no installation found');
-    }
-
-    this.metricsReporter.incrementCounter('fetched_installations_total', 1, {
-      enterprise: enterprise,
-    });
-    return res[0].raw as Installation<'v1' | 'v2', boolean>;
   }
 
   async deleteInstallation(query: InstallationQuery<boolean>): Promise<void> {

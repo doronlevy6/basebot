@@ -21,9 +21,7 @@ export function createApp(
     scopes: [
       'chat:write',
       'im:history',
-      'team:read',
       'users:read',
-      'users:read.email',
       'users.profile:read',
       'commands',
       'channels:history',
