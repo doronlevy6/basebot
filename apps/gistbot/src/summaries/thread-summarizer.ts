@@ -3,6 +3,7 @@ import { Message } from '@slack/web-api/dist/response/ConversationsRepliesRespon
 import { UserLink } from '../slack/components/user-link';
 import axios from 'axios';
 import { addToChannelInstructions } from '../slack/add-to-channel';
+import { parseMessagesForSummary } from './utils';
 
 export const threadSummarizationHandler = async ({
   shortcut,
@@ -61,84 +62,20 @@ export const threadSummarizationHandler = async ({
       cursor = messageRepliesRes.response_metadata.next_cursor;
     }
 
-    const messagesWithText: (
-      | Message
-      | {
-          type: 'message';
-          user?: string;
-          ts: string;
-          text?: string;
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          [key: string]: any;
-        }
-    )[] = [payload.message, ...messageReplies].filter((t) => t.text);
-
-    const messagesTexts: string[] = messagesWithText.map(
-      (m) => m.text,
-    ) as string[];
-
-    const messageUserIds: string[] = [
-      ...new Set(messagesWithText.map((m) => m.user)),
-    ].filter((u) => u) as string[];
-
-    const messageBotIds: string[] = [
-      ...new Set(messagesWithText.map((m) => m.bot_id)),
-    ].filter((u) => u) as string[];
-
-    const userInfoReses = await Promise.all(
-      messageUserIds.map((u) => client.users.info({ user: u })),
+    const { messages: messagesTexts, users } = await parseMessagesForSummary(
+      [payload.message, ...messageReplies],
+      client,
     );
-
-    const botInfoReses = await Promise.all(
-      messageBotIds.map((u) => client.bots.info({ bot: u })),
-    );
-
-    const userNames = messagesWithText.map((m) => {
-      const userInfo = userInfoReses.find((uir) => {
-        if (uir.error) {
-          throw new Error(`message user error: ${uir.error}`);
-        }
-        if (!uir.ok || !uir.user) {
-          throw new Error('message user not ok');
-        }
-
-        return uir.user.id === m.user;
-      });
-      if (userInfo && userInfo.user) {
-        return userInfo.user.name;
-      }
-
-      const botInfo = botInfoReses.find((uir) => {
-        if (uir.error) {
-          throw new Error(`message bot user error: ${uir.error}`);
-        }
-        if (!uir.ok || !uir.bot) {
-          throw new Error('message bot user not ok');
-        }
-
-        return uir.bot.id === m.bot_id;
-      });
-
-      if (!botInfo || !botInfo.bot) {
-        throw new Error(
-          `no user information or bot information found for user ${
-            m.user || m.bot_id
-          }`,
-        );
-      }
-
-      return botInfo.bot.name;
-    }) as string[];
 
     logger.info(
-      `Attempting to summarize thread with ${messagesTexts.length} messages and ${userNames.length} users`,
+      `Attempting to summarize thread with ${messagesTexts.length} messages and ${users.length} users`,
     );
 
     const modelRes = await axios.post(
       process.env.THREAD_SUMMARY_MODEL_URL as string,
       {
         messages: messagesTexts,
-        names: userNames,
+        names: users,
       },
       {
         timeout: 60000,
