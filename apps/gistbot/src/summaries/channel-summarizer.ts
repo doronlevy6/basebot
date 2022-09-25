@@ -11,6 +11,7 @@ export const channelSummarizationHandler = async ({
   client,
   logger,
   payload,
+  respond,
 }: SlackSlashCommandWrapper) => {
   try {
     await ack();
@@ -51,12 +52,11 @@ export const channelSummarizationHandler = async ({
     );
 
     if (modelRes.status >= 200 && modelRes.status <= 299) {
-      await client.chat.postEphemeral({
-        channel: channel_id,
+      await respond({
+        response_type: 'ephemeral',
         text: `${UserLink(user_id)} here's the summary you requested:\n\n${
           modelRes.data['data']
         }`,
-        user: user_id,
       });
     }
   } catch (error) {
@@ -71,10 +71,9 @@ export const channelSummarizationHandler = async ({
       return;
     }
 
-    await client.chat.postEphemeral({
-      channel: payload.channel_id,
+    await respond({
+      response_type: 'ephemeral',
       text: `We had an error processing the summarization: ${error.message}`,
-      user: payload.user_id,
     });
   }
 };

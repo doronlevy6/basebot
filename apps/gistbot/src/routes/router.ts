@@ -1,7 +1,7 @@
 import { App } from '@slack/bolt';
 import { addToChannelHandler } from '../slack/add-to-channel';
-import { channelSummarizationHandler } from '../summaries/channel-summarizer';
 import { threadSummarizationHandler } from '../summaries/thread-summarizer';
+import { slashCommandRouter } from './slash-command-router';
 
 export enum Routes {
   SUMMARIZE_THREAD = 'summarize-thread',
@@ -12,7 +12,7 @@ export enum Routes {
 export const registerBoltAppRouter = (app: App) => {
   app.shortcut(Routes.SUMMARIZE_THREAD, threadSummarizationHandler);
   app.view(Routes.ADD_TO_CHANNEL_SUBMIT, addToChannelHandler);
-  app.command(Routes.GIST_COMMAND, channelSummarizationHandler);
+  app.command(Routes.GIST_COMMAND, slashCommandRouter);
 
   // This is the global action handler, which will match all unmatched actions
   app.action(/.*/, onlyAck);
