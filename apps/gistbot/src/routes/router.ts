@@ -6,13 +6,12 @@ import { slashCommandRouter } from './slash-command-router';
 export enum Routes {
   SUMMARIZE_THREAD = 'summarize-thread',
   ADD_TO_CHANNEL_SUBMIT = 'add-to-channel-submit',
-  GIST_COMMAND = '/gist',
 }
 
 export const registerBoltAppRouter = (app: App) => {
   app.shortcut(Routes.SUMMARIZE_THREAD, threadSummarizationHandler);
   app.view(Routes.ADD_TO_CHANNEL_SUBMIT, addToChannelHandler);
-  app.command(Routes.GIST_COMMAND, slashCommandRouter);
+  app.command(/gist.*/, slashCommandRouter);
 
   // This is the global action handler, which will match all unmatched actions
   app.action(/.*/, onlyAck);
