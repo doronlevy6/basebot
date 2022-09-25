@@ -8,5 +8,12 @@ module.exports = async () => {
     env: 'test',
     serviceName: 'test',
   };
-  loadEnvs(initialEnv, ['configs', 'secrets']);
+
+  try {
+    loadEnvs(initialEnv, ['configs', 'secrets']);
+  } catch (error) {
+    console.log({
+      msg: 'error reading versions from environment: ' + error,
+    });
+  }
 };
