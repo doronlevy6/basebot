@@ -1,6 +1,7 @@
 import { SlackShortcutWrapper } from '../slack/types';
 import { addToChannelInstructions } from '../slack/add-to-channel';
 import { UserLink } from '../slack/components/user-link';
+import { Summary } from '../slack/components/summary';
 import { ThreadSummaryModel } from './models/thread-summary.model';
 import { SlackMessage } from './types';
 import { parseMessagesForSummary } from './utils';
@@ -109,85 +110,11 @@ export const threadSummarizationHandler =
         text: basicText,
         thread_ts: payload.message_ts,
         user: shortcut.user.id,
-        blocks: [
-          {
-            type: 'section',
-            text: {
-              text: basicText,
-              type: 'mrkdwn',
-              verbatim: true,
-            },
-          },
-          {
-            type: 'section',
-            text: {
-              text: summary,
-              type: 'plain_text',
-              emoji: true,
-            },
-          },
-          {
-            type: 'divider',
-          },
-          {
-            type: 'section',
-            text: {
-              type: 'plain_text',
-              text: 'How was this summary?',
-            },
-            accessory: {
-              type: 'static_select',
-              placeholder: {
-                type: 'plain_text',
-                text: 'Feedback',
-                emoji: true,
-              },
-              options: [
-                {
-                  text: {
-                    type: 'plain_text',
-                    text: 'Amazing summary, great job!',
-                    emoji: true,
-                  },
-                  value: 'amazing',
-                },
-                {
-                  text: {
-                    type: 'plain_text',
-                    text: 'Summary was OK',
-                    emoji: true,
-                  },
-                  value: 'ok',
-                },
-                {
-                  text: {
-                    type: 'plain_text',
-                    text: "Summary wasn't relevant",
-                    emoji: true,
-                  },
-                  value: 'not_relevant',
-                },
-                {
-                  text: {
-                    type: 'plain_text',
-                    text: 'Summary was incorrect',
-                    emoji: true,
-                  },
-                  value: 'incorrect',
-                },
-                {
-                  text: {
-                    type: 'plain_text',
-                    text: 'Summary was inappropriate',
-                    emoji: true,
-                  },
-                  value: 'inappropriate',
-                },
-              ],
-              action_id: Routes.THREAD_SUMMARY_FEEDBACK,
-            },
-          },
-        ],
+        blocks: Summary({
+          actionId: Routes.THREAD_SUMMARY_FEEDBACK,
+          basicText: basicText,
+          summary: summary,
+        }),
       });
 
       analyticsManager.threadSummaryFunnel({
@@ -206,11 +133,17 @@ export const threadSummarizationHandler =
       logger.error(`error in thread summarization: ${error.stack}`);
 
       if ((error as Error).message.toLowerCase().includes('not_in_channel')) {
-        await addToChannelInstructions(client, shortcut.trigger_id, {
-          channelId: payload.channel.id,
-          channelName: payload.channel.name,
-          currentUser: payload.user.id,
-        });
+        await addToChannelInstructions(
+          client,
+          shortcut.trigger_id,
+          {
+            channelId: payload.channel.id,
+            channelName: payload.channel.name,
+            currentUser: payload.user.id,
+            teamId: payload.user.team_id || 'unknown',
+          },
+          analyticsManager,
+        );
         analyticsManager.threadSummaryFunnel({
           funnelStep: 'not_in_channel',
           slackTeamId: payload.team?.id || 'unknown',

@@ -1,10 +1,12 @@
 import { logger } from '@base/logger';
 import { WebClient } from '@slack/web-api';
+import { AnalyticsManager } from '../analytics/manager';
 import { Routes } from '../routes/router';
 import { UserLink } from './components/user-link';
 import { ViewAction } from './types';
 
 interface AddToChannelProps {
+  teamId: string;
   channelId: string;
   channelName: string;
   currentUser: string;
@@ -14,12 +16,14 @@ export const addToChannelInstructions = async (
   client: WebClient,
   triggerId: string,
   props: AddToChannelProps,
+  analyticsManager: AnalyticsManager,
 ) => {
-  client.views.open({
+  await client.views.open({
     trigger_id: triggerId,
     view: {
       type: 'modal',
       callback_id: Routes.ADD_TO_CHANNEL_SUBMIT,
+      notify_on_close: true,
       private_metadata: JSON.stringify(props),
       submit: {
         type: 'plain_text',
@@ -61,30 +65,55 @@ export const addToChannelInstructions = async (
       ],
     },
   });
+
+  analyticsManager.modalView({
+    type: 'not_in_channel',
+    slackUserId: props.currentUser,
+    slackTeamId: props.teamId,
+    properties: {
+      channelId: props.channelId,
+    },
+  });
 };
 
-export const addToChannelHandler = async (params: ViewAction) => {
-  const { ack, view, client } = params;
+export const addToChannelHandler =
+  (analyticsManager: AnalyticsManager) => async (params: ViewAction) => {
+    const { ack, view, client, body } = params;
 
-  try {
-    await ack();
+    try {
+      await ack();
 
-    const { channelId, channelName, currentUser } = JSON.parse(
-      view.private_metadata,
-    ) as AddToChannelProps;
+      const submitted = body.type === 'view_submission';
 
-    await client.conversations.join({
-      channel: channelId,
-    });
+      const { channelId, channelName, currentUser, teamId } = JSON.parse(
+        view.private_metadata,
+      ) as AddToChannelProps;
 
-    await client.chat.postMessage({
-      channel: channelId,
-      text: `Hello! I'm GistBot :smile:\n\n${UserLink(
-        currentUser,
-      )} added me here to #${channelName} in order to help you all get the gist of things happening in this channel whenever you need!`,
-    });
-  } catch (err) {
-    // TODO: update modal view with error
-    logger.error(`Add to channel handler error: ${err}`);
-  }
-};
+      analyticsManager.modalClosed({
+        type: 'not_in_channel',
+        slackUserId: currentUser,
+        slackTeamId: teamId,
+        submitted: submitted,
+        properties: {
+          channelId: channelId,
+        },
+      });
+
+      if (!submitted) {
+        return;
+      }
+
+      await client.conversations.join({
+        channel: channelId,
+      });
+
+      await client.chat.postMessage({
+        channel: channelId,
+        text: `Hello! I'm GistBot :smile:\n\n${UserLink(
+          currentUser,
+        )} added me here to #${channelName} in order to help you all get the gist of things happening in this channel whenever you need!`,
+      });
+    } catch (err) {
+      logger.error(`Add to channel handler error: ${err.stack}`);
+    }
+  };

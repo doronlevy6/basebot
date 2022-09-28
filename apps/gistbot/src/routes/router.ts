@@ -1,6 +1,7 @@
 import { App } from '@slack/bolt';
 import { AnalyticsManager } from '../analytics/manager';
 import { addToChannelHandler } from '../slack/add-to-channel';
+import { channelSummaryFeedbackHandler } from '../summaries/channel-summary-feedback';
 import { ThreadSummaryModel } from '../summaries/models/thread-summary.model';
 import { threadSummarizationHandler } from '../summaries/thread-summarizer';
 import { threadSummaryFeedbackHandler } from '../summaries/thread-summary-feedback';
@@ -10,6 +11,7 @@ export enum Routes {
   SUMMARIZE_THREAD = 'summarize-thread',
   ADD_TO_CHANNEL_SUBMIT = 'add-to-channel-submit',
   THREAD_SUMMARY_FEEDBACK = 'thread-summary-feedback',
+  CHANNEL_SUMMARY_FEEDBACK = 'channel-summary-feedback',
 }
 
 export const registerBoltAppRouter = (
@@ -21,11 +23,25 @@ export const registerBoltAppRouter = (
     Routes.SUMMARIZE_THREAD,
     threadSummarizationHandler(analyticsManager, threadSummaryModel),
   );
-  app.view(Routes.ADD_TO_CHANNEL_SUBMIT, addToChannelHandler);
-  app.command(/gist.*/, slashCommandRouter(threadSummaryModel));
+
+  const addToChannel = addToChannelHandler(analyticsManager);
+
+  app.view(Routes.ADD_TO_CHANNEL_SUBMIT, addToChannel);
+  app.view(
+    { callback_id: Routes.ADD_TO_CHANNEL_SUBMIT, type: 'view_closed' },
+    addToChannel,
+  );
+  app.command(
+    /gist.*/,
+    slashCommandRouter(threadSummaryModel, analyticsManager),
+  );
   app.action(
     Routes.THREAD_SUMMARY_FEEDBACK,
     threadSummaryFeedbackHandler(analyticsManager),
+  );
+  app.action(
+    Routes.CHANNEL_SUMMARY_FEEDBACK,
+    channelSummaryFeedbackHandler(analyticsManager),
   );
 
   // This is the global action handler, which will match all unmatched actions

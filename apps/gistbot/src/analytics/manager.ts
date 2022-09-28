@@ -47,6 +47,50 @@ export class AnalyticsManager {
     });
   }
 
+  modalView({
+    type,
+    slackUserId,
+    slackTeamId,
+    properties,
+  }: {
+    type: string;
+    slackUserId: string;
+    slackTeamId: string;
+    properties?: ExtraParams;
+  }) {
+    this.sendEventToAnalytics({
+      eventName: 'slack_modal_view',
+      slackUserId: slackUserId,
+      slackTeamId: slackTeamId,
+      internalUserId: `${slackTeamId}_${slackUserId}`,
+      timestamp: new Date(),
+      properties: { ...properties, type },
+    });
+  }
+
+  modalClosed({
+    type,
+    slackUserId,
+    slackTeamId,
+    submitted,
+    properties,
+  }: {
+    type: string;
+    slackUserId: string;
+    slackTeamId: string;
+    submitted: boolean;
+    properties?: ExtraParams;
+  }) {
+    this.sendEventToAnalytics({
+      eventName: 'slack_modal_close',
+      slackUserId: slackUserId,
+      slackTeamId: slackTeamId,
+      internalUserId: `${slackTeamId}_${slackUserId}`,
+      timestamp: new Date(),
+      properties: { ...properties, type, submitted },
+    });
+  }
+
   error({
     slackUserId,
     slackTeamId,
@@ -92,6 +136,29 @@ export class AnalyticsManager {
       internalUserId: `${slackTeamId}_${slackUserId}`,
       timestamp: new Date(),
       properties: { ...extraParams, channelId, threadTs },
+    });
+  }
+
+  channelSummaryFunnel({
+    funnelStep,
+    slackUserId,
+    slackTeamId,
+    channelId,
+    extraParams,
+  }: {
+    funnelStep: string;
+    slackUserId: string;
+    slackTeamId: string;
+    channelId: string;
+    extraParams?: ExtraParams;
+  }) {
+    this.sendEventToAnalytics({
+      eventName: `channel_summary_${funnelStep}`,
+      slackUserId: slackUserId,
+      slackTeamId: slackTeamId,
+      internalUserId: `${slackTeamId}_${slackUserId}`,
+      timestamp: new Date(),
+      properties: { ...extraParams, channelId },
     });
   }
 }
