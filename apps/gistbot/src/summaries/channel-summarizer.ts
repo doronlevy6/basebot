@@ -2,13 +2,13 @@ import { addToChannelInstructions } from '../slack/add-to-channel';
 import { UserLink } from '../slack/components/user-link';
 import { Summary } from '../slack/components/summary';
 import { SlackSlashCommandWrapper } from '../slack/types';
-import { enrichWithReplies, parseMessagesForSummary } from './utils';
+import { /*enrichWithReplies,*/ parseMessagesForSummary } from './utils';
 import { SlackMessage } from './types';
 import { ThreadSummaryModel } from './models/thread-summary.model';
 import { AnalyticsManager } from '../analytics/manager';
 import { Routes } from '../routes/router';
 
-const MAX_MESSAGES_TO_FETCH = 50;
+const MAX_MESSAGES_TO_FETCH = 100;
 
 export const channelSummarizationHandler =
   (
@@ -49,23 +49,28 @@ export const channelSummarizationHandler =
         );
       }
 
-      const messagesWithReplies = await enrichWithReplies(
-        channel_id,
-        messages,
-        client,
-      );
-      const flattenArray: SlackMessage[] = [];
-      messagesWithReplies.forEach((item) =>
-        flattenArray.push(...[item.message, ...item.replies]),
-      );
+      // TODO: Return messages with replies when we bring in the full channel summary.
+      // Since we want to return this in the coming days I'm going to leave it commented out for now.
+      // const messagesWithReplies = await enrichWithReplies(
+      //   channel_id,
+      //   messages,
+      //   client,
+      // );
+      const flattenArray: SlackMessage[] = messages.map((m) => m);
+      // messagesWithReplies.forEach((item) =>
+      //   flattenArray.push(...[item.message, ...item.replies]),
+      // );
 
       const { messages: messagesTexts, users } = await parseMessagesForSummary(
         flattenArray,
         client,
       );
 
+      // logger.info(
+      //   `Attempting to summarize channel with ${messages.length} messages (${messagesTexts.length} with replies) and ${users.length} users`,
+      // );
       logger.info(
-        `Attempting to summarize channel with ${messages.length} messages (${messagesTexts.length} with replies) and ${users.length} users`,
+        `Attempting to summarize channel with ${messagesTexts.length} messages and ${users.length} users`,
       );
 
       analyticsManager.channelSummaryFunnel({
