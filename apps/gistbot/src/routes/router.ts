@@ -1,6 +1,7 @@
 import { App } from '@slack/bolt';
 import { AnalyticsManager } from '../analytics/manager';
 import { addToChannelHandler } from '../slack/add-to-channel';
+import { ThreadSummaryModel } from '../summaries/models/thread-summary.model';
 import { threadSummarizationHandler } from '../summaries/thread-summarizer';
 import { threadSummaryFeedbackHandler } from '../summaries/thread-summary-feedback';
 import { slashCommandRouter } from './slash-command-router';
@@ -14,13 +15,14 @@ export enum Routes {
 export const registerBoltAppRouter = (
   app: App,
   analyticsManager: AnalyticsManager,
+  threadSummaryModel: ThreadSummaryModel,
 ) => {
   app.shortcut(
     Routes.SUMMARIZE_THREAD,
-    threadSummarizationHandler(analyticsManager),
+    threadSummarizationHandler(analyticsManager, threadSummaryModel),
   );
   app.view(Routes.ADD_TO_CHANNEL_SUBMIT, addToChannelHandler);
-  app.command(/gist.*/, slashCommandRouter);
+  app.command(/gist.*/, slashCommandRouter(threadSummaryModel));
   app.action(
     Routes.THREAD_SUMMARY_FEEDBACK,
     threadSummaryFeedbackHandler(analyticsManager),

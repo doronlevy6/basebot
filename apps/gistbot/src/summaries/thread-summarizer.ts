@@ -1,14 +1,17 @@
 import { SlackShortcutWrapper } from '../slack/types';
-import { UserLink } from '../slack/components/user-link';
-import axios from 'axios';
 import { addToChannelInstructions } from '../slack/add-to-channel';
+import { UserLink } from '../slack/components/user-link';
+import { ThreadSummaryModel } from './models/thread-summary.model';
 import { SlackMessage } from './types';
 import { parseMessagesForSummary } from './utils';
 import { AnalyticsManager } from '../analytics/manager';
 import { Routes } from '../routes/router';
 
 export const threadSummarizationHandler =
-  (analyticsManager: AnalyticsManager) =>
+  (
+    analyticsManager: AnalyticsManager,
+    threadSummaryModel: ThreadSummaryModel,
+  ) =>
   async ({ shortcut, ack, client, logger, payload }: SlackShortcutWrapper) => {
     try {
       await ack();
@@ -89,107 +92,103 @@ export const threadSummarizationHandler =
         },
       });
 
-      const modelRes = await axios.post(
-        process.env.THREAD_SUMMARY_MODEL_URL as string,
+      const summary = await threadSummaryModel.summarizeThread(
         {
           messages: messagesTexts,
           names: users,
+          titles: [], // TODO: Add user titles
         },
-        {
-          timeout: 60000,
-        },
+        payload.user.id,
       );
 
-      if (modelRes.status >= 200 && modelRes.status <= 299) {
-        const basicText = `${UserLink(
-          shortcut.user.id,
-        )} requested a summary for this thread:`;
-        await client.chat.postMessage({
-          channel: shortcut.channel.id,
-          text: basicText,
-          thread_ts: payload.message_ts,
-          user: shortcut.user.id,
-          blocks: [
-            {
-              type: 'section',
-              text: {
-                text: basicText,
-                type: 'mrkdwn',
-                verbatim: true,
-              },
+      const basicText = `${UserLink(
+        shortcut.user.id,
+      )} requested a summary for this thread:`;
+      await client.chat.postMessage({
+        channel: shortcut.channel.id,
+        text: basicText,
+        thread_ts: payload.message_ts,
+        user: shortcut.user.id,
+        blocks: [
+          {
+            type: 'section',
+            text: {
+              text: basicText,
+              type: 'mrkdwn',
+              verbatim: true,
             },
-            {
-              type: 'section',
-              text: {
-                text: modelRes.data['data'],
+          },
+          {
+            type: 'section',
+            text: {
+              text: summary,
+              type: 'plain_text',
+              emoji: true,
+            },
+          },
+          {
+            type: 'divider',
+          },
+          {
+            type: 'section',
+            text: {
+              type: 'plain_text',
+              text: 'How was this summary?',
+            },
+            accessory: {
+              type: 'static_select',
+              placeholder: {
                 type: 'plain_text',
+                text: 'Feedback',
                 emoji: true,
               },
-            },
-            {
-              type: 'divider',
-            },
-            {
-              type: 'section',
-              text: {
-                type: 'plain_text',
-                text: 'How was this summary?',
-              },
-              accessory: {
-                type: 'static_select',
-                placeholder: {
-                  type: 'plain_text',
-                  text: 'Feedback',
-                  emoji: true,
+              options: [
+                {
+                  text: {
+                    type: 'plain_text',
+                    text: 'Amazing summary, great job!',
+                    emoji: true,
+                  },
+                  value: 'amazing',
                 },
-                options: [
-                  {
-                    text: {
-                      type: 'plain_text',
-                      text: 'Amazing summary, great job!',
-                      emoji: true,
-                    },
-                    value: 'amazing',
+                {
+                  text: {
+                    type: 'plain_text',
+                    text: 'Summary was OK',
+                    emoji: true,
                   },
-                  {
-                    text: {
-                      type: 'plain_text',
-                      text: 'Summary was OK',
-                      emoji: true,
-                    },
-                    value: 'ok',
+                  value: 'ok',
+                },
+                {
+                  text: {
+                    type: 'plain_text',
+                    text: "Summary wasn't relevant",
+                    emoji: true,
                   },
-                  {
-                    text: {
-                      type: 'plain_text',
-                      text: "Summary wasn't relevant",
-                      emoji: true,
-                    },
-                    value: 'not_relevant',
+                  value: 'not_relevant',
+                },
+                {
+                  text: {
+                    type: 'plain_text',
+                    text: 'Summary was incorrect',
+                    emoji: true,
                   },
-                  {
-                    text: {
-                      type: 'plain_text',
-                      text: 'Summary was incorrect',
-                      emoji: true,
-                    },
-                    value: 'incorrect',
+                  value: 'incorrect',
+                },
+                {
+                  text: {
+                    type: 'plain_text',
+                    text: 'Summary was inappropriate',
+                    emoji: true,
                   },
-                  {
-                    text: {
-                      type: 'plain_text',
-                      text: 'Summary was inappropriate',
-                      emoji: true,
-                    },
-                    value: 'inappropriate',
-                  },
-                ],
-                action_id: Routes.THREAD_SUMMARY_FEEDBACK,
-              },
+                  value: 'inappropriate',
+                },
+              ],
+              action_id: Routes.THREAD_SUMMARY_FEEDBACK,
             },
-          ],
-        });
-      }
+          },
+        ],
+      });
 
       analyticsManager.threadSummaryFunnel({
         funnelStep: 'summarized',

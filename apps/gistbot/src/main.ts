@@ -13,6 +13,7 @@ import { PgInstallationStore } from './installations/installationStore';
 import { createApp } from './slack-bolt-app';
 import { registerBoltAppRouter } from './routes/router';
 import { AnalyticsManager } from './analytics/manager';
+import { ThreadSummaryModel } from './summaries/models/thread-summary.model';
 
 const gracefulShutdown = (server: Server) => (signal: string) => {
   logger.info('starting shutdown, got signal ' + signal);
@@ -49,6 +50,7 @@ const startApp = async () => {
   });
 
   const analyticsManager = new AnalyticsManager();
+  const threadSummaryModel = new ThreadSummaryModel();
 
   let ready = await pgStore.isReady();
   if (!ready) {
@@ -62,7 +64,7 @@ const startApp = async () => {
   const slackApp = createApp(pgStore, metricsReporter);
   slackApp.use(slackBoltMetricsMiddleware(metricsReporter));
 
-  registerBoltAppRouter(slackApp, analyticsManager);
+  registerBoltAppRouter(slackApp, analyticsManager, threadSummaryModel);
 
   const port = process.env['PORT'] || 3000;
   const server = await slackApp.start(port);
