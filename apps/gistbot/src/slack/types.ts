@@ -1,5 +1,8 @@
 import {
   AllMiddlewareArgs,
+  BlockAction,
+  SlackAction,
+  SlackActionMiddlewareArgs,
   SlackCommandMiddlewareArgs,
   SlackShortcut,
   SlackShortcutMiddlewareArgs,
@@ -12,8 +15,12 @@ import { MessageShortcut } from '@slack/bolt/dist/types/shortcuts/message-shortc
 export type SlackSlashCommandWrapper = AllMiddlewareArgs &
   SlackCommandMiddlewareArgs;
 
-export type SlackActionWrapper<Action extends SlackShortcut = MessageShortcut> =
-  AllMiddlewareArgs & SlackShortcutMiddlewareArgs<Action>;
+export type SlackShortcutWrapper<
+  Action extends SlackShortcut = MessageShortcut,
+> = AllMiddlewareArgs & SlackShortcutMiddlewareArgs<Action>;
+
+export type SlackBlockActionWrapper<Action extends SlackAction = BlockAction> =
+  AllMiddlewareArgs & SlackActionMiddlewareArgs<Action>;
 
 export type ViewAction<Action extends SlackViewAction = ViewSubmitAction> =
   AllMiddlewareArgs & SlackViewMiddlewareArgs<Action>;

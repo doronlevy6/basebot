@@ -1,17 +1,30 @@
 import { App } from '@slack/bolt';
+import { AnalyticsManager } from '../analytics/manager';
 import { addToChannelHandler } from '../slack/add-to-channel';
 import { threadSummarizationHandler } from '../summaries/thread-summarizer';
+import { threadSummaryFeedbackHandler } from '../summaries/thread-summary-feedback';
 import { slashCommandRouter } from './slash-command-router';
 
 export enum Routes {
   SUMMARIZE_THREAD = 'summarize-thread',
   ADD_TO_CHANNEL_SUBMIT = 'add-to-channel-submit',
+  THREAD_SUMMARY_FEEDBACK = 'thread-summary-feedback',
 }
 
-export const registerBoltAppRouter = (app: App) => {
-  app.shortcut(Routes.SUMMARIZE_THREAD, threadSummarizationHandler);
+export const registerBoltAppRouter = (
+  app: App,
+  analyticsManager: AnalyticsManager,
+) => {
+  app.shortcut(
+    Routes.SUMMARIZE_THREAD,
+    threadSummarizationHandler(analyticsManager),
+  );
   app.view(Routes.ADD_TO_CHANNEL_SUBMIT, addToChannelHandler);
   app.command(/gist.*/, slashCommandRouter);
+  app.action(
+    Routes.THREAD_SUMMARY_FEEDBACK,
+    threadSummaryFeedbackHandler(analyticsManager),
+  );
 
   // This is the global action handler, which will match all unmatched actions
   app.action(/.*/, onlyAck);

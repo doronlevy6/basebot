@@ -12,6 +12,7 @@ import { Server } from 'http';
 import { PgInstallationStore } from './installations/installationStore';
 import { createApp } from './slack-bolt-app';
 import { registerBoltAppRouter } from './routes/router';
+import { AnalyticsManager } from './analytics/manager';
 
 const gracefulShutdown = (server: Server) => (signal: string) => {
   logger.info('starting shutdown, got signal ' + signal);
@@ -24,6 +25,12 @@ const gracefulShutdown = (server: Server) => (signal: string) => {
     }
     process.exit(0);
   });
+};
+
+const gracefulShutdownAsync = (analyticsManager: AnalyticsManager) => {
+  return async () => {
+    await Promise.all([analyticsManager.close()]);
+  };
 };
 
 const startApp = async () => {
@@ -41,15 +48,21 @@ const startApp = async () => {
     ),
   });
 
-  const ready = await pgStore.isReady();
+  const analyticsManager = new AnalyticsManager();
+
+  let ready = await pgStore.isReady();
   if (!ready) {
     throw new Error('PgStore is not ready');
+  }
+  ready = await analyticsManager.isReady();
+  if (!ready) {
+    throw new Error('AnalyticsManager is not ready');
   }
 
   const slackApp = createApp(pgStore, metricsReporter);
   slackApp.use(slackBoltMetricsMiddleware(metricsReporter));
 
-  registerBoltAppRouter(slackApp);
+  registerBoltAppRouter(slackApp, analyticsManager);
 
   const port = process.env['PORT'] || 3000;
   const server = await slackApp.start(port);
@@ -58,6 +71,7 @@ const startApp = async () => {
   const shutdownHandler = gracefulShutdown(server);
   process.on('SIGINT', shutdownHandler);
   process.on('SIGTERM', shutdownHandler);
+  process.on('beforeExit', gracefulShutdownAsync(analyticsManager));
 };
 
 startApp();
