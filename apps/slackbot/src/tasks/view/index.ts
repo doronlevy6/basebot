@@ -10,13 +10,14 @@ import { TaskTitleBlock } from './task-title';
 import { ITaskViewProps } from './types';
 
 export const TaskView = (props: ITaskViewProps): SlackMessageSenderMetadata => {
-  const { baseOrgId, assignee } = props;
+  const { baseOrgId, assignee, task } = props;
 
   return {
     organizationId: baseOrgId,
     channelId: assignee.id,
     text: TaskHeaderText(props),
     blocks: getFormattedBlocks(props),
+    taskId: task.id,
   };
 };
 

@@ -17,6 +17,7 @@ import { Messenger } from './messenger/messenger';
 import { registerSlackbotEvents } from './routes/router';
 import { createApp } from './slack-bolt-app';
 import { TasksManager } from './tasks/manager';
+import { NudgeManager } from './nudge/nudge-manager';
 
 const gracefulShutdown = (server: Server) => (signal: string) => {
   logger.info('starting shutdown, got signal ' + signal);
@@ -35,12 +36,14 @@ const gracefulShutdownAsync =
   (
     importManager: ImportController,
     taskStatusManager: TasksManager,
+    nudgeManager: NudgeManager,
     messenger: Messenger,
   ) =>
   async () => {
     await Promise.all([
       importManager.close(),
       taskStatusManager.close(),
+      nudgeManager.close(),
       messenger.close(),
       AnalyticsManager.close(),
     ]);
@@ -80,6 +83,8 @@ const startApp = async () => {
 
   const taskStatusManager = new TasksManager(allQueueCfg, pgStore);
 
+  const nudgeManager = new NudgeManager(allQueueCfg, pgStore);
+
   const importController = new ImportController(allQueueCfg, pgStore);
 
   const messenger = new Messenger(allQueueCfg, pgStore);
@@ -103,6 +108,10 @@ const startApp = async () => {
   if (!ready) {
     throw new Error('TaskStatusManager is not ready');
   }
+  ready = await nudgeManager.isReady();
+  if (!ready) {
+    throw new Error('NudgeManager is not ready');
+  }
   ready = await messenger.isReady();
   if (!ready) {
     throw new Error('Messenger is not ready');
@@ -124,7 +133,12 @@ const startApp = async () => {
   process.on('SIGTERM', shutdownHandler);
   process.on(
     'beforeExit',
-    gracefulShutdownAsync(importController, taskStatusManager, messenger),
+    gracefulShutdownAsync(
+      importController,
+      taskStatusManager,
+      nudgeManager,
+      messenger,
+    ),
   );
 };
 

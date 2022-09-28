@@ -7,6 +7,7 @@ import {
   ViewAction,
 } from '../../../slackbot/common/types';
 import { AnalyticsManager } from '../analytics/analytics-manager';
+import { ConvStore } from '../db/conv-store';
 import { TaskView } from '../tasks/view';
 import { AcknowledgementStatus, ITaskViewProps } from '../tasks/view/types';
 
@@ -70,11 +71,22 @@ export const updateTaskAndSendEvent = async (
     ...viewOverrides,
   });
 
-  await client.chat.update({
+  const updatedMsg = await client.chat.update({
     ts: messageTs,
     channel: channelId,
     blocks: taskView.blocks,
   });
+
+  if (updatedMsg && updatedMsg.ok && updatedMsg.ts) {
+    await ConvStore.set(
+      {
+        taskId: task.id,
+        baseOrgId: organizationId,
+        slackUserId: channelId,
+      },
+      updatedMsg.ts,
+    );
+  }
 
   sendEvent(
     client,

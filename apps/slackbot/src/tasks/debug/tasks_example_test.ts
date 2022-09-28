@@ -1,9 +1,7 @@
 import { Task, User } from '@base/oapigen';
-import { TaskStatusTriggerer } from './triggerer_tester';
+import { TriggerTester } from './triggerer_tester';
 // TODO remove function
-export const runTestExample = async (
-  taskStatusTriggerer: TaskStatusTriggerer,
-) => {
+export const runTestExample = async (triggerTester: TriggerTester) => {
   if (!['development', 'local'].includes(process.env.ENV || 'local')) {
     console.log(`skipping test status message in env ${process.env.ENV}`);
     return;
@@ -161,7 +159,8 @@ export const runTestExample = async (
 
   // for (let i = 0; i < 5; i++) {
   //   await taskStatusTriggerer.addTaskToQueue(assignee1, task);
-  await taskStatusTriggerer.addTaskToQueue(assignee2, task2, true);
+  await triggerTester.addTaskToQueue(assignee2, task2, true);
+  //await triggerTester.addNudgeToQueue({ comment: 'hi', taskId: task2.id, userToNudgeId: assignee2.id }, assignee2);
   //   // await taskStatusTriggerer.addTaskToQueue(assignee3, task);
   // }
 };
@@ -177,6 +176,6 @@ export const runDebugMessage = async () => {
     prefix: `{base:queues:${process.env.ENV || 'local'}}`,
   };
 
-  const taskStatusTriggerer = new TaskStatusTriggerer(allQueueCfg);
+  const taskStatusTriggerer = new TriggerTester(allQueueCfg);
   runTestExample(taskStatusTriggerer);
 };

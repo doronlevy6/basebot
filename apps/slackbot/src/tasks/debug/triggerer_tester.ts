@@ -1,12 +1,14 @@
 import { logger } from '@base/logger';
-import { Task, User } from '@base/oapigen';
+import { CreateNudgeMessageDto, Task, User } from '@base/oapigen';
 import { createQueue, IQueueConfig, QueueWrapper } from '@base/queues';
 
-export class TaskStatusTriggerer {
+export class TriggerTester {
   private taskStatusQueue: QueueWrapper;
+  private nudegQueue: QueueWrapper;
 
   constructor(queueCfg: IQueueConfig) {
     this.taskStatusQueue = createQueue('taskStatus', queueCfg);
+    this.nudegQueue = createQueue('slackNudge', queueCfg);
   }
 
   async isReady(): Promise<boolean> {
@@ -16,6 +18,7 @@ export class TaskStatusTriggerer {
     for (let i = 0; i < 10; i++) {
       try {
         await this.taskStatusQueue.queue.getWorkers();
+        await this.nudegQueue.queue.getWorkers();
         return true;
       } catch (error) {
         logger.error(`error pinging the queues: ${error}`);
@@ -29,6 +32,8 @@ export class TaskStatusTriggerer {
   async close() {
     await this.taskStatusQueue.queue.close();
     await this.taskStatusQueue.scheduler.close();
+    await this.nudegQueue.queue.close();
+    await this.nudegQueue.scheduler.close();
   }
 
   async addTaskToQueue(user: User, task: Task, firstTimeAsking: boolean) {
@@ -36,6 +41,15 @@ export class TaskStatusTriggerer {
       user: user,
       task: task,
       firstTimeAsking: firstTimeAsking,
+    });
+  }
+
+  async addNudgeToQueue(nudgeDto: CreateNudgeMessageDto, userToNudge: User) {
+    await this.nudegQueue.queue.add('slackNudge', {
+      userToNudgeEmail: userToNudge.email,
+      organizationId: userToNudge.organizationId,
+      comment: nudgeDto.comment,
+      taskId: nudgeDto.taskId,
     });
   }
 }

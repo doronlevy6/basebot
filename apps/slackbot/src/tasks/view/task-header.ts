@@ -69,7 +69,7 @@ const TaskCreatorAndOwnerHeaderText = (props: ITaskViewProps): string => {
 };
 
 const TaskCreatorAndOwnerHeaderBlockText = (): string => {
-  return `You will now be able monitor everything that is happening with this task without nagging anyone. Notice that you are the owner of this task`;
+  return `You will now be able monitor everything that is happening with this task without nagging anyone. Notice that you are the owner of this task.`;
 };
 
 const TaskOwnerHeaderText = ({ assignee, creator }: ITaskViewProps): string => {

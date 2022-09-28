@@ -391,6 +391,7 @@ export const CollateralTypeEnum = {
     File: 'file',
     Ticket: 'ticket',
     Calendar: 'calendar',
+    Code: 'code',
     Unknown: 'unknown'
 } as const;
 
@@ -452,6 +453,31 @@ export interface ConvertDraftsResponseDto {
      * @memberof ConvertDraftsResponseDto
      */
     'tasks'?: Array<Task>;
+}
+/**
+ * 
+ * @export
+ * @interface CreateNudgeMessageDto
+ */
+export interface CreateNudgeMessageDto {
+    /**
+     * 
+     * @type {string}
+     * @memberof CreateNudgeMessageDto
+     */
+    'userToNudgeId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof CreateNudgeMessageDto
+     */
+    'taskId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof CreateNudgeMessageDto
+     */
+    'comment': string;
 }
 /**
  * 
@@ -997,6 +1023,7 @@ export const EnrichedRecentActivityTypeEnum = {
     TaskPostponed: 'task_postponed',
     TicketAdded: 'ticket_added',
     TicketPostponed: 'ticket_postponed',
+    CalendarEventAdded: 'calendar_event_added',
     ContributorsAdded: 'contributors_added',
     ContributorsRemoved: 'contributors_removed',
     OwnerSet: 'owner_set',
@@ -1586,7 +1613,10 @@ export const LinkCollateralGroupEnum = {
     Presentation: 'presentation',
     Spreadsheet: 'spreadsheet',
     NonSpecific: 'non_specific',
-    Unknown: 'unknown'
+    Unknown: 'unknown',
+    Repository: 'repository',
+    PullRequest: 'pull_request',
+    Issue: 'issue'
 } as const;
 
 export type LinkCollateralGroupEnum = typeof LinkCollateralGroupEnum[keyof typeof LinkCollateralGroupEnum];
@@ -1671,6 +1701,43 @@ export interface MicroUser {
      * @memberof MicroUser
      */
     'displayName': string;
+}
+/**
+ * 
+ * @export
+ * @interface NudgeMessageDto
+ */
+export interface NudgeMessageDto {
+    /**
+     * 
+     * @type {string}
+     * @memberof NudgeMessageDto
+     */
+    'organizationId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof NudgeMessageDto
+     */
+    'userToNudgeEmail': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof NudgeMessageDto
+     */
+    'actionUserEmail': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof NudgeMessageDto
+     */
+    'taskId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof NudgeMessageDto
+     */
+    'comment': string;
 }
 /**
  * 
@@ -1912,6 +1979,7 @@ export const RecentActivityTypeEnum = {
     TaskPostponed: 'task_postponed',
     TicketAdded: 'ticket_added',
     TicketPostponed: 'ticket_postponed',
+    CalendarEventAdded: 'calendar_event_added',
     ContributorsAdded: 'contributors_added',
     ContributorsRemoved: 'contributors_removed',
     OwnerSet: 'owner_set',
@@ -3940,6 +4008,45 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
                 options: localVarRequestOptions,
             };
         },
+        /**
+         * 
+         * @param {CreateNudgeMessageDto} createNudgeMessageDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        messengerControllerCreate: async (createNudgeMessageDto: CreateNudgeMessageDto, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'createNudgeMessageDto' is not null or undefined
+            assertParamExists('messengerControllerCreate', 'createNudgeMessageDto', createNudgeMessageDto)
+            const localVarPath = `/messenger/nudge`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication bearer required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(createNudgeMessageDto, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
     }
 };
 
@@ -3968,6 +4075,16 @@ export const DefaultApiFp = function(configuration?: Configuration) {
             const localVarAxiosArgs = await localVarAxiosParamCreator.healthControllerCheck(options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
+        /**
+         * 
+         * @param {CreateNudgeMessageDto} createNudgeMessageDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async messengerControllerCreate(createNudgeMessageDto: CreateNudgeMessageDto, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.messengerControllerCreate(createNudgeMessageDto, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
     }
 };
 
@@ -3993,6 +4110,15 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          */
         healthControllerCheck(options?: any): AxiosPromise<HealthControllerCheck200Response> {
             return localVarFp.healthControllerCheck(options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {CreateNudgeMessageDto} createNudgeMessageDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        messengerControllerCreate(createNudgeMessageDto: CreateNudgeMessageDto, options?: any): AxiosPromise<void> {
+            return localVarFp.messengerControllerCreate(createNudgeMessageDto, options).then((request) => request(axios, basePath));
         },
     };
 };
@@ -4022,6 +4148,17 @@ export class DefaultApi extends BaseAPI {
      */
     public healthControllerCheck(options?: AxiosRequestConfig) {
         return DefaultApiFp(this.configuration).healthControllerCheck(options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {CreateNudgeMessageDto} createNudgeMessageDto 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApi
+     */
+    public messengerControllerCreate(createNudgeMessageDto: CreateNudgeMessageDto, options?: AxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).messengerControllerCreate(createNudgeMessageDto, options).then((request) => request(this.axios, this.basePath));
     }
 }
 
@@ -4644,6 +4781,45 @@ export const MobileApiAxiosParamCreator = function (configuration?: Configuratio
                 options: localVarRequestOptions,
             };
         },
+        /**
+         * 
+         * @param {CreateNudgeMessageDto} createNudgeMessageDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        mobileBffControllerNudge: async (createNudgeMessageDto: CreateNudgeMessageDto, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'createNudgeMessageDto' is not null or undefined
+            assertParamExists('mobileBffControllerNudge', 'createNudgeMessageDto', createNudgeMessageDto)
+            const localVarPath = `/mobile/messenger/nudge`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication bearer required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(createNudgeMessageDto, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
     }
 };
 
@@ -4696,6 +4872,16 @@ export const MobileApiFp = function(configuration?: Configuration) {
             const localVarAxiosArgs = await localVarAxiosParamCreator.mobileBffControllerMyTasks(limit, offset, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
+        /**
+         * 
+         * @param {CreateNudgeMessageDto} createNudgeMessageDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async mobileBffControllerNudge(createNudgeMessageDto: CreateNudgeMessageDto, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.mobileBffControllerNudge(createNudgeMessageDto, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
     }
 };
 
@@ -4743,6 +4929,15 @@ export const MobileApiFactory = function (configuration?: Configuration, basePat
          */
         mobileBffControllerMyTasks(limit?: number, offset?: number, options?: any): AxiosPromise<Array<SlimPersonalizedTask>> {
             return localVarFp.mobileBffControllerMyTasks(limit, offset, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {CreateNudgeMessageDto} createNudgeMessageDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        mobileBffControllerNudge(createNudgeMessageDto: CreateNudgeMessageDto, options?: any): AxiosPromise<void> {
+            return localVarFp.mobileBffControllerNudge(createNudgeMessageDto, options).then((request) => request(axios, basePath));
         },
     };
 };
@@ -4798,6 +4993,17 @@ export class MobileApi extends BaseAPI {
      */
     public mobileBffControllerMyTasks(limit?: number, offset?: number, options?: AxiosRequestConfig) {
         return MobileApiFp(this.configuration).mobileBffControllerMyTasks(limit, offset, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {CreateNudgeMessageDto} createNudgeMessageDto 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof MobileApi
+     */
+    public mobileBffControllerNudge(createNudgeMessageDto: CreateNudgeMessageDto, options?: AxiosRequestConfig) {
+        return MobileApiFp(this.configuration).mobileBffControllerNudge(createNudgeMessageDto, options).then((request) => request(this.axios, this.basePath));
     }
 }
 

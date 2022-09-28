@@ -16,6 +16,7 @@ import {
 } from '@slack/web-api';
 import { Job, Worker } from 'bullmq';
 import { AnalyticsManager } from '../analytics/analytics-manager';
+import { ConvStore } from '../db/conv-store';
 import { PgInstallationStore } from '../installations/installationStore';
 import { SlackMessageSenderMetadata } from './types';
 import { TaskView } from './view';
@@ -88,20 +89,29 @@ export class TasksManager {
 
   private async sendMessage(job: Job<SlackMessageSenderMetadata>) {
     try {
-      logger.debug({ msg: 'Sending slack msg', c: job.data.channelId, job });
+      const { channelId, taskId, organizationId, text, blocks } = job.data;
+      logger.debug({ msg: 'Sending slack msg', c: channelId, job });
 
       const installation =
-        await this.installationStore.fetchInstallationByBaseId(
-          job.data.organizationId,
-        );
+        await this.installationStore.fetchInstallationByBaseId(organizationId);
       const client = new WebClient(installation.bot?.token);
 
-      await client.chat.postMessage({
-        channel: job.data.channelId,
-        text: job.data.text,
-        blocks: job.data.blocks,
+      const postedMsg = await client.chat.postMessage({
+        channel: channelId,
+        text: text,
+        blocks: blocks,
       });
 
+      if (postedMsg && postedMsg.ok && postedMsg.ts) {
+        await ConvStore.set(
+          {
+            taskId,
+            baseOrgId: organizationId,
+            slackUserId: channelId,
+          },
+          postedMsg.ts,
+        );
+      }
       this.sendAnalyticsEvent(job.data);
       logger.info({ msg: 'send task status request', job: job.data });
     } catch (e) {
@@ -178,6 +188,7 @@ export class TasksManager {
       ...message,
       userEmail: job.data.user.email,
     } as SlackMessageSenderMetadata);
+
     logger.info({ msg: 'build task status request', data: job.data });
   }
 }
