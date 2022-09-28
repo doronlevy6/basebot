@@ -1,8 +1,8 @@
-import { SlackActionWrapper } from '../slack/types';
-import { Message } from '@slack/web-api/dist/response/ConversationsRepliesResponse';
-import { UserLink } from '../slack/components/user-link';
 import axios from 'axios';
 import { addToChannelInstructions } from '../slack/add-to-channel';
+import { UserLink } from '../slack/components/user-link';
+import { SlackActionWrapper } from '../slack/types';
+import { SlackMessage } from './types';
 import { parseMessagesForSummary } from './utils';
 
 export const threadSummarizationHandler = async ({
@@ -17,7 +17,7 @@ export const threadSummarizationHandler = async ({
 
     const messageTs = payload.message.ts;
     const channelId = payload.channel.id;
-    const messageReplies: Message[] = [];
+    const messageReplies: SlackMessage[] = [];
 
     if (!payload.message.user && !payload.message['bot_id']) {
       throw new Error('cannot extract user from empty user');

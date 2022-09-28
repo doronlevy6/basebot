@@ -1,10 +1,12 @@
 import { WebClient } from '@slack/web-api';
-import { Message } from '@slack/web-api/dist/response/ChannelsRepliesResponse';
 import { parseSlackMrkdwn } from '../slack/parser';
 import { extractMessageText } from '../slack/message-text';
+import { SlackMessage } from './types';
+
+const MAX_REPLIES_TO_FETCH = 20;
 
 export const parseMessagesForSummary = async (
-  messages: Message[],
+  messages: SlackMessage[],
   client: WebClient,
 ) => {
   const messagesWithText = messages?.filter((t) => extractMessageText(t));
@@ -74,8 +76,44 @@ export const parseMessagesForSummary = async (
 
     return capitalizedName;
   }) as string[];
+
   return {
     messages: messagesTexts,
     users: userNames,
   };
+};
+
+export const enrichWithReplies = async (
+  channelId: string,
+  messages: SlackMessage[],
+  client: WebClient,
+) => {
+  const repliesPromises = messages.map((m) => {
+    if (!m.reply_count || !m.ts) {
+      return Promise.resolve([]);
+    }
+
+    return client.conversations
+      .replies({
+        channel: channelId,
+        ts: m.ts,
+        limit: MAX_REPLIES_TO_FETCH,
+      })
+      .then(({ messages }) => {
+        if (!messages) {
+          return [];
+        }
+
+        const repliesWithoutParent = messages.filter(
+          (reply) => reply.ts !== m.ts,
+        );
+        return repliesWithoutParent;
+      });
+  });
+
+  const replies = await Promise.all(repliesPromises);
+  return replies.map((repliesArray, i) => ({
+    message: messages[i],
+    replies: repliesArray,
+  }));
 };

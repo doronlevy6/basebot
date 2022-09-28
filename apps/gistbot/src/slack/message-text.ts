@@ -1,10 +1,10 @@
 import {
   Attachment,
   Block,
-  Message,
 } from '@slack/web-api/dist/response/ConversationsRepliesResponse';
+import { SlackMessage } from '../summaries/types';
 
-export function extractMessageText(message: Message): string {
+export function extractMessageText(message: SlackMessage): string {
   let text = '';
 
   if (message.text) {

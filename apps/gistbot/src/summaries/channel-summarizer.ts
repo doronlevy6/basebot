@@ -2,7 +2,8 @@ import axios from 'axios';
 import { addToChannelInstructions } from '../slack/add-to-channel';
 import { UserLink } from '../slack/components/user-link';
 import { SlackSlashCommandWrapper } from '../slack/types';
-import { parseMessagesForSummary } from './utils';
+import { enrichWithReplies, parseMessagesForSummary } from './utils';
+import { SlackMessage } from './types';
 
 const MAX_MESSAGES_TO_FETCH = 50;
 
@@ -31,13 +32,23 @@ export const channelSummarizationHandler = async ({
       throw new Error(`conversation history error: ${error} ${ok} ${messages}`);
     }
 
-    const { messages: messagesTexts, users } = await parseMessagesForSummary(
+    const messagesWithReplies = await enrichWithReplies(
+      channel_id,
       messages,
+      client,
+    );
+    const flattenArray: SlackMessage[] = [];
+    messagesWithReplies.forEach((item) =>
+      flattenArray.push(...[item.message, ...item.replies]),
+    );
+
+    const { messages: messagesTexts, users } = await parseMessagesForSummary(
+      flattenArray,
       client,
     );
 
     logger.info(
-      `Attempting to summarize thread with ${messagesTexts.length} messages and ${users.length} users`,
+      `Attempting to summarize channel with ${messages.length} messages (${messagesTexts.length} with replies) and ${users.length} users`,
     );
 
     const modelRes = await axios.post(
@@ -51,14 +62,24 @@ export const channelSummarizationHandler = async ({
       },
     );
 
-    if (modelRes.status >= 200 && modelRes.status <= 299) {
-      await respond({
-        response_type: 'ephemeral',
-        text: `${UserLink(user_id)} here's the summary you requested:\n\n${
-          modelRes.data['data']
-        }`,
-      });
+    const modekResOk = modelRes.status >= 200 && modelRes.status <= 299;
+    const textResponse: string = modelRes.data?.data;
+
+    logger.info({
+      msg: 'Model returned with response',
+      status: modelRes.status,
+      data: modelRes.data,
+    });
+
+    if (!modekResOk || !textResponse?.length) {
+      throw new Error('Invalid response');
     }
+
+    await respond({
+      text: `${UserLink(
+        user_id,
+      )} here's the summary you requested:\n\n${textResponse}`,
+    });
   } catch (error) {
     logger.error(`error in thread summarization: ${error.stack}`);
 
