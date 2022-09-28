@@ -1,5 +1,3 @@
-import { InMemoryConvStore } from './in-memory-conv-store';
-
 export interface IConvStore {
   get(key: ConvKey): Promise<string | undefined>;
   set(key: ConvKey, value: string): Promise<void>;
@@ -14,5 +12,3 @@ export class ConvKey {
 export const generateKey = (key: ConvKey) => {
   return `${key.taskId}:${key.baseOrgId}:${key.slackUserId}`;
 };
-
-export const ConvStore = new InMemoryConvStore();

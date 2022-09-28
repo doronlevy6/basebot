@@ -7,7 +7,7 @@ import {
   ViewAction,
 } from '../../../slackbot/common/types';
 import { AnalyticsManager } from '../analytics/analytics-manager';
-import { ConvStore } from '../db/conv-store';
+import { IConvStore } from '../db/conv-store';
 import { TaskView } from '../tasks/view';
 import { AcknowledgementStatus, ITaskViewProps } from '../tasks/view/types';
 
@@ -24,6 +24,7 @@ export const updateTaskAndSendEvent = async (
     channelId: string;
   },
   analytics: { action: string; data?: Record<string, string> },
+  convStore: IConvStore,
   viewOverrides?: Partial<ITaskViewProps>,
 ) => {
   const { organizationId, assigneeId, task, channelId, messageTs } = data;
@@ -78,7 +79,7 @@ export const updateTaskAndSendEvent = async (
   });
 
   if (updatedMsg && updatedMsg.ok && updatedMsg.ts) {
-    await ConvStore.set(
+    await convStore.set(
       {
         taskId: task.id,
         baseOrgId: organizationId,

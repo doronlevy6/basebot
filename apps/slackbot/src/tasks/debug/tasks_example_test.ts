@@ -160,7 +160,13 @@ export const runTestExample = async (triggerTester: TriggerTester) => {
   // for (let i = 0; i < 5; i++) {
   //   await taskStatusTriggerer.addTaskToQueue(assignee1, task);
   await triggerTester.addTaskToQueue(assignee2, task2, true);
-  //await triggerTester.addNudgeToQueue({ comment: 'hi', taskId: task2.id, userToNudgeId: assignee2.id }, assignee2);
+  await triggerTester.addNudgeToQueue({
+    comment: 'hi',
+    taskId: task2.id,
+    userToNudgeEmail: assignee2.email,
+    actionUserEmail: creator.email,
+    organizationId: assignee2.organizationId,
+  });
   //   // await taskStatusTriggerer.addTaskToQueue(assignee3, task);
   // }
 };

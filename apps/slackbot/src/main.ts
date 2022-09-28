@@ -18,6 +18,7 @@ import { registerSlackbotEvents } from './routes/router';
 import { createApp } from './slack-bolt-app';
 import { TasksManager } from './tasks/manager';
 import { NudgeManager } from './nudge/nudge-manager';
+import { SqlConvStore } from './db/sql-conv-store';
 
 const gracefulShutdown = (server: Server) => (signal: string) => {
   logger.info('starting shutdown, got signal ' + signal);
@@ -60,7 +61,7 @@ const startApp = async () => {
     prefix: `{base:queues:${process.env.ENV || 'local'}}`,
   };
 
-  const pgStore = new PgInstallationStore(metricsReporter, {
+  const pgConfig = {
     host: process.env.DB_HOST || 'localhost',
     port: parseInt(process.env.DB_PORT || '5432', 10),
     user: process.env.DB_USER || '',
@@ -70,7 +71,11 @@ const startApp = async () => {
       process.env.ENV ||
         'local' /* We are defaulting to local env to be explicit */,
     ),
-  });
+  };
+
+  const pgStore = new PgInstallationStore(metricsReporter, pgConfig);
+
+  const sqlConvStore = new SqlConvStore(pgConfig);
 
   const baseApi = new SlackbotApi(
     new Configuration({
@@ -81,9 +86,13 @@ const startApp = async () => {
 
   AnalyticsManager.initialize(allQueueCfg);
 
-  const taskStatusManager = new TasksManager(allQueueCfg, pgStore);
+  const taskStatusManager = new TasksManager(
+    allQueueCfg,
+    pgStore,
+    sqlConvStore,
+  );
 
-  const nudgeManager = new NudgeManager(allQueueCfg, pgStore);
+  const nudgeManager = new NudgeManager(allQueueCfg, pgStore, sqlConvStore);
 
   const importController = new ImportController(allQueueCfg, pgStore);
 
@@ -99,6 +108,10 @@ const startApp = async () => {
   let ready = await pgStore.isReady();
   if (!ready) {
     throw new Error('PgStore is not ready');
+  }
+  ready = await sqlConvStore.isReady();
+  if (!ready) {
+    throw new Error('SqlConvStore is not ready');
   }
   ready = await importController.isReady();
   if (!ready) {
@@ -122,7 +135,7 @@ const startApp = async () => {
     logger.info(event);
   });
 
-  registerSlackbotEvents(slackApp, baseApi);
+  registerSlackbotEvents(slackApp, baseApi, sqlConvStore);
 
   const port = process.env['PORT'] || 3000;
   const server = await slackApp.start(port);

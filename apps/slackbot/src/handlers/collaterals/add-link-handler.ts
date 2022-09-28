@@ -2,13 +2,15 @@ import { logger } from '@base/logger';
 import { SlackbotApiApi } from '@base/oapigen';
 import validator from 'validator';
 import { ViewAction } from '../../../common/types';
+import { IConvStore } from '../../db/conv-store';
 import { SlackBotRoutes } from '../../routes/router';
 import { updateTaskAndSendEvent } from '../update-task-message';
 import { tryDetectLinkUrl } from './link-detector';
 import { showOauthModalIfNeeded } from './oauth-modal';
 
 export const addLinkHandler =
-  (baseApi: SlackbotApiApi) => async (params: ViewAction) => {
+  (baseApi: SlackbotApiApi, convStore: IConvStore) =>
+  async (params: ViewAction) => {
     const { body, ack, view, client } = params;
 
     try {
@@ -60,6 +62,7 @@ export const addLinkHandler =
           channelId,
         },
         { action: 'status_update' },
+        convStore,
         { extraCollaterals: [linkUrl] },
       );
 

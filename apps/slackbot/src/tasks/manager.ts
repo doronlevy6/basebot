@@ -16,7 +16,7 @@ import {
 } from '@slack/web-api';
 import { Job, Worker } from 'bullmq';
 import { AnalyticsManager } from '../analytics/analytics-manager';
-import { ConvStore } from '../db/conv-store';
+import { IConvStore } from '../db/conv-store';
 import { PgInstallationStore } from '../installations/installationStore';
 import { SlackMessageSenderMetadata } from './types';
 import { TaskView } from './view';
@@ -34,10 +34,16 @@ export class TasksManager {
   private messageSenderWorker: Worker;
   private messageSenderQueue: QueueWrapper;
   private installationStore: PgInstallationStore;
+  private convStore: IConvStore;
 
-  constructor(queueCfg: IQueueConfig, installationStore: PgInstallationStore) {
+  constructor(
+    queueCfg: IQueueConfig,
+    installationStore: PgInstallationStore,
+    convStore: IConvStore,
+  ) {
     this.queueCfg = queueCfg;
     this.installationStore = installationStore;
+    this.convStore = convStore;
   }
 
   async isReady(): Promise<boolean> {
@@ -103,7 +109,7 @@ export class TasksManager {
       });
 
       if (postedMsg && postedMsg.ok && postedMsg.ts) {
-        await ConvStore.set(
+        await this.convStore.set(
           {
             taskId,
             baseOrgId: organizationId,

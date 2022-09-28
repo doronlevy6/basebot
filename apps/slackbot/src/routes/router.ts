@@ -1,5 +1,6 @@
 import { SlackbotApiApi as SlackbotApi } from '@base/oapigen';
 import { App } from '@slack/bolt';
+import { IConvStore } from '../db/conv-store';
 import { addLinkHandler } from '../handlers/collaterals/add-link-handler';
 import { AddLinkModal } from '../handlers/collaterals/add-link-modal';
 import { addDiscussionHandler } from '../handlers/discussions/add-discussion-handler';
@@ -24,9 +25,16 @@ export enum SlackBotRoutes {
   SUMMARIZE_THREAD = 'summarize-thread',
 }
 
-export const registerSlackbotEvents = (app: App, baseApi: SlackbotApi) => {
-  const eventsHandler = new EventsHandler(baseApi);
-  app.view(SlackBotRoutes.TASK_STATUS_SUBMIT, taskStatusUpdateHandler(baseApi));
+export const registerSlackbotEvents = (
+  app: App,
+  baseApi: SlackbotApi,
+  convStore: IConvStore,
+) => {
+  const eventsHandler = new EventsHandler(baseApi, convStore);
+  app.view(
+    SlackBotRoutes.TASK_STATUS_SUBMIT,
+    taskStatusUpdateHandler(baseApi, convStore),
+  );
   app.action(/task-acknowledge.*/, eventsHandler.handleTaskAcknowledge);
   app.shortcut(SlackBotRoutes.CREATE_TASK, eventsHandler.handleCreateTask);
   app.shortcut(SlackBotRoutes.ADD_DISCUSSION, AddDiscussionModal(baseApi));
@@ -38,7 +46,7 @@ export const registerSlackbotEvents = (app: App, baseApi: SlackbotApi) => {
   app.view(SlackBotRoutes.CREATE_TASKS_SUBMIT, eventsHandler.submitCreateTasks);
   app.view(SlackBotRoutes.OAUTH_CONNECT, onlyAck);
   app.action(SlackBotRoutes.ADD_TASK_LINK_MODAL, AddLinkModal());
-  app.view(SlackBotRoutes.ADD_TASK_LINK, addLinkHandler(baseApi));
+  app.view(SlackBotRoutes.ADD_TASK_LINK, addLinkHandler(baseApi, convStore));
   app.action(SlackBotRoutes.TASK_STATUS_MODAL, TaskStatusUpdateModal());
 
   // This is the global action handler, which will match all unmatched actions

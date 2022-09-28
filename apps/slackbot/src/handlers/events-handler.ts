@@ -9,15 +9,18 @@ import {
   ViewAction,
 } from '../../../slackbot/common/types';
 import { AnalyticsManager } from '../analytics/analytics-manager';
+import { IConvStore } from '../db/conv-store';
 import { AcknowledgementStatus } from '../tasks/view/types';
 import { UserLink } from '../tasks/view/user-link';
 import { updateTaskAndSendEvent } from './update-task-message';
 
 export class EventsHandler {
   private baseApi: SlackbotApi;
+  private convStore: IConvStore;
 
-  constructor(baseApi: SlackbotApi) {
+  constructor(baseApi: SlackbotApi, convStore: IConvStore) {
     this.baseApi = baseApi;
+    this.convStore = convStore;
   }
 
   handleTaskAcknowledge = async (params: BlockButtonWrapper) => {
@@ -65,6 +68,7 @@ export class EventsHandler {
           messageTs: message.ts,
         },
         { action: 'task_acknowledged' },
+        this.convStore,
         { acknowledgementStatus: actionId as AcknowledgementStatus },
       );
     } catch (e) {

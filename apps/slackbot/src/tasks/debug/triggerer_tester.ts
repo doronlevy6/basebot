@@ -1,5 +1,5 @@
 import { logger } from '@base/logger';
-import { CreateNudgeMessageDto, Task, User } from '@base/oapigen';
+import { NudgeMessageDto, Task, User } from '@base/oapigen';
 import { createQueue, IQueueConfig, QueueWrapper } from '@base/queues';
 
 export class TriggerTester {
@@ -44,10 +44,11 @@ export class TriggerTester {
     });
   }
 
-  async addNudgeToQueue(nudgeDto: CreateNudgeMessageDto, userToNudge: User) {
+  async addNudgeToQueue(nudgeDto: NudgeMessageDto) {
     await this.nudegQueue.queue.add('slackNudge', {
-      userToNudgeEmail: userToNudge.email,
-      organizationId: userToNudge.organizationId,
+      userToNudgeEmail: nudgeDto.userToNudgeEmail,
+      actionUserEmail: nudgeDto.actionUserEmail,
+      organizationId: nudgeDto.organizationId,
       comment: nudgeDto.comment,
       taskId: nudgeDto.taskId,
     });

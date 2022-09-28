@@ -1,12 +1,14 @@
 import { logger } from '@base/logger';
 import { SlackbotApiApi } from '@base/oapigen';
 import { ViewAction } from '../../../common/types';
+import { IConvStore } from '../../db/conv-store';
 import { SlackBotRoutes } from '../../routes/router';
 import { IModalMetadata } from '../types';
 import { updateTaskAndSendEvent } from '../update-task-message';
 
 export const taskStatusUpdateHandler =
-  (baseApi: SlackbotApiApi) => async (params: ViewAction) => {
+  (baseApi: SlackbotApiApi, convStore: IConvStore) =>
+  async (params: ViewAction) => {
     const { body, ack, view } = params;
     await ack();
 
@@ -43,6 +45,7 @@ export const taskStatusUpdateHandler =
           channelId,
         },
         { action: 'status_update', data: { status } },
+        convStore,
       );
     } catch (err) {
       logger.error(`Failed handling status update: ${err}`);

@@ -4,17 +4,23 @@ import { createQueueWorker, IQueueConfig } from '@base/queues';
 import { PgInstallationStore } from '../installations/installationStore';
 import { NudgeMessageDto } from '@base/oapigen';
 import { WebClient } from '@slack/web-api';
-import { ConvStore } from '../db/conv-store';
+import { IConvStore } from '../db/conv-store';
 import { UserLink } from '../tasks/view/user-link';
 
 export class NudgeManager {
   private queueCfg: IQueueConfig;
   private nudgeWorker: Worker;
   private installationStore: PgInstallationStore;
+  private convStore: IConvStore;
 
-  constructor(queueCfg: IQueueConfig, installationStore: PgInstallationStore) {
+  constructor(
+    queueCfg: IQueueConfig,
+    installationStore: PgInstallationStore,
+    convStore: IConvStore,
+  ) {
     this.queueCfg = queueCfg;
     this.installationStore = installationStore;
+    this.convStore = convStore;
   }
 
   async isReady(): Promise<boolean> {
@@ -79,7 +85,7 @@ export class NudgeManager {
         );
       }
 
-      const messageTs = await ConvStore.get({
+      const messageTs = await this.convStore.get({
         taskId,
         baseOrgId: organizationId,
         slackUserId: nudgeUserRes.user.id,
@@ -111,10 +117,10 @@ export class NudgeManager {
   generateNudgeMsgText = (actionUserSlackId: string, comment: string) => {
     let text = `${UserLink(
       actionUserSlackId,
-    )}, requested an update on this task.`;
+    )}, requested an update on this task`;
 
     if (comment) {
-      text += `\n${comment}`;
+      text += `:\n${comment}`;
     }
     return text;
   };
