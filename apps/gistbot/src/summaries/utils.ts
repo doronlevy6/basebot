@@ -2,6 +2,10 @@ import { WebClient } from '@slack/web-api';
 import { parseSlackMrkdwn } from '../slack/parser';
 import { extractMessageText } from '../slack/message-text';
 import { SlackMessage } from './types';
+import {
+  approximatePromptCharacterCount,
+  MAX_PROMPT_CHARACTER_COUNT,
+} from './models/prompt-character-calculator';
 
 const MAX_REPLIES_TO_FETCH = 20;
 
@@ -77,6 +81,21 @@ export const parseMessagesForSummary = async (
     return capitalizedName;
   }) as string[];
 
+  let cc = approximatePromptCharacterCount({
+    messages: messagesTexts,
+    names: userNames,
+    titles: [],
+  });
+  while (cc > MAX_PROMPT_CHARACTER_COUNT) {
+    messagesTexts.shift();
+    userNames.shift();
+    cc = approximatePromptCharacterCount({
+      messages: messagesTexts,
+      names: userNames,
+      titles: [],
+    });
+  }
+
   return {
     messages: messagesTexts,
     users: userNames,
@@ -116,4 +135,14 @@ export const enrichWithReplies = async (
     message: messages[i],
     replies: repliesArray,
   }));
+};
+
+export const sortSlackMessages = (m1: SlackMessage, m2: SlackMessage) => {
+  if ((m1.ts as string) < (m2.ts as string)) {
+    return -1;
+  }
+  if ((m2.ts as string) < (m1.ts as string)) {
+    return 1;
+  }
+  return 0;
 };

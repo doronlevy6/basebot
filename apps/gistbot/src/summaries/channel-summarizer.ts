@@ -2,7 +2,10 @@ import { addToChannelInstructions } from '../slack/add-to-channel';
 import { UserLink } from '../slack/components/user-link';
 import { Summary } from '../slack/components/summary';
 import { SlackSlashCommandWrapper } from '../slack/types';
-import { /*enrichWithReplies,*/ parseMessagesForSummary } from './utils';
+import {
+  /*enrichWithReplies,*/ parseMessagesForSummary,
+  sortSlackMessages,
+} from './utils';
 import { SlackMessage } from './types';
 import { ThreadSummaryModel } from './models/thread-summary.model';
 import { AnalyticsManager } from '../analytics/manager';
@@ -48,6 +51,9 @@ export const channelSummarizationHandler =
           `conversation history error: ${error} ${ok} ${messages}`,
         );
       }
+
+      // Ensure that we sort the messages oldest first (so that the model receives a conversation in order)
+      messages.sort(sortSlackMessages);
 
       // TODO: Return messages with replies when we bring in the full channel summary.
       // Since we want to return this in the coming days I'm going to leave it commented out for now.

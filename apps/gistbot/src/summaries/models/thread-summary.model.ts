@@ -1,7 +1,8 @@
 import { logger } from '@base/logger';
 import axios from 'axios';
+import { approximatePromptCharacterCount } from './prompt-character-calculator';
 
-interface ModelRequest {
+export interface ModelRequest {
   messages: string[];
   names: string[];
   titles: string[];
@@ -38,6 +39,7 @@ export class ThreadSummaryModel {
         status: res.status,
         data: res.data,
         request: data,
+        approximateTokenCount: approximatePromptCharacterCount(data),
       });
 
       if (res.status >= 300) {
