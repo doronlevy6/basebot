@@ -10,6 +10,7 @@ import { SlackMessage } from './types';
 import { ThreadSummaryModel } from './models/thread-summary.model';
 import { AnalyticsManager } from '../analytics/manager';
 import { Routes } from '../routes/router';
+import { privateChannelInstructions } from '../slack/private-channel';
 
 const MAX_MESSAGES_TO_FETCH = 100;
 
@@ -145,6 +146,30 @@ export const channelSummarizationHandler =
         );
         analyticsManager.channelSummaryFunnel({
           funnelStep: 'not_in_channel',
+          slackTeamId: payload.team_id,
+          slackUserId: payload.user_id,
+          channelId: payload.channel_id,
+        });
+        return;
+      }
+
+      if (
+        (error as Error).message.toLowerCase().includes('channel_not_found') ||
+        (error as Error).message.toLowerCase().includes('missing_scope')
+      ) {
+        await privateChannelInstructions(
+          client,
+          payload.trigger_id,
+          {
+            channelId: payload.channel_id,
+            channelName: payload.channel_name,
+            currentUser: payload.user_id,
+            teamId: payload.team_id,
+          },
+          analyticsManager,
+        );
+        analyticsManager.channelSummaryFunnel({
+          funnelStep: 'private_channel',
           slackTeamId: payload.team_id,
           slackUserId: payload.user_id,
           channelId: payload.channel_id,

@@ -1,6 +1,7 @@
 import { App } from '@slack/bolt';
 import { AnalyticsManager } from '../analytics/manager';
 import { addToChannelHandler } from '../slack/add-to-channel';
+import { privateChannelHandler } from '../slack/private-channel';
 import { channelSummaryFeedbackHandler } from '../summaries/channel-summary-feedback';
 import { ThreadSummaryModel } from '../summaries/models/thread-summary.model';
 import { threadSummarizationHandler } from '../summaries/thread-summarizer';
@@ -10,6 +11,7 @@ import { slashCommandRouter } from './slash-command-router';
 export enum Routes {
   SUMMARIZE_THREAD = 'summarize-thread',
   ADD_TO_CHANNEL_SUBMIT = 'add-to-channel-submit',
+  PRIVATE_CHANNEL_SUBMIT = 'private-channel-submit',
   THREAD_SUMMARY_FEEDBACK = 'thread-summary-feedback',
   CHANNEL_SUMMARY_FEEDBACK = 'channel-summary-feedback',
 }
@@ -25,11 +27,17 @@ export const registerBoltAppRouter = (
   );
 
   const addToChannel = addToChannelHandler(analyticsManager);
+  const privateChannel = privateChannelHandler(analyticsManager);
 
   app.view(Routes.ADD_TO_CHANNEL_SUBMIT, addToChannel);
   app.view(
     { callback_id: Routes.ADD_TO_CHANNEL_SUBMIT, type: 'view_closed' },
     addToChannel,
+  );
+  app.view(Routes.PRIVATE_CHANNEL_SUBMIT, privateChannel);
+  app.view(
+    { callback_id: Routes.PRIVATE_CHANNEL_SUBMIT, type: 'view_closed' },
+    privateChannel,
   );
   app.command(
     /gist.*/,
