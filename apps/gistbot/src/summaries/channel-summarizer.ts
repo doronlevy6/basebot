@@ -130,7 +130,7 @@ export const channelSummarizationHandler =
         },
       });
     } catch (error) {
-      logger.error(`error in thread summarization: ${error.stack}`);
+      logger.error(`error in channel summarization: ${error.stack}`);
 
       if ((error as Error).message.toLowerCase().includes('not_in_channel')) {
         await addToChannelInstructions(
