@@ -37,7 +37,7 @@ export const addToChannelInstructions = async (
       },
       title: {
         type: 'plain_text',
-        text: `I'm not a member!`,
+        text: `Add theGist to channel`,
         emoji: true,
       },
       blocks: [
@@ -45,21 +45,14 @@ export const addToChannelInstructions = async (
           type: 'section',
           text: {
             type: 'mrkdwn',
-            text: `I can only get the gist of messages in channels that I am a member of, and it looks like unfortunately, I'm not a member of #${props.channelName}.\n\nBut you're in luck! There is a very easy way to add me as a member :smile:`,
-          },
-        },
-        {
-          type: 'section',
-          text: {
-            type: 'mrkdwn',
-            text: "To a let me summarize threads and channels for you, type `/invite @GistBot` from the channel you want to add me to and I'll get started right away!",
-          },
-        },
-        {
-          type: 'section',
-          text: {
-            type: 'mrkdwn',
-            text: 'You can also add me right now to the channel you\'re currently in by clicking the big "Add me now!" button, and I\'ll go ahead and introduce myself to the team.',
+            text:
+              'I can only get the gist of messages in channels that I am a member of.' +
+              '\n' +
+              `I'm afraid it looks like I'm not a member of #${props.channelName}.` +
+              '\n\n' +
+              'Just tap the `Add me now!` button to let me in.' +
+              '\n' +
+              'You can also type `/invite @theGist` from any channel.',
           },
         },
       ],
@@ -109,7 +102,7 @@ export const addToChannelHandler =
 
       await client.chat.postMessage({
         channel: channelId,
-        text: `Hello! I'm GistBot :smile:\n\n${UserLink(
+        text: `Hello! I'm theGist :smile:\n\n${UserLink(
           currentUser,
         )} added me here to #${channelName} in order to help you all get the gist of things happening in this channel whenever you need!`,
       });

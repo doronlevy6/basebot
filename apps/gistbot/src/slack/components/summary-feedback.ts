@@ -12,7 +12,7 @@ export const SummaryFeedback = (actionId: string): StaticSelect => {
       {
         text: {
           type: 'plain_text',
-          text: 'Amazing summary, great job!',
+          text: '🤯 Amazing summary, great job!',
           emoji: true,
         },
         value: 'amazing',
@@ -20,7 +20,7 @@ export const SummaryFeedback = (actionId: string): StaticSelect => {
       {
         text: {
           type: 'plain_text',
-          text: 'Summary was OK',
+          text: '👍 Summary was OK',
           emoji: true,
         },
         value: 'ok',
@@ -28,7 +28,7 @@ export const SummaryFeedback = (actionId: string): StaticSelect => {
       {
         text: {
           type: 'plain_text',
-          text: "Summary wasn't relevant",
+          text: "😐 Summary wasn't relevant",
           emoji: true,
         },
         value: 'not_relevant',
@@ -36,7 +36,7 @@ export const SummaryFeedback = (actionId: string): StaticSelect => {
       {
         text: {
           type: 'plain_text',
-          text: 'Summary was incorrect',
+          text: '🤔 Summary was incorrect',
           emoji: true,
         },
         value: 'incorrect',
@@ -44,7 +44,7 @@ export const SummaryFeedback = (actionId: string): StaticSelect => {
       {
         text: {
           type: 'plain_text',
-          text: 'Summary was inappropriate',
+          text: '🚫 Summary was inappropriate',
           emoji: true,
         },
         value: 'inappropriate',
