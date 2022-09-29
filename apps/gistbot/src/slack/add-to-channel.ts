@@ -78,9 +78,8 @@ export const addToChannelHandler =
 
       const submitted = body.type === 'view_submission';
 
-      const { channelId, channelName, currentUser, teamId } = JSON.parse(
-        view.private_metadata,
-      ) as AddToChannelProps;
+      const props = JSON.parse(view.private_metadata) as AddToChannelProps;
+      const { channelId, currentUser, teamId } = props;
 
       analyticsManager.modalClosed({
         type: 'not_in_channel',
@@ -96,17 +95,47 @@ export const addToChannelHandler =
         return;
       }
 
-      await client.conversations.join({
-        channel: channelId,
-      });
-
-      await client.chat.postMessage({
-        channel: channelId,
-        text: `Hello! I'm theGist :smile:\n\n${UserLink(
-          currentUser,
-        )} added me here to #${channelName} in order to help you all get the gist of things happening in this channel whenever you need!`,
-      });
+      await addToChannel(client, props, analyticsManager);
     } catch (err) {
       logger.error(`Add to channel handler error: ${err.stack}`);
     }
   };
+
+export const addToChannel = async (
+  client: WebClient,
+  props: Omit<AddToChannelProps, 'channelName'>,
+  analyticsManager: AnalyticsManager,
+) => {
+  try {
+    const res = await client.conversations.join({
+      channel: props.channelId,
+    });
+
+    if (res.error || !res.ok) {
+      throw new Error(`failed to join channel: ${res.error}`);
+    }
+
+    if (res.warning === 'already_in_channel') {
+      // We skip the welcome message if the bot is already in the channel
+      // TODO: Do we want maybe an ephemeral message to the user to tell them we are in the channel already?
+      return;
+    }
+
+    analyticsManager.addedToChannel({
+      slackUserId: props.currentUser,
+      slackTeamId: props.teamId,
+      channelId: props.channelId,
+    });
+
+    await client.chat.postMessage({
+      channel: props.channelId,
+      text: `Hello! I'm theGist :smile:\n\n${UserLink(
+        props.currentUser,
+      )} added me here to <#${
+        props.channelId
+      }> in order to help you all get the gist of things happening in this channel whenever you need!`,
+    });
+  } catch (err) {
+    logger.error(`Add to channel handler error: ${err.stack}`);
+  }
+};

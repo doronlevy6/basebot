@@ -161,4 +161,25 @@ export class AnalyticsManager {
       properties: { ...extraParams, channelId },
     });
   }
+
+  addedToChannel({
+    slackUserId,
+    slackTeamId,
+    channelId,
+    extraParams,
+  }: {
+    slackUserId: string;
+    slackTeamId: string;
+    channelId: string;
+    extraParams?: ExtraParams;
+  }) {
+    this.sendEventToAnalytics({
+      eventName: `added_to_channel`,
+      slackUserId: slackUserId,
+      slackTeamId: slackTeamId,
+      internalUserId: `${slackTeamId}_${slackUserId}`,
+      timestamp: new Date(),
+      properties: { ...extraParams, channelId },
+    });
+  }
 }

@@ -1,6 +1,11 @@
 import { App } from '@slack/bolt';
 import { AnalyticsManager } from '../analytics/manager';
 import { addToChannelHandler } from '../slack/add-to-channel';
+import {
+  addToChannelFromWelcomeHandler,
+  addToChannelFromWelcomeModal,
+  addToChannelFromWelcomeModalHandler,
+} from '../slack/add-to-channel-from-welcome';
 import { privateChannelHandler } from '../slack/private-channel';
 import { channelSummaryFeedbackHandler } from '../summaries/channel-summary-feedback';
 import { ThreadSummaryModel } from '../summaries/models/thread-summary.model';
@@ -14,6 +19,9 @@ export enum Routes {
   PRIVATE_CHANNEL_SUBMIT = 'private-channel-submit',
   THREAD_SUMMARY_FEEDBACK = 'thread-summary-feedback',
   CHANNEL_SUMMARY_FEEDBACK = 'channel-summary-feedback',
+  ADD_TO_CHANNEL_FROM_WELCOME = 'add-to-channel-from-welcome',
+  ADD_TO_CHANNEL_FROM_WELCOME_MODAL = 'add-to-channel-from-welcome-modal',
+  ADD_TO_CHANNEL_FROM_WELCOME_SUBMIT = 'add-to-channel-from-welcome-submit',
 }
 
 export const registerBoltAppRouter = (
@@ -50,6 +58,19 @@ export const registerBoltAppRouter = (
   app.action(
     Routes.CHANNEL_SUMMARY_FEEDBACK,
     channelSummaryFeedbackHandler(analyticsManager),
+  );
+
+  app.action(
+    Routes.ADD_TO_CHANNEL_FROM_WELCOME,
+    addToChannelFromWelcomeHandler(analyticsManager),
+  );
+  app.view(
+    Routes.ADD_TO_CHANNEL_FROM_WELCOME_SUBMIT,
+    addToChannelFromWelcomeModal(analyticsManager),
+  );
+  app.action(
+    Routes.ADD_TO_CHANNEL_FROM_WELCOME_MODAL,
+    addToChannelFromWelcomeModalHandler(analyticsManager),
   );
 
   // This is the global action handler, which will match all unmatched actions
