@@ -1,5 +1,7 @@
 import { logger } from '@base/logger';
 import axios from 'axios';
+import { ModerationError } from '../errors/moderation-error';
+import { OpenAiModerationModel } from './openai-moderation.model';
 import { approximatePromptCharacterCount } from './prompt-character-calculator';
 
 export interface ModelRequest {
@@ -16,9 +18,11 @@ interface ModelResponse {
 
 export class ThreadSummaryModel {
   private apiEndpoint: string;
+  private moderationApi: OpenAiModerationModel;
 
   constructor() {
     this.apiEndpoint = process.env.THREAD_SUMMARY_MODEL_URL as string;
+    this.moderationApi = new OpenAiModerationModel();
   }
 
   async summarizeThread(
@@ -52,6 +56,14 @@ export class ThreadSummaryModel {
 
       if (res.data.error) {
         throw new Error(`Error response: ${res.data.error}`);
+      }
+
+      const { flagged } = await this.moderationApi.moderate({
+        input: res.data.data,
+      });
+
+      if (flagged) {
+        throw new ModerationError('moderated');
       }
 
       return res.data.data;

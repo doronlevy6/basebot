@@ -8,13 +8,21 @@ import { parseMessagesForSummary } from './utils';
 import { AnalyticsManager } from '../analytics/manager';
 import { Routes } from '../routes/router';
 import { privateChannelInstructions } from '../slack/private-channel';
+import { ModerationError } from './errors/moderation-error';
 
 export const threadSummarizationHandler =
   (
     analyticsManager: AnalyticsManager,
     threadSummaryModel: ThreadSummaryModel,
   ) =>
-  async ({ shortcut, ack, client, logger, payload }: SlackShortcutWrapper) => {
+  async ({
+    shortcut,
+    ack,
+    client,
+    logger,
+    payload,
+    respond,
+  }: SlackShortcutWrapper) => {
     try {
       await ack();
 
@@ -180,7 +188,23 @@ export const threadSummarizationHandler =
         return;
       }
 
-      await client.chat.postMessage({
+      if (error instanceof ModerationError) {
+        await respond({
+          response_type: 'ephemeral',
+          text: "This summary seems to be inappropriate :speak_no_evil:\nI'm not able to help you in this case.",
+        });
+
+        analyticsManager.threadSummaryFunnel({
+          funnelStep: 'moderated',
+          slackTeamId: payload.team?.id || 'unknown',
+          slackUserId: payload.user.id,
+          channelId: payload.channel.id,
+          threadTs: payload.message_ts,
+        });
+        return;
+      }
+
+      await client.chat.postEphemeral({
         channel: shortcut.user.id,
         text: `We had an error processing the summarization: ${error.message}`,
         thread_ts: payload.message_ts,

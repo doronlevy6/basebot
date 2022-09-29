@@ -11,6 +11,7 @@ import { ThreadSummaryModel } from './models/thread-summary.model';
 import { AnalyticsManager } from '../analytics/manager';
 import { Routes } from '../routes/router';
 import { privateChannelInstructions } from '../slack/private-channel';
+import { ModerationError } from './errors/moderation-error';
 
 const MAX_MESSAGES_TO_FETCH = 100;
 
@@ -170,6 +171,21 @@ export const channelSummarizationHandler =
         );
         analyticsManager.channelSummaryFunnel({
           funnelStep: 'private_channel',
+          slackTeamId: payload.team_id,
+          slackUserId: payload.user_id,
+          channelId: payload.channel_id,
+        });
+        return;
+      }
+
+      if (error instanceof ModerationError) {
+        await respond({
+          response_type: 'ephemeral',
+          text: "This summary seems to be inappropriate :speak_no_evil:\nI'm not able to help you in this case.",
+        });
+
+        analyticsManager.channelSummaryFunnel({
+          funnelStep: 'moderated',
           slackTeamId: payload.team_id,
           slackUserId: payload.user_id,
           channelId: payload.channel_id,
