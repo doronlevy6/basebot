@@ -4,9 +4,11 @@ import { Routes } from '../routes/router';
 import { addToChannel } from './add-to-channel';
 import { SlackBlockActionWrapper, ViewAction } from './types';
 
+const ADD_TO_CHANNEL_FROM_WELCOME = 'add-to-channel-from-welcome';
+
 export const addToChannelFromWelcomeModal =
   (analyticsManager: AnalyticsManager) => async (params: ViewAction) => {
-    const { ack, body } = params;
+    const { ack, body, client } = params;
 
     try {
       await ack();
@@ -19,29 +21,21 @@ export const addToChannelFromWelcomeModal =
         slackTeamId: body.user.team_id || 'unknown',
         submitted: submitted,
       });
-    } catch (err) {
-      logger.error(`Add to channel from welcome modal error: ${err.stack}`);
-    }
-  };
 
-export const addToChannelFromWelcomeHandler =
-  (analyticsManager: AnalyticsManager) =>
-  async ({ ack, logger, payload, body, client }: SlackBlockActionWrapper) => {
-    try {
-      await ack();
-
-      if (payload.type !== 'multi_conversations_select') {
-        throw new Error(
-          `received ${payload.type} instead of multi_conversations_select in addToChannelFromSelectHandler handler`,
-        );
+      if (!submitted) {
+        return;
       }
 
+      const selectedConversations =
+        Object.values(body.view.state.values)[0][ADD_TO_CHANNEL_FROM_WELCOME]
+          .selected_conversations || [];
+
       logger.info(
-        `${body.user.id} is adding the bot to channels ${payload.selected_conversations}`,
+        `${body.user.id} is adding the bot to channels ${selectedConversations}`,
       );
 
       await Promise.all(
-        payload.selected_conversations.map((c) =>
+        selectedConversations.map((c) =>
           addToChannel(
             client,
             {
@@ -53,8 +47,8 @@ export const addToChannelFromWelcomeHandler =
           ),
         ),
       );
-    } catch (error) {
-      logger.error(`error in add to channel from select: ${error.stack}`);
+    } catch (err) {
+      logger.error(`Add to channel from welcome modal error: ${err.stack}`);
     }
   };
 
@@ -103,7 +97,7 @@ export const addToChannelFromWelcomeModalHandler =
                   exclude_bot_users: true,
                   exclude_external_shared_channels: true,
                 },
-                action_id: Routes.ADD_TO_CHANNEL_FROM_WELCOME,
+                action_id: ADD_TO_CHANNEL_FROM_WELCOME,
               },
             },
           ],
