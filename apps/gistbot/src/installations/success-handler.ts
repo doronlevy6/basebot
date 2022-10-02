@@ -1,8 +1,11 @@
 import { CallbackOptions } from '@slack/oauth';
+import { AnalyticsManager } from '../analytics/manager';
 import { postInstallationMessage } from './post-install';
 
-export const installationSucccessHandler: CallbackOptions['successAsync'] =
-  async (installation, installOptions, req, res) => {
+export const installationSucccessHandler = (
+  analyticsManager: AnalyticsManager,
+): CallbackOptions['successAsync'] => {
+  return async (installation, installOptions, req, res) => {
     const redirectUrl = process.env.SLACK_REDIRECT_URL as string;
 
     await postInstallationMessage(
@@ -10,8 +13,15 @@ export const installationSucccessHandler: CallbackOptions['successAsync'] =
       installation.bot?.token || '',
     );
 
+    analyticsManager.installationFunnel({
+      funnelStep: 'successful_install',
+      slackTeamId: installation.team?.id || 'unknown',
+      slackUserId: installation.user.id,
+    });
+
     res.writeHead(302, {
       Location: redirectUrl,
     });
     res.end();
   };
+};

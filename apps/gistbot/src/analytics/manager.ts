@@ -114,6 +114,27 @@ export class AnalyticsManager {
     });
   }
 
+  installationFunnel({
+    funnelStep,
+    slackUserId,
+    slackTeamId,
+    extraParams,
+  }: {
+    funnelStep: string;
+    slackUserId: string;
+    slackTeamId: string;
+    extraParams?: ExtraParams;
+  }) {
+    this.sendEventToAnalytics({
+      eventName: `installation_${funnelStep}`,
+      slackUserId: slackUserId,
+      slackTeamId: slackTeamId,
+      internalUserId: `${slackTeamId}_${slackUserId}`,
+      timestamp: new Date(),
+      properties: { ...extraParams },
+    });
+  }
+
   threadSummaryFunnel({
     funnelStep,
     slackUserId,

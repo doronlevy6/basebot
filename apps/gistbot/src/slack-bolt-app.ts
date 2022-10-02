@@ -6,10 +6,16 @@ import { installationSucccessHandler } from './installations/success-handler';
 import { installationFailureHandler } from './installations/failure-handler';
 import { healthRoute } from './routes/health-route';
 import { metricsRoute } from './routes/metrics-route';
+import { AnalyticsManager } from './analytics/manager';
+import {
+  AUTH_VERSION,
+  installEndpointHtml,
+} from './installations/install-endpoint';
 
 export function createApp(
   installationStore: PgInstallationStore,
   metricsReporter: IReporter,
+  analyticsManager: AnalyticsManager,
 ): App {
   return new App({
     logger: new BoltWrapper(logger),
@@ -30,10 +36,11 @@ export function createApp(
     ],
     installationStore: installationStore,
     installerOptions: {
-      directInstall: true,
+      renderHtmlForInstallPath: installEndpointHtml(analyticsManager),
+      authVersion: AUTH_VERSION,
       callbackOptions: {
-        successAsync: installationSucccessHandler,
-        failure: installationFailureHandler,
+        successAsync: installationSucccessHandler(analyticsManager),
+        failure: installationFailureHandler(analyticsManager),
       },
     },
   });

@@ -61,7 +61,7 @@ const startApp = async () => {
     throw new Error('AnalyticsManager is not ready');
   }
 
-  const slackApp = createApp(pgStore, metricsReporter);
+  const slackApp = createApp(pgStore, metricsReporter, analyticsManager);
   slackApp.use(slackBoltMetricsMiddleware(metricsReporter));
 
   registerBoltAppRouter(slackApp, analyticsManager, threadSummaryModel);
