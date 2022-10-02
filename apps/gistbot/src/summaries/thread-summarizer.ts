@@ -7,12 +7,13 @@ import { SlackMessage } from './types';
 import {
   filterUnwantedMessages,
   identifyTriggeringUser,
-  parseMessagesForSummary,
+  parseThreadForSummary,
 } from './utils';
 import { AnalyticsManager } from '../analytics/manager';
 import { Routes } from '../routes/router';
 import { privateChannelInstructions } from '../slack/private-channel';
 import { ModerationError } from './errors/moderation-error';
+import { MAX_PROMPT_CHARACTER_COUNT } from './models/prompt-character-calculator';
 
 export const threadSummarizationHandler =
   (
@@ -101,10 +102,11 @@ export const threadSummarizationHandler =
         cursor = messageRepliesRes.response_metadata.next_cursor;
       }
 
-      const { messages: messagesTexts, users } = await parseMessagesForSummary(
+      const { messages: messagesTexts, users } = await parseThreadForSummary(
         [payload.message, ...messageReplies],
         client,
         payload.team?.id || 'unknown',
+        MAX_PROMPT_CHARACTER_COUNT,
         context.botId,
       );
 
@@ -129,7 +131,7 @@ export const threadSummarizationHandler =
         {
           messages: messagesTexts,
           names: users,
-          titles: [], // TODO: Add user titles
+          titles: ' '.repeat(users.length).split(' '), // TODO: Add user titles
         },
         payload.user.id,
       );

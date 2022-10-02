@@ -2,31 +2,34 @@ import { logger } from '@base/logger';
 import axios from 'axios';
 import { ModerationError } from '../errors/moderation-error';
 import { OpenAiModerationModel } from './openai-moderation.model';
-import { approximatePromptCharacterCount } from './prompt-character-calculator';
+import { approximatePromptCharacterCountForChannelSummary } from './prompt-character-calculator';
 
-export interface ThreadSummaryModelRequest {
-  messages: string[];
-  names: string[];
-  titles: string[];
+export interface ChannelSummaryModelRequest {
+  channel_name: string;
+  threads: {
+    messages: string[];
+    names: string[];
+    titles: string[];
+  }[];
 }
 
 interface ModelResponse {
   data: string;
-  from?: 'model-thread-summary';
+  from?: 'model-channel-summary';
   error?: string;
 }
 
-export class ThreadSummaryModel {
+export class ChannelSummaryModel {
   private apiEndpoint: string;
   private moderationApi: OpenAiModerationModel;
 
   constructor() {
-    this.apiEndpoint = process.env.THREAD_SUMMARY_MODEL_URL as string;
+    this.apiEndpoint = process.env.CHANNEL_SUMMARY_MODEL_URL as string;
     this.moderationApi = new OpenAiModerationModel();
   }
 
-  async summarizeThread(
-    data: ThreadSummaryModelRequest,
+  async summarizeChannel(
+    data: ChannelSummaryModelRequest,
     requestingUserId: string,
   ): Promise<string> {
     try {
@@ -39,11 +42,12 @@ export class ThreadSummaryModel {
       );
 
       logger.info({
-        msg: 'Thread Summary Model returned with response',
+        msg: 'Channel Summary Model returned with response',
         status: res.status,
         data: res.data,
         request: data,
-        approximateTokenCount: approximatePromptCharacterCount(data),
+        approximateTokenCount:
+          approximatePromptCharacterCountForChannelSummary(data),
       });
 
       if (res.status >= 300) {
@@ -69,7 +73,7 @@ export class ThreadSummaryModel {
       return res.data.data;
     } catch (error) {
       logger.error(
-        `error in thread summarization model: ${error} ${error.stack} ${error.response.data}`,
+        `error in channel summarization model: ${error} ${error.stack} ${error.response.data}`,
       );
       throw error;
     }

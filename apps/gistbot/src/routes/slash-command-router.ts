@@ -3,14 +3,14 @@ import { AnalyticsManager } from '../analytics/manager';
 import { Help } from '../slack/components/help';
 import { SlackSlashCommandWrapper } from '../slack/types';
 import { channelSummarizationHandler } from '../summaries/channel-summarizer';
-import { ThreadSummaryModel } from '../summaries/models/thread-summary.model';
+import { ChannelSummaryModel } from '../summaries/models/channel-summary.model';
 
 export const slashCommandRouter = (
-  threadSummaryModel: ThreadSummaryModel,
+  channelSummaryModel: ChannelSummaryModel,
   analyticsManager: AnalyticsManager,
 ) => {
   const handler = channelSummarizationHandler(
-    threadSummaryModel,
+    channelSummaryModel,
     analyticsManager,
   );
 

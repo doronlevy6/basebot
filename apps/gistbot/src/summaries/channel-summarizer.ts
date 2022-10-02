@@ -5,21 +5,22 @@ import { SlackSlashCommandWrapper } from '../slack/types';
 import {
   filterUnwantedMessages,
   identifyTriggeringUser,
-  /*enrichWithReplies,*/ parseMessagesForSummary,
+  enrichWithReplies,
+  parseThreadForSummary,
   sortSlackMessages,
 } from './utils';
-import { SlackMessage } from './types';
-import { ThreadSummaryModel } from './models/thread-summary.model';
 import { AnalyticsManager } from '../analytics/manager';
 import { Routes } from '../routes/router';
 import { privateChannelInstructions } from '../slack/private-channel';
 import { ModerationError } from './errors/moderation-error';
+import { ChannelSummaryModel } from './models/channel-summary.model';
+import { MAX_PROMPT_CHARACTER_COUNT } from './models/prompt-character-calculator';
 
-const MAX_MESSAGES_TO_FETCH = 100;
+const MAX_MESSAGES_TO_FETCH = 30;
 
 export const channelSummarizationHandler =
   (
-    threadSummaryModel: ThreadSummaryModel,
+    channelSummaryModel: ChannelSummaryModel,
     analyticsManager: AnalyticsManager,
   ) =>
   async ({
@@ -69,31 +70,40 @@ export const channelSummarizationHandler =
       // Ensure that we sort the messages oldest first (so that the model receives a conversation in order)
       filteredMessages.sort(sortSlackMessages);
 
-      // TODO: Return messages with replies when we bring in the full channel summary.
-      // Since we want to return this in the coming days I'm going to leave it commented out for now.
-      // const messagesWithReplies = await enrichWithReplies(
-      //   channel_id,
-      //   filteredMessages,
-      //   client,
-      //   context.botId,
-      // );
-      const flattenArray: SlackMessage[] = filteredMessages.map((m) => m);
-      // messagesWithReplies.forEach((item) =>
-      //   flattenArray.push(...[item.message, ...item.replies]),
-      // );
-
-      const { messages: messagesTexts, users } = await parseMessagesForSummary(
-        flattenArray,
+      const messagesWithReplies = await enrichWithReplies(
+        channel_id,
+        filteredMessages,
         client,
-        payload.team_id,
         context.botId,
       );
 
-      // logger.info(
-      //   `Attempting to summarize channel with ${messages.length} messages (${messagesTexts.length} with replies) and ${users.length} users`,
-      // );
+      const threads = await Promise.all(
+        messagesWithReplies.map((mwr) => {
+          const thread = parseThreadForSummary(
+            [mwr.message, ...mwr.replies],
+            client,
+            payload.team_id,
+            MAX_PROMPT_CHARACTER_COUNT,
+            context.botId,
+          );
+
+          return thread;
+        }),
+      );
+
+      const numberOfMessages = threads.reduce((acc, t) => {
+        return acc + t.messages.length;
+      }, 0);
+      const numberOfUsers = threads.reduce((acc, t) => {
+        return acc + t.users.length;
+      }, 0);
+      const uniqueUsers = threads.reduce((acc, t) => {
+        t.users.forEach((u) => acc.add(u));
+        return acc;
+      }, new Set<string>());
+
       logger.info(
-        `Attempting to summarize channel with ${messagesTexts.length} messages and ${users.length} users`,
+        `Attempting to summarize channel with ${threads.length} threads, ${numberOfMessages} messages, and ${numberOfUsers} users`,
       );
 
       analyticsManager.channelSummaryFunnel({
@@ -102,17 +112,23 @@ export const channelSummarizationHandler =
         slackUserId: user_id,
         channelId: channel_id,
         extraParams: {
-          numberOfMessages: messagesTexts.length,
-          numberOfUsers: users.length,
-          numberOfUniqueUsers: new Set(users).size,
+          numberOfThreads: threads.length,
+          numberOfMessages: numberOfMessages,
+          numberOfUsers: numberOfUsers,
+          numberOfUniqueUsers: uniqueUsers.size,
         },
       });
 
-      const summary = await threadSummaryModel.summarizeThread(
+      const summary = await channelSummaryModel.summarizeChannel(
         {
-          messages: messagesTexts,
-          names: users,
-          titles: [], // TODO: Add user titles
+          channel_name: channel_name,
+          threads: threads.map((t) => {
+            return {
+              messages: t.messages,
+              names: t.users,
+              titles: ' '.repeat(t.users.length).split(' '), // TODO: Add user titles
+            };
+          }),
         },
         user_id,
       );
@@ -140,9 +156,10 @@ export const channelSummarizationHandler =
         slackUserId: user_id,
         channelId: channel_id,
         extraParams: {
-          numberOfMessages: messagesTexts.length,
-          numberOfUsers: users.length,
-          numberOfUniqueUsers: new Set(users).size,
+          numberOfThreads: threads.length,
+          numberOfMessages: numberOfMessages,
+          numberOfUsers: numberOfUsers,
+          numberOfUniqueUsers: uniqueUsers.size,
         },
       });
     } catch (error) {

@@ -2,19 +2,17 @@ import { WebClient } from '@slack/web-api';
 import { parseSlackMrkdwn } from '../slack/parser';
 import { extractMessageText } from '../slack/message-text';
 import { SlackMessage } from './types';
-import {
-  approximatePromptCharacterCount,
-  MAX_PROMPT_CHARACTER_COUNT,
-} from './models/prompt-character-calculator';
 import { AnalyticsManager } from '../analytics/manager';
 import { logger } from '@base/logger';
+import { approximatePromptCharacterCount } from './models/prompt-character-calculator';
 
-const MAX_REPLIES_TO_FETCH = 20;
+const MAX_REPLIES_TO_FETCH = 200;
 
-export const parseMessagesForSummary = async (
+export const parseThreadForSummary = async (
   messages: SlackMessage[],
   client: WebClient,
   teamId: string,
+  maxCharacterCountPerThread: number,
   myBotId?: string,
 ) => {
   const messagesWithText = messages?.filter((t) => {
@@ -92,7 +90,7 @@ export const parseMessagesForSummary = async (
     names: userNames,
     titles: [],
   });
-  while (cc > MAX_PROMPT_CHARACTER_COUNT) {
+  while (cc > maxCharacterCountPerThread) {
     messagesTexts.shift();
     userNames.shift();
     cc = approximatePromptCharacterCount({

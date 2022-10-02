@@ -8,6 +8,7 @@ import {
 import { Help } from '../slack/components/help';
 import { privateChannelHandler } from '../slack/private-channel';
 import { channelSummaryFeedbackHandler } from '../summaries/channel-summary-feedback';
+import { ChannelSummaryModel } from '../summaries/models/channel-summary.model';
 import { ThreadSummaryModel } from '../summaries/models/thread-summary.model';
 import { threadSummarizationHandler } from '../summaries/thread-summarizer';
 import { threadSummaryFeedbackHandler } from '../summaries/thread-summary-feedback';
@@ -28,6 +29,7 @@ export const registerBoltAppRouter = (
   installationStore: InstallationStore,
   analyticsManager: AnalyticsManager,
   threadSummaryModel: ThreadSummaryModel,
+  channelSummaryModel: ChannelSummaryModel,
 ) => {
   app.shortcut(
     Routes.SUMMARIZE_THREAD,
@@ -49,7 +51,7 @@ export const registerBoltAppRouter = (
   );
   app.command(
     /gist.*/,
-    slashCommandRouter(threadSummaryModel, analyticsManager),
+    slashCommandRouter(channelSummaryModel, analyticsManager),
   );
   app.action(
     Routes.THREAD_SUMMARY_FEEDBACK,
