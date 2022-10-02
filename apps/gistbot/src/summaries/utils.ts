@@ -12,6 +12,7 @@ const MAX_REPLIES_TO_FETCH = 20;
 export const parseMessagesForSummary = async (
   messages: SlackMessage[],
   client: WebClient,
+  teamId: string,
   myBotId?: string,
 ) => {
   const messagesWithText = messages?.filter((t) => {
@@ -20,7 +21,7 @@ export const parseMessagesForSummary = async (
 
   const messagesTexts: string[] = (await Promise.all(
     messagesWithText.map((m) =>
-      parseSlackMrkdwn(extractMessageText(m)).plainText(client),
+      parseSlackMrkdwn(extractMessageText(m)).plainText(teamId, client),
     ),
   )) as string[];
 
@@ -37,7 +38,7 @@ export const parseMessagesForSummary = async (
   );
 
   const botInfoReses = await Promise.all(
-    messageBotIds.map((u) => client.bots.info({ bot: u })),
+    messageBotIds.map((u) => client.bots.info({ bot: u, team_id: teamId })),
   );
 
   const userNames = messagesWithText.map((m) => {

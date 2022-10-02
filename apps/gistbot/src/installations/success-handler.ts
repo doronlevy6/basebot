@@ -17,7 +17,19 @@ export const installationSucccessHandler = (
       funnelStep: 'successful_install',
       slackTeamId: installation.team?.id || 'unknown',
       slackUserId: installation.user.id,
+      extraParams: {
+        isEnterprise: installation.isEnterpriseInstall || false,
+      },
     });
+
+    if (installation.isEnterpriseInstall) {
+      const redirectUrl = `https://app.slack.com/manage/${installation.enterprise?.id}/integrations/profile/${installation.appId}/workspaces/add`;
+      res.writeHead(302, {
+        Location: redirectUrl,
+      });
+      res.end();
+      return;
+    }
 
     res.writeHead(302, {
       Location: redirectUrl,

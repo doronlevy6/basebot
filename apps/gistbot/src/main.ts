@@ -64,7 +64,12 @@ const startApp = async () => {
   const slackApp = createApp(pgStore, metricsReporter, analyticsManager);
   slackApp.use(slackBoltMetricsMiddleware(metricsReporter));
 
-  registerBoltAppRouter(slackApp, analyticsManager, threadSummaryModel);
+  registerBoltAppRouter(
+    slackApp,
+    pgStore,
+    analyticsManager,
+    threadSummaryModel,
+  );
 
   const port = process.env['PORT'] || 3000;
   const server = await slackApp.start(port);

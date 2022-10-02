@@ -11,7 +11,7 @@ export class UserGroupMentionSection {
     this.label = initial?.label;
   }
 
-  async plainText(client?: WebClient): Promise<string> {
+  async plainText(teamId: string, client?: WebClient): Promise<string> {
     if (this.label) {
       return `@${this.label}`;
     }
@@ -21,7 +21,7 @@ export class UserGroupMentionSection {
     }
 
     try {
-      const res = await client.usergroups.list();
+      const res = await client.usergroups.list({ team_id: teamId });
       if (res.error || !res.ok) {
         throw new Error(`error returned from usergroups.list: ${res.error}`);
       }

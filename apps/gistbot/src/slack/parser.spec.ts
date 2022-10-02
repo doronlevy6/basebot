@@ -19,7 +19,7 @@ describe('parseSlackMrkdwn', () => {
       ],
     });
     expect(parseSlackMrkdwn(originalText)).toEqual(expected);
-    expect(await parseSlackMrkdwn(originalText).plainText()).toEqual(
+    expect(await parseSlackMrkdwn(originalText).plainText('')).toEqual(
       originalText,
     );
   });
@@ -50,7 +50,7 @@ describe('parseSlackMrkdwn', () => {
       ],
     });
     expect(parseSlackMrkdwn(originalText)).toEqual(expected);
-    expect(await parseSlackMrkdwn(originalText).plainText()).toEqual(
+    expect(await parseSlackMrkdwn(originalText).plainText('')).toEqual(
       expectedPlainText,
     );
   });
@@ -82,7 +82,7 @@ describe('parseSlackMrkdwn', () => {
       ],
     });
     expect(parseSlackMrkdwn(originalText)).toEqual(expected);
-    expect(await parseSlackMrkdwn(originalText).plainText()).toEqual(
+    expect(await parseSlackMrkdwn(originalText).plainText('')).toEqual(
       expectedPlainText,
     );
   });
@@ -110,7 +110,7 @@ describe('parseSlackMrkdwn', () => {
       ],
     });
     expect(parseSlackMrkdwn(originalText)).toEqual(expected);
-    expect(await parseSlackMrkdwn(originalText).plainText()).toEqual(
+    expect(await parseSlackMrkdwn(originalText).plainText('')).toEqual(
       expectedPlainText,
     );
   });
@@ -139,7 +139,7 @@ describe('parseSlackMrkdwn', () => {
       ],
     });
     expect(parseSlackMrkdwn(originalText)).toEqual(expected);
-    expect(await parseSlackMrkdwn(originalText).plainText()).toEqual(
+    expect(await parseSlackMrkdwn(originalText).plainText('')).toEqual(
       expectedPlainText,
     );
   });
@@ -161,7 +161,7 @@ describe('parseSlackMrkdwn', () => {
       ],
     });
     expect(parseSlackMrkdwn(originalText)).toEqual(expected);
-    expect(await parseSlackMrkdwn(originalText).plainText()).toEqual(
+    expect(await parseSlackMrkdwn(originalText).plainText('')).toEqual(
       expectedPlainText,
     );
   });
@@ -184,7 +184,7 @@ describe('parseSlackMrkdwn', () => {
       ],
     });
     expect(parseSlackMrkdwn(originalText)).toEqual(expected);
-    expect(await parseSlackMrkdwn(originalText).plainText()).toEqual(
+    expect(await parseSlackMrkdwn(originalText).plainText('')).toEqual(
       expectedPlainText,
     );
   });
@@ -211,7 +211,7 @@ describe('parseSlackMrkdwn', () => {
       ],
     });
     expect(parseSlackMrkdwn(originalText)).toEqual(expected);
-    expect(await parseSlackMrkdwn(originalText).plainText()).toEqual(
+    expect(await parseSlackMrkdwn(originalText).plainText('')).toEqual(
       expectedPlainText,
     );
   });
@@ -238,7 +238,7 @@ describe('parseSlackMrkdwn', () => {
       ],
     });
     expect(parseSlackMrkdwn(originalText)).toEqual(expected);
-    expect(await parseSlackMrkdwn(originalText).plainText()).toEqual(
+    expect(await parseSlackMrkdwn(originalText).plainText('')).toEqual(
       expectedPlainText,
     );
   });
@@ -263,7 +263,7 @@ describe('parseSlackMrkdwn', () => {
       ],
     });
     expect(parseSlackMrkdwn(originalText)).toEqual(expected);
-    expect(await parseSlackMrkdwn(originalText).plainText()).toEqual(
+    expect(await parseSlackMrkdwn(originalText).plainText('')).toEqual(
       expectedPlainText,
     );
   });
@@ -289,7 +289,7 @@ describe('parseSlackMrkdwn', () => {
       ],
     });
     expect(parseSlackMrkdwn(originalText)).toEqual(expected);
-    expect(await parseSlackMrkdwn(originalText).plainText()).toEqual(
+    expect(await parseSlackMrkdwn(originalText).plainText('')).toEqual(
       expectedPlainText,
     );
   });
@@ -309,7 +309,7 @@ describe('parseSlackMrkdwn', () => {
       ],
     });
     expect(parseSlackMrkdwn(originalText)).toEqual(expected);
-    expect(await parseSlackMrkdwn(originalText).plainText()).toEqual(
+    expect(await parseSlackMrkdwn(originalText).plainText('')).toEqual(
       expectedPlainText,
     );
   });
@@ -331,7 +331,7 @@ describe('parseSlackMrkdwn', () => {
       ],
     });
     expect(parseSlackMrkdwn(originalText)).toEqual(expected);
-    expect(await parseSlackMrkdwn(originalText).plainText()).toEqual(
+    expect(await parseSlackMrkdwn(originalText).plainText('')).toEqual(
       expectedPlainText,
     );
   });

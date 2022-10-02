@@ -1,4 +1,4 @@
-import { App } from '@slack/bolt';
+import { App, InstallationStore } from '@slack/bolt';
 import { AnalyticsManager } from '../analytics/manager';
 import { addToChannelHandler } from '../slack/add-to-channel';
 import {
@@ -25,6 +25,7 @@ export enum Routes {
 
 export const registerBoltAppRouter = (
   app: App,
+  installationStore: InstallationStore,
   analyticsManager: AnalyticsManager,
   threadSummaryModel: ThreadSummaryModel,
 ) => {
@@ -74,6 +75,16 @@ export const registerBoltAppRouter = (
       say({
         text: 'Hi there :wave:',
         blocks: Help(),
+      });
+    }
+  });
+
+  app.event('app_uninstalled', async ({ body }) => {
+    if (installationStore.deleteInstallation) {
+      await installationStore.deleteInstallation({
+        teamId: body.team_id,
+        enterpriseId: body.enterprise_id,
+        isEnterpriseInstall: body.enterprise_id ? true : false,
       });
     }
   });

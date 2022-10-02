@@ -20,9 +20,9 @@ export class ParsedMessage {
     this.sections = initial?.sections || [];
   }
 
-  async plainText(client?: WebClient): Promise<string> {
+  async plainText(teamId: string, client?: WebClient): Promise<string> {
     const enrichedSections = await Promise.all(
-      this.sections.map((current) => current.plainText(client)),
+      this.sections.map((current) => current.plainText(teamId, client)),
     );
 
     return enrichedSections.reduce((acc, current) => `${acc}${current}`, '');

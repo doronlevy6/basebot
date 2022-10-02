@@ -79,6 +79,7 @@ export const channelSummarizationHandler =
       const { messages: messagesTexts, users } = await parseMessagesForSummary(
         flattenArray,
         client,
+        payload.team_id,
         context.botId,
       );
 

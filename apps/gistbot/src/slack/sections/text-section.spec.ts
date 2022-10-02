@@ -53,6 +53,6 @@ describe('strip TextSection', () => {
 
     const section = new TextSection({ text: originalText });
 
-    expect(await section.plainText()).toEqual(expectedText);
+    expect(await section.plainText('')).toEqual(expectedText);
   });
 });

@@ -14,7 +14,7 @@ export class SpecialMentionSection {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async plainText(client?: WebClient): Promise<string> {
+  async plainText(teamId: string, client?: WebClient): Promise<string> {
     return `@${this.label || this.mention}`;
   }
 }

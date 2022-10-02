@@ -11,7 +11,7 @@ export class ChannelLinkSection {
     this.label = initial?.label;
   }
 
-  async plainText(client?: WebClient): Promise<string> {
+  async plainText(teamId: string, client?: WebClient): Promise<string> {
     if (this.label) {
       return this.label;
     }

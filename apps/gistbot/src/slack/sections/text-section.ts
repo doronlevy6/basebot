@@ -9,7 +9,7 @@ export class TextSection {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async plainText(client?: WebClient): Promise<string> {
+  async plainText(teamId: string, client?: WebClient): Promise<string> {
     const multilineCodeStripped = stripMrkdwnFormatting(this.text, '```', true);
     const codeStripped = stripMrkdwnFormatting(multilineCodeStripped, '`');
     const italicsStripped = stripMrkdwnFormatting(codeStripped, '_');

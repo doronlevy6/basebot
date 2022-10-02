@@ -90,6 +90,7 @@ export const threadSummarizationHandler =
       const { messages: messagesTexts, users } = await parseMessagesForSummary(
         [payload.message, ...messageReplies],
         client,
+        payload.team?.id || 'unknown',
         context.botId,
       );
 
