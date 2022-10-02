@@ -1,5 +1,6 @@
 import { WebClient } from '@slack/web-api';
 import { Routes } from '../routes/router';
+import { MessageShortcutImage } from '../slack/components/message-shortcut-image';
 import { UserLink } from '../slack/components/user-link';
 
 export const postInstallationMessage = async (
@@ -35,17 +36,7 @@ export const postInstallationMessage = async (
           text: ':two: Use the message shortcut to instantly get a summary of the message or the thread (shown below).',
         },
       },
-      {
-        type: 'image',
-        title: {
-          type: 'plain_text',
-          text: 'message shortcut example',
-          emoji: true,
-        },
-        image_url:
-          'https://assets.base.la/gist/assets/theGistWelcomeMessage.jpg',
-        alt_text: 'message shortcut example',
-      },
+      MessageShortcutImage(),
       {
         type: 'section',
         text: {

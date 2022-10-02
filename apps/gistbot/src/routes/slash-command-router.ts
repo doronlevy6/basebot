@@ -1,6 +1,6 @@
 import { logger } from '@base/logger';
 import { AnalyticsManager } from '../analytics/manager';
-import { respondWithHelp } from '../slack/help-message';
+import { Help } from '../slack/components/help';
 import { SlackSlashCommandWrapper } from '../slack/types';
 import { channelSummarizationHandler } from '../summaries/channel-summarizer';
 import { ThreadSummaryModel } from '../summaries/models/thread-summary.model';
@@ -23,7 +23,11 @@ export const slashCommandRouter = (
 
     if (text === 'help') {
       await props.ack();
-      await respondWithHelp(respond);
+      await respond({
+        response_type: 'ephemeral',
+        text: 'Hi there :wave:',
+        blocks: Help(),
+      });
       return;
     }
 

@@ -6,6 +6,7 @@ import {
   addToChannelFromWelcomeModal,
   addToChannelFromWelcomeModalHandler,
 } from '../slack/add-to-channel-from-welcome';
+import { Help } from '../slack/components/help';
 import { privateChannelHandler } from '../slack/private-channel';
 import { channelSummaryFeedbackHandler } from '../summaries/channel-summary-feedback';
 import { ThreadSummaryModel } from '../summaries/models/thread-summary.model';
@@ -72,6 +73,16 @@ export const registerBoltAppRouter = (
     Routes.ADD_TO_CHANNEL_FROM_WELCOME_MODAL,
     addToChannelFromWelcomeModalHandler(analyticsManager),
   );
+
+  app.message(async ({ event, say }) => {
+    // We are only able to listen to our own IM channels, so if the message channel is an IM, then we can assume it's our own IM
+    if (event.channel_type === 'im') {
+      say({
+        text: 'Hi there :wave:',
+        blocks: Help(),
+      });
+    }
+  });
 
   // This is the global action handler, which will match all unmatched actions
   app.action(/.*/, onlyAck);
