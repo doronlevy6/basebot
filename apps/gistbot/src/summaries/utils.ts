@@ -12,8 +12,11 @@ const MAX_REPLIES_TO_FETCH = 20;
 export const parseMessagesForSummary = async (
   messages: SlackMessage[],
   client: WebClient,
+  myBotId?: string,
 ) => {
-  const messagesWithText = messages?.filter((t) => extractMessageText(t));
+  const messagesWithText = messages?.filter((t) => {
+    return extractMessageText(t) && filterUnwantedMessages(t, myBotId);
+  });
 
   const messagesTexts: string[] = (await Promise.all(
     messagesWithText.map((m) =>
@@ -106,6 +109,7 @@ export const enrichWithReplies = async (
   channelId: string,
   messages: SlackMessage[],
   client: WebClient,
+  myBotId?: string,
 ) => {
   const repliesPromises = messages.map((m) => {
     if (!m.reply_count || !m.ts) {
@@ -123,9 +127,9 @@ export const enrichWithReplies = async (
           return [];
         }
 
-        const repliesWithoutParent = messages.filter(
-          (reply) => reply.ts !== m.ts,
-        );
+        const repliesWithoutParent = messages.filter((reply) => {
+          return reply.ts !== m.ts && filterUnwantedMessages(reply, myBotId);
+        });
         return repliesWithoutParent;
       });
   });
@@ -145,4 +149,36 @@ export const sortSlackMessages = (m1: SlackMessage, m2: SlackMessage) => {
     return 1;
   }
   return 0;
+};
+
+const filteredSubtypes = [
+  'channel_join',
+  'channel_leave',
+  'channel_topic',
+  'channel_purpose',
+  'channel_name',
+  'channel_archive',
+  'channel_unarchive',
+];
+
+const baseProductionBotId = 'B042VQMGZ55';
+const stagingBotId = 'B043CMTLDFE';
+const devBotId = 'B043CDNE604';
+
+const filterInternalBotIds = [baseProductionBotId, stagingBotId, devBotId];
+
+export const filterUnwantedMessages = (m: SlackMessage, myBotId?: string) => {
+  if (m.subtype && filteredSubtypes.includes(m.subtype)) {
+    return false;
+  }
+
+  if (m.bot_id && m.bot_id === myBotId) {
+    return false;
+  }
+
+  if (m.bot_id && filterInternalBotIds.includes(m.bot_id)) {
+    return false;
+  }
+
+  return true;
 };

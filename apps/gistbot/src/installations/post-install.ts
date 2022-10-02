@@ -42,14 +42,15 @@ export const postInstallationMessage = async (
           text: 'message shortcut example',
           emoji: true,
         },
-        image_url: 'https://assets.base.la/gist/assets/welcomeMessage.jpg',
+        image_url:
+          'https://assets.base.la/gist/assets/theGistWelcomeMessage.jpg',
         alt_text: 'message shortcut example',
       },
       {
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: "To start tracking your team's tasks, add me to a channel and I'll introduce myself. I'm usually added to a team or project channel. Type /invite @theGist from the channel or pick a channel on the right.",
+          text: "To start getting the Gist, add me to a channel and I'll introduce myself. I'm usually added to a team or project channel. Type /invite @theGist from the channel or pick a channel on the right.",
         },
         accessory: {
           type: 'button',

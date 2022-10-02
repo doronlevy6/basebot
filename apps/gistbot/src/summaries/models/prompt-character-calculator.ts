@@ -1,6 +1,6 @@
 import { ModelRequest } from './thread-summary.model';
 
-export const MAX_PROMPT_CHARACTER_COUNT = 13000;
+export const MAX_PROMPT_CHARACTER_COUNT = 10000;
 
 export function approximatePromptCharacterCount(data: ModelRequest): number {
   const escapeUnicode = (str: string) => {

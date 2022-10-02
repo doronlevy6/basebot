@@ -1,6 +1,7 @@
 import { RespondFn } from '@slack/bolt';
 
-const IMAGE_URL = 'https://assets.base.la/gist/assets/welcomeMessage.jpg';
+const IMAGE_URL =
+  'https://assets.base.la/gist/assets/theGistWelcomeMessage.jpg';
 
 export const respondWithHelp = async (respond: RespondFn) => {
   await respond({
@@ -30,11 +31,11 @@ export const respondWithHelp = async (respond: RespondFn) => {
         type: 'image',
         title: {
           type: 'plain_text',
-          text: 'image1',
+          text: 'message shortcut example',
           emoji: true,
         },
         image_url: IMAGE_URL,
-        alt_text: 'image1',
+        alt_text: 'message shortcut example',
       },
     ],
   });

@@ -3,6 +3,7 @@ import { UserLink } from '../slack/components/user-link';
 import { Summary } from '../slack/components/summary';
 import { SlackSlashCommandWrapper } from '../slack/types';
 import {
+  filterUnwantedMessages,
   /*enrichWithReplies,*/ parseMessagesForSummary,
   sortSlackMessages,
 } from './utils';
@@ -26,6 +27,7 @@ export const channelSummarizationHandler =
     logger,
     payload,
     respond,
+    context,
   }: SlackSlashCommandWrapper) => {
     try {
       await ack();
@@ -54,17 +56,22 @@ export const channelSummarizationHandler =
         );
       }
 
+      const filteredMessages = messages.filter((m) => {
+        return filterUnwantedMessages(m, context.botId);
+      });
+
       // Ensure that we sort the messages oldest first (so that the model receives a conversation in order)
-      messages.sort(sortSlackMessages);
+      filteredMessages.sort(sortSlackMessages);
 
       // TODO: Return messages with replies when we bring in the full channel summary.
       // Since we want to return this in the coming days I'm going to leave it commented out for now.
       // const messagesWithReplies = await enrichWithReplies(
       //   channel_id,
-      //   messages,
+      //   filteredMessages,
       //   client,
+      //   context.botId,
       // );
-      const flattenArray: SlackMessage[] = messages.map((m) => m);
+      const flattenArray: SlackMessage[] = filteredMessages.map((m) => m);
       // messagesWithReplies.forEach((item) =>
       //   flattenArray.push(...[item.message, ...item.replies]),
       // );
@@ -72,6 +79,7 @@ export const channelSummarizationHandler =
       const { messages: messagesTexts, users } = await parseMessagesForSummary(
         flattenArray,
         client,
+        context.botId,
       );
 
       // logger.info(

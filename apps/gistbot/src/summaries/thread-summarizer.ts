@@ -4,7 +4,7 @@ import { UserLink } from '../slack/components/user-link';
 import { Summary } from '../slack/components/summary';
 import { ThreadSummaryModel } from './models/thread-summary.model';
 import { SlackMessage } from './types';
-import { parseMessagesForSummary } from './utils';
+import { filterUnwantedMessages, parseMessagesForSummary } from './utils';
 import { AnalyticsManager } from '../analytics/manager';
 import { Routes } from '../routes/router';
 import { privateChannelInstructions } from '../slack/private-channel';
@@ -22,6 +22,7 @@ export const threadSummarizationHandler =
     logger,
     payload,
     respond,
+    context,
   }: SlackShortcutWrapper) => {
     try {
       await ack();
@@ -67,7 +68,13 @@ export const threadSummarizationHandler =
         }
 
         messageReplies.push(
-          ...messageRepliesRes.messages.filter((m) => m.ts !== messageTs),
+          ...messageRepliesRes.messages.filter((m) => {
+            if (m.ts === messageTs) {
+              return false;
+            }
+
+            return filterUnwantedMessages(m, context.botId);
+          }),
         );
 
         if (!messageRepliesRes.has_more) {
@@ -83,6 +90,7 @@ export const threadSummarizationHandler =
       const { messages: messagesTexts, users } = await parseMessagesForSummary(
         [payload.message, ...messageReplies],
         client,
+        context.botId,
       );
 
       logger.info(

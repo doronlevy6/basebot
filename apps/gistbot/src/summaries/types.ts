@@ -11,4 +11,5 @@ export type SlackMessage = Pick<
   | 'reply_count'
   | 'attachments'
   | 'text'
+  | 'subtype'
 >;
