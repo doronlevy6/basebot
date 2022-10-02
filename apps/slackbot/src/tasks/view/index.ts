@@ -32,15 +32,14 @@ const getFormattedBlocks = (props: ITaskViewProps): MessageBlocks[] => {
     TaskTitleBlock(task.title),
   ];
 
-  if (shouldShowAcknowledge) {
-    messageBlocks.push(...AcknowledgeAction(props));
-    if (acknowledgementStatus === 'acknowledged') {
-      messageBlocks.push(TaskDetails(props));
-      messageBlocks.push(...TaskActions(props));
-      messageBlocks.push(TaskFooter(props));
-    }
-  } else {
+  shouldShowAcknowledge && messageBlocks.push(...AcknowledgeAction(props));
+  if (
+    (shouldShowAcknowledge && acknowledgementStatus === 'acknowledged') ||
+    !shouldShowAcknowledge
+  ) {
+    messageBlocks.push(TaskDetails(props));
     messageBlocks.push(...TaskActions(props));
+    messageBlocks.push(TaskFooter(props));
   }
 
   return messageBlocks;
