@@ -68,7 +68,9 @@ export class ThreadSummaryModel {
 
       return res.data.data;
     } catch (error) {
-      logger.error(`error in thread summarization model: ${error.stack}`);
+      logger.error(
+        `error in thread summarization model: ${error} ${error.stack}`,
+      );
       throw error;
     }
   }
