@@ -1,13 +1,23 @@
 import { WebClient } from '@slack/web-api';
+import { AnalyticsManager } from '../analytics/manager';
 import { Routes } from '../routes/router';
 import { MessageShortcutImage } from '../slack/components/message-shortcut-image';
 import { UserLink } from '../slack/components/user-link';
+import { identifyTriggeringUser } from '../summaries/utils';
 
 export const postInstallationMessage = async (
   userId: string,
+  teamId: string,
   token: string,
+  analyticsManager: AnalyticsManager,
 ) => {
   const client = new WebClient(token);
+
+  // Don't await so that we don't force anything to wait just for the identification.
+  // This handles error handling internally and will never cause an exception, so we
+  // won't have any unhandled promise rejection errors.
+  identifyTriggeringUser(userId, teamId, client, analyticsManager);
+
   await client.chat.postMessage({
     channel: userId,
     text: `Hey ${UserLink(userId)} :wave: I'm theGist!`,

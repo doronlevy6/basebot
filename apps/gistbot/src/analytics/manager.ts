@@ -12,6 +12,15 @@ interface Event {
   properties: Record<string, string | boolean | number>;
 }
 
+interface UserIdentification {
+  slackUserId: string;
+  slackTeamId: string;
+  username?: string;
+  realName?: string;
+  title?: string;
+  avatarUrl?: string;
+}
+
 export class AnalyticsManager {
   private client: Segment;
 
@@ -47,6 +56,24 @@ export class AnalyticsManager {
     });
   }
 
+  private internalId(slackTeamId: string, slackUserId: string): string {
+    return `${slackTeamId}_${slackUserId}`;
+  }
+
+  identifyUser(user: UserIdentification) {
+    logger.info({ msg: 'identifying user in analytics', user: user });
+    this.client.identify({
+      userId: this.internalId(user.slackTeamId, user.slackUserId),
+      traits: {
+        name: user.realName,
+        username: user.username,
+        title: user.title,
+        slackTeamId: user.slackTeamId,
+        service: 'gistbot',
+      },
+    });
+  }
+
   modalView({
     type,
     slackUserId,
@@ -62,7 +89,7 @@ export class AnalyticsManager {
       eventName: 'slack_modal_view',
       slackUserId: slackUserId,
       slackTeamId: slackTeamId,
-      internalUserId: `${slackTeamId}_${slackUserId}`,
+      internalUserId: this.internalId(slackTeamId, slackUserId),
       timestamp: new Date(),
       properties: { ...properties, type },
     });
@@ -85,7 +112,7 @@ export class AnalyticsManager {
       eventName: 'slack_modal_close',
       slackUserId: slackUserId,
       slackTeamId: slackTeamId,
-      internalUserId: `${slackTeamId}_${slackUserId}`,
+      internalUserId: this.internalId(slackTeamId, slackUserId),
       timestamp: new Date(),
       properties: { ...properties, type, submitted },
     });
@@ -108,7 +135,7 @@ export class AnalyticsManager {
       eventName: `errors`,
       slackUserId: slackUserId,
       slackTeamId: slackTeamId,
-      internalUserId: `${slackTeamId}_${slackUserId}`,
+      internalUserId: this.internalId(slackTeamId, slackUserId),
       timestamp: new Date(),
       properties: { ...extraParams, channelId, errorMessage },
     });
@@ -129,7 +156,7 @@ export class AnalyticsManager {
       eventName: `installation_${funnelStep}`,
       slackUserId: slackUserId,
       slackTeamId: slackTeamId,
-      internalUserId: `${slackTeamId}_${slackUserId}`,
+      internalUserId: this.internalId(slackTeamId, slackUserId),
       timestamp: new Date(),
       properties: { ...extraParams },
     });
@@ -154,7 +181,7 @@ export class AnalyticsManager {
       eventName: `thread_summary_${funnelStep}`,
       slackUserId: slackUserId,
       slackTeamId: slackTeamId,
-      internalUserId: `${slackTeamId}_${slackUserId}`,
+      internalUserId: this.internalId(slackTeamId, slackUserId),
       timestamp: new Date(),
       properties: { ...extraParams, channelId, threadTs },
     });
@@ -177,7 +204,7 @@ export class AnalyticsManager {
       eventName: `channel_summary_${funnelStep}`,
       slackUserId: slackUserId,
       slackTeamId: slackTeamId,
-      internalUserId: `${slackTeamId}_${slackUserId}`,
+      internalUserId: this.internalId(slackTeamId, slackUserId),
       timestamp: new Date(),
       properties: { ...extraParams, channelId },
     });
@@ -198,7 +225,7 @@ export class AnalyticsManager {
       eventName: `added_to_channel`,
       slackUserId: slackUserId,
       slackTeamId: slackTeamId,
-      internalUserId: `${slackTeamId}_${slackUserId}`,
+      internalUserId: this.internalId(slackTeamId, slackUserId),
       timestamp: new Date(),
       properties: { ...extraParams, channelId },
     });

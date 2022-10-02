@@ -4,6 +4,7 @@ import { Summary } from '../slack/components/summary';
 import { SlackSlashCommandWrapper } from '../slack/types';
 import {
   filterUnwantedMessages,
+  identifyTriggeringUser,
   /*enrichWithReplies,*/ parseMessagesForSummary,
   sortSlackMessages,
 } from './utils';
@@ -33,6 +34,11 @@ export const channelSummarizationHandler =
       await ack();
 
       const { channel_id, user_id, channel_name, team_id } = payload;
+
+      // Don't await so that we don't force anything to wait just for the identification.
+      // This handles error handling internally and will never cause an exception, so we
+      // won't have any unhandled promise rejection errors.
+      identifyTriggeringUser(user_id, team_id, client, analyticsManager);
 
       logger.info(
         `${user_id} requested a channel summarization on ${channel_name}`,

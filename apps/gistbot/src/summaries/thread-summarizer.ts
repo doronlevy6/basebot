@@ -4,7 +4,11 @@ import { UserLink } from '../slack/components/user-link';
 import { Summary } from '../slack/components/summary';
 import { ThreadSummaryModel } from './models/thread-summary.model';
 import { SlackMessage } from './types';
-import { filterUnwantedMessages, parseMessagesForSummary } from './utils';
+import {
+  filterUnwantedMessages,
+  identifyTriggeringUser,
+  parseMessagesForSummary,
+} from './utils';
 import { AnalyticsManager } from '../analytics/manager';
 import { Routes } from '../routes/router';
 import { privateChannelInstructions } from '../slack/private-channel';
@@ -26,6 +30,16 @@ export const threadSummarizationHandler =
   }: SlackShortcutWrapper) => {
     try {
       await ack();
+
+      // Don't await so that we don't force anything to wait just for the identification.
+      // This handles error handling internally and will never cause an exception, so we
+      // won't have any unhandled promise rejection errors.
+      identifyTriggeringUser(
+        payload.user.id,
+        payload.team?.id || 'unknown',
+        client,
+        analyticsManager,
+      );
 
       const messageTs = payload.message.ts;
       const channelId = payload.channel.id;

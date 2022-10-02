@@ -10,7 +10,9 @@ export const installationSucccessHandler = (
 
     await postInstallationMessage(
       installation.user.id,
+      installation.team?.id || 'unknown',
       installation.bot?.token || '',
+      analyticsManager,
     );
 
     analyticsManager.installationFunnel({
