@@ -2,7 +2,6 @@ import { logger } from '@base/logger';
 import { WebClient } from '@slack/web-api';
 import { AnalyticsManager } from '../analytics/manager';
 import { Routes } from '../routes/router';
-import { UserLink } from './components/user-link';
 import { ViewAction } from './types';
 
 interface AddToChannelProps {
@@ -125,15 +124,6 @@ export const addToChannel = async (
       slackUserId: props.currentUser,
       slackTeamId: props.teamId,
       channelId: props.channelId,
-    });
-
-    await client.chat.postMessage({
-      channel: props.channelId,
-      text: `Hello! I'm theGist :smile:\n\n${UserLink(
-        props.currentUser,
-      )} added me here to <#${
-        props.channelId
-      }> in order to help you all get the gist of things happening in this channel whenever you need!`,
     });
   } catch (err) {
     logger.error(`Add to channel handler error: ${err.stack}`);
