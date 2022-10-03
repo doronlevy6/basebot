@@ -2,8 +2,6 @@ import { WebClient } from '@slack/web-api';
 import { parseSlackMrkdwn } from '../slack/parser';
 import { extractMessageText } from '../slack/message-text';
 import { SlackMessage } from './types';
-import { AnalyticsManager } from '../analytics/manager';
-import { logger } from '@base/logger';
 import { approximatePromptCharacterCount } from './models/prompt-character-calculator';
 
 const MAX_REPLIES_TO_FETCH = 200;
@@ -195,39 +193,4 @@ export const filterUnwantedMessages = (m: SlackMessage, myBotId?: string) => {
   }
 
   return true;
-};
-
-export const identifyTriggeringUser = async (
-  userId: string,
-  teamId: string,
-  client: WebClient,
-  analyticsManager: AnalyticsManager,
-) => {
-  try {
-    const { error, ok, profile } = await client.users.profile.get({
-      user: userId,
-    });
-    if (error || !ok) {
-      throw new Error(`Failed to fetch user profile ${error}`);
-    }
-
-    if (!profile) {
-      throw new Error(`Failed to fetch user profile profile not found`);
-    }
-
-    analyticsManager.identifyUser({
-      slackUserId: userId,
-      slackTeamId: teamId,
-      username: profile.display_name,
-      realName: profile.real_name,
-      avatarUrl: profile.image_512,
-    });
-  } catch (error) {
-    logger.error({
-      msg: `failed to identify triggering user with error`,
-      error: `${error.stack ? error.stack : error}`,
-      userId: userId,
-      teamId: teamId,
-    });
-  }
 };

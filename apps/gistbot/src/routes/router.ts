@@ -1,5 +1,7 @@
 import { App, InstallationStore } from '@slack/bolt';
 import { AnalyticsManager } from '../analytics/manager';
+import { appHomeOpenedHandler } from '../onboarding/app-home-opened-handler';
+import { OnboardingStore } from '../onboarding/onboardingStore';
 import { addToChannelHandler } from '../slack/add-to-channel';
 import {
   addToChannelFromWelcomeModal,
@@ -30,6 +32,7 @@ export const registerBoltAppRouter = (
   analyticsManager: AnalyticsManager,
   threadSummaryModel: ThreadSummaryModel,
   channelSummaryModel: ChannelSummaryModel,
+  onboardingStore: OnboardingStore,
 ) => {
   app.shortcut(
     Routes.SUMMARIZE_THREAD,
@@ -71,12 +74,21 @@ export const registerBoltAppRouter = (
     addToChannelFromWelcomeModalHandler(analyticsManager),
   );
 
-  app.message(async ({ event, say }) => {
+  app.message(async ({ event, say, body }) => {
     // We are only able to listen to our own IM channels, so if the message channel is an IM, then we can assume it's our own IM
     if (event.channel_type === 'im') {
       say({
         text: 'Hi there :wave:',
         blocks: Help(),
+      });
+      console.log(event);
+      analyticsManager.messageSentToUserDM({
+        type: 'help_response_message',
+        slackTeamId: body.team_id,
+        slackUserId: event['user'] || 'unknown',
+        properties: {
+          triggerMessage: event['text'],
+        },
       });
     }
   });
@@ -90,6 +102,11 @@ export const registerBoltAppRouter = (
       });
     }
   });
+
+  app.event(
+    'app_home_opened',
+    appHomeOpenedHandler(onboardingStore, analyticsManager),
+  );
 
   // This is the global action handler, which will match all unmatched actions
   app.action(/.*/, onlyAck);

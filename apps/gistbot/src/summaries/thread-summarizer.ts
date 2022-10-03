@@ -4,16 +4,13 @@ import { UserLink } from '../slack/components/user-link';
 import { Summary } from '../slack/components/summary';
 import { ThreadSummaryModel } from './models/thread-summary.model';
 import { SlackMessage } from './types';
-import {
-  filterUnwantedMessages,
-  identifyTriggeringUser,
-  parseThreadForSummary,
-} from './utils';
+import { filterUnwantedMessages, parseThreadForSummary } from './utils';
 import { AnalyticsManager } from '../analytics/manager';
 import { Routes } from '../routes/router';
 import { privateChannelInstructions } from '../slack/private-channel';
 import { ModerationError } from './errors/moderation-error';
 import { MAX_PROMPT_CHARACTER_COUNT } from './models/prompt-character-calculator';
+import { identifyTriggeringUser } from '../slack/utils';
 
 export const threadSummarizationHandler =
   (

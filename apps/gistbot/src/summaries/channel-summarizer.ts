@@ -4,7 +4,6 @@ import { Summary } from '../slack/components/summary';
 import { SlackSlashCommandWrapper } from '../slack/types';
 import {
   filterUnwantedMessages,
-  identifyTriggeringUser,
   enrichWithReplies,
   parseThreadForSummary,
   sortSlackMessages,
@@ -21,6 +20,7 @@ import {
 import { WebClient } from '@slack/web-api';
 import { Context } from '@slack/bolt';
 import { SlackMessage } from './types';
+import { identifyTriggeringUser } from '../slack/utils';
 
 const MAX_MESSAGES_TO_FETCH = 50;
 

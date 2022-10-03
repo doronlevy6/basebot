@@ -118,6 +118,27 @@ export class AnalyticsManager {
     });
   }
 
+  messageSentToUserDM({
+    type,
+    slackUserId,
+    slackTeamId,
+    properties,
+  }: {
+    type: string;
+    slackUserId: string;
+    slackTeamId: string;
+    properties?: ExtraParams;
+  }) {
+    this.sendEventToAnalytics({
+      eventName: 'slack_direct_message_sent',
+      slackUserId: slackUserId,
+      slackTeamId: slackTeamId,
+      internalUserId: this.internalId(slackTeamId, slackUserId),
+      timestamp: new Date(),
+      properties: { ...properties, type },
+    });
+  }
+
   error({
     slackUserId,
     slackTeamId,

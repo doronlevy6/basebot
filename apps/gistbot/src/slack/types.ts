@@ -4,6 +4,7 @@ import {
   SlackAction,
   SlackActionMiddlewareArgs,
   SlackCommandMiddlewareArgs,
+  SlackEventMiddlewareArgs,
   SlackShortcut,
   SlackShortcutMiddlewareArgs,
   SlackViewAction,
@@ -26,3 +27,6 @@ export type SlackBlockActionWrapper<Action extends SlackAction = BlockAction> =
 export type ViewAction<
   Action extends SlackViewAction = ViewSubmitAction | ViewClosedAction,
 > = AllMiddlewareArgs & SlackViewMiddlewareArgs<Action>;
+
+export type SlackEventWrapper<Event extends string> = AllMiddlewareArgs &
+  SlackEventMiddlewareArgs<Event>;

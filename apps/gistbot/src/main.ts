@@ -15,6 +15,8 @@ import { registerBoltAppRouter } from './routes/router';
 import { AnalyticsManager } from './analytics/manager';
 import { ThreadSummaryModel } from './summaries/models/thread-summary.model';
 import { ChannelSummaryModel } from './summaries/models/channel-summary.model';
+import { PgOnboardingStore } from './onboarding/onboardingStore';
+import { userOnboardingMiddleware } from './onboarding/global-middleware';
 
 const gracefulShutdown = (server: Server) => (signal: string) => {
   logger.info('starting shutdown, got signal ' + signal);
@@ -38,7 +40,7 @@ const gracefulShutdownAsync = (analyticsManager: AnalyticsManager) => {
 const startApp = async () => {
   const metricsReporter = new PrometheusReporter();
 
-  const pgStore = new PgInstallationStore(metricsReporter, {
+  const pgConfig = {
     host: process.env.DB_HOST || 'localhost',
     port: parseInt(process.env.DB_PORT || '5432', 10),
     user: process.env.DB_USER || '',
@@ -48,7 +50,9 @@ const startApp = async () => {
       process.env.ENV ||
         'local' /* We are defaulting to local env to be explicit */,
     ),
-  });
+  };
+  const pgStore = new PgInstallationStore(metricsReporter, pgConfig);
+  const pgOnboardingStore = new PgOnboardingStore(metricsReporter, pgConfig);
 
   const analyticsManager = new AnalyticsManager();
   const threadSummaryModel = new ThreadSummaryModel();
@@ -58,6 +62,10 @@ const startApp = async () => {
   if (!ready) {
     throw new Error('PgStore is not ready');
   }
+  ready = await pgOnboardingStore.isReady();
+  if (!ready) {
+    throw new Error('PgOnboardingStore is not ready');
+  }
   ready = await analyticsManager.isReady();
   if (!ready) {
     throw new Error('AnalyticsManager is not ready');
@@ -65,6 +73,7 @@ const startApp = async () => {
 
   const slackApp = createApp(pgStore, metricsReporter, analyticsManager);
   slackApp.use(slackBoltMetricsMiddleware(metricsReporter));
+  slackApp.use(userOnboardingMiddleware(pgOnboardingStore, analyticsManager));
 
   registerBoltAppRouter(
     slackApp,
@@ -72,6 +81,7 @@ const startApp = async () => {
     analyticsManager,
     threadSummaryModel,
     channelSummaryModel,
+    pgOnboardingStore,
   );
 
   const port = process.env['PORT'] || 3000;
