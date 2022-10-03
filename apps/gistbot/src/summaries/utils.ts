@@ -34,30 +34,38 @@ export const parseThreadForSummary = async (
   ].filter((u) => u) as string[];
 
   const userInfoReses = await Promise.all(
-    messageUserIds.map((u) => client.users.info({ user: u })),
+    messageUserIds.map((u) =>
+      client.users.profile.get({ user: u }).then((res) => {
+        if (res.error) {
+          throw new Error(`message user error: ${res.error}`);
+        }
+        if (!res.ok || !res.profile) {
+          throw new Error('message user not ok');
+        }
+
+        return { ...res.profile, id: u };
+      }),
+    ),
   );
 
   const botInfoReses = await Promise.all(
     messageBotIds.map((u) => client.bots.info({ bot: u, team_id: teamId })),
   );
 
-  const userNames = messagesWithText.map((m) => {
-    const userInfo = userInfoReses.find((uir) => {
-      if (uir.error) {
-        throw new Error(`message user error: ${uir.error}`);
-      }
-      if (!uir.ok || !uir.user) {
-        throw new Error('message user not ok');
-      }
-
-      return uir.user.id === m.user;
+  const userNamesAndTitles = messagesWithText.map((m) => {
+    const userProfile = userInfoReses.find((uir) => {
+      return uir.id === m.user;
     });
-    if (userInfo && userInfo.user && userInfo.user.name) {
-      const capitalizedName =
-        userInfo.user.name.charAt(0).toUpperCase() +
-        userInfo.user.name.slice(1);
+    if (userProfile) {
+      const name =
+        userProfile.display_name ||
+        userProfile.real_name ||
+        userProfile.first_name;
+      if (name) {
+        const capitalizedName = name.charAt(0).toUpperCase() + name.slice(1);
 
-      return capitalizedName;
+        return { name: capitalizedName, title: userProfile.title || '' };
+      }
     }
 
     const botInfo = botInfoReses.find((uir) => {
@@ -82,27 +90,32 @@ export const parseThreadForSummary = async (
     const capitalizedName =
       botInfo.bot.name.charAt(0).toUpperCase() + botInfo.bot.name.slice(1);
 
-    return capitalizedName;
-  }) as string[];
+    return { name: capitalizedName, title: 'Bot' };
+  }) as { name: string; title: 'Bot' | string }[];
 
   let cc = approximatePromptCharacterCount({
     messages: messagesTexts,
-    names: userNames,
-    titles: [],
+    names: userNamesAndTitles.map((u) => u.name),
+    titles: userNamesAndTitles.map((u) => u.title),
   });
   while (cc > maxCharacterCountPerThread) {
     messagesTexts.shift();
-    userNames.shift();
+    userNamesAndTitles.shift();
     cc = approximatePromptCharacterCount({
       messages: messagesTexts,
-      names: userNames,
-      titles: [],
+      names: userNamesAndTitles.map((u) => u.name),
+      titles: userNamesAndTitles.map((u) => u.title),
     });
   }
 
   return {
     messages: messagesTexts,
-    users: userNames,
+    users: userNamesAndTitles.map((u) => u.name),
+    // TODO: Return the user titles back when they are used in personalization,
+    // for now they are taking up space in the available tokens and are not exactly used in the model itself.
+    // titles: userNamesAndTitles.map((u) => u.title),
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    titles: userNamesAndTitles.map((u) => ''),
   };
 };
 

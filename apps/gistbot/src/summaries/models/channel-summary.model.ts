@@ -73,7 +73,9 @@ export class ChannelSummaryModel {
       return res.data.data;
     } catch (error) {
       logger.error(
-        `error in channel summarization model: ${error} ${error.stack} ${error.response.data}`,
+        `error in channel summarization model: ${error} ${error.stack} ${
+          error.response && error.response.data
+        }`,
       );
       throw error;
     }

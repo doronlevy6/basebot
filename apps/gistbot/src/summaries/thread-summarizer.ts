@@ -102,7 +102,11 @@ export const threadSummarizationHandler =
         cursor = messageRepliesRes.response_metadata.next_cursor;
       }
 
-      const { messages: messagesTexts, users } = await parseThreadForSummary(
+      const {
+        messages: messagesTexts,
+        users,
+        titles,
+      } = await parseThreadForSummary(
         [payload.message, ...messageReplies],
         client,
         payload.team?.id || 'unknown',
@@ -131,7 +135,7 @@ export const threadSummarizationHandler =
         {
           messages: messagesTexts,
           names: users,
-          titles: ' '.repeat(users.length).split(' '), // TODO: Add user titles
+          titles: titles,
         },
         payload.user.id,
       );

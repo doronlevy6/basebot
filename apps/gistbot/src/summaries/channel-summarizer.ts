@@ -14,9 +14,15 @@ import { Routes } from '../routes/router';
 import { privateChannelInstructions } from '../slack/private-channel';
 import { ModerationError } from './errors/moderation-error';
 import { ChannelSummaryModel } from './models/channel-summary.model';
-import { MAX_PROMPT_CHARACTER_COUNT } from './models/prompt-character-calculator';
+import {
+  approximatePromptCharacterCountForChannelSummary,
+  MAX_PROMPT_CHARACTER_COUNT,
+} from './models/prompt-character-calculator';
+import { WebClient } from '@slack/web-api';
+import { Context } from '@slack/bolt';
+import { SlackMessage } from './types';
 
-const MAX_MESSAGES_TO_FETCH = 30;
+const MAX_MESSAGES_TO_FETCH = 50;
 
 export const channelSummarizationHandler =
   (
@@ -52,27 +58,19 @@ export const channelSummarizationHandler =
         channelId: channel_id,
       });
 
-      const { ok, error, messages } = await client.conversations.history({
-        channel: channel_id,
-        limit: MAX_MESSAGES_TO_FETCH,
-      });
-
-      if (error || !ok || !messages) {
-        throw new Error(
-          `conversation history error: ${error} ${ok} ${messages}`,
-        );
-      }
-
-      const filteredMessages = messages.filter((m) => {
-        return filterUnwantedMessages(m, context.botId);
-      });
+      const rootMessages = await fetchChannelRootMessages(
+        client,
+        channel_id,
+        context,
+        MAX_MESSAGES_TO_FETCH,
+      );
 
       // Ensure that we sort the messages oldest first (so that the model receives a conversation in order)
-      filteredMessages.sort(sortSlackMessages);
+      rootMessages.sort(sortSlackMessages);
 
       const messagesWithReplies = await enrichWithReplies(
         channel_id,
-        filteredMessages,
+        rootMessages,
         client,
         context.botId,
       );
@@ -102,38 +100,71 @@ export const channelSummarizationHandler =
         return acc;
       }, new Set<string>());
 
-      logger.info(
-        `Attempting to summarize channel with ${threads.length} threads, ${numberOfMessages} messages, and ${numberOfUsers} users`,
-      );
+      let successfulSummary = '';
+      let analyticsPrefix = '';
+      // eslint-disable-next-line no-constant-condition
+      while (true) {
+        logger.info(
+          `Attempting to summarize channel with ${threads.length} threads, ${numberOfMessages} messages, and ${numberOfUsers} users`,
+        );
 
-      analyticsManager.channelSummaryFunnel({
-        funnelStep: 'requesting_from_api',
-        slackTeamId: team_id,
-        slackUserId: user_id,
-        channelId: channel_id,
-        extraParams: {
-          numberOfThreads: threads.length,
-          numberOfMessages: numberOfMessages,
-          numberOfUsers: numberOfUsers,
-          numberOfUniqueUsers: uniqueUsers.size,
-        },
-      });
+        analyticsManager.channelSummaryFunnel({
+          funnelStep: `${analyticsPrefix}requesting_from_api`,
+          slackTeamId: team_id,
+          slackUserId: user_id,
+          channelId: channel_id,
+          extraParams: {
+            numberOfThreads: threads.length,
+            numberOfMessages: numberOfMessages,
+            numberOfUsers: numberOfUsers,
+            numberOfUniqueUsers: uniqueUsers.size,
+          },
+        });
 
-      const summary = await channelSummaryModel.summarizeChannel(
-        {
+        let req = {
           channel_name: channel_name,
           threads: threads.map((t) => {
             return {
               messages: t.messages,
               names: t.users,
-              titles: ' '.repeat(t.users.length).split(' '), // TODO: Add user titles
+              titles: t.titles,
             };
           }),
-        },
-        user_id,
-      );
+        };
+        let cc = approximatePromptCharacterCountForChannelSummary(req);
+        while (cc > MAX_PROMPT_CHARACTER_COUNT) {
+          threads.shift();
+          req = {
+            channel_name: channel_name,
+            threads: threads.map((t) => {
+              return {
+                messages: t.messages,
+                names: t.users,
+                titles: t.titles,
+              };
+            }),
+          };
+          cc = approximatePromptCharacterCountForChannelSummary(req);
+        }
 
-      if (!summary.length) {
+        const summary = await channelSummaryModel.summarizeChannel(
+          req,
+          user_id,
+        );
+
+        if (summary.length) {
+          successfulSummary = summary;
+          break;
+        }
+
+        analyticsPrefix = 'redo_';
+        threads.shift();
+        if (threads.length === 0) {
+          break;
+        }
+      }
+
+      if (!successfulSummary.length) {
         throw new Error('Invalid response');
       }
 
@@ -146,7 +177,7 @@ export const channelSummarizationHandler =
         blocks: Summary({
           actionId: Routes.CHANNEL_SUMMARY_FEEDBACK,
           basicText: basicText,
-          summary: summary,
+          summary: successfulSummary,
         }),
       });
 
@@ -238,3 +269,50 @@ export const channelSummarizationHandler =
       });
     }
   };
+
+const fetchChannelRootMessages = async (
+  client: WebClient,
+  channel_id: string,
+  context: Context,
+  maximumMessageCount: number,
+): Promise<SlackMessage[]> => {
+  const output: SlackMessage[] = [];
+  let cursor = '';
+
+  while (output.length < maximumMessageCount) {
+    const { ok, error, messages, has_more, response_metadata } =
+      await client.conversations.history({
+        channel: channel_id,
+        limit: maximumMessageCount - output.length,
+        cursor: cursor,
+      });
+
+    if (error || !ok) {
+      throw new Error(`conversation history error: ${error} ${ok}`);
+    }
+
+    if (!messages) {
+      break;
+    }
+
+    const filteredMessages = messages.filter((m) => {
+      // conversations.history returns some messages in threads
+      // and since we are going to fetch the replies anyways, we should
+      // remove these from the roots.
+      if (m.thread_ts && m.ts !== m.thread_ts) {
+        return false;
+      }
+
+      return filterUnwantedMessages(m, context.botId);
+    });
+
+    output.push(...filteredMessages);
+
+    cursor = response_metadata?.next_cursor || '';
+    if (!has_more || cursor === '') {
+      break;
+    }
+  }
+
+  return output;
+};
