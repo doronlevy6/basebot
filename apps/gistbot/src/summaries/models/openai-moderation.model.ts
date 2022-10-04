@@ -46,7 +46,7 @@ export class OpenAiModerationModel {
         requestBody,
         {
           headers: { Authorization: `Bearer ${this.apiKey}` },
-          timeout: 1000 * 60, // Milliseconds
+          timeout: 1000 * 10, // Milliseconds
         },
       );
 

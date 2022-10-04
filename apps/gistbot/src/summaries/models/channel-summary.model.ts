@@ -37,7 +37,7 @@ export class ChannelSummaryModel {
         this.apiEndpoint,
         { ...data, user_id: requestingUserId },
         {
-          timeout: 1000 * 60, // Milliseconds
+          timeout: 1000 * (60 * 10), // Milliseconds
         },
       );
 
@@ -62,12 +62,24 @@ export class ChannelSummaryModel {
         throw new Error(`Error response: ${res.data.error}`);
       }
 
-      const { flagged } = await this.moderationApi.moderate({
-        input: res.data.data,
-      });
+      try {
+        const { flagged } = await this.moderationApi.moderate({
+          input: res.data.data,
+        });
 
-      if (flagged) {
-        throw new ModerationError('moderated');
+        if (flagged) {
+          throw new ModerationError('moderated');
+        }
+      } catch (error) {
+        if (error instanceof ModerationError) {
+          throw new ModerationError('moderated');
+        }
+
+        logger.error(
+          `error in moderation of channel summarization: ${error} ${
+            error.stack
+          } ${error.response && error.response.data}`,
+        );
       }
 
       return res.data.data;
