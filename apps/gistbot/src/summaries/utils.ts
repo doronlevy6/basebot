@@ -34,16 +34,31 @@ export const parseThreadForSummary = async (
 
   const userInfoReses = await Promise.all(
     messageUserIds.map((u) =>
-      client.users.profile.get({ user: u }).then((res) => {
-        if (res.error) {
-          throw new Error(`message user error: ${res.error}`);
-        }
-        if (!res.ok || !res.profile) {
-          throw new Error('message user not ok');
-        }
+      client.users.profile
+        .get({ user: u })
+        .then((res) => {
+          if (res.error) {
+            throw new Error(`message user error: ${res.error}`);
+          }
+          if (!res.ok || !res.profile) {
+            throw new Error('message user not ok');
+          }
 
-        return { ...res.profile, id: u };
-      }),
+          return { ...res.profile, id: u };
+        })
+        .catch((reason) => {
+          logger.error(
+            `failed to get user info for user ${u} on team ${teamId}: ${reason}`,
+          );
+
+          return {
+            id: u,
+            display_name: 'Unknown User',
+            real_name: undefined,
+            first_name: undefined,
+            title: undefined,
+          };
+        }),
     ),
   );
 
