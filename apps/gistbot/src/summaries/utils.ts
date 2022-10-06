@@ -1,8 +1,9 @@
-import { WebClient } from '@slack/web-api';
+import { BotsInfoResponse, WebClient } from '@slack/web-api';
 import { parseSlackMrkdwn } from '../slack/parser';
 import { extractMessageText } from '../slack/message-text';
 import { SlackMessage } from './types';
 import { approximatePromptCharacterCount } from './models/prompt-character-calculator';
+import { logger } from '@base/logger';
 
 const MAX_REPLIES_TO_FETCH = 200;
 
@@ -47,7 +48,17 @@ export const parseThreadForSummary = async (
   );
 
   const botInfoReses = await Promise.all(
-    messageBotIds.map((u) => client.bots.info({ bot: u, team_id: teamId })),
+    messageBotIds.map((u) =>
+      client.bots.info({ bot: u, team_id: teamId }).catch((reason) => {
+        logger.error(
+          `failed to get bot info for bot ${u} on team ${teamId}: ${reason}`,
+        );
+        return {
+          bot: { bot_id: u, name: 'Unknown Bot' },
+          ok: true,
+        } as BotsInfoResponse;
+      }),
+    ),
   );
 
   const userNamesAndTitles = messagesWithText.map((m) => {
