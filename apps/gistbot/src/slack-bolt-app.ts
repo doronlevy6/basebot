@@ -9,7 +9,7 @@ import { metricsRoute } from './routes/metrics-route';
 import { AnalyticsManager } from './analytics/manager';
 import {
   AUTH_VERSION,
-  installEndpointHtml,
+  installEndpoint,
 } from './installations/install-endpoint';
 
 export function createApp(
@@ -37,7 +37,10 @@ export function createApp(
     ],
     installationStore: installationStore,
     installerOptions: {
-      renderHtmlForInstallPath: installEndpointHtml(analyticsManager),
+      directInstall: true,
+      installPathOptions: {
+        beforeRedirection: installEndpoint(analyticsManager),
+      },
       authVersion: AUTH_VERSION,
       callbackOptions: {
         successAsync: installationSucccessHandler(analyticsManager),
