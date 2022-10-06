@@ -19,6 +19,7 @@ import { PgOnboardingStore } from './onboarding/onboardingStore';
 import { userOnboardingMiddleware } from './onboarding/global-middleware';
 import { ChannelSummarizer } from './summaries/channel/channel-summarizer';
 import { ThreadSummarizer } from './summaries/thread/thread-summarizer';
+import { UserOnboardedNotifier } from './onboarding/notifier';
 
 const gracefulShutdown = (server: Server) => (signal: string) => {
   logger.info('starting shutdown, got signal ' + signal);
@@ -81,9 +82,20 @@ const startApp = async () => {
     throw new Error('AnalyticsManager is not ready');
   }
 
+  const userOnboardingNotifier = new UserOnboardedNotifier(
+    process.env.ENV || 'local',
+    process.env.SLACK_REGISTRATIONS_BOT_TOKEN,
+  );
+
   const slackApp = createApp(pgStore, metricsReporter, analyticsManager);
   slackApp.use(slackBoltMetricsMiddleware(metricsReporter));
-  slackApp.use(userOnboardingMiddleware(pgOnboardingStore, analyticsManager));
+  slackApp.use(
+    userOnboardingMiddleware(
+      pgOnboardingStore,
+      analyticsManager,
+      userOnboardingNotifier,
+    ),
+  );
 
   registerBoltAppRouter(
     slackApp,
@@ -92,6 +104,7 @@ const startApp = async () => {
     threadSummarizer,
     channelSummarizer,
     pgOnboardingStore,
+    userOnboardingNotifier,
   );
 
   const port = process.env['PORT'] || 3000;

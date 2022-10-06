@@ -10,6 +10,7 @@ import {
 import { AnalyticsManager } from '../analytics/manager';
 import { UserLink } from '../slack/components/user-link';
 import { Welcome } from '../slack/components/welcome';
+import { UserOnboardedNotifier } from './notifier';
 import { OnboardingStore } from './onboardingStore';
 
 interface slackIds {
@@ -22,9 +23,10 @@ export const userOnboardingMiddleware =
   (
     onboardingStore: OnboardingStore,
     analyticsManager: AnalyticsManager,
+    onboardingNotifier: UserOnboardedNotifier,
   ): Middleware<AnyMiddlewareArgs> =>
   async (args) => {
-    const { logger, next } = args;
+    const { logger, next, client } = args;
     const vals = getUserIdAndTeamId(args);
 
     if (!vals) {
@@ -55,6 +57,11 @@ export const userOnboardingMiddleware =
         });
 
         await onboardingStore.userOnboarded(vals.teamId, vals.userId);
+
+        // Don't await so that we don't force anything to wait just for the notification.
+        // This handles error handling internally and will never cause an exception, so we
+        // won't have any unhandled promise rejection errors.
+        onboardingNotifier.notify(client, vals.userId, vals.teamId);
       }
     } catch (error) {
       logger.error(
