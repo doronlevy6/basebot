@@ -42,9 +42,8 @@ export const channelSummarizationHandler =
       await ack();
       await summaryInProgressMessage(
         client,
-        payload.channel.id,
-        payload.user.id,
-        payload.message_ts,
+        payload.channel_id,
+        payload.user_id,
       );
 
       const { channel_id, user_id, channel_name, team_id } = payload;
