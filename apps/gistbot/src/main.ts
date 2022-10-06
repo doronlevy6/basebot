@@ -18,6 +18,7 @@ import { ChannelSummaryModel } from './summaries/models/channel-summary.model';
 import { PgOnboardingStore } from './onboarding/onboardingStore';
 import { userOnboardingMiddleware } from './onboarding/global-middleware';
 import { ChannelSummarizer } from './summaries/channel/channel-summarizer';
+import { ThreadSummarizer } from './summaries/thread/thread-summarizer';
 
 const gracefulShutdown = (server: Server) => (signal: string) => {
   logger.info('starting shutdown, got signal ' + signal);
@@ -57,6 +58,10 @@ const startApp = async () => {
 
   const analyticsManager = new AnalyticsManager();
   const threadSummaryModel = new ThreadSummaryModel();
+  const threadSummarizer = new ThreadSummarizer(
+    threadSummaryModel,
+    analyticsManager,
+  );
   const channelSummaryModel = new ChannelSummaryModel();
   const channelSummarizer = new ChannelSummarizer(
     channelSummaryModel,
@@ -84,7 +89,7 @@ const startApp = async () => {
     slackApp,
     pgStore,
     analyticsManager,
-    threadSummaryModel,
+    threadSummarizer,
     channelSummarizer,
     pgOnboardingStore,
   );

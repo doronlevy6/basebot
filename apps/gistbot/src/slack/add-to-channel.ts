@@ -3,6 +3,7 @@ import { WebClient } from '@slack/web-api';
 import { AnalyticsManager } from '../analytics/manager';
 import { Routes } from '../routes/router';
 import { ChannelSummarizer } from '../summaries/channel/channel-summarizer';
+import { ThreadSummarizer } from '../summaries/thread/thread-summarizer';
 import { SummarizationProps } from '../summaries/types';
 import { summaryInProgressMessage } from '../summaries/utils';
 import { ViewAction } from './types';
@@ -73,7 +74,11 @@ export const addToChannelInstructions = async (
 };
 
 export const addToChannelHandler =
-  (analyticsManager: AnalyticsManager, channelSummarizer: ChannelSummarizer) =>
+  (
+    analyticsManager: AnalyticsManager,
+    channelSummarizer: ChannelSummarizer,
+    threadSummarizer: ThreadSummarizer,
+  ) =>
   async (params: ViewAction) => {
     const { ack, view, client, body, context, respond } = params;
 
@@ -119,6 +124,42 @@ export const addToChannelHandler =
         });
 
         await channelSummarizer.summarize(
+          context.botId || '',
+          teamId,
+          currentUser,
+          summarization,
+          client,
+          respond,
+        );
+
+        return;
+      }
+
+      if (summarization && summarization.type === 'thread') {
+        analyticsManager.threadSummaryFunnel({
+          funnelStep: 'user_requested',
+          slackTeamId: teamId,
+          slackUserId: currentUser,
+          channelId: summarization.channelId,
+          threadTs: summarization.threadTs,
+        });
+
+        await summaryInProgressMessage(
+          client,
+          summarization.channelId,
+          currentUser,
+          summarization.threadTs,
+        );
+
+        analyticsManager.threadSummaryFunnel({
+          funnelStep: 'in_progress_sent',
+          slackTeamId: teamId,
+          slackUserId: currentUser,
+          channelId: summarization.channelId,
+          threadTs: summarization.threadTs,
+        });
+
+        await threadSummarizer.summarize(
           context.botId || '',
           teamId,
           currentUser,
