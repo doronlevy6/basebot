@@ -39,7 +39,7 @@ export const privateChannelInstructions = async (
           type: 'section',
           text: {
             type: 'mrkdwn',
-            text: `It looks like you're trying to use me in a private channel...\n\nFor now, I can't be used in private channels in order to preserve the privacy of those in the channel.`,
+            text: `It looks like you're trying to use me in a private channel...\n\nI can't be added to private channels automatically, so you'll have to invite me manually.\n\nYou do this by typing /invite @theGist from the channel.`,
           },
         },
       ],
