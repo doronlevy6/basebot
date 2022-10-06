@@ -194,3 +194,18 @@ export const filterUnwantedMessages = (m: SlackMessage, myBotId?: string) => {
 
   return true;
 };
+
+export const summaryInProgressMessage = async (
+  client: WebClient,
+  channel: string,
+  user: string,
+  message_ts?: string,
+) => {
+  await client.chat.postEphemeral({
+    thread_ts: message_ts,
+    response_type: 'ephemeral',
+    channel: channel,
+    text: `Creating your summary`,
+    user: user,
+  });
+};

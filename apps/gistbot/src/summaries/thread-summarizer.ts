@@ -4,7 +4,11 @@ import { UserLink } from '../slack/components/user-link';
 import { Summary } from '../slack/components/summary';
 import { ThreadSummaryModel } from './models/thread-summary.model';
 import { SlackMessage } from './types';
-import { filterUnwantedMessages, parseThreadForSummary } from './utils';
+import {
+  filterUnwantedMessages,
+  parseThreadForSummary,
+  summaryInProgressMessage,
+} from './utils';
 import { AnalyticsManager } from '../analytics/manager';
 import { Routes } from '../routes/router';
 import { privateChannelInstructions } from '../slack/private-channel';
@@ -28,6 +32,12 @@ export const threadSummarizationHandler =
   }: SlackShortcutWrapper) => {
     try {
       await ack();
+      await summaryInProgressMessage(
+        client,
+        payload.channel.id,
+        payload.user.id,
+        payload.message_ts,
+      );
 
       // Don't await so that we don't force anything to wait just for the identification.
       // This handles error handling internally and will never cause an exception, so we

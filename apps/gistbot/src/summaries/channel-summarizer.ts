@@ -7,6 +7,7 @@ import {
   enrichWithReplies,
   parseThreadForSummary,
   sortSlackMessages,
+  summaryInProgressMessage,
 } from './utils';
 import { AnalyticsManager } from '../analytics/manager';
 import { Routes } from '../routes/router';
@@ -39,6 +40,12 @@ export const channelSummarizationHandler =
   }: SlackSlashCommandWrapper) => {
     try {
       await ack();
+      await summaryInProgressMessage(
+        client,
+        payload.channel.id,
+        payload.user.id,
+        payload.message_ts,
+      );
 
       const { channel_id, user_id, channel_name, team_id } = payload;
 
