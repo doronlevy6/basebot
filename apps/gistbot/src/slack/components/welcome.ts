@@ -42,7 +42,7 @@ export const Welcome = (userId: string, myBotUserId: string): KnownBlock[] => {
       type: 'section',
       text: {
         type: 'mrkdwn',
-        text: `To start getting the Gist, add me to a channel and I'll introduce myself. I'm usually added to a team or project channel. Type /invite ${UserLink(
+        text: `To start getting the Gist, add me to a channel and I'll introduce myself. I'm usually added to a team or project channel. Type \`/invite\` ${UserLink(
           myBotUserId,
         )} from the channel or pick a channel on the right.`,
       },

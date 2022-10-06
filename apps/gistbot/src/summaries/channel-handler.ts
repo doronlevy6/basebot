@@ -81,6 +81,7 @@ export const channelSummarizationHandler =
             },
           },
           analyticsManager,
+          context.botUserId || '',
         );
         analyticsManager.channelSummaryFunnel({
           funnelStep: 'not_in_channel',
@@ -105,6 +106,7 @@ export const channelSummarizationHandler =
             teamId: payload.team_id,
           },
           analyticsManager,
+          context.botUserId || '',
         );
         analyticsManager.channelSummaryFunnel({
           funnelStep: 'private_channel',

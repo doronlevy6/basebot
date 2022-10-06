@@ -83,7 +83,11 @@ export const registerBoltAppRouter = (
 
   app.message(async ({ event, say, body, context }) => {
     // We are only able to listen to our own IM channels, so if the message channel is an IM, then we can assume it's our own IM
-    if (event.channel_type === 'im') {
+    if (
+      event.channel_type === 'im' &&
+      'user' in event &&
+      event.user !== 'USLACKBOT'
+    ) {
       say({
         text: 'Hi there :wave:',
         blocks: Help(context.botUserId || ''),
@@ -94,7 +98,7 @@ export const registerBoltAppRouter = (
         slackTeamId: body.team_id,
         slackUserId: event['user'] || 'unknown',
         properties: {
-          triggerMessage: event['text'],
+          triggerMessage: event['text'] || 'unknown text',
         },
       });
     }

@@ -6,6 +6,7 @@ import { ChannelSummarizer } from '../summaries/channel/channel-summarizer';
 import { ThreadSummarizer } from '../summaries/thread/thread-summarizer';
 import { SummarizationProps } from '../summaries/types';
 import { summaryInProgressMessage } from '../summaries/utils';
+import { UserLink } from './components/user-link';
 import { ViewAction } from './types';
 
 interface AddToChannelProps {
@@ -21,6 +22,7 @@ export const addToChannelInstructions = async (
   triggerId: string,
   props: AddToChannelProps,
   analyticsManager: AnalyticsManager,
+  myBotId: string,
 ) => {
   await client.views.open({
     trigger_id: triggerId,
@@ -56,7 +58,9 @@ export const addToChannelInstructions = async (
               '\n\n' +
               'Just tap the `Add me now!` button to let me in.' +
               '\n' +
-              'You can also type `/invite @theGist` from any channel.',
+              `You can also type \`/invite\` ${UserLink(
+                myBotId,
+              )} from any channel.`,
           },
         },
       ],

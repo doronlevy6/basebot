@@ -94,6 +94,7 @@ export const threadSummarizationHandler =
             },
           },
           analyticsManager,
+          context.botUserId || '',
         );
         analyticsManager.threadSummaryFunnel({
           funnelStep: 'not_in_channel',
@@ -119,6 +120,7 @@ export const threadSummarizationHandler =
             teamId: payload.user.team_id || 'unknown',
           },
           analyticsManager,
+          context.botUserId || '',
         );
         analyticsManager.threadSummaryFunnel({
           funnelStep: 'private_channel',

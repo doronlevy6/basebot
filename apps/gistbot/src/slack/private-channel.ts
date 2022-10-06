@@ -2,6 +2,7 @@ import { logger } from '@base/logger';
 import { WebClient } from '@slack/web-api';
 import { AnalyticsManager } from '../analytics/manager';
 import { Routes } from '../routes/router';
+import { UserLink } from './components/user-link';
 import { ViewAction } from './types';
 
 interface PrivateChannelProps {
@@ -16,6 +17,7 @@ export const privateChannelInstructions = async (
   triggerId: string,
   props: PrivateChannelProps,
   analyticsManager: AnalyticsManager,
+  myBotId: string,
 ) => {
   await client.views.open({
     trigger_id: triggerId,
@@ -39,7 +41,9 @@ export const privateChannelInstructions = async (
           type: 'section',
           text: {
             type: 'mrkdwn',
-            text: `It looks like you're trying to use me in a private channel...\n\nI can't be added to private channels automatically, so you'll have to invite me manually.\n\nYou do this by typing /invite @theGist from the channel.`,
+            text: `It looks like you're trying to use me in a private channel...\n\nI can't be added to private channels automatically, so you'll have to invite me manually.\n\nYou do this by typing \`/invite\` ${UserLink(
+              myBotId,
+            )} from the channel.`,
           },
         },
       ],
