@@ -3,7 +3,7 @@ import { Routes } from '../../routes/router';
 import { MessageShortcutImage } from './message-shortcut-image';
 import { UserLink } from './user-link';
 
-export const Welcome = (userId: string): KnownBlock[] => {
+export const Welcome = (userId: string, myBotUserId: string): KnownBlock[] => {
   return [
     {
       type: 'section',
@@ -33,7 +33,18 @@ export const Welcome = (userId: string): KnownBlock[] => {
       type: 'section',
       text: {
         type: 'mrkdwn',
-        text: "To start getting the Gist, add me to a channel and I'll introduce myself. I'm usually added to a team or project channel. Type /invite @theGist from the channel or pick a channel on the right.",
+        text: `:three: You can also always simply ask me to summarize a channel or a thread by mentioning me like this: ${UserLink(
+          myBotUserId,
+        )}.`,
+      },
+    },
+    {
+      type: 'section',
+      text: {
+        type: 'mrkdwn',
+        text: `To start getting the Gist, add me to a channel and I'll introduce myself. I'm usually added to a team or project channel. Type /invite ${UserLink(
+          myBotUserId,
+        )} from the channel or pick a channel on the right.`,
       },
       accessory: {
         type: 'button',

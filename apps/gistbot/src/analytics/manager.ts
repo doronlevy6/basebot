@@ -74,6 +74,27 @@ export class AnalyticsManager {
     });
   }
 
+  botMentioned({
+    slackUserId,
+    slackTeamId,
+    channelId,
+    properties,
+  }: {
+    slackUserId: string;
+    slackTeamId: string;
+    channelId: string;
+    properties?: ExtraParams;
+  }) {
+    this.sendEventToAnalytics({
+      eventName: 'bot_mentioned',
+      slackUserId: slackUserId,
+      slackTeamId: slackTeamId,
+      internalUserId: this.internalId(slackTeamId, slackUserId),
+      timestamp: new Date(),
+      properties: { ...properties, channelId },
+    });
+  }
+
   modalView({
     type,
     slackUserId,

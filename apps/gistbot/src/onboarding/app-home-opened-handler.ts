@@ -16,6 +16,7 @@ export const appHomeOpenedHandler =
     logger,
     event,
     body,
+    context,
   }: SlackEventWrapper<'app_home_opened'>) => {
     const { team_id } = body;
     const { user } = event;
@@ -38,7 +39,7 @@ export const appHomeOpenedHandler =
       await client.chat.postMessage({
         channel: user,
         text: `Hey ${UserLink(user)} :wave: I'm theGist!`,
-        blocks: Welcome(user),
+        blocks: Welcome(user, context.botUserId || ''),
       });
 
       analyticsManager.messageSentToUserDM({

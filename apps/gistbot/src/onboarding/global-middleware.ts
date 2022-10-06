@@ -26,7 +26,7 @@ export const userOnboardingMiddleware =
     onboardingNotifier: UserOnboardedNotifier,
   ): Middleware<AnyMiddlewareArgs> =>
   async (args) => {
-    const { logger, next, client } = args;
+    const { logger, next, client, context } = args;
     const vals = getUserIdAndTeamId(args);
 
     if (!vals) {
@@ -44,7 +44,7 @@ export const userOnboardingMiddleware =
         await vals.respond({
           response_type: 'ephemeral',
           text: `Hey ${UserLink(vals.userId)} :wave: I'm theGist!`,
-          blocks: Welcome(vals.userId),
+          blocks: Welcome(vals.userId, context.botUserId || ''),
         });
 
         analyticsManager.messageSentToUserDM({

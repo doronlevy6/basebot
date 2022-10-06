@@ -1,0 +1,74 @@
+import { GenericMessageEvent } from '@slack/bolt';
+import { AnalyticsManager } from '../analytics/manager';
+import { SlackEventWrapper } from '../slack/types';
+import { ChannelSummarizer } from './channel/channel-summarizer';
+import { ThreadSummarizer } from './thread/thread-summarizer';
+
+export const mentionHandler =
+  (
+    analyticsManager: AnalyticsManager,
+    channelSummarizer: ChannelSummarizer,
+    threadSummarizer: ThreadSummarizer,
+  ) =>
+  async ({ client, logger, body, context }: SlackEventWrapper<'message'>) => {
+    try {
+      const { team_id } = body;
+      const event = body.event as GenericMessageEvent;
+      logger.info(`${event.user} mentioned us in ${event.channel}`);
+
+      analyticsManager.botMentioned({
+        slackTeamId: team_id,
+        slackUserId: event.user,
+        channelId: event.channel,
+        properties: {
+          mention_message_text: event.text || '',
+        },
+      });
+
+      const { error, ok, channel } = await client.conversations.info({
+        channel: event.channel,
+      });
+
+      if (error || !ok) {
+        throw new Error(`Failed to fetch conversation info ${error}`);
+      }
+
+      if (!channel || !channel.name) {
+        throw new Error(
+          `Failed to fetch conversation info conversation not found`,
+        );
+      }
+
+      if (event.thread_ts) {
+        await threadSummarizer.summarize(
+          context.botId || '',
+          team_id,
+          event.user,
+          {
+            type: 'thread',
+            channelId: event.channel,
+            channelName: channel.name,
+            threadTs: event.thread_ts,
+          },
+          client,
+        );
+        return;
+      }
+
+      await channelSummarizer.summarize(
+        context.botId || '',
+        team_id,
+        event.user,
+        {
+          type: 'channel',
+          channelId: event.channel,
+          channelName: channel.name,
+        },
+        client,
+      );
+    } catch (error) {
+      logger.error(
+        `error in handling mention summarization: ${error} ${error.stack}`,
+      );
+    }
+  };

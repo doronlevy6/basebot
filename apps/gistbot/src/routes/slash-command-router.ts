@@ -2,7 +2,7 @@ import { logger } from '@base/logger';
 import { AnalyticsManager } from '../analytics/manager';
 import { Help } from '../slack/components/help';
 import { SlackSlashCommandWrapper } from '../slack/types';
-import { channelSummarizationHandler } from '../summaries/channel-summarizer';
+import { channelSummarizationHandler } from '../summaries/channel-handler';
 import { ChannelSummarizer } from '../summaries/channel/channel-summarizer';
 
 export const slashCommandRouter = (
@@ -18,6 +18,7 @@ export const slashCommandRouter = (
     const {
       command: { text },
       respond,
+      context,
     } = props;
     logger.info(`Running command ${text}`);
 
@@ -26,7 +27,7 @@ export const slashCommandRouter = (
       await respond({
         response_type: 'ephemeral',
         text: 'Hi there :wave:',
-        blocks: Help(),
+        blocks: Help(context.botUserId || ''),
       });
       return;
     }

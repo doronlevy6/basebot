@@ -1,4 +1,4 @@
-import { App, InstallationStore } from '@slack/bolt';
+import { App, directMention, InstallationStore } from '@slack/bolt';
 import { AnalyticsManager } from '../analytics/manager';
 import { appHomeOpenedHandler } from '../onboarding/app-home-opened-handler';
 import { UserOnboardedNotifier } from '../onboarding/notifier';
@@ -12,7 +12,8 @@ import { Help } from '../slack/components/help';
 import { privateChannelHandler } from '../slack/private-channel';
 import { channelSummaryFeedbackHandler } from '../summaries/channel-summary-feedback';
 import { ChannelSummarizer } from '../summaries/channel/channel-summarizer';
-import { threadSummarizationHandler } from '../summaries/thread-summarizer';
+import { mentionHandler } from '../summaries/mention-handler';
+import { threadSummarizationHandler } from '../summaries/thread-handler';
 import { threadSummaryFeedbackHandler } from '../summaries/thread-summary-feedback';
 import { ThreadSummarizer } from '../summaries/thread/thread-summarizer';
 import { slashCommandRouter } from './slash-command-router';
@@ -80,12 +81,12 @@ export const registerBoltAppRouter = (
     addToChannelFromWelcomeModalHandler(analyticsManager),
   );
 
-  app.message(async ({ event, say, body }) => {
+  app.message(async ({ event, say, body, context }) => {
     // We are only able to listen to our own IM channels, so if the message channel is an IM, then we can assume it's our own IM
     if (event.channel_type === 'im') {
       say({
         text: 'Hi there :wave:',
-        blocks: Help(),
+        blocks: Help(context.botUserId || ''),
       });
       console.log(event);
       analyticsManager.messageSentToUserDM({
@@ -98,6 +99,11 @@ export const registerBoltAppRouter = (
       });
     }
   });
+
+  app.message(
+    directMention(),
+    mentionHandler(analyticsManager, channelSummarizer, threadSummarizer),
+  );
 
   app.event('app_uninstalled', async ({ body }) => {
     if (installationStore.deleteInstallation) {

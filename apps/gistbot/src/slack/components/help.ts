@@ -1,7 +1,8 @@
 import { KnownBlock } from '@slack/web-api';
 import { MessageShortcutImage } from './message-shortcut-image';
+import { UserLink } from './user-link';
 
-export const Help = (): KnownBlock[] => {
+export const Help = (myBotUserId: string): KnownBlock[] => {
   return [
     {
       type: 'section',
@@ -18,7 +19,11 @@ export const Help = (): KnownBlock[] => {
           '\n\n' +
           '*Summarize threads:*' +
           '\n\n' +
-          'Use the message shortcut to summarize a message or a thread (see image below)',
+          'Use the message shortcut to summarize a message or a thread (see image below)' +
+          '\n\n' +
+          `You can also always simply ask us to summarize a channel or a thread by mentioning us like this: ${UserLink(
+            myBotUserId,
+          )} `,
       },
     },
     MessageShortcutImage(),
