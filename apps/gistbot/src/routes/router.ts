@@ -102,7 +102,13 @@ export const registerBoltAppRouter = (
 
   app.message(
     directMention(),
-    mentionHandler(analyticsManager, channelSummarizer, threadSummarizer),
+    mentionHandler(
+      analyticsManager,
+      channelSummarizer,
+      threadSummarizer,
+      onboardingStore,
+      onboardingNotifier,
+    ),
   );
 
   app.event('app_uninstalled', async ({ body }) => {
