@@ -3,15 +3,15 @@ import { AnalyticsManager } from '../analytics/manager';
 import { Help } from '../slack/components/help';
 import { SlackSlashCommandWrapper } from '../slack/types';
 import { channelSummarizationHandler } from '../summaries/channel-summarizer';
-import { ChannelSummaryModel } from '../summaries/models/channel-summary.model';
+import { ChannelSummarizer } from '../summaries/channel/channel-summarizer';
 
 export const slashCommandRouter = (
-  channelSummaryModel: ChannelSummaryModel,
+  channelSummarizer: ChannelSummarizer,
   analyticsManager: AnalyticsManager,
 ) => {
   const handler = channelSummarizationHandler(
-    channelSummaryModel,
     analyticsManager,
+    channelSummarizer,
   );
 
   return async (props: SlackSlashCommandWrapper) => {

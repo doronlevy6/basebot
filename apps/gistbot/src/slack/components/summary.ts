@@ -4,11 +4,11 @@ import { SummaryFeedback } from './summary-feedback';
 export const Summary = ({
   actionId,
   basicText,
-  summary,
+  summaryParts,
 }: {
   actionId: string;
   basicText: string;
-  summary: string;
+  summaryParts: string[];
 }): (KnownBlock | Block)[] => {
   return [
     {
@@ -19,14 +19,16 @@ export const Summary = ({
         verbatim: true,
       },
     },
-    {
-      type: 'section',
-      text: {
-        text: summary,
-        type: 'plain_text',
-        emoji: true,
-      },
-    },
+    ...summaryParts.map((sp) => {
+      return {
+        type: 'section',
+        text: {
+          text: sp,
+          type: 'plain_text',
+          emoji: true,
+        },
+      };
+    }),
     {
       type: 'divider',
     },

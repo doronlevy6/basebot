@@ -158,7 +158,7 @@ export const threadSummarizationHandler =
         blocks: Summary({
           actionId: Routes.THREAD_SUMMARY_FEEDBACK,
           basicText: basicText,
-          summary: summary,
+          summaryParts: [summary],
         }),
       });
 
@@ -186,6 +186,12 @@ export const threadSummarizationHandler =
             channelName: payload.channel.name,
             currentUser: payload.user.id,
             teamId: payload.user.team_id || 'unknown',
+            summarization: {
+              type: 'thread',
+              channelId: payload.channel.id,
+              threadTs: payload.message_ts,
+              channelName: payload.channel.name,
+            },
           },
           analyticsManager,
         );

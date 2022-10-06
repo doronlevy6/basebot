@@ -2,6 +2,9 @@ import { logger } from '@base/logger';
 import { WebClient } from '@slack/web-api';
 import { AnalyticsManager } from '../analytics/manager';
 import { Routes } from '../routes/router';
+import { ChannelSummarizer } from '../summaries/channel/channel-summarizer';
+import { SummarizationProps } from '../summaries/types';
+import { summaryInProgressMessage } from '../summaries/utils';
 import { ViewAction } from './types';
 
 interface AddToChannelProps {
@@ -9,6 +12,7 @@ interface AddToChannelProps {
   channelId: string;
   channelName: string;
   currentUser: string;
+  summarization?: SummarizationProps;
 }
 
 export const addToChannelInstructions = async (
@@ -69,8 +73,9 @@ export const addToChannelInstructions = async (
 };
 
 export const addToChannelHandler =
-  (analyticsManager: AnalyticsManager) => async (params: ViewAction) => {
-    const { ack, view, client, body } = params;
+  (analyticsManager: AnalyticsManager, channelSummarizer: ChannelSummarizer) =>
+  async (params: ViewAction) => {
+    const { ack, view, client, body, context, respond } = params;
 
     try {
       await ack();
@@ -78,7 +83,7 @@ export const addToChannelHandler =
       const submitted = body.type === 'view_submission';
 
       const props = JSON.parse(view.private_metadata) as AddToChannelProps;
-      const { channelId, currentUser, teamId } = props;
+      const { channelId, currentUser, teamId, summarization } = props;
 
       analyticsManager.modalClosed({
         type: 'not_in_channel',
@@ -95,6 +100,33 @@ export const addToChannelHandler =
       }
 
       await addToChannel(client, props, analyticsManager);
+
+      if (summarization && summarization.type === 'channel') {
+        analyticsManager.channelSummaryFunnel({
+          funnelStep: 'user_requested',
+          slackTeamId: teamId,
+          slackUserId: currentUser,
+          channelId: props.channelId,
+        });
+
+        await summaryInProgressMessage(client, props.channelId, currentUser);
+
+        analyticsManager.channelSummaryFunnel({
+          funnelStep: 'in_progress_sent',
+          slackTeamId: teamId,
+          slackUserId: currentUser,
+          channelId: props.channelId,
+        });
+
+        await channelSummarizer.summarize(
+          context.botId || '',
+          teamId,
+          currentUser,
+          summarization,
+          client,
+          respond,
+        );
+      }
     } catch (err) {
       logger.error(`Add to channel handler error: ${err.stack}`);
     }
@@ -102,7 +134,7 @@ export const addToChannelHandler =
 
 export const addToChannel = async (
   client: WebClient,
-  props: Omit<AddToChannelProps, 'channelName'>,
+  props: Omit<AddToChannelProps, 'channelName' | 'summarization'>,
   analyticsManager: AnalyticsManager,
 ) => {
   try {

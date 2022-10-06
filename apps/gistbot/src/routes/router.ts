@@ -10,7 +10,7 @@ import {
 import { Help } from '../slack/components/help';
 import { privateChannelHandler } from '../slack/private-channel';
 import { channelSummaryFeedbackHandler } from '../summaries/channel-summary-feedback';
-import { ChannelSummaryModel } from '../summaries/models/channel-summary.model';
+import { ChannelSummarizer } from '../summaries/channel/channel-summarizer';
 import { ThreadSummaryModel } from '../summaries/models/thread-summary.model';
 import { threadSummarizationHandler } from '../summaries/thread-summarizer';
 import { threadSummaryFeedbackHandler } from '../summaries/thread-summary-feedback';
@@ -31,7 +31,7 @@ export const registerBoltAppRouter = (
   installationStore: InstallationStore,
   analyticsManager: AnalyticsManager,
   threadSummaryModel: ThreadSummaryModel,
-  channelSummaryModel: ChannelSummaryModel,
+  channelSummarizer: ChannelSummarizer,
   onboardingStore: OnboardingStore,
 ) => {
   app.shortcut(
@@ -39,7 +39,7 @@ export const registerBoltAppRouter = (
     threadSummarizationHandler(analyticsManager, threadSummaryModel),
   );
 
-  const addToChannel = addToChannelHandler(analyticsManager);
+  const addToChannel = addToChannelHandler(analyticsManager, channelSummarizer);
   const privateChannel = privateChannelHandler(analyticsManager);
 
   app.view(Routes.ADD_TO_CHANNEL_SUBMIT, addToChannel);
@@ -54,7 +54,7 @@ export const registerBoltAppRouter = (
   );
   app.command(
     /gist.*/,
-    slashCommandRouter(channelSummaryModel, analyticsManager),
+    slashCommandRouter(channelSummarizer, analyticsManager),
   );
   app.action(
     Routes.THREAD_SUMMARY_FEEDBACK,

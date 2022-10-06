@@ -17,6 +17,7 @@ import { ThreadSummaryModel } from './summaries/models/thread-summary.model';
 import { ChannelSummaryModel } from './summaries/models/channel-summary.model';
 import { PgOnboardingStore } from './onboarding/onboardingStore';
 import { userOnboardingMiddleware } from './onboarding/global-middleware';
+import { ChannelSummarizer } from './summaries/channel/channel-summarizer';
 
 const gracefulShutdown = (server: Server) => (signal: string) => {
   logger.info('starting shutdown, got signal ' + signal);
@@ -57,6 +58,10 @@ const startApp = async () => {
   const analyticsManager = new AnalyticsManager();
   const threadSummaryModel = new ThreadSummaryModel();
   const channelSummaryModel = new ChannelSummaryModel();
+  const channelSummarizer = new ChannelSummarizer(
+    channelSummaryModel,
+    analyticsManager,
+  );
 
   let ready = await pgStore.isReady();
   if (!ready) {
@@ -80,7 +85,7 @@ const startApp = async () => {
     pgStore,
     analyticsManager,
     threadSummaryModel,
-    channelSummaryModel,
+    channelSummarizer,
     pgOnboardingStore,
   );
 

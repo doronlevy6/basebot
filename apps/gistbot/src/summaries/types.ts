@@ -13,3 +13,20 @@ export type SlackMessage = Pick<
   | 'text'
   | 'subtype'
 >;
+
+export type SummarizationProps =
+  | ThreadSummarizationProps
+  | ChannelSummarizationProps;
+
+export interface ThreadSummarizationProps {
+  type: 'thread';
+  channelId: string;
+  channelName: string;
+  threadTs: string;
+}
+
+export interface ChannelSummarizationProps {
+  type: 'channel';
+  channelId: string;
+  channelName: string;
+}
