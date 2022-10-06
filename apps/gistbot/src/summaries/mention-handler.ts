@@ -3,6 +3,7 @@ import { AnalyticsManager } from '../analytics/manager';
 import { SlackEventWrapper } from '../slack/types';
 import { ChannelSummarizer } from './channel/channel-summarizer';
 import { ThreadSummarizer } from './thread/thread-summarizer';
+import { summaryInProgressMessage } from './utils';
 
 export const mentionHandler =
   (
@@ -24,6 +25,13 @@ export const mentionHandler =
           mention_message_text: event.text || '',
         },
       });
+
+      await summaryInProgressMessage(
+        client,
+        event.channel,
+        event.user,
+        event.thread_ts,
+      );
 
       const { error, ok, channel } = await client.conversations.info({
         channel: event.channel,

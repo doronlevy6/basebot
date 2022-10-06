@@ -1,9 +1,11 @@
 import {
   AnyMiddlewareArgs,
+  GenericMessageEvent,
   Middleware,
   RespondFn,
   SlackActionMiddlewareArgs,
   SlackCommandMiddlewareArgs,
+  SlackEventMiddlewareArgs,
   SlackShortcutMiddlewareArgs,
   SlackViewMiddlewareArgs,
 } from '@slack/bolt';
@@ -13,7 +15,17 @@ import { Welcome } from '../slack/components/welcome';
 import { UserOnboardedNotifier } from './notifier';
 import { OnboardingStore } from './onboardingStore';
 
+type extractedValues = slackIdsForMessageEvent | slackIds;
+
+interface slackIdsForMessageEvent {
+  type: 'message';
+  teamId: string;
+  userId: string;
+  channelId: string;
+}
+
 interface slackIds {
+  type: 'user-interaction';
   teamId: string;
   userId: string;
   respond: RespondFn;
@@ -41,11 +53,20 @@ export const userOnboardingMiddleware =
       );
 
       if (!wasOnboarded) {
-        await vals.respond({
-          response_type: 'ephemeral',
-          text: `Hey ${UserLink(vals.userId)} :wave: I'm theGist!`,
-          blocks: Welcome(vals.userId, context.botUserId || ''),
-        });
+        if (vals.type === 'user-interaction') {
+          await vals.respond({
+            response_type: 'ephemeral',
+            text: `Hey ${UserLink(vals.userId)} :wave: I'm theGist!`,
+            blocks: Welcome(vals.userId, context.botUserId || ''),
+          });
+        } else {
+          await client.chat.postEphemeral({
+            text: `Hey ${UserLink(vals.userId)} :wave: I'm theGist!`,
+            blocks: Welcome(vals.userId, context.botUserId || ''),
+            user: vals.userId,
+            channel: vals.channelId,
+          });
+        }
 
         analyticsManager.messageSentToUserDM({
           type: 'onboarding_message',
@@ -72,9 +93,12 @@ export const userOnboardingMiddleware =
     await next();
   };
 
-function getUserIdAndTeamId(args: AnyMiddlewareArgs): slackIds | undefined {
+function getUserIdAndTeamId(
+  args: AnyMiddlewareArgs,
+): extractedValues | undefined {
   if (isActionArgs(args)) {
     return {
+      type: 'user-interaction',
       teamId: args.body.team?.id || 'unknown',
       userId: args.body.user.id,
       respond: args.respond,
@@ -83,6 +107,7 @@ function getUserIdAndTeamId(args: AnyMiddlewareArgs): slackIds | undefined {
 
   if (isCommandArgs(args)) {
     return {
+      type: 'user-interaction',
       teamId: args.body.team_id || 'unknown',
       userId: args.body.user_id,
       respond: args.respond,
@@ -91,6 +116,7 @@ function getUserIdAndTeamId(args: AnyMiddlewareArgs): slackIds | undefined {
 
   if (isViewArgs(args)) {
     return {
+      type: 'user-interaction',
       teamId: args.body.team?.id || 'unknown',
       userId: args.body.user.id,
       respond: args.respond,
@@ -99,10 +125,24 @@ function getUserIdAndTeamId(args: AnyMiddlewareArgs): slackIds | undefined {
 
   if (isShortcutArgs(args)) {
     return {
+      type: 'user-interaction',
       teamId: args.body.team?.id || 'unknown',
       userId: args.body.user.id,
       respond: args.respond,
     };
+  }
+
+  if (isEventArgs(args)) {
+    if (args.message !== undefined) {
+      const message =
+        args.message as SlackEventMiddlewareArgs<'message'>['message'] as GenericMessageEvent;
+      return {
+        type: 'message',
+        teamId: args.body.team_id,
+        userId: message.user,
+        channelId: message.channel,
+      };
+    }
   }
 }
 
@@ -126,4 +166,10 @@ function isShortcutArgs(
   args: AnyMiddlewareArgs,
 ): args is SlackShortcutMiddlewareArgs {
   return (args as SlackShortcutMiddlewareArgs).shortcut !== undefined;
+}
+
+function isEventArgs(
+  args: AnyMiddlewareArgs,
+): args is SlackEventMiddlewareArgs {
+  return (args as SlackEventMiddlewareArgs).event !== undefined;
 }
