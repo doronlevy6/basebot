@@ -34,6 +34,7 @@ export function createApp(
       'channels:join',
       'usergroups:read',
       'reactions:read',
+      'groups:history',
     ],
     installationStore: installationStore,
     installerOptions: {
