@@ -35,6 +35,8 @@ export function createApp(
       'usergroups:read',
       'reactions:read',
       'groups:history',
+      'channels:read',
+      'groups:read',
     ],
     installationStore: installationStore,
     installerOptions: {
