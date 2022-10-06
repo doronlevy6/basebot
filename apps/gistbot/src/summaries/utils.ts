@@ -104,11 +104,12 @@ export const parseThreadForSummary = async (
     });
 
     if (!botInfo || !botInfo.bot || !botInfo.bot.name) {
-      throw new Error(
+      logger.error(
         `no user information or bot information found for user ${
           m.user || m.bot_id
         }`,
       );
+      return { name: 'Unknown User', title: '' };
     }
 
     const capitalizedName =
