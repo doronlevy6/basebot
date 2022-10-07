@@ -50,5 +50,7 @@ export function createApp(
         failure: installationFailureHandler(analyticsManager),
       },
     },
+    socketMode: false,
+    developerMode: true,
   });
 }
