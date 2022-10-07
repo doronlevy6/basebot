@@ -116,6 +116,14 @@ export const registerBoltAppRouter = (
   );
 
   app.event('app_uninstalled', async ({ body }) => {
+    analyticsManager.installationFunnel({
+      funnelStep: 'begin_uninstall',
+      slackTeamId: body.team_id,
+      slackUserId: 'unknown',
+      extraParams: {
+        isEnterprise: body.enterprise_id ? true : false,
+      },
+    });
     if (installationStore.deleteInstallation) {
       await installationStore.deleteInstallation({
         teamId: body.team_id,
@@ -123,6 +131,14 @@ export const registerBoltAppRouter = (
         isEnterpriseInstall: body.enterprise_id ? true : false,
       });
     }
+    analyticsManager.installationFunnel({
+      funnelStep: 'successful_uninstall',
+      slackTeamId: body.team_id,
+      slackUserId: 'unknown',
+      extraParams: {
+        isEnterprise: body.enterprise_id ? true : false,
+      },
+    });
   });
 
   app.event(
