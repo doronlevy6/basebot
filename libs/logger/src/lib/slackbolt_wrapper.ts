@@ -9,7 +9,30 @@ export class BoltWrapper implements BoltLogger {
     this.logger = logger;
   }
 
+  private filterDebugLogs(...msg: any[]) {
+    return Boolean(
+      msg.find((m) => {
+        if (typeof m !== 'string') {
+          return false;
+        }
+        if (m.includes('will perform http request')) {
+          return true;
+        }
+        if (m.includes('http response received')) {
+          return true;
+        }
+        if (m.includes(`apiCall('`)) {
+          return true;
+        }
+        return false;
+      }),
+    );
+  }
+
   debug(...msg: any[]): void {
+    if (this.filterDebugLogs(...msg)) {
+      return;
+    }
     this.logger.debug({ message: msg, origin: 'bolt' });
   }
 
