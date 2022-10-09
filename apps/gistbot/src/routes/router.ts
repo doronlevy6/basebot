@@ -2,6 +2,7 @@ import { App, directMention, InstallationStore } from '@slack/bolt';
 import { AnalyticsManager } from '../analytics/manager';
 import { appHomeOpenedHandler } from '../onboarding/app-home-opened-handler';
 import { UserOnboardedNotifier } from '../onboarding/notifier';
+import { OnboardingLock } from '../onboarding/onboarding-lock';
 import { OnboardingStore } from '../onboarding/onboardingStore';
 import { addToChannelHandler } from '../slack/add-to-channel';
 import {
@@ -36,6 +37,7 @@ export const registerBoltAppRouter = (
   channelSummarizer: ChannelSummarizer,
   onboardingStore: OnboardingStore,
   onboardingNotifier: UserOnboardedNotifier,
+  onboardingLock: OnboardingLock,
 ) => {
   app.shortcut(
     Routes.SUMMARIZE_THREAD,
@@ -112,6 +114,7 @@ export const registerBoltAppRouter = (
       threadSummarizer,
       onboardingStore,
       onboardingNotifier,
+      onboardingLock,
     ),
   );
 
@@ -143,7 +146,12 @@ export const registerBoltAppRouter = (
 
   app.event(
     'app_home_opened',
-    appHomeOpenedHandler(onboardingStore, analyticsManager, onboardingNotifier),
+    appHomeOpenedHandler(
+      onboardingStore,
+      analyticsManager,
+      onboardingNotifier,
+      onboardingLock,
+    ),
   );
 
   // This is the global action handler, which will match all unmatched actions

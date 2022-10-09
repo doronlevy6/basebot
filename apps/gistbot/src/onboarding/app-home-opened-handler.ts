@@ -3,6 +3,7 @@ import { UserLink } from '../slack/components/user-link';
 import { Welcome } from '../slack/components/welcome';
 import { SlackEventWrapper } from '../slack/types';
 import { UserOnboardedNotifier } from './notifier';
+import { OnboardingLock } from './onboarding-lock';
 import { OnboardingStore } from './onboardingStore';
 
 export const appHomeOpenedHandler =
@@ -10,6 +11,7 @@ export const appHomeOpenedHandler =
     onboardingStore: OnboardingStore,
     analyticsManager: AnalyticsManager,
     onboardingNotifier: UserOnboardedNotifier,
+    onboardingLock: OnboardingLock,
   ) =>
   async ({
     client,
@@ -31,6 +33,14 @@ export const appHomeOpenedHandler =
 
       if (wasOnboarded) {
         logger.info(`user ${user} has already been onboarded`);
+        return;
+      }
+
+      const acquireOnboarding = await onboardingLock.lock(team_id, user);
+      if (!acquireOnboarding) {
+        logger.info(
+          `user ${user} is being onboarded elsewhere, skipping app home onboarding`,
+        );
         return;
       }
 

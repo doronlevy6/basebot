@@ -20,6 +20,7 @@ import { userOnboardingMiddleware } from './onboarding/global-middleware';
 import { ChannelSummarizer } from './summaries/channel/channel-summarizer';
 import { ThreadSummarizer } from './summaries/thread/thread-summarizer';
 import { UserOnboardedNotifier } from './onboarding/notifier';
+import { RedisOnboardingLock } from './onboarding/onboarding-lock';
 
 const gracefulShutdown = (server: Server) => (signal: string) => {
   logger.info('starting shutdown, got signal ' + signal);
@@ -56,6 +57,15 @@ const startApp = async () => {
   };
   const pgStore = new PgInstallationStore(metricsReporter, pgConfig);
   const pgOnboardingStore = new PgOnboardingStore(metricsReporter, pgConfig);
+  const onboardingLock = new RedisOnboardingLock(
+    {
+      host: process.env.REDIS_HOST || '',
+      port: parseInt(process.env.REDIS_PORT || '6379', 10),
+      password: process.env.REDIS_PASSWORD,
+      cluster: process.env.REDIS_CLUSTER === 'true',
+    },
+    process.env.ENV || 'local',
+  );
 
   const analyticsManager = new AnalyticsManager();
   const threadSummaryModel = new ThreadSummaryModel();
@@ -81,6 +91,10 @@ const startApp = async () => {
   if (!ready) {
     throw new Error('AnalyticsManager is not ready');
   }
+  ready = await onboardingLock.isReady();
+  if (!ready) {
+    throw new Error('OnboardingLock is not ready');
+  }
 
   const userOnboardingNotifier = new UserOnboardedNotifier(
     process.env.ENV || 'local',
@@ -94,6 +108,7 @@ const startApp = async () => {
       pgOnboardingStore,
       analyticsManager,
       userOnboardingNotifier,
+      onboardingLock,
     ),
   );
 
@@ -105,6 +120,7 @@ const startApp = async () => {
     channelSummarizer,
     pgOnboardingStore,
     userOnboardingNotifier,
+    onboardingLock,
   );
 
   const port = process.env['PORT'] || 3000;
