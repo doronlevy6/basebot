@@ -1,7 +1,7 @@
 import { WebClient } from '@slack/web-api';
 
 export class SpecialMentionSection {
-  type: 'special_mention';
+  type: 'special_mention' = 'special_mention';
   mention: 'channel' | 'everyone' | 'here';
   label?: string;
 

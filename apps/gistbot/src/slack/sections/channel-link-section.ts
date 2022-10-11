@@ -2,7 +2,7 @@ import { logger } from '@base/logger';
 import { WebClient } from '@slack/web-api';
 
 export class ChannelLinkSection {
-  type: 'channel_link';
+  type: 'channel_link' = 'channel_link';
   channelId: string;
   label?: string;
 

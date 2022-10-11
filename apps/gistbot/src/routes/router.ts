@@ -9,6 +9,7 @@ import {
 } from '../slack/add-to-channel-from-welcome';
 import { Help } from '../slack/components/help';
 import { privateChannelHandler } from '../slack/private-channel';
+import { mentionedInThreadMessage } from '../slack/mentioned-in-thread.middleware';
 import { channelJoinHandler } from '../summaries/channel-join-handler';
 import { channelSummaryFeedbackHandler } from '../summaries/channel-summary-feedback';
 import { ChannelSummarizer } from '../summaries/channel/channel-summarizer';
@@ -112,6 +113,10 @@ export const registerBoltAppRouter = (
       onboardingManager,
     ),
   );
+
+  app.message(mentionedInThreadMessage(), async ({ logger }) => {
+    logger.info('in thread mention');
+  });
 
   app.message(
     subtype('channel_join'),

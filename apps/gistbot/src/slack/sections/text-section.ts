@@ -1,7 +1,7 @@
 import { WebClient } from '@slack/web-api';
 
 export class TextSection {
-  type: 'text';
+  type: 'text' = 'text';
   text: string;
 
   constructor(initial?: { text?: string }) {

@@ -1,7 +1,7 @@
 import { WebClient } from '@slack/web-api';
 
 export class UrlLinkSection {
-  type: 'url_link';
+  type: 'url_link' = 'url_link';
   url: string;
   label?: string;
 

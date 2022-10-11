@@ -2,7 +2,7 @@ import { logger } from '@base/logger';
 import { WebClient } from '@slack/web-api';
 
 export class UserMentionSection {
-  type: 'user_mention';
+  type: 'user_mention' = 'user_mention';
   userId: string;
   label?: string;
 

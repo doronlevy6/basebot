@@ -1,7 +1,7 @@
 import { WebClient } from '@slack/web-api';
 
 export class LocalizedDateSection {
-  type: 'localized_date';
+  type: 'localized_date' = 'localized_date';
   unix: number;
   format: string;
   optionalLink?: string;
