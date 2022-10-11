@@ -74,6 +74,7 @@ export class ThreadSummarizer {
         client,
         teamId,
         MAX_PROMPT_CHARACTER_COUNT,
+        props.channelName,
         myBotId,
       );
 
@@ -99,6 +100,7 @@ export class ThreadSummarizer {
           messages: messagesTexts,
           names: users,
           titles: titles,
+          channel_name: props.channelName,
         },
         userId,
       );

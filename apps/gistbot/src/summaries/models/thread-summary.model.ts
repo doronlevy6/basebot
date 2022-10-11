@@ -8,10 +8,11 @@ export interface ThreadSummaryModelRequest {
   messages: string[];
   names: string[];
   titles: string[];
+  channel_name: string;
 }
 
 interface ModelResponse {
-  data: string;
+  data: string[];
   from?: 'model-thread-summary';
   error?: string;
 }
@@ -32,7 +33,7 @@ export class ThreadSummaryModel {
     try {
       const res = await axios.post<ModelResponse>(
         this.apiEndpoint,
-        { ...data, user_id: requestingUserId },
+        { threads: [data], user_id: requestingUserId },
         {
           timeout: 1000 * (60 * 10), // Milliseconds
         },
@@ -60,7 +61,7 @@ export class ThreadSummaryModel {
 
       try {
         const { flagged } = await this.moderationApi.moderate({
-          input: res.data.data,
+          input: res.data.data[0],
         });
 
         if (flagged) {
@@ -78,7 +79,7 @@ export class ThreadSummaryModel {
         );
       }
 
-      return res.data.data;
+      return res.data.data[0];
     } catch (error) {
       logger.error(
         `error in thread summarization model: ${error} ${error.stack} ${

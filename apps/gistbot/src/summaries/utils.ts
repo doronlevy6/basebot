@@ -12,6 +12,7 @@ export const parseThreadForSummary = async (
   client: WebClient,
   teamId: string,
   maxCharacterCountPerThread: number,
+  channelName: string,
   myBotId?: string,
 ) => {
   const messagesWithText = messages?.filter((t) => {
@@ -122,6 +123,7 @@ export const parseThreadForSummary = async (
     messages: messagesTexts,
     names: userNamesAndTitles.map((u) => u.name),
     titles: userNamesAndTitles.map((u) => u.title),
+    channel_name: channelName,
   });
   while (cc > maxCharacterCountPerThread) {
     messagesTexts.shift();
@@ -130,6 +132,7 @@ export const parseThreadForSummary = async (
       messages: messagesTexts,
       names: userNamesAndTitles.map((u) => u.name),
       titles: userNamesAndTitles.map((u) => u.title),
+      channel_name: channelName,
     });
   }
 

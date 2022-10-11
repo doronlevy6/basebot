@@ -60,6 +60,7 @@ export class ChannelSummarizer {
             client,
             teamId,
             MAX_PROMPT_CHARACTER_COUNT,
+            props.channelName,
             myBotId,
           );
 
