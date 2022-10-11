@@ -7,12 +7,7 @@ import {
   SlackShortcutMiddlewareArgs,
   SlackViewMiddlewareArgs,
 } from '@slack/bolt';
-import { AnalyticsManager } from '../analytics/manager';
-import { UserLink } from '../slack/components/user-link';
-import { Welcome } from '../slack/components/welcome';
-import { UserOnboardedNotifier } from './notifier';
-import { OnboardingLock } from './onboarding-lock';
-import { OnboardingStore } from './onboardingStore';
+import { OnboardingManager } from './manager';
 
 interface slackIds {
   type: 'user-interaction';
@@ -22,12 +17,7 @@ interface slackIds {
 }
 
 export const userOnboardingMiddleware =
-  (
-    onboardingStore: OnboardingStore,
-    analyticsManager: AnalyticsManager,
-    onboardingNotifier: UserOnboardedNotifier,
-    onboardingLock: OnboardingLock,
-  ): Middleware<AnyMiddlewareArgs> =>
+  (onboardingManager: OnboardingManager): Middleware<AnyMiddlewareArgs> =>
   async (args) => {
     const { logger, next, client, context } = args;
     const vals = getUserIdAndTeamId(args);
@@ -38,45 +28,13 @@ export const userOnboardingMiddleware =
     }
 
     try {
-      const wasOnboarded = await onboardingStore.wasUserOnboarded(
+      await onboardingManager.onboardUser(
         vals.teamId,
         vals.userId,
+        client,
+        'global_middleware',
+        context.botUserId,
       );
-
-      if (!wasOnboarded) {
-        const acquireOnboarding = await onboardingLock.lock(
-          vals.teamId,
-          vals.userId,
-        );
-
-        if (acquireOnboarding) {
-          await vals.respond({
-            response_type: 'ephemeral',
-            text: `Hey ${UserLink(vals.userId)} :wave: I'm theGist!`,
-            blocks: Welcome(vals.userId, context.botUserId || ''),
-          });
-
-          analyticsManager.messageSentToUserDM({
-            type: 'onboarding_message',
-            slackTeamId: vals.teamId,
-            slackUserId: vals.userId,
-            properties: {
-              ephemeral: true,
-            },
-          });
-
-          await onboardingStore.userOnboarded(vals.teamId, vals.userId);
-
-          // Don't await so that we don't force anything to wait just for the notification.
-          // This handles error handling internally and will never cause an exception, so we
-          // won't have any unhandled promise rejection errors.
-          onboardingNotifier.notify(client, vals.userId, vals.teamId);
-        } else {
-          logger.info(
-            `user ${vals.userId} is being onboarded elsewhere, skipping middleware onboarding`,
-          );
-        }
-      }
     } catch (error) {
       logger.error(
         `error checking if the user was onboarded: ${error} - ${error.stack}`,

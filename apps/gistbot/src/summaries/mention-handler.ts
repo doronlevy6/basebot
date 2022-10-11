@@ -1,12 +1,6 @@
-import { logger } from '@base/logger';
 import { GenericMessageEvent } from '@slack/bolt';
-import { WebClient } from '@slack/web-api';
 import { AnalyticsManager } from '../analytics/manager';
-import { UserOnboardedNotifier } from '../onboarding/notifier';
-import { OnboardingLock } from '../onboarding/onboarding-lock';
-import { OnboardingStore } from '../onboarding/onboardingStore';
-import { UserLink } from '../slack/components/user-link';
-import { Welcome } from '../slack/components/welcome';
+import { OnboardingManager } from '../onboarding/manager';
 import { SlackEventWrapper } from '../slack/types';
 import { ChannelSummarizer } from './channel/channel-summarizer';
 import { ThreadSummarizer } from './thread/thread-summarizer';
@@ -17,9 +11,7 @@ export const mentionHandler =
     analyticsManager: AnalyticsManager,
     channelSummarizer: ChannelSummarizer,
     threadSummarizer: ThreadSummarizer,
-    onboardingStore: OnboardingStore,
-    onboardingNotifier: UserOnboardedNotifier,
-    onboardingLock: OnboardingLock,
+    onboardingManager: OnboardingManager,
   ) =>
   async ({ client, logger, body, context }: SlackEventWrapper<'message'>) => {
     try {
@@ -27,16 +19,12 @@ export const mentionHandler =
       const event = body.event as GenericMessageEvent;
       logger.info(`${event.user} mentioned us in ${event.channel}`);
 
-      await checkAndOnboard(
+      await onboardingManager.onboardUser(
         team_id,
         event.user,
-        context.botUserId || '',
-        event.channel,
         client,
-        onboardingStore,
-        analyticsManager,
-        onboardingNotifier,
-        onboardingLock,
+        'direct_mention',
+        context.botUserId,
       );
 
       analyticsManager.botMentioned({
@@ -102,56 +90,3 @@ export const mentionHandler =
       );
     }
   };
-
-export const checkAndOnboard = async (
-  teamId: string,
-  userId: string,
-  botUserId: string,
-  channelId: string,
-  client: WebClient,
-  onboardingStore: OnboardingStore,
-  analyticsManager: AnalyticsManager,
-  onboardingNotifier: UserOnboardedNotifier,
-  onboardingLock: OnboardingLock,
-) => {
-  try {
-    const wasOnboarded = await onboardingStore.wasUserOnboarded(teamId, userId);
-
-    if (!wasOnboarded) {
-      const acquireOnboarding = await onboardingLock.lock(teamId, userId);
-      if (!acquireOnboarding) {
-        logger.info(
-          `user ${userId} is being onboarded elsewhere, skipping mention onboarding`,
-        );
-        return;
-      }
-
-      await client.chat.postEphemeral({
-        text: `Hey ${UserLink(userId)} :wave: I'm theGist!`,
-        blocks: Welcome(userId, botUserId || ''),
-        user: userId,
-        channel: channelId,
-      });
-
-      analyticsManager.messageSentToUserDM({
-        type: 'onboarding_message',
-        slackTeamId: teamId,
-        slackUserId: userId,
-        properties: {
-          ephemeral: true,
-        },
-      });
-
-      await onboardingStore.userOnboarded(teamId, userId);
-
-      // Don't await so that we don't force anything to wait just for the notification.
-      // This handles error handling internally and will never cause an exception, so we
-      // won't have any unhandled promise rejection errors.
-      onboardingNotifier.notify(client, userId, teamId);
-    }
-  } catch (error) {
-    logger.error(
-      `error checking if the user was onboarded: ${error} - ${error.stack}`,
-    );
-  }
-};

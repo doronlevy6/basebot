@@ -21,6 +21,7 @@ import { ChannelSummarizer } from './summaries/channel/channel-summarizer';
 import { ThreadSummarizer } from './summaries/thread/thread-summarizer';
 import { UserOnboardedNotifier } from './onboarding/notifier';
 import { RedisOnboardingLock } from './onboarding/onboarding-lock';
+import { OnboardingManager } from './onboarding/manager';
 
 const gracefulShutdown = (server: Server) => (signal: string) => {
   logger.info('starting shutdown, got signal ' + signal);
@@ -101,16 +102,16 @@ const startApp = async () => {
     process.env.SLACK_REGISTRATIONS_BOT_TOKEN,
   );
 
+  const onboardingManager = new OnboardingManager(
+    pgOnboardingStore,
+    onboardingLock,
+    analyticsManager,
+    userOnboardingNotifier,
+  );
+
   const slackApp = createApp(pgStore, metricsReporter, analyticsManager);
   slackApp.use(slackBoltMetricsMiddleware(metricsReporter));
-  slackApp.use(
-    userOnboardingMiddleware(
-      pgOnboardingStore,
-      analyticsManager,
-      userOnboardingNotifier,
-      onboardingLock,
-    ),
-  );
+  slackApp.use(userOnboardingMiddleware(onboardingManager));
 
   registerBoltAppRouter(
     slackApp,
@@ -118,9 +119,7 @@ const startApp = async () => {
     analyticsManager,
     threadSummarizer,
     channelSummarizer,
-    pgOnboardingStore,
-    userOnboardingNotifier,
-    onboardingLock,
+    onboardingManager,
   );
 
   const port = process.env['PORT'] || 3000;
