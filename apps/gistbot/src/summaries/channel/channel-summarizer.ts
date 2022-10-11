@@ -28,12 +28,14 @@ export class ChannelSummarizer {
   ) {}
 
   async summarize(
+    summaryContext: string,
     myBotId: string,
     teamId: string,
     userId: string,
     props: ChannelSummarizationProps,
     client: WebClient,
     respond?: RespondFn,
+    minMessageCount?: number,
   ): Promise<void> {
     try {
       const rootMessages = await this.fetchChannelRootMessages(
@@ -79,6 +81,26 @@ export class ChannelSummarizer {
         return acc;
       }, new Set<string>());
 
+      if (minMessageCount && numberOfMessages < minMessageCount) {
+        logger.info(
+          `${numberOfMessages} messages in channel ${props.channelId} less than the minimum requested count ${minMessageCount}`,
+        );
+        this.analyticsManager.channelSummaryFunnel({
+          funnelStep: 'channel_too_small',
+          slackTeamId: teamId,
+          slackUserId: userId,
+          channelId: props.channelId,
+          extraParams: {
+            summaryContext: summaryContext,
+            numberOfThreads: threads.length,
+            numberOfMessages: numberOfMessages,
+            numberOfUsers: numberOfUsers,
+            numberOfUniqueUsers: uniqueUsers.size,
+          },
+        });
+        return;
+      }
+
       let successfulSummary = '';
       let analyticsPrefix = '';
       // eslint-disable-next-line no-constant-condition
@@ -93,6 +115,7 @@ export class ChannelSummarizer {
           slackUserId: userId,
           channelId: props.channelId,
           extraParams: {
+            summaryContext: summaryContext,
             numberOfThreads: threads.length,
             numberOfMessages: numberOfMessages,
             numberOfUsers: numberOfUsers,
@@ -192,6 +215,7 @@ export class ChannelSummarizer {
         slackUserId: userId,
         channelId: props.channelId,
         extraParams: {
+          summaryContext: summaryContext,
           numberOfThreads: threads.length,
           numberOfMessages: numberOfMessages,
           numberOfUsers: numberOfUsers,
@@ -219,6 +243,9 @@ export class ChannelSummarizer {
           slackTeamId: teamId,
           slackUserId: userId,
           channelId: props.channelId,
+          extraParams: {
+            summaryContext: summaryContext,
+          },
         });
         return;
       }

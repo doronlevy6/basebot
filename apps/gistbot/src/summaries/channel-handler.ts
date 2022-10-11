@@ -51,6 +51,7 @@ export const channelSummarizationHandler =
       );
 
       await channelSummarizer.summarize(
+        'slash_command',
         context.botId || '',
         team_id,
         user_id,

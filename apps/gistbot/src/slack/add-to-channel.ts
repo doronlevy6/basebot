@@ -128,6 +128,7 @@ export const addToChannelHandler =
         });
 
         await channelSummarizer.summarize(
+          'add_to_channel',
           context.botId || '',
           teamId,
           currentUser,

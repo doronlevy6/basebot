@@ -1,10 +1,7 @@
-import { App, directMention, InstallationStore } from '@slack/bolt';
+import { App, directMention, InstallationStore, subtype } from '@slack/bolt';
 import { AnalyticsManager } from '../analytics/manager';
 import { appHomeOpenedHandler } from '../onboarding/app-home-opened-handler';
 import { OnboardingManager } from '../onboarding/manager';
-import { UserOnboardedNotifier } from '../onboarding/notifier';
-import { OnboardingLock } from '../onboarding/onboarding-lock';
-import { OnboardingStore } from '../onboarding/onboardingStore';
 import { addToChannelHandler } from '../slack/add-to-channel';
 import {
   addToChannelFromWelcomeModal,
@@ -12,6 +9,7 @@ import {
 } from '../slack/add-to-channel-from-welcome';
 import { Help } from '../slack/components/help';
 import { privateChannelHandler } from '../slack/private-channel';
+import { channelJoinHandler } from '../summaries/channel-join-handler';
 import { channelSummaryFeedbackHandler } from '../summaries/channel-summary-feedback';
 import { ChannelSummarizer } from '../summaries/channel/channel-summarizer';
 import { mentionHandler } from '../summaries/mention-handler';
@@ -113,6 +111,16 @@ export const registerBoltAppRouter = (
       threadSummarizer,
       onboardingManager,
     ),
+  );
+
+  app.message(
+    subtype('channel_join'),
+    channelJoinHandler(analyticsManager, channelSummarizer, onboardingManager),
+  );
+
+  app.message(
+    subtype('group_join'),
+    channelJoinHandler(analyticsManager, channelSummarizer, onboardingManager),
   );
 
   app.event('app_uninstalled', async ({ body }) => {

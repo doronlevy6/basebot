@@ -1,29 +1,29 @@
-import { GenericMessageEvent } from '@slack/bolt';
+import { ChannelJoinMessageEvent } from '@slack/bolt';
 import { AnalyticsManager } from '../analytics/manager';
 import { OnboardingManager } from '../onboarding/manager';
 import { SlackEventWrapper } from '../slack/types';
 import { ChannelSummarizer } from './channel/channel-summarizer';
-import { ThreadSummarizer } from './thread/thread-summarizer';
 import { summaryInProgressMessage } from './utils';
 
-export const mentionHandler =
+const MINIMUM_MESSAGES_ON_CHANNEL_JOIN = 10;
+
+export const channelJoinHandler =
   (
     analyticsManager: AnalyticsManager,
     channelSummarizer: ChannelSummarizer,
-    threadSummarizer: ThreadSummarizer,
     onboardingManager: OnboardingManager,
   ) =>
   async ({ client, logger, body, context }: SlackEventWrapper<'message'>) => {
     try {
       const { team_id } = body;
-      const event = body.event as GenericMessageEvent;
-      logger.info(`${event.user} mentioned us in ${event.channel}`);
+      const event = body.event as ChannelJoinMessageEvent;
+      logger.info(`${event.user} has joined ${event.channel}`);
 
       await onboardingManager.onboardUser(
         team_id,
         event.user,
         client,
-        'direct_mention',
+        'channel_join',
         context.botUserId,
       );
 
@@ -36,12 +36,7 @@ export const mentionHandler =
         },
       });
 
-      await summaryInProgressMessage(
-        client,
-        event.channel,
-        event.user,
-        event.thread_ts,
-      );
+      await summaryInProgressMessage(client, event.channel, event.user);
 
       const { error, ok, channel } = await client.conversations.info({
         channel: event.channel,
@@ -57,24 +52,8 @@ export const mentionHandler =
         );
       }
 
-      if (event.thread_ts) {
-        await threadSummarizer.summarize(
-          context.botId || '',
-          team_id,
-          event.user,
-          {
-            type: 'thread',
-            channelId: event.channel,
-            channelName: channel.name,
-            threadTs: event.thread_ts,
-          },
-          client,
-        );
-        return;
-      }
-
       await channelSummarizer.summarize(
-        'bot_mentioned',
+        'channel_joined',
         context.botId || '',
         team_id,
         event.user,
@@ -84,10 +63,12 @@ export const mentionHandler =
           channelName: channel.name,
         },
         client,
+        undefined,
+        MINIMUM_MESSAGES_ON_CHANNEL_JOIN,
       );
     } catch (error) {
       logger.error(
-        `error in handling mention summarization: ${error} ${error.stack}`,
+        `error in handling channel join summarization: ${error} ${error.stack}`,
       );
     }
   };
