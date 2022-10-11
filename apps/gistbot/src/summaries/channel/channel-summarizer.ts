@@ -11,6 +11,7 @@ import {
   approximatePromptCharacterCountForChannelSummary,
   MAX_PROMPT_CHARACTER_COUNT,
 } from '../models/prompt-character-calculator';
+import { SummaryStore } from '../summary-store';
 import { ChannelSummarizationProps, SlackMessage } from '../types';
 import {
   enrichWithReplies,
@@ -25,6 +26,7 @@ export class ChannelSummarizer {
   constructor(
     private channelSummaryModel: ChannelSummaryModel,
     private analyticsManager: AnalyticsManager,
+    private summaryStore: SummaryStore,
   ) {}
 
   async summarize(
@@ -187,11 +189,20 @@ export class ChannelSummarizer {
         summaryParts.push(summaryPart);
       }
 
+      const startTimeStamp = Number(rootMessages[0].ts);
       const basicText = `${UserLink(userId)} here's the summary you requested:`;
+
+      const summaryStoreKey = await this.summaryStore.set({
+        textParts: summaryParts,
+        startDate: startTimeStamp,
+      });
+
+      logger.debug(`Wrote summary with key ${summaryStoreKey.key}`);
+
       const blocks = Summary({
         actionId: Routes.CHANNEL_SUMMARY_FEEDBACK,
-        basicText: basicText,
-        summaryParts: summaryParts,
+        basicText,
+        summaryParts,
       });
 
       if (respond) {

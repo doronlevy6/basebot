@@ -21,6 +21,8 @@ import { ChannelSummarizer } from './summaries/channel/channel-summarizer';
 import { ThreadSummarizer } from './summaries/thread/thread-summarizer';
 import { UserOnboardedNotifier } from './onboarding/notifier';
 import { RedisOnboardingLock } from './onboarding/onboarding-lock';
+import { RedisConfig } from './utils/redis-util';
+import { SummaryStore } from './summaries/summary-store';
 import { OnboardingManager } from './onboarding/manager';
 
 const gracefulShutdown = (server: Server) => (signal: string) => {
@@ -45,28 +47,27 @@ const gracefulShutdownAsync = (analyticsManager: AnalyticsManager) => {
 const startApp = async () => {
   const metricsReporter = new PrometheusReporter();
 
+  const env =
+    process.env.ENV ||
+    'local'; /* We are defaulting to local env to be explicit */
   const pgConfig = {
     host: process.env.DB_HOST || 'localhost',
     port: parseInt(process.env.DB_PORT || '5432', 10),
     user: process.env.DB_USER || '',
     password: process.env.DB_PASSWORD || '',
     database: process.env.DB_DATABASE || '',
-    synchronize: ['development', 'local'].includes(
-      process.env.ENV ||
-        'local' /* We are defaulting to local env to be explicit */,
-    ),
+    synchronize: ['development', 'local'].includes(env),
   };
   const pgStore = new PgInstallationStore(metricsReporter, pgConfig);
   const pgOnboardingStore = new PgOnboardingStore(metricsReporter, pgConfig);
-  const onboardingLock = new RedisOnboardingLock(
-    {
-      host: process.env.REDIS_HOST || '',
-      port: parseInt(process.env.REDIS_PORT || '6379', 10),
-      password: process.env.REDIS_PASSWORD,
-      cluster: process.env.REDIS_CLUSTER === 'true',
-    },
-    process.env.ENV || 'local',
-  );
+  const redisConfig: RedisConfig = {
+    host: process.env.REDIS_HOST || '',
+    port: parseInt(process.env.REDIS_PORT || '6379', 10),
+    password: process.env.REDIS_PASSWORD,
+    cluster: process.env.REDIS_CLUSTER === 'true',
+  };
+
+  const onboardingLock = new RedisOnboardingLock(redisConfig, env);
 
   const analyticsManager = new AnalyticsManager();
   const threadSummaryModel = new ThreadSummaryModel();
@@ -75,9 +76,11 @@ const startApp = async () => {
     analyticsManager,
   );
   const channelSummaryModel = new ChannelSummaryModel();
+  const summaryStore = new SummaryStore(redisConfig, env);
   const channelSummarizer = new ChannelSummarizer(
     channelSummaryModel,
     analyticsManager,
+    summaryStore,
   );
 
   let ready = await pgStore.isReady();
@@ -95,6 +98,10 @@ const startApp = async () => {
   ready = await onboardingLock.isReady();
   if (!ready) {
     throw new Error('OnboardingLock is not ready');
+  }
+  ready = await summaryStore.isReady();
+  if (!ready) {
+    throw new Error('SummaryStore is not ready');
   }
 
   const userOnboardingNotifier = new UserOnboardedNotifier(
