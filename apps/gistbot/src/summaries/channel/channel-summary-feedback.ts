@@ -1,5 +1,5 @@
-import { SlackBlockActionWrapper } from '../slack/types';
-import { AnalyticsManager } from '../analytics/manager';
+import { SlackBlockActionWrapper } from '../../slack/types';
+import { AnalyticsManager } from '../../analytics/manager';
 
 export const channelSummaryFeedbackHandler =
   (analyticsManager: AnalyticsManager) =>

@@ -11,11 +11,14 @@ import { Help } from '../slack/components/help';
 import { privateChannelHandler } from '../slack/private-channel';
 import { mentionedInThreadMessage } from '../slack/mentioned-in-thread.middleware';
 import { channelJoinHandler } from '../summaries/channel-join-handler';
-import { channelSummaryFeedbackHandler } from '../summaries/channel-summary-feedback';
+import { channelSummaryFeedbackHandler } from '../summaries/channel/channel-summary-feedback';
+import { channelSummaryPostHandler } from '../summaries/channel/channel-summary-post';
 import { ChannelSummarizer } from '../summaries/channel/channel-summarizer';
 import { mentionHandler } from '../summaries/mention-handler';
+import { SummaryStore } from '../summaries/summary-store';
 import { threadSummarizationHandler } from '../summaries/thread-handler';
-import { threadSummaryFeedbackHandler } from '../summaries/thread-summary-feedback';
+import { threadSummaryFeedbackHandler } from '../summaries/thread/thread-summary-feedback';
+import { threadSummaryPostHandler } from '../summaries/thread/thread-summary-post';
 import { ThreadSummarizer } from '../summaries/thread/thread-summarizer';
 import { slashCommandRouter } from './slash-command-router';
 
@@ -24,7 +27,9 @@ export enum Routes {
   ADD_TO_CHANNEL_SUBMIT = 'add-to-channel-submit',
   PRIVATE_CHANNEL_SUBMIT = 'private-channel-submit',
   THREAD_SUMMARY_FEEDBACK = 'thread-summary-feedback',
+  THREAD_SUMMARY_POST = 'thread-summary-post',
   CHANNEL_SUMMARY_FEEDBACK = 'channel-summary-feedback',
+  CHANNEL_SUMMARY_POST = 'channel-summary-post',
   ADD_TO_CHANNEL_FROM_WELCOME_MODAL = 'add-to-channel-from-welcome-modal',
   ADD_TO_CHANNEL_FROM_WELCOME_SUBMIT = 'add-to-channel-from-welcome-submit',
 }
@@ -36,6 +41,7 @@ export const registerBoltAppRouter = (
   threadSummarizer: ThreadSummarizer,
   channelSummarizer: ChannelSummarizer,
   onboardingManager: OnboardingManager,
+  summaryStore: SummaryStore,
 ) => {
   app.shortcut(
     Routes.SUMMARIZE_THREAD,
@@ -67,9 +73,20 @@ export const registerBoltAppRouter = (
     Routes.THREAD_SUMMARY_FEEDBACK,
     threadSummaryFeedbackHandler(analyticsManager),
   );
+
+  app.action(
+    Routes.THREAD_SUMMARY_POST,
+    threadSummaryPostHandler(analyticsManager, summaryStore),
+  );
+
   app.action(
     Routes.CHANNEL_SUMMARY_FEEDBACK,
     channelSummaryFeedbackHandler(analyticsManager),
+  );
+
+  app.action(
+    Routes.CHANNEL_SUMMARY_POST,
+    channelSummaryPostHandler(analyticsManager, summaryStore),
   );
 
   app.view(

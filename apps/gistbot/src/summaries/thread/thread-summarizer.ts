@@ -3,11 +3,11 @@ import { RespondFn } from '@slack/bolt';
 import { WebClient } from '@slack/web-api';
 import { AnalyticsManager } from '../../analytics/manager';
 import { Routes } from '../../routes/router';
-import { Summary } from '../../slack/components/summary';
-import { UserLink } from '../../slack/components/user-link';
+import { EphemeralSummary } from '../../slack/components/ephemeral-summary';
 import { ModerationError } from '../errors/moderation-error';
 import { MAX_PROMPT_CHARACTER_COUNT } from '../models/prompt-character-calculator';
 import { ThreadSummaryModel } from '../models/thread-summary.model';
+import { SummaryStore } from '../summary-store';
 import { SlackMessage, ThreadSummarizationProps } from '../types';
 import { filterUnwantedMessages, parseThreadForSummary } from '../utils';
 
@@ -15,6 +15,7 @@ export class ThreadSummarizer {
   constructor(
     private threadSummaryModel: ThreadSummaryModel,
     private analyticsManager: AnalyticsManager,
+    private summaryStore: SummaryStore,
   ) {}
 
   async summarize(
@@ -109,47 +110,32 @@ export class ThreadSummarizer {
         throw new Error('Invalid response');
       }
 
-      const summaryParts: string[] = [];
-      if (summary.length <= 3000) {
-        summaryParts.push(summary);
-      } else {
-        const lines = summary.split('\n');
-
-        let summaryPart = '';
-        lines.forEach((line) => {
-          if (summaryPart.length > 2000) {
-            summaryParts.push(`${summaryPart}`);
-            summaryPart = '';
-          }
-          summaryPart = `${summaryPart}${line}\n`;
-        });
-        summaryParts.push(summaryPart);
-      }
-
-      const basicText = `${UserLink(
+      const startTimeStamp = Number(props.threadTs);
+      const { key } = await this.summaryStore.set({
+        text: summary,
+        startDate: startTimeStamp,
+        threadTs: props.threadTs,
+      });
+      const { blocks, title } = EphemeralSummary({
+        actionIds: {
+          feedback: Routes.THREAD_SUMMARY_FEEDBACK,
+          addToChannels: Routes.ADD_TO_CHANNEL_FROM_WELCOME_MODAL,
+          post: Routes.THREAD_SUMMARY_POST,
+        },
+        cacheKey: key,
         userId,
-      )} requested a summary for this thread:`;
-      const blocks = Summary({
-        actionId: Routes.THREAD_SUMMARY_FEEDBACK,
-        basicText: basicText,
-        summaryParts: summaryParts,
+        startTimeStamp,
+        summary,
       });
 
-      if (respond) {
-        await respond({
-          response_type: 'in_channel',
-          text: basicText,
-          thread_ts: props.threadTs,
-          blocks: blocks,
-        });
-      } else {
-        await client.chat.postMessage({
-          channel: props.channelId,
-          text: basicText,
-          thread_ts: props.threadTs,
-          blocks: blocks,
-        });
-      }
+      // Slack's API does not work with respond ephemeral in threads, they reccomend to not use respond in this cases and just use this.
+      await client.chat.postEphemeral({
+        channel: props.channelId,
+        thread_ts: props.threadTs,
+        user: userId,
+        blocks,
+        text: title,
+      });
 
       this.analyticsManager.threadSummaryFunnel({
         funnelStep: 'summarized',
@@ -164,7 +150,7 @@ export class ThreadSummarizer {
         },
       });
     } catch (error) {
-      logger.error(`error in thread summarizer: ${error.stack}`);
+      logger.error(`error in thread summarizer: ${error}`);
       if (error instanceof ModerationError) {
         if (respond) {
           await respond({
@@ -172,7 +158,7 @@ export class ThreadSummarizer {
             text: "This summary seems to be inappropriate :speak_no_evil:\nI'm not able to help you in this case.",
           });
         } else {
-          client.chat.postEphemeral({
+          await client.chat.postEphemeral({
             text: "This summary seems to be inappropriate :speak_no_evil:\nI'm not able to help you in this case.",
             channel: props.channelId,
             user: userId,
@@ -196,7 +182,7 @@ export class ThreadSummarizer {
           thread_ts: props.threadTs,
         });
       } else {
-        client.chat.postEphemeral({
+        await client.chat.postEphemeral({
           text: `We had an error processing the summarization: ${error.message}`,
           channel: props.channelId,
           user: userId,

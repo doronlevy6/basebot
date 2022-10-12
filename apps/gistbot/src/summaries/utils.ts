@@ -229,13 +229,13 @@ export const summaryInProgressMessage = async (
   client: WebClient,
   channel: string,
   user: string,
-  message_ts?: string,
+  thread_ts?: string,
 ) => {
   await client.chat.postEphemeral({
-    thread_ts: message_ts,
+    thread_ts,
     response_type: 'ephemeral',
-    channel: channel,
+    channel,
     text: `Creating your summary`,
-    user: user,
+    user,
   });
 };

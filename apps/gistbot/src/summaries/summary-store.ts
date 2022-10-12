@@ -4,8 +4,9 @@ import { RedisUtil } from '../utils/redis-util';
 const TTL = 60 * 60; // One Hour
 const BASE_KEY = 'summaries';
 export interface ISummary {
-  textParts: string[];
+  text: string;
   startDate: number;
+  threadTs?: string;
 }
 
 export class SummaryStore extends RedisUtil {

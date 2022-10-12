@@ -68,15 +68,16 @@ const startApp = async () => {
   };
 
   const onboardingLock = new RedisOnboardingLock(redisConfig, env);
-
+  const summaryStore = new SummaryStore(redisConfig, env);
   const analyticsManager = new AnalyticsManager();
   const threadSummaryModel = new ThreadSummaryModel();
   const threadSummarizer = new ThreadSummarizer(
     threadSummaryModel,
     analyticsManager,
+    summaryStore,
   );
+
   const channelSummaryModel = new ChannelSummaryModel();
-  const summaryStore = new SummaryStore(redisConfig, env);
   const channelSummarizer = new ChannelSummarizer(
     channelSummaryModel,
     analyticsManager,
@@ -127,6 +128,7 @@ const startApp = async () => {
     threadSummarizer,
     channelSummarizer,
     onboardingManager,
+    summaryStore,
   );
 
   const port = process.env['PORT'] || 3000;

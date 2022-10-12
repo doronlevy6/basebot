@@ -3,8 +3,7 @@ import { RespondFn } from '@slack/bolt';
 import { WebClient } from '@slack/web-api';
 import { AnalyticsManager } from '../../analytics/manager';
 import { Routes } from '../../routes/router';
-import { Summary } from '../../slack/components/summary';
-import { UserLink } from '../../slack/components/user-link';
+import { EphemeralSummary } from '../../slack/components/ephemeral-summary';
 import { ModerationError } from '../errors/moderation-error';
 import { ChannelSummaryModel } from '../models/channel-summary.model';
 import {
@@ -172,49 +171,36 @@ export class ChannelSummarizer {
         throw new Error('Invalid response');
       }
 
-      const summaryParts: string[] = [];
-      if (successfulSummary.length <= 3000) {
-        summaryParts.push(successfulSummary);
-      } else {
-        const lines = successfulSummary.split('\n');
-
-        let summaryPart = '';
-        lines.forEach((line) => {
-          if (summaryPart.length > 2000) {
-            summaryParts.push(`${summaryPart}`);
-            summaryPart = '';
-          }
-          summaryPart = `${summaryPart}${line}\n`;
-        });
-        summaryParts.push(summaryPart);
-      }
-
       const startTimeStamp = Number(rootMessages[0].ts);
-      const basicText = `${UserLink(userId)} here's the summary you requested:`;
-
-      const summaryStoreKey = await this.summaryStore.set({
-        textParts: summaryParts,
+      const { key: cacheKey } = await this.summaryStore.set({
+        text: successfulSummary,
         startDate: startTimeStamp,
       });
 
-      logger.debug(`Wrote summary with key ${summaryStoreKey.key}`);
+      logger.info('Saved summary with cache key ' + cacheKey);
 
-      const blocks = Summary({
-        actionId: Routes.CHANNEL_SUMMARY_FEEDBACK,
-        basicText,
-        summaryParts,
+      const { blocks, title } = EphemeralSummary({
+        actionIds: {
+          feedback: Routes.CHANNEL_SUMMARY_FEEDBACK,
+          addToChannels: Routes.ADD_TO_CHANNEL_FROM_WELCOME_MODAL,
+          post: Routes.CHANNEL_SUMMARY_POST,
+        },
+        cacheKey,
+        startTimeStamp,
+        userId,
+        summary: successfulSummary,
       });
 
       if (respond) {
         await respond({
           response_type: 'ephemeral',
-          text: basicText,
-          blocks: blocks,
+          text: title,
+          blocks,
         });
       } else {
-        client.chat.postEphemeral({
-          text: basicText,
-          blocks: blocks,
+        await client.chat.postEphemeral({
+          text: title,
+          blocks,
           channel: props.channelId,
           user: userId,
         });
@@ -242,7 +228,7 @@ export class ChannelSummarizer {
             text: "This summary seems to be inappropriate :speak_no_evil:\nI'm not able to help you in this case.",
           });
         } else {
-          client.chat.postEphemeral({
+          await client.chat.postEphemeral({
             text: "This summary seems to be inappropriate :speak_no_evil:\nI'm not able to help you in this case.",
             channel: props.channelId,
             user: userId,
@@ -267,7 +253,7 @@ export class ChannelSummarizer {
           text: `We had an error processing the summarization: ${error.message}`,
         });
       } else {
-        client.chat.postEphemeral({
+        await client.chat.postEphemeral({
           text: `We had an error processing the summarization: ${error.message}`,
           channel: props.channelId,
           user: userId,

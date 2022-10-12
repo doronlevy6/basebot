@@ -36,3 +36,25 @@ export const identifyTriggeringUser = async (
     });
   }
 };
+
+export const splitTextBlocks = (text: string) => {
+  const MAX_SLACK_BLOCK_CHARACTERS = 3000;
+  if (text.length <= MAX_SLACK_BLOCK_CHARACTERS) {
+    return [text];
+  }
+
+  const parts: string[] = [];
+  const lines = text.split('\n');
+
+  let part = '';
+  lines.forEach((line) => {
+    if (part.length > 2000) {
+      parts.push(`${part}`);
+      part = '';
+    }
+    part = `${part}${line}\n`;
+  });
+  parts.push(part);
+
+  return parts;
+};
