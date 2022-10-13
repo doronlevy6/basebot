@@ -233,6 +233,7 @@ const sendUserSuggestion = async (
 
   const shouldTrigger =
     await newUserTriggersManager.shouldTriggerForPotentialUser(
+      'thread_mention',
       teamId,
       userId,
       presence,

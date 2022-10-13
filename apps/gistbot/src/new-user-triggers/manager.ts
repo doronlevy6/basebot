@@ -13,6 +13,7 @@ export class NewUserTriggersManager {
   ) {}
 
   async shouldTriggerForPotentialUser(
+    triggerContext: string,
     teamId: string,
     userId: string,
     presence: string,
@@ -20,7 +21,7 @@ export class NewUserTriggersManager {
     try {
       const [wasOnboarded, isUserLocked] = await Promise.all([
         this.onboardingManager.wasUserOnboarded(teamId, userId),
-        this.persistentTriggerLock.isUserLocked(teamId, userId),
+        this.persistentTriggerLock.isUserLocked(triggerContext, teamId, userId),
       ]);
 
       // Locked user (already passed the threshold for potential users)
@@ -40,6 +41,7 @@ export class NewUserTriggersManager {
       }
 
       const shouldTrigger = await this.triggerLock.shouldTrigger(
+        triggerContext,
         teamId,
         userId,
         presence,
@@ -57,9 +59,14 @@ export class NewUserTriggersManager {
         teamId,
         userId,
         presence,
+        triggerContext,
       );
       if (triggerAmount > MAX_TRIGGER_THRESHOLD) {
-        await this.persistentTriggerLock.lockUser(teamId, userId);
+        await this.persistentTriggerLock.lockUser(
+          triggerContext,
+          teamId,
+          userId,
+        );
         logger.info(
           `user ${userId} on team ${teamId} has more than ${MAX_TRIGGER_THRESHOLD}, no trigger`,
         );

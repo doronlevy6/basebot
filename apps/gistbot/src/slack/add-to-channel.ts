@@ -2,7 +2,10 @@ import { logger } from '@base/logger';
 import { WebClient } from '@slack/web-api';
 import { AnalyticsManager } from '../analytics/manager';
 import { Routes } from '../routes/router';
-import { ChannelSummarizer } from '../summaries/channel/channel-summarizer';
+import {
+  ChannelSummarizer,
+  DEFAULT_DAYS_BACK,
+} from '../summaries/channel/channel-summarizer';
 import { ThreadSummarizer } from '../summaries/thread/thread-summarizer';
 import { SummarizationProps } from '../summaries/types';
 import { summaryInProgressMessage } from '../summaries/utils';
@@ -133,6 +136,7 @@ export const addToChannelHandler =
           teamId,
           currentUser,
           summarization,
+          DEFAULT_DAYS_BACK,
           client,
           respond,
         );

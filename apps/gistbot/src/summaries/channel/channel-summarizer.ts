@@ -21,6 +21,8 @@ import {
 
 const MAX_MESSAGES_TO_FETCH = 50;
 
+export const DEFAULT_DAYS_BACK = 1;
+
 export class ChannelSummarizer {
   constructor(
     private channelSummaryModel: ChannelSummaryModel,
@@ -34,9 +36,9 @@ export class ChannelSummarizer {
     teamId: string,
     userId: string,
     props: ChannelSummarizationProps,
+    daysBack: number,
     client: WebClient,
     respond?: RespondFn,
-    minMessageCount?: number,
   ): Promise<void> {
     try {
       const {
@@ -58,15 +60,13 @@ export class ChannelSummarizer {
         );
       }
 
-      const oldestMessageDateToFetch = this.getOldestMessagesDateToFetch(
-        userInfo.tz || 'UTC',
-      ).toFixed(6);
       const rootMessages = await this.fetchChannelRootMessages(
         client,
         props.channelId,
         myBotId,
         MAX_MESSAGES_TO_FETCH,
-        oldestMessageDateToFetch,
+        daysBack,
+        userInfo.tz,
       );
 
       // Ensure that we sort the messages oldest first (so that the model receives a conversation in order)
@@ -104,26 +104,6 @@ export class ChannelSummarizer {
         t.users.forEach((u) => acc.add(u));
         return acc;
       }, new Set<string>());
-
-      if (minMessageCount && numberOfMessages < minMessageCount) {
-        logger.info(
-          `${numberOfMessages} messages in channel ${props.channelId} less than the minimum requested count ${minMessageCount}`,
-        );
-        this.analyticsManager.channelSummaryFunnel({
-          funnelStep: 'channel_too_small',
-          slackTeamId: teamId,
-          slackUserId: userId,
-          channelId: props.channelId,
-          extraParams: {
-            summaryContext: summaryContext,
-            numberOfThreads: threads.length,
-            numberOfMessages: numberOfMessages,
-            numberOfUsers: numberOfUsers,
-            numberOfUniqueUsers: uniqueUsers.size,
-          },
-        });
-        return;
-      }
 
       let successfulSummary = '';
       let analyticsPrefix = '';
@@ -293,13 +273,19 @@ export class ChannelSummarizer {
     }
   }
 
-  private async fetchChannelRootMessages(
+  async fetchChannelRootMessages(
     client: WebClient,
     channel_id: string,
     myBotId: string,
     maximumMessageCount: number,
-    oldestMsgsDate: string,
+    daysBack: number,
+    userTz?: string,
   ): Promise<SlackMessage[]> {
+    const oldestMessageDateToFetch = this.getOldestMessagesDateToFetch(
+      userTz || 'UTC',
+      daysBack,
+    ).toFixed(6);
+
     const output: SlackMessage[] = [];
     let cursor = '';
 
@@ -314,7 +300,7 @@ export class ChannelSummarizer {
           channel: channel_id,
           limit: maximumMessageCount - output.length,
           cursor: cursor,
-          oldest: oldestMsgsDate,
+          oldest: oldestMessageDateToFetch,
           latest: latestMsgDate,
         });
 
@@ -348,14 +334,14 @@ export class ChannelSummarizer {
     return output;
   }
 
-  getOldestMessagesDateToFetch(userTimezone: string) {
+  private getOldestMessagesDateToFetch(userTimezone: string, daysBack: number) {
     const dateWithTz = new Date(
       new Date().toLocaleString('en-US', { timeZone: userTimezone }),
     );
     const prevDate = new Date(
       dateWithTz.getFullYear(),
       dateWithTz.getMonth(),
-      dateWithTz.getDate() - 1,
+      dateWithTz.getDate() - daysBack,
       0,
       0,
     );

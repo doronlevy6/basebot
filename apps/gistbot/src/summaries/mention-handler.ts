@@ -2,7 +2,10 @@ import { GenericMessageEvent } from '@slack/bolt';
 import { AnalyticsManager } from '../analytics/manager';
 import { OnboardingManager } from '../onboarding/manager';
 import { SlackEventWrapper } from '../slack/types';
-import { ChannelSummarizer } from './channel/channel-summarizer';
+import {
+  ChannelSummarizer,
+  DEFAULT_DAYS_BACK,
+} from './channel/channel-summarizer';
 import { ThreadSummarizer } from './thread/thread-summarizer';
 import { summaryInProgressMessage } from './utils';
 
@@ -83,6 +86,7 @@ export const mentionHandler =
           channelId: event.channel,
           channelName: channel.name,
         },
+        DEFAULT_DAYS_BACK,
         client,
       );
     } catch (error) {

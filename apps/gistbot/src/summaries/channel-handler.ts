@@ -3,7 +3,10 @@ import { SlackSlashCommandWrapper } from '../slack/types';
 import { AnalyticsManager } from '../analytics/manager';
 import { privateChannelInstructions } from '../slack/private-channel';
 import { identifyTriggeringUser } from '../slack/utils';
-import { ChannelSummarizer } from './channel/channel-summarizer';
+import {
+  ChannelSummarizer,
+  DEFAULT_DAYS_BACK,
+} from './channel/channel-summarizer';
 import { summaryInProgressMessage } from './utils';
 
 export const channelSummarizationHandler =
@@ -60,6 +63,7 @@ export const channelSummarizationHandler =
           channelId: channel_id,
           channelName: channel_name,
         },
+        DEFAULT_DAYS_BACK,
         client,
         respond,
       );

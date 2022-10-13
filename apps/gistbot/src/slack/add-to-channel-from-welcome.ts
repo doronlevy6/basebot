@@ -3,7 +3,10 @@ import { AnalyticsManager } from '../analytics/manager';
 import { Routes } from '../routes/router';
 import { addToChannel } from './add-to-channel';
 import { SlackBlockActionWrapper, ViewAction } from './types';
-import { ChannelSummarizer } from '../summaries/channel/channel-summarizer';
+import {
+  ChannelSummarizer,
+  DEFAULT_DAYS_BACK,
+} from '../summaries/channel/channel-summarizer';
 import { WebClient } from '@slack/web-api';
 
 const ADD_TO_CHANNEL_FROM_WELCOME = 'add-to-channel-from-welcome';
@@ -208,6 +211,7 @@ export const addToChannelFromWelcomeMessageHandler =
             channelId: selectedConversation,
             channelName: res.channel?.name || '',
           },
+          DEFAULT_DAYS_BACK,
           client,
         );
         analyticsManager.welcomeMessageInteraction({

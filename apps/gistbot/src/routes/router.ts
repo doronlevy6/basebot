@@ -11,7 +11,10 @@ import {
 import { Help } from '../slack/components/help';
 import { privateChannelHandler } from '../slack/private-channel';
 import { mentionedInThreadMessage } from '../slack/mentioned-in-thread.middleware';
-import { channelJoinHandler } from '../summaries/channel-join-handler';
+import {
+  channelJoinHandler,
+  summarizeSuggestedChannelAfterJoin,
+} from '../summaries/channel-join-handler';
 import { channelSummaryFeedbackHandler } from '../summaries/channel/channel-summary-feedback';
 import { channelSummaryPostHandler } from '../summaries/channel/channel-summary-post';
 import { ChannelSummarizer } from '../summaries/channel/channel-summarizer';
@@ -41,6 +44,7 @@ export enum Routes {
   ADD_TO_CHANNEL_FROM_WELCOME_SUBMIT = 'add-to-channel-from-welcome-submit',
   ADD_TO_CHANNEL_FROM_WELCOME_MESSAGE = 'add-to-channel-from-welcome-message',
   SUMMARIZE_THREAD_FROM_THREAD_MENTION = 'summarize-thread-from-thread-mention',
+  SUMMARIZE_CHANNEL_FROM_CHANNEL_JOIN = 'summarize-channel-from-channel-join',
 }
 
 export const registerBoltAppRouter = (
@@ -125,6 +129,15 @@ export const registerBoltAppRouter = (
     summarizeSuggestedThreadAfterMention(
       analyticsManager,
       threadSummarizer,
+      onboardingManager,
+    ),
+  );
+
+  app.action(
+    Routes.SUMMARIZE_CHANNEL_FROM_CHANNEL_JOIN,
+    summarizeSuggestedChannelAfterJoin(
+      analyticsManager,
+      channelSummarizer,
       onboardingManager,
     ),
   );

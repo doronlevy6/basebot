@@ -54,28 +54,42 @@ export class PgTriggerLock {
         .raw(`CREATE TABLE IF NOT EXISTS gistbot_persistent_trigger_locks (
         slack_team_id varchar(36) NOT NULL,
         slack_user_id varchar(36) NOT NULL,
-        PRIMARY KEY ("slack_team_id", "slack_user_id")
+        trigger_context varchar(36) NOT NULL,
+        PRIMARY KEY ("slack_team_id", "slack_user_id", "trigger_context")
       );`);
     }
 
     return true;
   }
 
-  async lockUser(teamId: string, userId: string): Promise<void> {
+  async lockUser(
+    triggerContext: string,
+    teamId: string,
+    userId: string,
+  ): Promise<void> {
     await this.db('gistbot_persistent_trigger_locks')
       .insert({
         slack_team_id: teamId,
         slack_user_id: userId,
+        trigger_context: triggerContext,
       })
       .onConflict(['slack_team_id', 'slack_user_id'])
       .ignore();
   }
 
-  async isUserLocked(teamId: string, userId: string): Promise<boolean> {
+  async isUserLocked(
+    triggerContext: string,
+    teamId: string,
+    userId: string,
+  ): Promise<boolean> {
     const res = await this.db
       .select(1)
       .from('gistbot_persistent_trigger_locks')
-      .where({ slack_team_id: teamId, slack_user_id: userId });
+      .where({
+        slack_team_id: teamId,
+        slack_user_id: userId,
+        trigger_context: triggerContext,
+      });
     if (!res || res.length == 0) {
       return false;
     }
