@@ -116,6 +116,27 @@ export class AnalyticsManager {
     });
   }
 
+  welcomeMessageInteraction({
+    type,
+    slackUserId,
+    slackTeamId,
+    properties,
+  }: {
+    type: string;
+    slackUserId: string;
+    slackTeamId: string;
+    properties?: ExtraParams;
+  }) {
+    this.sendEventToAnalytics({
+      eventName: 'slack_welcome_message',
+      slackUserId: slackUserId,
+      slackTeamId: slackTeamId,
+      internalUserId: this.internalId(slackTeamId, slackUserId),
+      timestamp: new Date(),
+      properties: { ...properties, type },
+    });
+  }
+
   modalClosed({
     type,
     slackUserId,

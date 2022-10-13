@@ -4,6 +4,7 @@ import { appHomeOpenedHandler } from '../onboarding/app-home-opened-handler';
 import { OnboardingManager } from '../onboarding/manager';
 import { addToChannelHandler } from '../slack/add-to-channel';
 import {
+  addToChannelFromWelcomeMessageHandler,
   addToChannelFromWelcomeModal,
   addToChannelFromWelcomeModalHandler,
 } from '../slack/add-to-channel-from-welcome';
@@ -36,6 +37,7 @@ export enum Routes {
   CHANNEL_SUMMARY_POST = 'channel-summary-post',
   ADD_TO_CHANNEL_FROM_WELCOME_MODAL = 'add-to-channel-from-welcome-modal',
   ADD_TO_CHANNEL_FROM_WELCOME_SUBMIT = 'add-to-channel-from-welcome-submit',
+  ADD_TO_CHANNEL_FROM_WELCOME_MESSAGE = 'add-to-channel-from-welcome-message',
   SUMMARIZE_THREAD_FROM_THREAD_MENTION = 'summarize-thread-from-thread-mention',
 }
 
@@ -109,6 +111,11 @@ export const registerBoltAppRouter = (
       threadSummarizer,
       onboardingManager,
     ),
+  );
+
+  app.action(
+    Routes.ADD_TO_CHANNEL_FROM_WELCOME_MESSAGE,
+    addToChannelFromWelcomeMessageHandler(analyticsManager, channelSummarizer),
   );
 
   app.message(async ({ event, say, body, context }) => {
