@@ -39,11 +39,34 @@ export class ChannelSummarizer {
     minMessageCount?: number,
   ): Promise<void> {
     try {
+      const {
+        error: infoError,
+        ok: infoOk,
+        user: userInfo,
+      } = await client.users.info({
+        user: userId,
+      });
+      if (infoError || !infoOk) {
+        throw new Error(
+          `Failed to fetch user from slack when trying to summarize a channel ${infoError}`,
+        );
+      }
+
+      if (!userInfo) {
+        throw new Error(
+          `Failed to fetch user from slack when trying to summarize a channel, user not found`,
+        );
+      }
+
+      const oldestMessageDateToFetch = this.getOldestMessagesDateToFetch(
+        userInfo.tz || 'UTC',
+      ).toFixed(6);
       const rootMessages = await this.fetchChannelRootMessages(
         client,
         props.channelId,
         myBotId,
         MAX_MESSAGES_TO_FETCH,
+        oldestMessageDateToFetch,
       );
 
       // Ensure that we sort the messages oldest first (so that the model receives a conversation in order)
@@ -275,16 +298,24 @@ export class ChannelSummarizer {
     channel_id: string,
     myBotId: string,
     maximumMessageCount: number,
+    oldestMsgsDate: string,
   ): Promise<SlackMessage[]> {
     const output: SlackMessage[] = [];
     let cursor = '';
 
     while (output.length < maximumMessageCount) {
+      // latest is time now or oldest message from the pagination
+      const latestMsgDate = output.length
+        ? output[output.length - 1].ts
+        : (new Date().getTime() / 1000).toFixed(6);
+
       const { ok, error, messages, has_more, response_metadata } =
         await client.conversations.history({
           channel: channel_id,
           limit: maximumMessageCount - output.length,
           cursor: cursor,
+          oldest: oldestMsgsDate,
+          latest: latestMsgDate,
         });
 
       if (error || !ok) {
@@ -315,5 +346,19 @@ export class ChannelSummarizer {
     }
 
     return output;
+  }
+
+  getOldestMessagesDateToFetch(userTimezone: string) {
+    const dateWithTz = new Date(
+      new Date().toLocaleString('en-US', { timeZone: userTimezone }),
+    );
+    const prevDate = new Date(
+      dateWithTz.getFullYear(),
+      dateWithTz.getMonth(),
+      dateWithTz.getDate() - 1,
+      0,
+      0,
+    );
+    return prevDate.getTime() / 1000;
   }
 }
