@@ -15,6 +15,16 @@ export class OnboardingManager {
     private notifier: UserOnboardedNotifier,
   ) {}
 
+  async wasUserOnboarded(teamId: string, userId: string): Promise<boolean> {
+    try {
+      const wasOnboarded = await this.store.wasUserOnboarded(teamId, userId);
+      return wasOnboarded;
+    } catch (error) {
+      logger.error(`Was User onboarded error: ${error} ${error.stack}`);
+      throw error;
+    }
+  }
+
   async onboardUser(
     teamId: string,
     userId: string,

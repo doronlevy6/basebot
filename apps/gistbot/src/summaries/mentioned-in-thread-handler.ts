@@ -1,6 +1,7 @@
 import { GenericMessageEvent } from '@slack/bolt';
 import { ChatPostEphemeralResponse, WebClient } from '@slack/web-api';
 import { AnalyticsManager } from '../analytics/manager';
+import { NewUserTriggersManager } from '../new-user-triggers/manager';
 import { OnboardingManager } from '../onboarding/manager';
 import { Routes } from '../routes/router';
 import { UserLink } from '../slack/components/user-link';
@@ -14,10 +15,15 @@ const THREAD_LENGTH_LIMIT = 20;
 interface MentionedInThreadProps {
   threadTs: string;
   channelId: string;
+  triggerContext: 'in_channel' | 'in_dm';
+  threadPermalink: string;
 }
 
 export const mentionedInThreadHandler =
-  (analyticsManager: AnalyticsManager) =>
+  (
+    analyticsManager: AnalyticsManager,
+    newUserTriggersManager: NewUserTriggersManager,
+  ) =>
   async ({ client, logger, body, context }: SlackEventWrapper<'message'>) => {
     try {
       const event = body.event as GenericMessageEvent;
@@ -93,7 +99,7 @@ export const mentionedInThreadHandler =
         throw new Error(`Failed to get permalink to message not found`);
       }
 
-      const awaits: Promise<ChatPostEphemeralResponse>[] = [];
+      const awaits: Promise<ChatPostEphemeralResponse | null>[] = [];
       for (const user of threadMentionedUsers) {
         awaits.push(
           sendUserSuggestion(
@@ -105,6 +111,7 @@ export const mentionedInThreadHandler =
             permalink,
             analyticsManager,
             client,
+            newUserTriggersManager,
           ),
         );
       }
@@ -126,14 +133,6 @@ export const summarizeSuggestedThreadAfterMention =
   async ({ ack, logger, body, client, context }: SlackBlockActionWrapper) => {
     try {
       await ack();
-
-      await onboardingManager.onboardUser(
-        body.team?.id || 'unknown',
-        body.user.id,
-        client,
-        'suggested_thread_summary',
-        context.botUserId,
-      );
 
       const action = body.actions[0];
       if (action.type !== 'button') {
@@ -177,6 +176,23 @@ export const summarizeSuggestedThreadAfterMention =
         },
         client,
       );
+
+      if (props.triggerContext === 'in_dm') {
+        await client.chat.postMessage({
+          channel: body.user.id,
+          text: `Great, your summary was created! Click <${props.threadPermalink}|here> to go to the thread and see the summary.`,
+        });
+      }
+
+      // Trigger the onboarding at the end so that after they've clicked on the message the onboarding message will happen
+      await new Promise((resolve) => setTimeout(resolve, 10000)); // Wait for 10 seconds before triggering the onboarding message so we don't surprise the user before they see the previous message
+      await onboardingManager.onboardUser(
+        body.team?.id || 'unknown',
+        body.user.id,
+        client,
+        'suggested_thread_summary',
+        context.botUserId,
+      );
     } catch (error) {
       logger.error(
         `error in summarize suggested thread after mention: ${error} ${error.stack}`,
@@ -193,12 +209,8 @@ const sendUserSuggestion = async (
   threadPermalink: string,
   analyticsManager: AnalyticsManager,
   client: WebClient,
-): Promise<ChatPostEphemeralResponse> => {
-  const props: MentionedInThreadProps = {
-    threadTs: threadTs,
-    channelId: channelId,
-  };
-
+  newUserTriggersManager: NewUserTriggersManager,
+): Promise<ChatPostEphemeralResponse | null> => {
   const {
     error: presenceErr,
     ok: presenceOk,
@@ -210,6 +222,24 @@ const sendUserSuggestion = async (
 
   if (!presence) {
     throw new Error(`Failed to get presence not found`);
+  }
+
+  const props: MentionedInThreadProps = {
+    threadTs: threadTs,
+    channelId: channelId,
+    triggerContext: presence === 'away' ? 'in_dm' : 'in_channel',
+    threadPermalink: threadPermalink,
+  };
+
+  const shouldTrigger =
+    await newUserTriggersManager.shouldTriggerForPotentialUser(
+      teamId,
+      userId,
+      presence,
+    );
+
+  if (!shouldTrigger) {
+    return null;
   }
 
   let basicText: string;

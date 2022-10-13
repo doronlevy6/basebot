@@ -16,7 +16,6 @@ import { AnalyticsManager } from './analytics/manager';
 import { ThreadSummaryModel } from './summaries/models/thread-summary.model';
 import { ChannelSummaryModel } from './summaries/models/channel-summary.model';
 import { PgOnboardingStore } from './onboarding/onboardingStore';
-import { userOnboardingMiddleware } from './onboarding/global-middleware';
 import { ChannelSummarizer } from './summaries/channel/channel-summarizer';
 import { ThreadSummarizer } from './summaries/thread/thread-summarizer';
 import { UserOnboardedNotifier } from './onboarding/notifier';
@@ -24,6 +23,9 @@ import { RedisOnboardingLock } from './onboarding/onboarding-lock';
 import { RedisConfig } from './utils/redis-util';
 import { SummaryStore } from './summaries/summary-store';
 import { OnboardingManager } from './onboarding/manager';
+import { NewUserTriggersManager } from './new-user-triggers/manager';
+import { RedisTriggerLock } from './new-user-triggers/trigger-lock';
+import { PgTriggerLock } from './new-user-triggers/trigger-lock-persistent';
 
 const gracefulShutdown = (server: Server) => (signal: string) => {
   logger.info('starting shutdown, got signal ' + signal);
@@ -66,9 +68,11 @@ const startApp = async () => {
     password: process.env.REDIS_PASSWORD,
     cluster: process.env.REDIS_CLUSTER === 'true',
   };
+  const pgNewUsersTriggersLock = new PgTriggerLock(pgConfig);
 
   const onboardingLock = new RedisOnboardingLock(redisConfig, env);
   const summaryStore = new SummaryStore(redisConfig, env);
+  const newUserTriggersLock = new RedisTriggerLock(redisConfig, env);
   const analyticsManager = new AnalyticsManager();
   const threadSummaryModel = new ThreadSummaryModel();
   const threadSummarizer = new ThreadSummarizer(
@@ -104,6 +108,14 @@ const startApp = async () => {
   if (!ready) {
     throw new Error('SummaryStore is not ready');
   }
+  ready = await pgNewUsersTriggersLock.isReady();
+  if (!ready) {
+    throw new Error('PgNewUsersTriggersLock is not ready');
+  }
+  ready = await newUserTriggersLock.isReady();
+  if (!ready) {
+    throw new Error('NewUserTriggersLock is not ready');
+  }
 
   const userOnboardingNotifier = new UserOnboardedNotifier(
     process.env.ENV || 'local',
@@ -117,9 +129,14 @@ const startApp = async () => {
     userOnboardingNotifier,
   );
 
+  const newUserTriggersManager = new NewUserTriggersManager(
+    onboardingManager,
+    newUserTriggersLock,
+    pgNewUsersTriggersLock,
+  );
+
   const slackApp = createApp(pgStore, metricsReporter, analyticsManager);
   slackApp.use(slackBoltMetricsMiddleware(metricsReporter));
-  slackApp.use(userOnboardingMiddleware(onboardingManager));
 
   registerBoltAppRouter(
     slackApp,
@@ -129,6 +146,7 @@ const startApp = async () => {
     channelSummarizer,
     onboardingManager,
     summaryStore,
+    newUserTriggersManager,
   );
 
   const port = process.env['PORT'] || 3000;

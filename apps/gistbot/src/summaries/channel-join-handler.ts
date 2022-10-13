@@ -1,5 +1,6 @@
 import { ChannelJoinMessageEvent } from '@slack/bolt';
 import { AnalyticsManager } from '../analytics/manager';
+import { NewUserTriggersManager } from '../new-user-triggers/manager';
 import { OnboardingManager } from '../onboarding/manager';
 import { SlackEventWrapper } from '../slack/types';
 import { ChannelSummarizer } from './channel/channel-summarizer';
@@ -12,6 +13,7 @@ export const channelJoinHandler =
     analyticsManager: AnalyticsManager,
     channelSummarizer: ChannelSummarizer,
     onboardingManager: OnboardingManager,
+    newUserTriggersManager: NewUserTriggersManager,
   ) =>
   async ({ client, logger, body, context }: SlackEventWrapper<'message'>) => {
     try {

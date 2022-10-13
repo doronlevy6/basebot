@@ -1,7 +1,7 @@
 import { ImageBlock } from '@slack/web-api';
 
 const IMAGE_URL =
-  'https://assets.base.la/gist/assets/channel-summary-image.jpeg';
+  'https://assets.thegist.ai/gist/assets/channel-summary-image.jpeg';
 
 export const ChannelSummaryImage = (
   text?: string,

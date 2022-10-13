@@ -26,6 +26,8 @@ import {
   mentionedInThreadHandler,
   summarizeSuggestedThreadAfterMention,
 } from '../summaries/mentioned-in-thread-handler';
+import { NewUserTriggersManager } from '../new-user-triggers/manager';
+import { userOnboardingMiddleware } from '../onboarding/global-middleware';
 
 export enum Routes {
   SUMMARIZE_THREAD = 'summarize-thread',
@@ -49,9 +51,13 @@ export const registerBoltAppRouter = (
   channelSummarizer: ChannelSummarizer,
   onboardingManager: OnboardingManager,
   summaryStore: SummaryStore,
+  newUserTriggersManager: NewUserTriggersManager,
 ) => {
+  const onboardingMiddleware = userOnboardingMiddleware(onboardingManager);
+
   app.shortcut(
     Routes.SUMMARIZE_THREAD,
+    onboardingMiddleware,
     threadSummarizationHandler(analyticsManager, threadSummarizer),
   );
 
@@ -62,48 +68,58 @@ export const registerBoltAppRouter = (
   );
   const privateChannel = privateChannelHandler(analyticsManager);
 
-  app.view(Routes.ADD_TO_CHANNEL_SUBMIT, addToChannel);
+  app.view(Routes.ADD_TO_CHANNEL_SUBMIT, onboardingMiddleware, addToChannel);
   app.view(
     { callback_id: Routes.ADD_TO_CHANNEL_SUBMIT, type: 'view_closed' },
+    onboardingMiddleware,
     addToChannel,
   );
-  app.view(Routes.PRIVATE_CHANNEL_SUBMIT, privateChannel);
+  app.view(Routes.PRIVATE_CHANNEL_SUBMIT, onboardingMiddleware, privateChannel);
   app.view(
     { callback_id: Routes.PRIVATE_CHANNEL_SUBMIT, type: 'view_closed' },
+    onboardingMiddleware,
     privateChannel,
   );
   app.command(
     /gist.*/,
+    onboardingMiddleware,
     slashCommandRouter(channelSummarizer, analyticsManager),
   );
   app.action(
     Routes.THREAD_SUMMARY_FEEDBACK,
+    onboardingMiddleware,
     threadSummaryFeedbackHandler(analyticsManager),
   );
 
   app.action(
     Routes.THREAD_SUMMARY_POST,
+    onboardingMiddleware,
     threadSummaryPostHandler(analyticsManager, summaryStore),
   );
 
   app.action(
     Routes.CHANNEL_SUMMARY_FEEDBACK,
+    onboardingMiddleware,
     channelSummaryFeedbackHandler(analyticsManager),
   );
 
   app.action(
     Routes.CHANNEL_SUMMARY_POST,
+    onboardingMiddleware,
     channelSummaryPostHandler(analyticsManager, summaryStore),
   );
 
   app.view(
     Routes.ADD_TO_CHANNEL_FROM_WELCOME_SUBMIT,
+    onboardingMiddleware,
     addToChannelFromWelcomeModal(analyticsManager),
   );
   app.action(
     Routes.ADD_TO_CHANNEL_FROM_WELCOME_MODAL,
+    onboardingMiddleware,
     addToChannelFromWelcomeModalHandler(analyticsManager),
   );
+
   app.action(
     Routes.SUMMARIZE_THREAD_FROM_THREAD_MENTION,
     summarizeSuggestedThreadAfterMention(
@@ -115,6 +131,7 @@ export const registerBoltAppRouter = (
 
   app.action(
     Routes.ADD_TO_CHANNEL_FROM_WELCOME_MESSAGE,
+    onboardingMiddleware,
     addToChannelFromWelcomeMessageHandler(analyticsManager, channelSummarizer),
   );
 
@@ -153,18 +170,18 @@ export const registerBoltAppRouter = (
 
   app.message(
     mentionedInThreadMessage(),
-    mentionedInThreadHandler(analyticsManager),
+    mentionedInThreadHandler(analyticsManager, newUserTriggersManager),
   );
 
-  app.message(
-    subtype('channel_join'),
-    channelJoinHandler(analyticsManager, channelSummarizer, onboardingManager),
+  const joinHandler = channelJoinHandler(
+    analyticsManager,
+    channelSummarizer,
+    onboardingManager,
+    newUserTriggersManager,
   );
+  app.message(subtype('channel_join'), joinHandler);
 
-  app.message(
-    subtype('group_join'),
-    channelJoinHandler(analyticsManager, channelSummarizer, onboardingManager),
-  );
+  app.message(subtype('group_join'), joinHandler);
 
   app.event('app_uninstalled', async ({ body }) => {
     analyticsManager.installationFunnel({

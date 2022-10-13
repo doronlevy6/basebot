@@ -15,6 +15,31 @@ export const appHomeOpenedHandler =
 
     try {
       logger.info(`user ${user} opened the bot DMs`);
+
+      const latest = (new Date().getTime() / 1000).toFixed(6);
+      const {
+        error: historyErr,
+        ok: historyOk,
+        messages,
+      } = await client.conversations.history({
+        channel: event.channel,
+        limit: 1,
+        latest: latest,
+      });
+
+      if (historyErr || !historyOk) {
+        throw new Error(`Failed to get dm history ${historyErr}`);
+      }
+
+      if (messages && messages[0].user === context.botUserId) {
+        // Skip onboarding if the last message in the DM is from the bot so we don't send onboardings when
+        // you open the bot DM and there is already a message waiting for you.
+        logger.info(
+          `skipping onboarding as the latest message is from the bot`,
+        );
+        return;
+      }
+
       await onboardingManager.onboardUser(
         team_id,
         user,

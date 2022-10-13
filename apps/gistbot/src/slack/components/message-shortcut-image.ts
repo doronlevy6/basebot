@@ -1,7 +1,7 @@
 import { ImageBlock } from '@slack/web-api';
 
 const IMAGE_URL =
-  'https://assets.base.la/gist/assets/theGistWelcomeMessage.jpg';
+  'https://assets.thegist.ai/gist/assets/theGistWelcomeMessage.jpg';
 
 export const MessageShortcutImage = (
   text?: string,

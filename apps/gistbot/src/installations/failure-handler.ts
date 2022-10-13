@@ -10,7 +10,7 @@ export const installationFailureHandler =
     const params = new URLSearchParams();
     params.set(
       'error',
-      `We've failed connecting your slack account to BASE. Please try again.`,
+      `We've failed connecting your slack account to theGist. Please try again.`,
     );
     params.set('from', 'slack_failure');
 
@@ -20,9 +20,8 @@ export const installationFailureHandler =
       slackUserId: 'unknown',
     });
 
-    // TODO: Redirect to Gistbot Page instead of www.base.la
     res.writeHead(302, {
-      Location: `https://www.base.la/slack-failure`,
+      Location: `https://www.thegist.ai/slack-failure`,
     });
     res.end();
   };
