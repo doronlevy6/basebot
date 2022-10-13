@@ -126,6 +126,7 @@ export class ThreadSummarizer {
         userId,
         startTimeStamp,
         summary,
+        isThread: true,
       });
 
       // Slack's API does not work with respond ephemeral in threads, they reccomend to not use respond in this cases and just use this.

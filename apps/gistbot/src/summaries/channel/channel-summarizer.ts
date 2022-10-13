@@ -189,6 +189,7 @@ export class ChannelSummarizer {
         startTimeStamp,
         userId,
         summary: successfulSummary,
+        isThread: false,
       });
 
       if (respond) {

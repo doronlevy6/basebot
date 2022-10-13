@@ -16,6 +16,7 @@ interface Input {
   userId: string;
   startTimeStamp: number;
   summary: string;
+  isThread: boolean;
 }
 
 export const EphemeralSummary = ({
@@ -24,10 +25,9 @@ export const EphemeralSummary = ({
   startTimeStamp,
   userId,
   cacheKey,
+  isThread,
 }: Input): { title: string; blocks: (KnownBlock | Block)[] } => {
-  const title = `*${UserLink(userId)} here's your summary from \`${SlackDate(
-    startTimeStamp.toString(),
-  )}\` onwards*:`;
+  const title = summaryTitle(userId, startTimeStamp, isThread);
   const fullText = `${title}\n${summary}`;
   const blocksSplit = splitTextBlocks(fullText);
 
@@ -59,4 +59,17 @@ export const EphemeralSummary = ({
       },
     ],
   };
+};
+
+const summaryTitle = (
+  userId: string,
+  startTimeStamp: number,
+  isThread: boolean,
+) => {
+  if (isThread) {
+    return `*${UserLink(userId)} here's your summary:*`;
+  }
+  return `*${UserLink(userId)} here's your summary from \`${SlackDate(
+    startTimeStamp.toString(),
+  )}\` onwards:*`;
 };

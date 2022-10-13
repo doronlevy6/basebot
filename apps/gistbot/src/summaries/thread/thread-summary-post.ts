@@ -68,6 +68,7 @@ export const threadSummaryPostHandler =
         startTimeStamp: startDate,
         summary: text,
         myBotUserId: botUserId,
+        isThread: true,
       });
 
       await Promise.all([

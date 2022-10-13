@@ -15,6 +15,7 @@ interface Input {
   startTimeStamp: number;
   summary: string;
   myBotUserId: string;
+  isThread: boolean;
 }
 
 export const Summary = ({
@@ -23,10 +24,9 @@ export const Summary = ({
   startTimeStamp,
   userId,
   myBotUserId,
+  isThread,
 }: Input): { title: string; blocks: (KnownBlock | Block)[] } => {
-  const title = `*Summary of messages from \`${SlackDate(
-    startTimeStamp.toString(),
-  )}\` onwards*:`;
+  const title = summaryTitle(startTimeStamp, isThread);
 
   const footer = `This summary was requested by ${UserLink(
     userId,
@@ -61,4 +61,13 @@ export const Summary = ({
       },
     ],
   };
+};
+
+const summaryTitle = (startTimeStamp: number, isThread: boolean) => {
+  if (isThread) {
+    return `*Summary of this thread:*`;
+  }
+  return `*Summary of messages from \`${SlackDate(
+    startTimeStamp.toString(),
+  )}\` onwards:*`;
 };

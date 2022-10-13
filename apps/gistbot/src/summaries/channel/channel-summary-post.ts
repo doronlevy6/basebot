@@ -61,6 +61,7 @@ export const channelSummaryPostHandler =
         startTimeStamp: summary.startDate,
         summary: summary.text,
         myBotUserId: botUserId,
+        isThread: false,
       });
 
       await respond({
