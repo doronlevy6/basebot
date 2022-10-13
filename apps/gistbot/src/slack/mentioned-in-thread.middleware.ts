@@ -1,16 +1,25 @@
 import {
+  Context,
   GenericMessageEvent,
   Middleware,
   SlackEventMiddlewareArgs,
 } from '@slack/bolt';
 import { parseSlackMrkdwn } from './parser';
 
+const PARSED_THREAD_MENTIONED_USERS_CONTEXT_KEY =
+  'parsed_thread_mentioned_users';
+
+export const getThreadMentionedUsersFromContext = (
+  context: Context,
+): string[] => {
+  return context[PARSED_THREAD_MENTIONED_USERS_CONTEXT_KEY] || [];
+};
+
 export function mentionedInThreadMessage(): Middleware<
   SlackEventMiddlewareArgs<'message'>
 > {
-  return async ({ body, next, logger, context }) => {
+  return async ({ body, next, context }) => {
     const event = body.event as GenericMessageEvent;
-    logger.info(`${event.user} mentioned us in ${event.channel}`);
 
     // No thread_ts means skip because it's not a thread mention
     // so we skip the event entirely.
@@ -32,6 +41,18 @@ export function mentionedInThreadMessage(): Middleware<
     if (!parsedMentions || parsedMentions.length === 0) {
       return;
     }
+
+    context[PARSED_THREAD_MENTIONED_USERS_CONTEXT_KEY] = parsedMentions.map(
+      (pm) => {
+        if (pm.type !== 'user_mention') {
+          throw new Error(
+            'undefined behaviour, non user_mention type after we should be filtered to only user_mention types',
+          );
+        }
+
+        return pm.userId;
+      },
+    );
 
     await next();
   };

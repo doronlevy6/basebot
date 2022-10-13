@@ -1,0 +1,278 @@
+import { GenericMessageEvent } from '@slack/bolt';
+import { ChatPostEphemeralResponse, WebClient } from '@slack/web-api';
+import { AnalyticsManager } from '../analytics/manager';
+import { OnboardingManager } from '../onboarding/manager';
+import { Routes } from '../routes/router';
+import { UserLink } from '../slack/components/user-link';
+import { getThreadMentionedUsersFromContext } from '../slack/mentioned-in-thread.middleware';
+import { SlackBlockActionWrapper, SlackEventWrapper } from '../slack/types';
+import { ThreadSummarizer } from './thread/thread-summarizer';
+import { summaryInProgressMessage } from './utils';
+
+const THREAD_LENGTH_LIMIT = 20;
+
+interface MentionedInThreadProps {
+  threadTs: string;
+  channelId: string;
+}
+
+export const mentionedInThreadHandler =
+  (analyticsManager: AnalyticsManager) =>
+  async ({ client, logger, body, context }: SlackEventWrapper<'message'>) => {
+    try {
+      const event = body.event as GenericMessageEvent;
+
+      if (!event.thread_ts) {
+        logger.warn(`received no thread_ts in mentioned in thread handler`);
+        return;
+      }
+
+      const threadMentionedUsers = new Set(
+        getThreadMentionedUsersFromContext(context),
+      );
+      if (threadMentionedUsers.size === 0) {
+        logger.warn(
+          `received no thread mentioned users in mentioned in thread handler`,
+        );
+        return;
+      }
+
+      const {
+        error: repliesError,
+        ok: repliesOk,
+        messages,
+      } = await client.conversations.replies({
+        ts: event.thread_ts,
+        channel: event.channel,
+        latest: event.ts,
+        limit: THREAD_LENGTH_LIMIT,
+      });
+
+      if (repliesError || !repliesOk) {
+        throw new Error(`Failed to fetch conversation replies ${repliesError}`);
+      }
+
+      if (!messages) {
+        throw new Error(`Failed to fetch replies not found`);
+      }
+
+      if (messages.length < THREAD_LENGTH_LIMIT) {
+        logger.info(
+          `thread ${event.thread_ts} has less than ${THREAD_LENGTH_LIMIT} messages`,
+        );
+        return;
+      }
+
+      messages.forEach((m) => {
+        if (m.user && threadMentionedUsers.has(m.user)) {
+          threadMentionedUsers.delete(m.user);
+        }
+      });
+
+      if (threadMentionedUsers.size === 0) {
+        logger.info(
+          `all mentioned users were active within the last ${THREAD_LENGTH_LIMIT} messages on ${event.thread_ts}`,
+        );
+        return;
+      }
+
+      const {
+        error: linkError,
+        ok: linkOk,
+        permalink,
+      } = await client.chat.getPermalink({
+        channel: event.channel,
+        message_ts: event.thread_ts,
+      });
+
+      if (linkError || !linkOk) {
+        throw new Error(`Failed to get permalink to message ${linkError}`);
+      }
+
+      if (!permalink) {
+        throw new Error(`Failed to get permalink to message not found`);
+      }
+
+      const awaits: Promise<ChatPostEphemeralResponse>[] = [];
+      for (const user of threadMentionedUsers) {
+        awaits.push(
+          sendUserSuggestion(
+            event.thread_ts,
+            event.channel,
+            user,
+            context.botUserId || '',
+            body.team_id,
+            permalink,
+            analyticsManager,
+            client,
+          ),
+        );
+      }
+
+      await Promise.all(awaits);
+    } catch (error) {
+      logger.error(
+        `error in handling thread mentioned users: ${error} ${error.stack}`,
+      );
+    }
+  };
+
+export const summarizeSuggestedThreadAfterMention =
+  (
+    analyticsManager: AnalyticsManager,
+    threadSummarizer: ThreadSummarizer,
+    onboardingManager: OnboardingManager,
+  ) =>
+  async ({ ack, logger, body, client, context }: SlackBlockActionWrapper) => {
+    try {
+      await ack();
+
+      await onboardingManager.onboardUser(
+        body.team?.id || 'unknown',
+        body.user.id,
+        client,
+        'suggested_thread_summary',
+        context.botUserId,
+      );
+
+      const action = body.actions[0];
+      if (action.type !== 'button') {
+        throw new Error(
+          'summarize thread after mention received non-button action',
+        );
+      }
+
+      const props = JSON.parse(action.value) as MentionedInThreadProps;
+
+      await summaryInProgressMessage(
+        client,
+        props.channelId,
+        body.user.id,
+        props.threadTs,
+      );
+
+      const { error, ok, channel } = await client.conversations.info({
+        channel: props.channelId,
+      });
+
+      if (error || !ok) {
+        throw new Error(`Failed to fetch conversation info ${error}`);
+      }
+
+      if (!channel || !channel.name) {
+        throw new Error(
+          `Failed to fetch conversation info conversation not found`,
+        );
+      }
+
+      await threadSummarizer.summarize(
+        context.botId || '',
+        body.team?.id || 'unknown',
+        body.user.id,
+        {
+          type: 'thread',
+          channelId: props.channelId,
+          channelName: channel.name,
+          threadTs: props.threadTs,
+        },
+        client,
+      );
+    } catch (error) {
+      logger.error(
+        `error in summarize suggested thread after mention: ${error} ${error.stack}`,
+      );
+    }
+  };
+
+const sendUserSuggestion = async (
+  threadTs: string,
+  channelId: string,
+  userId: string,
+  botUserId: string,
+  teamId: string,
+  threadPermalink: string,
+  analyticsManager: AnalyticsManager,
+  client: WebClient,
+): Promise<ChatPostEphemeralResponse> => {
+  const props: MentionedInThreadProps = {
+    threadTs: threadTs,
+    channelId: channelId,
+  };
+
+  const {
+    error: presenceErr,
+    ok: presenceOk,
+    presence,
+  } = await client.users.getPresence({ user: userId });
+  if (presenceErr || !presenceOk) {
+    throw new Error(`Failed to get presence ${presenceErr}`);
+  }
+
+  if (!presence) {
+    throw new Error(`Failed to get presence not found`);
+  }
+
+  let basicText: string;
+  if (presence === 'away') {
+    basicText = `Hi ${UserLink(userId)} I'm ${UserLink(
+      botUserId,
+    )}, I make life simpler by summarizing discussions on Slack.\n\nYou were mentioned in <${threadPermalink}|this long thread> that you haven't been active in yet.\n\nWould you like a summary of the discussion so far?`;
+  } else {
+    basicText = `Hi ${UserLink(userId)} I'm ${UserLink(
+      botUserId,
+    )}, I make life simpler by summarizing discussions on Slack.\n\nYou were mentioned in this long thread that you haven't been active in yet.\n\nWould you like a summary of the discussion so far?`;
+  }
+
+  const blocks = [
+    {
+      type: 'section',
+      text: {
+        type: 'mrkdwn',
+        text: basicText,
+      },
+    },
+    {
+      type: 'actions',
+      elements: [
+        {
+          type: 'button',
+          text: {
+            type: 'plain_text',
+            text: 'Summarize this thread',
+            emoji: true,
+          },
+          style: 'primary',
+          value: JSON.stringify(props),
+          action_id: Routes.SUMMARIZE_THREAD_FROM_THREAD_MENTION,
+        },
+      ],
+    },
+  ];
+
+  analyticsManager.messageSentToUserDM({
+    type: 'suggest_thread_summary_for_thread',
+    slackUserId: userId,
+    slackTeamId: teamId,
+    properties: {
+      suggestedThread: threadTs,
+      suggestedChannel: channelId,
+      ephemeralInChannel: presence !== 'away',
+    },
+  });
+
+  if (presence === 'away') {
+    return client.chat.postMessage({
+      channel: userId,
+      text: basicText,
+      blocks: blocks,
+    });
+  }
+
+  return client.chat.postEphemeral({
+    channel: channelId,
+    thread_ts: threadTs,
+    user: userId,
+    text: basicText,
+    blocks: blocks,
+  });
+};

@@ -21,6 +21,10 @@ import { threadSummaryFeedbackHandler } from '../summaries/thread/thread-summary
 import { threadSummaryPostHandler } from '../summaries/thread/thread-summary-post';
 import { ThreadSummarizer } from '../summaries/thread/thread-summarizer';
 import { slashCommandRouter } from './slash-command-router';
+import {
+  mentionedInThreadHandler,
+  summarizeSuggestedThreadAfterMention,
+} from '../summaries/mentioned-in-thread-handler';
 
 export enum Routes {
   SUMMARIZE_THREAD = 'summarize-thread',
@@ -32,6 +36,7 @@ export enum Routes {
   CHANNEL_SUMMARY_POST = 'channel-summary-post',
   ADD_TO_CHANNEL_FROM_WELCOME_MODAL = 'add-to-channel-from-welcome-modal',
   ADD_TO_CHANNEL_FROM_WELCOME_SUBMIT = 'add-to-channel-from-welcome-submit',
+  SUMMARIZE_THREAD_FROM_THREAD_MENTION = 'summarize-thread-from-thread-mention',
 }
 
 export const registerBoltAppRouter = (
@@ -97,6 +102,14 @@ export const registerBoltAppRouter = (
     Routes.ADD_TO_CHANNEL_FROM_WELCOME_MODAL,
     addToChannelFromWelcomeModalHandler(analyticsManager),
   );
+  app.action(
+    Routes.SUMMARIZE_THREAD_FROM_THREAD_MENTION,
+    summarizeSuggestedThreadAfterMention(
+      analyticsManager,
+      threadSummarizer,
+      onboardingManager,
+    ),
+  );
 
   app.message(async ({ event, say, body, context }) => {
     // We are only able to listen to our own IM channels, so if the message channel is an IM, then we can assume it's our own IM
@@ -131,9 +144,10 @@ export const registerBoltAppRouter = (
     ),
   );
 
-  app.message(mentionedInThreadMessage(), async ({ logger }) => {
-    logger.info('in thread mention');
-  });
+  app.message(
+    mentionedInThreadMessage(),
+    mentionedInThreadHandler(analyticsManager),
+  );
 
   app.message(
     subtype('channel_join'),
