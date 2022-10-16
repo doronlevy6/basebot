@@ -157,7 +157,7 @@ export const registerBoltAppRouter = (
     ) {
       say({
         text: 'Hi there :wave:',
-        blocks: Help(context.botUserId || ''),
+        blocks: Help(event.user || '', context.botUserId || ''),
       });
       console.log(event);
       analyticsManager.messageSentToUserDM({

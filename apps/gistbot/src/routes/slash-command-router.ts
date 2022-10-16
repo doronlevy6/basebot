@@ -27,7 +27,7 @@ export const slashCommandRouter = (
       await respond({
         response_type: 'ephemeral',
         text: 'Hi there :wave:',
-        blocks: Help(context.botUserId || ''),
+        blocks: Help(props.command.user_id, context.botUserId || ''),
       });
       return;
     }
