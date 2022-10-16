@@ -232,6 +232,13 @@ export const addToChannelFromWelcomeMessageHandler =
           slackTeamId: body.team?.id || 'unknown',
           slackUserId: body.user.id || 'unknown',
         });
+
+        await onBoardingAddToMoreChannels(client, body.user.id);
+        analyticsManager.messageSentToUserDM({
+          type: 'onboarding_add_to_more_channels',
+          slackTeamId: body.team?.id || 'unknown',
+          slackUserId: body.user.id,
+        });
       } catch (error) {
         logger.error(`error in fetching channel message count: ${error.stack}`);
       }
@@ -239,6 +246,7 @@ export const addToChannelFromWelcomeMessageHandler =
       logger.error(`error in add to channel from welcome: ${error.stack}`);
     }
   };
+
 async function onBoardingSummarizeLoadingMessage(
   client: WebClient,
   userId: string,
@@ -266,6 +274,7 @@ async function onBoardingChannelNotReadyMessage(
     text: `It seems like the channel does not have enough messages for me to summarize, can you try a different one?`,
   });
 }
+
 async function onBoardingChannelSummarizeSuccessMessage(
   client: WebClient,
   selectedConversation: string,
@@ -279,6 +288,30 @@ async function onBoardingChannelSummarizeSuccessMessage(
         text: {
           type: 'mrkdwn',
           text: `Done! Let's go see it at <#${selectedConversation}> 👀.`,
+        },
+      },
+    ],
+  });
+}
+
+async function onBoardingAddToMoreChannels(client: WebClient, userId: string) {
+  await client.chat.postMessage({
+    channel: userId,
+    blocks: [
+      {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: 'Add me to more channels',
+        },
+        accessory: {
+          type: 'button',
+          text: {
+            type: 'plain_text',
+            text: 'Select a channel...',
+            emoji: true,
+          },
+          action_id: Routes.ADD_TO_CHANNEL_FROM_WELCOME_MODAL,
         },
       },
     ],

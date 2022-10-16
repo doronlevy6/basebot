@@ -29,6 +29,11 @@ export const Welcome = (userId: string, myBotUserId: string): KnownBlock[] => {
           text: 'Select a channel...',
           emoji: true,
         },
+        filter: {
+          include: ['public'],
+          exclude_bot_users: true,
+          exclude_external_shared_channels: true,
+        },
         action_id: Routes.ADD_TO_CHANNEL_FROM_WELCOME_MESSAGE,
       },
     },
