@@ -16,12 +16,13 @@ const MESSAGE_THRESHOLD = 3;
 
 export const addToChannelFromWelcomeModal =
   (analyticsManager: AnalyticsManager) => async (params: ViewAction) => {
-    const { ack, body, client } = params;
+    const { ack, body, client, view } = params;
 
     try {
       await ack();
 
       const submitted = body.type === 'view_submission';
+      const props = JSON.parse(view.private_metadata) as ChannelModalProps;
 
       analyticsManager.modalClosed({
         type: 'add_to_channels_from_welcome',
@@ -55,10 +56,23 @@ export const addToChannelFromWelcomeModal =
           ),
         ),
       );
+
+      await client.chat.postEphemeral({
+        user: body.user.id,
+        channel: props.originChannel || props.user,
+        thread_ts: props.threadTs,
+        text: 'theGist was added to the selected channels!',
+      });
     } catch (err) {
       logger.error(`Add to channel from welcome modal error: ${err.stack}`);
     }
   };
+
+interface ChannelModalProps {
+  originChannel?: string;
+  threadTs?: string;
+  user: string;
+}
 
 export const addToChannelFromWelcomeModalHandler =
   (analyticsManager: AnalyticsManager) =>
@@ -66,11 +80,18 @@ export const addToChannelFromWelcomeModalHandler =
     try {
       await ack();
 
+      const props: ChannelModalProps = {
+        originChannel: body.channel?.id,
+        threadTs: body.message?.thread_ts,
+        user: body.user.id,
+      };
+
       await client.views.open({
         trigger_id: body.trigger_id,
         view: {
           type: 'modal',
           callback_id: Routes.ADD_TO_CHANNEL_FROM_WELCOME_SUBMIT,
+          private_metadata: JSON.stringify(props),
           submit: {
             type: 'plain_text',
             text: 'Add me to these channels',
