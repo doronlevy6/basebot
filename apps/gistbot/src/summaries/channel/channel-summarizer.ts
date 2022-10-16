@@ -69,6 +69,37 @@ export class ChannelSummarizer {
         userInfo.tz,
       );
 
+      if (rootMessages.length === 0) {
+        this.analyticsManager.channelSummaryFunnel({
+          funnelStep: `channel_too_small`,
+          slackTeamId: teamId,
+          slackUserId: userId,
+          channelId: props.channelId,
+          extraParams: {
+            summaryContext: summaryContext,
+          },
+        });
+
+        if (respond) {
+          await respond({
+            response_type: 'ephemeral',
+            text: `This channel does not have any messages in the last ${daysBack} day${
+              daysBack > 1 ? 's' : ''
+            }, so we cannot currently create a summary.`,
+          });
+        } else {
+          await client.chat.postEphemeral({
+            text: `This channel does not have any messages in the last ${daysBack} day${
+              daysBack > 1 ? 's' : ''
+            }, so we cannot currently create a summary.`,
+            channel: props.channelId,
+            user: userId,
+          });
+        }
+
+        return;
+      }
+
       // Ensure that we sort the messages oldest first (so that the model receives a conversation in order)
       rootMessages.sort(sortSlackMessages);
 
