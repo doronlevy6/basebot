@@ -176,13 +176,14 @@ export const registerBoltAppRouter = (
     handleUserFeedbackSubmit(analyticsManager, userFeedbackManager),
   );
 
-  app.message(async ({ event, say, body, context }) => {
+  app.message(async ({ event, say, body, context, logger }) => {
+    if (event.channel_type === 'im' && 'bot_profile' in event) {
+      logger.warn({ msg: `a bot is talking to us`, bot: event.bot_profile });
+      return;
+    }
+
     // We are only able to listen to our own IM channels, so if the message channel is an IM, then we can assume it's our own IM
-    if (
-      event.channel_type === 'im' &&
-      'user' in event &&
-      event.user !== 'USLACKBOT'
-    ) {
+    if (event.channel_type === 'im' && 'user' in event) {
       say({
         text: 'Hi there :wave:',
         blocks: Help(event.user || '', context.botUserId || ''),
