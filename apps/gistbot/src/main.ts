@@ -26,6 +26,7 @@ import { OnboardingManager } from './onboarding/manager';
 import { NewUserTriggersManager } from './new-user-triggers/manager';
 import { RedisTriggerLock } from './new-user-triggers/trigger-lock';
 import { PgTriggerLock } from './new-user-triggers/trigger-lock-persistent';
+import { UserFeedbackManager } from './user-feedback/manager';
 
 const gracefulShutdown = (server: Server) => (signal: string) => {
   logger.info('starting shutdown, got signal ' + signal);
@@ -117,9 +118,20 @@ const startApp = async () => {
     throw new Error('NewUserTriggersLock is not ready');
   }
 
+  const registrationBotToken = process.env.SLACK_REGISTRATIONS_BOT_TOKEN;
+  if (!registrationBotToken) {
+    throw new Error('no bot token given for internal Slack Client');
+  }
+
   const userOnboardingNotifier = new UserOnboardedNotifier(
     process.env.ENV || 'local',
-    process.env.SLACK_REGISTRATIONS_BOT_TOKEN,
+    registrationBotToken,
+  );
+
+  const userFeedbackManager = new UserFeedbackManager(
+    analyticsManager,
+    process.env.ENV || 'local',
+    registrationBotToken, // Just use the auth0 notifier token for now, doesn't really matter at all
   );
 
   const onboardingManager = new OnboardingManager(
@@ -147,6 +159,7 @@ const startApp = async () => {
     onboardingManager,
     summaryStore,
     newUserTriggersManager,
+    userFeedbackManager,
   );
 
   const port = process.env['PORT'] || 3000;

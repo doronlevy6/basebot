@@ -55,7 +55,7 @@ export const EphemeralSummary = ({
           type: 'plain_text',
           text: 'How was this summary?',
         },
-        accessory: SummaryFeedback(actionIds.feedback),
+        accessory: SummaryFeedback(actionIds.feedback, cacheKey),
       },
     ],
   };

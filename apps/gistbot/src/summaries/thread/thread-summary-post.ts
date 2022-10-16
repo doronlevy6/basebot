@@ -61,9 +61,10 @@ export const threadSummaryPostHandler =
       }
       const { blocks, title } = Summary({
         actionIds: {
-          feedback: Routes.CHANNEL_SUMMARY_FEEDBACK,
+          feedback: Routes.THREAD_SUMMARY_FEEDBACK,
           addToChannels: Routes.ADD_TO_CHANNEL_FROM_WELCOME_MODAL,
         },
+        cacheKey: value,
         userId: body.user.id,
         startTimeStamp: startDate,
         summary: text,

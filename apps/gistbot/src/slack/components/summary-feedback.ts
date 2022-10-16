@@ -1,6 +1,19 @@
 import { StaticSelect } from '@slack/bolt';
 
-export const SummaryFeedback = (actionId: string): StaticSelect => {
+export const extractSessionIdAndValueFromFeedback = (
+  value: string,
+): [string, string] => {
+  const split = value.split(':');
+  if (split.length !== 2) {
+    throw new Error('failed to split session id to 2 parts');
+  }
+  return [split[0], split[1]];
+};
+
+export const SummaryFeedback = (
+  actionId: string,
+  sessionId: string,
+): StaticSelect => {
   return {
     type: 'static_select',
     placeholder: {
@@ -12,42 +25,26 @@ export const SummaryFeedback = (actionId: string): StaticSelect => {
       {
         text: {
           type: 'plain_text',
-          text: '🤯 Amazing summary, great job!',
+          text: ':+1: Great summary',
           emoji: true,
         },
-        value: 'amazing',
+        value: `${sessionId}:good`,
       },
       {
         text: {
           type: 'plain_text',
-          text: '👍 Summary was OK',
+          text: ':-1: Summary needs improvement',
           emoji: true,
         },
-        value: 'ok',
+        value: `${sessionId}:not_good`,
       },
       {
         text: {
           type: 'plain_text',
-          text: "😐 Summary wasn't relevant",
+          text: ':exclamation: Summary was inappropriate',
           emoji: true,
         },
-        value: 'not_relevant',
-      },
-      {
-        text: {
-          type: 'plain_text',
-          text: '🤔 Summary was incorrect',
-          emoji: true,
-        },
-        value: 'incorrect',
-      },
-      {
-        text: {
-          type: 'plain_text',
-          text: '🚫 Summary was inappropriate',
-          emoji: true,
-        },
-        value: 'inappropriate',
+        value: `${sessionId}:inappropriate`,
       },
     ],
     action_id: actionId,

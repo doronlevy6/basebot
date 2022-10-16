@@ -1,9 +1,11 @@
 import { SlackBlockActionWrapper } from '../../slack/types';
 import { AnalyticsManager } from '../../analytics/manager';
+import { UserFeedbackManager } from '../../user-feedback/manager';
+import { extractSessionIdAndValueFromFeedback } from '../../slack/components/summary-feedback';
 
 export const channelSummaryFeedbackHandler =
-  (analyticsManager: AnalyticsManager) =>
-  async ({ ack, logger, payload, body }: SlackBlockActionWrapper) => {
+  (analyticsManager: AnalyticsManager, feedbackManager: UserFeedbackManager) =>
+  async ({ ack, logger, payload, body, client }: SlackBlockActionWrapper) => {
     try {
       await ack();
 
@@ -13,6 +15,10 @@ export const channelSummaryFeedbackHandler =
         );
       }
 
+      const [sessionId, feedbackValue] = extractSessionIdAndValueFromFeedback(
+        payload.selected_option.value,
+      );
+
       const messageTs = body.message?.text || body.container['message_ts'];
       if (!body.channel || !messageTs) {
         logger.error({ msg: `no channel or message in body`, body: body });
@@ -20,7 +26,7 @@ export const channelSummaryFeedbackHandler =
       }
 
       logger.info(
-        `${body.user.id} is returning feedback ${payload.selected_option.value} on ${messageTs} in channel ${body.channel.id}`,
+        `${body.user.id} is returning feedback ${feedbackValue} on ${messageTs} in channel ${body.channel.id}`,
       );
 
       analyticsManager.channelSummaryFunnel({
@@ -29,9 +35,16 @@ export const channelSummaryFeedbackHandler =
         slackUserId: body.user.id,
         channelId: body.channel.id,
         extraParams: {
-          feedback_value: payload.selected_option.value,
+          feedback_value: feedbackValue,
+          gist_session: sessionId,
         },
       });
+
+      await feedbackManager.askForFeedback(
+        client,
+        body.channel.id,
+        body.user.id,
+      );
     } catch (error) {
       logger.error(`error in channel summary feedback: ${error.stack}`);
     }

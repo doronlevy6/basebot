@@ -57,6 +57,7 @@ export const channelSummaryPostHandler =
           feedback: Routes.CHANNEL_SUMMARY_FEEDBACK,
           addToChannels: Routes.ADD_TO_CHANNEL_FROM_WELCOME_MODAL,
         },
+        cacheKey: value,
         userId: body.user.id,
         startTimeStamp: summary.startDate,
         summary: summary.text,

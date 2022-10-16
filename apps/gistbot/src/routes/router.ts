@@ -31,6 +31,11 @@ import {
 } from '../summaries/mentioned-in-thread-handler';
 import { NewUserTriggersManager } from '../new-user-triggers/manager';
 import { userOnboardingMiddleware } from '../onboarding/global-middleware';
+import { UserFeedbackManager } from '../user-feedback/manager';
+import {
+  handleUserFeedbackSubmit,
+  openFeedbackModalHandler,
+} from '../user-feedback/handler';
 
 export enum Routes {
   SUMMARIZE_THREAD = 'summarize-thread',
@@ -45,6 +50,8 @@ export enum Routes {
   ADD_TO_CHANNEL_FROM_WELCOME_MESSAGE = 'add-to-channel-from-welcome-message',
   SUMMARIZE_THREAD_FROM_THREAD_MENTION = 'summarize-thread-from-thread-mention',
   SUMMARIZE_CHANNEL_FROM_CHANNEL_JOIN = 'summarize-channel-from-channel-join',
+  SEND_USER_FEEDBACK = 'send-user-feedback',
+  USER_FEEDBACK_MODAL_SUBMIT = 'user-feedback-modal-submit',
 }
 
 export const registerBoltAppRouter = (
@@ -56,6 +63,7 @@ export const registerBoltAppRouter = (
   onboardingManager: OnboardingManager,
   summaryStore: SummaryStore,
   newUserTriggersManager: NewUserTriggersManager,
+  userFeedbackManager: UserFeedbackManager,
 ) => {
   const onboardingMiddleware = userOnboardingMiddleware(onboardingManager);
 
@@ -92,7 +100,11 @@ export const registerBoltAppRouter = (
   app.action(
     Routes.THREAD_SUMMARY_FEEDBACK,
     onboardingMiddleware,
-    threadSummaryFeedbackHandler(analyticsManager),
+    threadSummaryFeedbackHandler(
+      analyticsManager,
+      userFeedbackManager,
+      summaryStore,
+    ),
   );
 
   app.action(
@@ -104,7 +116,7 @@ export const registerBoltAppRouter = (
   app.action(
     Routes.CHANNEL_SUMMARY_FEEDBACK,
     onboardingMiddleware,
-    channelSummaryFeedbackHandler(analyticsManager),
+    channelSummaryFeedbackHandler(analyticsManager, userFeedbackManager),
   );
 
   app.action(
@@ -146,6 +158,22 @@ export const registerBoltAppRouter = (
     Routes.ADD_TO_CHANNEL_FROM_WELCOME_MESSAGE,
     onboardingMiddleware,
     addToChannelFromWelcomeMessageHandler(analyticsManager, channelSummarizer),
+  );
+
+  app.action(
+    Routes.SEND_USER_FEEDBACK,
+    onboardingMiddleware,
+    openFeedbackModalHandler(analyticsManager),
+  );
+  app.view(
+    Routes.USER_FEEDBACK_MODAL_SUBMIT,
+    onboardingMiddleware,
+    handleUserFeedbackSubmit(analyticsManager, userFeedbackManager),
+  );
+  app.view(
+    { callback_id: Routes.USER_FEEDBACK_MODAL_SUBMIT, type: 'view_closed' },
+    onboardingMiddleware,
+    handleUserFeedbackSubmit(analyticsManager, userFeedbackManager),
   );
 
   app.message(async ({ event, say, body, context }) => {
@@ -225,14 +253,24 @@ export const registerBoltAppRouter = (
   app.event('app_home_opened', appHomeOpenedHandler(onboardingManager));
 
   // This is the global action handler, which will match all unmatched actions
-  app.action(/.*/, onlyAck);
+  // The global action handler will wait 2500 milliseconds and then ack the received action.
+  // The waiting and then acking is in order to avoid the Bolt Framework's error when you ack multiple
+  // times on the same action.
+  app.action(/.*/, async ({ ack, logger, body }) => {
+    const delay = (ms: number) =>
+      new Promise((resolve) => setTimeout(resolve, ms));
+    await delay(2500);
+
+    try {
+      await ack();
+      logger.warn({ msg: `unacked action`, body: body });
+    } catch (error) {
+      // Do nothing on error, since the error is going to be the "ack multiple times error" and we don't care here
+    }
+  });
 
   // This is a general message event handler to log all received messages
   app.event('message', async ({ event, logger }) => {
     logger.info(event);
   });
-};
-
-const onlyAck = async ({ ack }) => {
-  await ack();
 };

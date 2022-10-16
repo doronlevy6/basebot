@@ -10,6 +10,7 @@ interface Input {
     feedback: string;
     addToChannels: string;
   };
+  cacheKey: string;
   userId: string;
   startTimeStamp: number;
   summary: string;
@@ -21,6 +22,7 @@ export const Summary = ({
   actionIds,
   summary,
   startTimeStamp,
+  cacheKey,
   userId,
   myBotUserId,
   isThread,
@@ -52,7 +54,7 @@ export const Summary = ({
           type: 'plain_text',
           text: 'How was this summary?',
         },
-        accessory: SummaryFeedback(actionIds.feedback),
+        accessory: SummaryFeedback(actionIds.feedback, cacheKey),
       },
     ],
   };
