@@ -183,7 +183,11 @@ export const registerBoltAppRouter = (
     }
 
     // We are only able to listen to our own IM channels, so if the message channel is an IM, then we can assume it's our own IM
-    if (event.channel_type === 'im' && 'user' in event) {
+    if (
+      event.channel_type === 'im' &&
+      'user' in event &&
+      event.user !== 'USLACKBOT'
+    ) {
       say({
         text: 'Hi there :wave:',
         blocks: Help(event.user || '', context.botUserId || ''),
