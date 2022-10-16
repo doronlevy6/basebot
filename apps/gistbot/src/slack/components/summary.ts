@@ -1,10 +1,9 @@
 import { Block, KnownBlock } from '@slack/bolt';
 import { splitTextBlocks } from '../utils';
 import { SlackDate } from './date';
-import { GeneratedByAIBlock } from './generated-by-ai';
+import { PublicGeneratedByAIBlock } from './generated-by-ai';
 import { SummaryActions } from './summary-actions';
 import { SummaryFeedback } from './summary-feedback';
-import { UserLink } from './user-link';
 
 interface Input {
   actionIds: {
@@ -28,11 +27,7 @@ export const Summary = ({
 }: Input): { title: string; blocks: (KnownBlock | Block)[] } => {
   const title = summaryTitle(startTimeStamp, isThread);
 
-  const footer = `This summary was requested by ${UserLink(
-    userId,
-  )}. Get your summary at: ${UserLink(myBotUserId)}.`;
-
-  const fullText = `${title}\n${summary}\n\n${footer}`;
+  const fullText = `${title}\n${summary}`;
   const blocksSplit = splitTextBlocks(fullText);
   return {
     title,
@@ -47,7 +42,7 @@ export const Summary = ({
       SummaryActions({
         addToChannelsAction: { id: actionIds.addToChannels },
       }),
-      GeneratedByAIBlock(),
+      PublicGeneratedByAIBlock(userId, myBotUserId),
       {
         type: 'divider',
       },
