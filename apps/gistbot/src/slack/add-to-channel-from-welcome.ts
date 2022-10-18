@@ -272,14 +272,16 @@ async function onBoardingSummarizeLoadingMessage(
   client: WebClient,
   userId: string,
 ) {
+  const text = 'Awesome! Getting that summary ready for you! 🦾';
   await client.chat.postMessage({
     channel: userId,
+    text: text,
     blocks: [
       {
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: 'Awesome! Getting that summary ready for you! 🦾',
+          text: text,
         },
       },
     ],
@@ -301,14 +303,16 @@ async function onBoardingChannelSummarizeSuccessMessage(
   selectedConversation: string,
   userId: string,
 ) {
+  const text = `Done! Let's go see it at <#${selectedConversation}> 👀.`;
   await client.chat.postMessage({
     channel: userId,
+    text: text,
     blocks: [
       {
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: `Done! Let's go see it at <#${selectedConversation}> 👀.`,
+          text: text,
         },
       },
     ],
@@ -318,6 +322,7 @@ async function onBoardingChannelSummarizeSuccessMessage(
 async function onBoardingAddToMoreChannels(client: WebClient, userId: string) {
   await client.chat.postMessage({
     channel: userId,
+    text: 'Add me to more channels',
     blocks: [
       {
         type: 'section',
