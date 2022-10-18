@@ -1,13 +1,11 @@
 import { GenericMessageEvent } from '@slack/bolt';
 import { AnalyticsManager } from '../analytics/manager';
 import { OnboardingManager } from '../onboarding/manager';
+import { parseSlackMrkdwn } from '../slack/parser';
 import { SlackEventWrapper } from '../slack/types';
-import {
-  ChannelSummarizer,
-  DEFAULT_DAYS_BACK,
-} from './channel/channel-summarizer';
+import { ChannelSummarizer } from './channel/channel-summarizer';
 import { ThreadSummarizer } from './thread/thread-summarizer';
-import { summaryInProgressMessage } from './utils';
+import { extractDaysBack, summaryInProgressMessage } from './utils';
 
 export const mentionHandler =
   (
@@ -76,6 +74,15 @@ export const mentionHandler =
         return;
       }
 
+      const parsedMrkdwn = parseSlackMrkdwn(event.text || '');
+      parsedMrkdwn.sections.shift();
+      const textWithoutFirstMention = await parsedMrkdwn.plainText(
+        team_id,
+        client,
+      );
+
+      const daysBack = extractDaysBack(textWithoutFirstMention);
+
       await channelSummarizer.summarize(
         'bot_mentioned',
         context.botId || '',
@@ -86,7 +93,7 @@ export const mentionHandler =
           channelId: event.channel,
           channelName: channel.name,
         },
-        DEFAULT_DAYS_BACK,
+        daysBack,
         client,
       );
     } catch (error) {

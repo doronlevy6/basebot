@@ -3,11 +3,8 @@ import { SlackSlashCommandWrapper } from '../slack/types';
 import { AnalyticsManager } from '../analytics/manager';
 import { privateChannelInstructions } from '../slack/private-channel';
 import { identifyTriggeringUser } from '../slack/utils';
-import {
-  ChannelSummarizer,
-  DEFAULT_DAYS_BACK,
-} from './channel/channel-summarizer';
-import { summaryInProgressMessage } from './utils';
+import { ChannelSummarizer } from './channel/channel-summarizer';
+import { extractDaysBack, summaryInProgressMessage } from './utils';
 
 export const channelSummarizationHandler =
   (analyticsManager: AnalyticsManager, channelSummarizer: ChannelSummarizer) =>
@@ -42,15 +39,17 @@ export const channelSummarizationHandler =
         channelId: payload.channel_id,
       });
 
-      const { channel_id, user_id, channel_name, team_id } = payload;
+      const { text, channel_id, user_id, channel_name, team_id } = payload;
 
       // Don't await so that we don't force anything to wait just for the identification.
       // This handles error handling internally and will never cause an exception, so we
       // won't have any unhandled promise rejection errors.
       identifyTriggeringUser(user_id, team_id, client, analyticsManager);
 
+      const daysBack = extractDaysBack(text);
+
       logger.info(
-        `${user_id} requested a channel summarization on ${channel_name}`,
+        `${user_id} requested a channel summarization on ${channel_name} for ${daysBack} days`,
       );
 
       await channelSummarizer.summarize(
@@ -63,7 +62,7 @@ export const channelSummarizationHandler =
           channelId: channel_id,
           channelName: channel_name,
         },
-        DEFAULT_DAYS_BACK,
+        daysBack,
         client,
         respond,
       );

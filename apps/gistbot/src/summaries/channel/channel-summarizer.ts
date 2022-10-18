@@ -5,7 +5,10 @@ import { AnalyticsManager } from '../../analytics/manager';
 import { Routes } from '../../routes/router';
 import { EphemeralSummary } from '../../slack/components/ephemeral-summary';
 import { ModerationError } from '../errors/moderation-error';
-import { ChannelSummaryModel } from '../models/channel-summary.model';
+import {
+  ChannelSummary,
+  ChannelSummaryModel,
+} from '../models/channel-summary.model';
 import {
   approximatePromptCharacterCountForChannelSummary,
   MAX_PROMPT_CHARACTER_COUNT,
@@ -189,8 +192,13 @@ export class ChannelSummarizer {
           userId,
         );
 
-        if (summary.length) {
-          successfulSummary = summary;
+        const selectedSummary = await this.selectSummaryFromResponse(
+          summary,
+          teamId,
+        );
+
+        if (selectedSummary.length) {
+          successfulSummary = selectedSummary;
           break;
         }
 
@@ -377,5 +385,16 @@ export class ChannelSummarizer {
       0,
     );
     return prevDate.getTime() / 1000;
+  }
+
+  private async selectSummaryFromResponse(
+    summary: ChannelSummary,
+    teamId: string,
+  ): Promise<string> {
+    if (teamId === 'T02G37MUWJ1') {
+      return `*Summary By Everything*:\n${summary.summary_by_everything}\n\n*Summary By Summary*:\n${summary.summary_by_summary}\n\n*Summary By Bullets*:\n${summary.summary_by_bullets}\n\n`;
+    }
+
+    return summary.summary_by_everything;
   }
 }

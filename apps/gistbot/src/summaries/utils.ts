@@ -4,6 +4,7 @@ import { extractMessageText } from '../slack/message-text';
 import { SlackMessage } from './types';
 import { approximatePromptCharacterCount } from './models/prompt-character-calculator';
 import { logger } from '@base/logger';
+import { DEFAULT_DAYS_BACK } from './channel/channel-summarizer';
 
 const MAX_REPLIES_TO_FETCH = 200;
 
@@ -203,11 +204,13 @@ const filteredSubtypes = [
   'channel_unarchive',
 ];
 
-const baseProductionBotId = 'B042VQMGZ55';
-const stagingBotId = 'B043CMTLDFE';
-const devBotId = 'B043CDNE604';
-
-const filterInternalBotIds = [baseProductionBotId, stagingBotId, devBotId];
+const filterInternalBotIds = [
+  'B042VQMGZ55',
+  'B043CMTLDFE',
+  'B043CDNE604',
+  'B043ZVCGLC8',
+  'B045009QXT9',
+];
 
 export const filterUnwantedMessages = (m: SlackMessage, myBotId?: string) => {
   if (m.subtype && filteredSubtypes.includes(m.subtype)) {
@@ -238,4 +241,39 @@ export const summaryInProgressMessage = async (
     text: `Creating your summary`,
     user,
   });
+};
+
+export const extractDaysBack = (text: string): number => {
+  if (!text) {
+    return DEFAULT_DAYS_BACK;
+  }
+
+  let daysMultiplier = 1;
+  let extracted = '';
+
+  if (text.endsWith(' days') || text.endsWith(' day')) {
+    extracted = text.replace(' days', '').replace(' day', '');
+    daysMultiplier = 1;
+  }
+
+  if (text.endsWith(' weeks') || text.endsWith(' week')) {
+    extracted = text.replace(' weeks', '').replace(' week', '');
+    daysMultiplier = 7;
+  }
+
+  if (!extracted) {
+    return DEFAULT_DAYS_BACK;
+  }
+
+  try {
+    const parsed = parseInt(extracted, 10);
+    if (isNaN(parsed)) {
+      return DEFAULT_DAYS_BACK;
+    }
+    return parsed * daysMultiplier;
+  } catch (error) {
+    logger.error(`error in parsing days back: ${error}`);
+  }
+
+  return DEFAULT_DAYS_BACK;
 };

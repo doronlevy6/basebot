@@ -13,8 +13,14 @@ export interface ChannelSummaryModelRequest {
   }[];
 }
 
-interface ModelResponse {
-  data: string;
+export interface ChannelSummary {
+  summary_by_summary: string;
+  summary_by_topics: 'TBD' | string;
+  summary_by_everything: string;
+  summary_by_bullets: string[];
+}
+
+interface ModelResponse extends ChannelSummary {
   from?: 'model-channel-summary';
   error?: string;
 }
@@ -31,7 +37,7 @@ export class ChannelSummaryModel {
   async summarizeChannel(
     data: ChannelSummaryModelRequest,
     requestingUserId: string,
-  ): Promise<string> {
+  ): Promise<ChannelSummary> {
     try {
       const res = await axios.post<ModelResponse>(
         this.apiEndpoint,
@@ -63,11 +69,41 @@ export class ChannelSummaryModel {
       }
 
       try {
-        const { flagged } = await this.moderationApi.moderate({
-          input: res.data.data,
-        });
+        const [resSbS, resSbT, resSbE, resSbB] = await Promise.all([
+          this.moderationApi.moderate({
+            input: res.data.summary_by_summary,
+          }),
+          this.moderationApi.moderate({
+            input: res.data.summary_by_topics,
+          }),
+          this.moderationApi.moderate({
+            input: res.data.summary_by_everything,
+          }),
+          this.moderationApi.moderate({
+            input: res.data.summary_by_bullets.join('\n'),
+          }),
+        ]);
 
-        if (flagged) {
+        let moderatedCount = 0;
+        if (resSbS.flagged) {
+          res.data.summary_by_summary = '';
+          moderatedCount++;
+        }
+        if (resSbT.flagged) {
+          res.data.summary_by_topics = '';
+          moderatedCount++;
+        }
+        if (resSbE.flagged) {
+          res.data.summary_by_everything = '';
+          moderatedCount++;
+        }
+        if (resSbB.flagged) {
+          res.data.summary_by_bullets = [];
+          moderatedCount++;
+        }
+
+        // If all 4 have been moderated then we return a moderation error
+        if (moderatedCount === 4) {
           throw new ModerationError('moderated');
         }
       } catch (error) {
@@ -82,7 +118,12 @@ export class ChannelSummaryModel {
         );
       }
 
-      return res.data.data;
+      return {
+        summary_by_summary: res.data.summary_by_summary,
+        summary_by_topics: res.data.summary_by_topics,
+        summary_by_everything: res.data.summary_by_everything,
+        summary_by_bullets: res.data.summary_by_bullets,
+      };
     } catch (error) {
       logger.error(
         `error in channel summarization model: ${error} ${error.stack} ${
