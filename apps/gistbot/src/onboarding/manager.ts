@@ -8,6 +8,7 @@ import { OnboardingLock } from './onboarding-lock';
 import { OnboardingStore } from './onboardingStore';
 import { EmailSender } from '../email/email-sender.util';
 import { InviteUserTemplate } from './invite-user.template';
+import { allowUserByEmails } from '../utils/user-filter.util';
 
 export class OnboardingManager {
   constructor(
@@ -91,6 +92,11 @@ export class OnboardingManager {
         logger.error(`Could not get user data`);
         return;
       }
+
+      if (allowUserByEmails(data?.user?.profile?.email)) {
+        return;
+      }
+
       await this.emailSender.sendEmail({
         to: data.user.profile.email,
         ...InviteUserTemplate(),
