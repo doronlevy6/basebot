@@ -61,9 +61,9 @@ export const addToChannelInstructions = async (
               '\n\n' +
               'Just tap the `Add me now!` button to let me in.' +
               '\n' +
-              `You can also type \`/invite\` ${UserLink(
+              `You can also type \`/invite ${UserLink(
                 myBotId,
-              )} from any channel.`,
+              )}\` from any channel.`,
           },
         },
       ],

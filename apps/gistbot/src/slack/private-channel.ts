@@ -41,9 +41,9 @@ export const privateChannelInstructions = async (
           type: 'section',
           text: {
             type: 'mrkdwn',
-            text: `It looks like you're trying to use me in a private channel...\n\nI can't be added to private channels automatically, so you'll have to invite me manually.\n\nYou do this by typing \`/invite\` ${UserLink(
+            text: `It looks like you're trying to use me in a private channel...\n\nI can't be added to private channels automatically, so you'll have to invite me manually.\n\nYou do this by typing \`/invite ${UserLink(
               myBotId,
-            )} from the channel.`,
+            )}\` from the channel.`,
           },
         },
       ],
