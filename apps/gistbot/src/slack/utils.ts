@@ -26,6 +26,7 @@ export const identifyTriggeringUser = async (
       username: profile.display_name,
       realName: profile.real_name,
       avatarUrl: profile.image_512,
+      email: profile.email,
     });
   } catch (error) {
     logger.error({

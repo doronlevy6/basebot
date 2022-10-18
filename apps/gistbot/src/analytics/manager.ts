@@ -19,6 +19,7 @@ interface UserIdentification {
   realName?: string;
   title?: string;
   avatarUrl?: string;
+  email?: string;
 }
 
 export class AnalyticsManager {
@@ -61,15 +62,18 @@ export class AnalyticsManager {
   }
 
   identifyUser(user: UserIdentification) {
-    logger.info({ msg: 'identifying user in analytics', user: user });
+    logger.info({ msg: 'identifying user in analytics', user });
+    const { realName, username, title, slackTeamId, email, avatarUrl } = user;
     this.client.identify({
       userId: this.internalId(user.slackTeamId, user.slackUserId),
       traits: {
-        name: user.realName,
-        username: user.username,
-        title: user.title,
-        slackTeamId: user.slackTeamId,
+        name: realName,
+        username,
+        title: title,
+        slackTeamId: slackTeamId,
+        email,
         service: 'gistbot',
+        avatar: avatarUrl,
       },
     });
   }
