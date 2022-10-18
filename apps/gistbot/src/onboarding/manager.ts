@@ -87,18 +87,18 @@ export class OnboardingManager {
     client: WebClient,
   ): Promise<void> {
     try {
-      const data = await client.users.info({ user: userId });
-      if (!data?.user?.profile?.email) {
+      const data = await client.users.profile.get({ user: userId });
+      if (!data?.profile?.email) {
         logger.error(`Could not get user data`);
         return;
       }
 
-      if (allowUserByEmails(data?.user?.profile?.email)) {
+      if (!allowUserByEmails(data?.profile?.email)) {
         return;
       }
 
       await this.emailSender.sendEmail({
-        to: data.user.profile.email,
+        to: data.profile.email,
         ...InviteUserTemplate(),
       });
       this.analyticsManager.emailSentToUserDM({
