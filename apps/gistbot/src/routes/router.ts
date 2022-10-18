@@ -182,6 +182,10 @@ export const registerBoltAppRouter = (
       return;
     }
 
+    if (body.team_id === 'T02G37MUWJ1') {
+      return;
+    }
+
     // We are only able to listen to our own IM channels, so if the message channel is an IM, then we can assume it's our own IM
     if (
       event.channel_type === 'im' &&
