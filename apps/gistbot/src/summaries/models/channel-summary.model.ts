@@ -1,5 +1,5 @@
 import { logger } from '@base/logger';
-import axios from 'axios';
+import axios, { AxiosProxyConfig } from 'axios';
 import { ModerationError } from '../errors/moderation-error';
 import { OpenAiModerationModel } from './openai-moderation.model';
 import { approximatePromptCharacterCountForChannelSummary } from './prompt-character-calculator';
@@ -28,10 +28,18 @@ interface ModelResponse extends ChannelSummary {
 export class ChannelSummaryModel {
   private apiEndpoint: string;
   private moderationApi: OpenAiModerationModel;
+  private proxyConfig?: AxiosProxyConfig;
 
   constructor() {
     this.apiEndpoint = process.env.CHANNEL_SUMMARY_MODEL_URL as string;
     this.moderationApi = new OpenAiModerationModel();
+    if (process.env.MODELS_PROXY_URL) {
+      this.proxyConfig = {
+        protocol: 'http',
+        host: process.env.MODELS_PROXY_URL,
+        port: 8080,
+      };
+    }
   }
 
   async summarizeChannel(
@@ -44,6 +52,7 @@ export class ChannelSummaryModel {
         { ...data, user_id: requestingUserId },
         {
           timeout: 1000 * (60 * 10), // Milliseconds
+          proxy: this.proxyConfig,
         },
       );
 

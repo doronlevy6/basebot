@@ -1,5 +1,5 @@
 import { logger } from '@base/logger';
-import axios from 'axios';
+import axios, { AxiosProxyConfig } from 'axios';
 import { ModerationError } from '../errors/moderation-error';
 import { OpenAiModerationModel } from './openai-moderation.model';
 import { approximatePromptCharacterCount } from './prompt-character-calculator';
@@ -20,10 +20,18 @@ interface ModelResponse {
 export class ThreadSummaryModel {
   private apiEndpoint: string;
   private moderationApi: OpenAiModerationModel;
+  private proxyConfig?: AxiosProxyConfig;
 
   constructor() {
     this.apiEndpoint = process.env.THREAD_SUMMARY_MODEL_URL as string;
     this.moderationApi = new OpenAiModerationModel();
+    if (process.env.MODELS_PROXY_URL) {
+      this.proxyConfig = {
+        protocol: 'http',
+        host: process.env.MODELS_PROXY_URL,
+        port: 8080,
+      };
+    }
   }
 
   async summarizeThread(
@@ -36,6 +44,7 @@ export class ThreadSummaryModel {
         { threads: [data], user_id: requestingUserId },
         {
           timeout: 1000 * (60 * 10), // Milliseconds
+          proxy: this.proxyConfig,
         },
       );
 
