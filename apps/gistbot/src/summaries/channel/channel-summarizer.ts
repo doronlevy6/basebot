@@ -392,9 +392,29 @@ export class ChannelSummarizer {
     teamId: string,
   ): Promise<string> {
     if (teamId === 'T02G37MUWJ1') {
-      return `*Summary By Everything*:\n${summary.summary_by_everything}\n\n*Summary By Summary*:\n${summary.summary_by_summary}\n\n*Summary By Bullets*:\n${summary.summary_by_bullets}\n\n`;
+      return `*Summary By Everything*:\n${
+        summary.summary_by_everything
+      }\n\n*Summary By Bullets*:\n${summary.summary_by_bullets.join(
+        '\n',
+      )}\n\n*Summary By Summary*:\n${summary.summary_by_summary}\n\n`;
     }
 
-    return summary.summary_by_everything;
+    if (summary.summary_by_everything) {
+      return summary.summary_by_everything;
+    }
+
+    if (summary.summary_by_bullets) {
+      return summary.summary_by_bullets.join('\n');
+    }
+
+    if (summary.summary_by_summary) {
+      return summary.summary_by_summary;
+    }
+
+    if (summary.summary_by_topics && summary.summary_by_topics !== 'TBD') {
+      return summary.summary_by_topics;
+    }
+
+    return '';
   }
 }
