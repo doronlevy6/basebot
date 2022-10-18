@@ -22,6 +22,7 @@
   "private": true,
   "dependencies": {
     "@openapitools/openapi-generator-cli": "^2.5.1",
+    "@sendgrid/mail": "^7.7.0",
     "@slack/bolt": "^3.11.1",
     "@slack/web-api": "^6.7.1",
     "analytics-node": "^6.2.0",

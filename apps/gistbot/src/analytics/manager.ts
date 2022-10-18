@@ -180,6 +180,26 @@ export class AnalyticsManager {
       properties: { ...properties, type },
     });
   }
+  emailSentToUserDM({
+    type,
+    slackUserId,
+    slackTeamId,
+    properties,
+  }: {
+    type: string;
+    slackUserId: string;
+    slackTeamId: string;
+    properties?: ExtraParams;
+  }) {
+    this.sendEventToAnalytics({
+      eventName: 'email_sent',
+      slackUserId: slackUserId,
+      slackTeamId: slackTeamId,
+      internalUserId: this.internalId(slackTeamId, slackUserId),
+      timestamp: new Date(),
+      properties: { ...properties, type },
+    });
+  }
 
   error({
     slackUserId,

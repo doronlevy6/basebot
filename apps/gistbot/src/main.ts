@@ -27,6 +27,7 @@ import { NewUserTriggersManager } from './new-user-triggers/manager';
 import { RedisTriggerLock } from './new-user-triggers/trigger-lock';
 import { PgTriggerLock } from './new-user-triggers/trigger-lock-persistent';
 import { UserFeedbackManager } from './user-feedback/manager';
+import { EmailSender } from './email/email-sender.util';
 
 const gracefulShutdown = (server: Server) => (signal: string) => {
   logger.info('starting shutdown, got signal ' + signal);
@@ -133,12 +134,13 @@ const startApp = async () => {
     process.env.ENV || 'local',
     registrationBotToken, // Just use the auth0 notifier token for now, doesn't really matter at all
   );
-
+  const emailSender = new EmailSender();
   const onboardingManager = new OnboardingManager(
     pgOnboardingStore,
     onboardingLock,
     analyticsManager,
     userOnboardingNotifier,
+    emailSender,
   );
 
   const newUserTriggersManager = new NewUserTriggersManager(

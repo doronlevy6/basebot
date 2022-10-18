@@ -6,6 +6,8 @@ import { Welcome } from '../slack/components/welcome';
 import { UserOnboardedNotifier } from './notifier';
 import { OnboardingLock } from './onboarding-lock';
 import { OnboardingStore } from './onboardingStore';
+import { EmailSender } from '../email/email-sender.util';
+import { InviteUserTemplate } from './invite-user.template';
 
 export class OnboardingManager {
   constructor(
@@ -13,6 +15,7 @@ export class OnboardingManager {
     private lock: OnboardingLock,
     private analyticsManager: AnalyticsManager,
     private notifier: UserOnboardedNotifier,
+    private emailSender: EmailSender,
   ) {}
 
   async wasUserOnboarded(teamId: string, userId: string): Promise<boolean> {
@@ -49,7 +52,6 @@ export class OnboardingManager {
       }
 
       logger.debug(`user ${userId} has not yet been onboarded, onboarding now`);
-
       await client.chat.postMessage({
         channel: userId,
         text: `Hey ${UserLink(userId)} :wave: I'm theGist!`,
@@ -64,8 +66,8 @@ export class OnboardingManager {
           onboardingContext: onboardingContext,
         },
       });
-
       await this.store.userOnboarded(teamId, userId);
+      await this.onboardUserViaMail(teamId, userId, client);
 
       // Don't await so that we don't force anything to wait just for the notification.
       // This handles error handling internally and will never cause an exception, so we
@@ -75,6 +77,31 @@ export class OnboardingManager {
       logger.error(
         `User onboarding in ${onboardingContext} error: ${error} ${error.stack}`,
       );
+    }
+  }
+
+  async onboardUserViaMail(
+    teamId: string,
+    userId: string,
+    client: WebClient,
+  ): Promise<void> {
+    try {
+      const data = await client.users.info({ user: userId });
+      if (!data?.user?.profile?.email) {
+        logger.error(`Could not get user data`);
+        return;
+      }
+      await this.emailSender.sendEmail({
+        to: data.user.profile.email,
+        ...InviteUserTemplate(),
+      });
+      this.analyticsManager.emailSentToUserDM({
+        type: 'invite',
+        slackUserId: userId,
+        slackTeamId: teamId,
+      });
+    } catch (error) {
+      logger.error(`user invite mail error: ${error} ${error.stack}`);
     }
   }
 }
