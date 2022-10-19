@@ -14,6 +14,8 @@ export type SlackMessage = Pick<
   | 'subtype'
 >;
 
+export type TriggerContext = 'in_channel' | 'in_dm';
+
 export type SummarizationProps =
   | ThreadSummarizationProps
   | ChannelSummarizationProps;

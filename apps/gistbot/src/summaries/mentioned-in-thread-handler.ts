@@ -9,13 +9,14 @@ import { getThreadMentionedUsersFromContext } from '../slack/mentioned-in-thread
 import { SlackBlockActionWrapper, SlackEventWrapper } from '../slack/types';
 import { ThreadSummarizer } from './thread/thread-summarizer';
 import { summaryInProgressMessage } from './utils';
+import { TriggerContext } from './types';
 
 const THREAD_LENGTH_LIMIT = 20;
 
 interface MentionedInThreadProps {
   threadTs: string;
   channelId: string;
-  triggerContext: 'in_channel' | 'in_dm';
+  triggerContext: TriggerContext;
   threadPermalink: string;
 }
 
@@ -143,12 +144,12 @@ export const summarizeSuggestedThreadAfterMention =
 
       const props = JSON.parse(action.value) as MentionedInThreadProps;
 
-      await summaryInProgressMessage(
-        client,
-        props.channelId,
-        body.user.id,
-        props.threadTs,
-      );
+      await summaryInProgressMessage(client, {
+        channel: props.channelId,
+        user: body.user.id,
+        thread_ts: props.threadTs,
+        trigger_context: props.triggerContext,
+      });
 
       const { error, ok, channel } = await client.conversations.info({
         channel: props.channelId,

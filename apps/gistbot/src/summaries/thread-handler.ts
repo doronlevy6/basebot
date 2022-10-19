@@ -32,12 +32,11 @@ export const threadSummarizationHandler =
         threadTs: payload.message_ts,
       });
 
-      await summaryInProgressMessage(
-        client,
-        payload.channel.id,
-        payload.user.id,
-        payload.message_ts,
-      );
+      await summaryInProgressMessage(client, {
+        channel: payload.channel.id,
+        user: payload.user.id,
+        thread_ts: payload.message_ts,
+      });
 
       analyticsManager.threadSummaryFunnel({
         funnelStep: 'in_progress_sent',

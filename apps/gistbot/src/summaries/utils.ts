@@ -1,7 +1,7 @@
 import { BotsInfoResponse, WebClient } from '@slack/web-api';
 import { parseSlackMrkdwn } from '../slack/parser';
 import { extractMessageText } from '../slack/message-text';
-import { SlackMessage } from './types';
+import { SlackMessage, TriggerContext } from './types';
 import { approximatePromptCharacterCount } from './models/prompt-character-calculator';
 import { logger } from '@base/logger';
 import { DEFAULT_DAYS_BACK } from './channel/channel-summarizer';
@@ -230,14 +230,22 @@ export const filterUnwantedMessages = (m: SlackMessage, myBotId?: string) => {
 
 export const summaryInProgressMessage = async (
   client: WebClient,
-  channel: string,
-  user: string,
-  thread_ts?: string,
+  {
+    channel,
+    user,
+    thread_ts,
+    trigger_context,
+  }: {
+    channel: string;
+    user: string;
+    thread_ts?: string;
+    trigger_context?: TriggerContext;
+  },
 ) => {
   await client.chat.postEphemeral({
     thread_ts,
     response_type: 'ephemeral',
-    channel,
+    channel: trigger_context === 'in_dm' ? user : channel,
     text: `Creating your summary`,
     user,
   });

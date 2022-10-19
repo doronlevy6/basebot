@@ -8,12 +8,13 @@ import { UserLink } from '../slack/components/user-link';
 import { SlackBlockActionWrapper, SlackEventWrapper } from '../slack/types';
 import { ChannelSummarizer } from './channel/channel-summarizer';
 import { summaryInProgressMessage } from './utils';
+import { TriggerContext } from './types';
 
 const MINIMUM_MESSAGES_ON_CHANNEL_JOIN = 10;
 
 interface AddedToChannelProps {
   channelId: string;
-  triggerContext: 'in_channel' | 'in_dm';
+  triggerContext: TriggerContext;
 }
 
 export const channelJoinHandler =
@@ -208,7 +209,11 @@ export const summarizeSuggestedChannelAfterJoin =
         );
       }
 
-      await summaryInProgressMessage(client, props.channelId, body.user.id);
+      await summaryInProgressMessage(client, {
+        channel: props.channelId,
+        user: body.user.id,
+        trigger_context: props.triggerContext,
+      });
 
       await channelSummarizer.summarize(
         'channel_join',

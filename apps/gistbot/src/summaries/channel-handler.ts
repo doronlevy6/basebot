@@ -25,12 +25,10 @@ export const channelSummarizationHandler =
         slackUserId: payload.user_id,
         channelId: payload.channel_id,
       });
-
-      await summaryInProgressMessage(
-        client,
-        payload.channel_id,
-        payload.user_id,
-      );
+      await summaryInProgressMessage(client, {
+        channel: payload.channel_id,
+        user: payload.user_id,
+      });
 
       analyticsManager.channelSummaryFunnel({
         funnelStep: 'in_progress_sent',

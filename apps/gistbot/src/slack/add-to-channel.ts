@@ -121,7 +121,10 @@ export const addToChannelHandler =
           channelId: props.channelId,
         });
 
-        await summaryInProgressMessage(client, props.channelId, currentUser);
+        await summaryInProgressMessage(client, {
+          channel: summarization.channelId,
+          user: currentUser,
+        });
 
         analyticsManager.channelSummaryFunnel({
           funnelStep: 'in_progress_sent',
@@ -153,12 +156,11 @@ export const addToChannelHandler =
           threadTs: summarization.threadTs,
         });
 
-        await summaryInProgressMessage(
-          client,
-          summarization.channelId,
-          currentUser,
-          summarization.threadTs,
-        );
+        await summaryInProgressMessage(client, {
+          channel: summarization.channelId,
+          user: currentUser,
+          thread_ts: summarization.threadTs,
+        });
 
         analyticsManager.threadSummaryFunnel({
           funnelStep: 'in_progress_sent',

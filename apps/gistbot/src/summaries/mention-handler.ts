@@ -37,12 +37,10 @@ export const mentionHandler =
         },
       });
 
-      await summaryInProgressMessage(
-        client,
-        event.channel,
-        event.user,
-        event.thread_ts,
-      );
+      await summaryInProgressMessage(client, {
+        channel: event.channel,
+        user: event.user,
+      });
 
       const { error, ok, channel } = await client.conversations.info({
         channel: event.channel,
