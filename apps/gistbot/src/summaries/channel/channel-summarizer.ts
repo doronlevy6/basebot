@@ -407,15 +407,12 @@ export class ChannelSummarizer {
         summaryByTopics = `${summaryByTopics}${key}:\n${element}\n`;
       }
     }
+    const summaryByBulletsFormatted = summary.summary_by_bullets
+      .map((s, i) => `${i + 1}. ${s}`)
+      .join('\n\n');
 
     if (isBaseTeamWorkspace(teamId) || isItayOnLenny(userId, teamId)) {
-      return `*Summary By Everything*:\n${
-        summary.summary_by_everything
-      }\n\n*Summary By Bullets*:\n${summary.summary_by_bullets.join(
-        '\n',
-      )}\n\n*Summary By Summary*:\n${
-        summary.summary_by_summary
-      }\n\n*Summary By Topics*:\n${summaryByTopics}\n\n`;
+      return `*Summary By Everything*:\n${summary.summary_by_everything}\n\n*Summary By Bullets*:\n${summaryByBulletsFormatted}\n\n*Summary By Summary*:\n${summary.summary_by_summary}\n\n*Summary By Topics*:\n${summaryByTopics}\n\n`;
     }
 
     if (summary.summary_by_everything) {
@@ -427,7 +424,7 @@ export class ChannelSummarizer {
     }
 
     if (summary.summary_by_bullets) {
-      return summary.summary_by_bullets.join('\n');
+      return summaryByBulletsFormatted;
     }
 
     if (summary.summary_by_summary) {
