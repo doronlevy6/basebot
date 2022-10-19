@@ -391,16 +391,36 @@ export class ChannelSummarizer {
     summary: ChannelSummary,
     teamId: string,
   ): Promise<string> {
+    if (summary.summary_by_topics === 'TBD') {
+      summary.summary_by_topics = {};
+    }
+
+    let summaryByTopics = '';
+    for (const key in summary.summary_by_topics) {
+      if (
+        Object.prototype.hasOwnProperty.call(summary.summary_by_topics, key)
+      ) {
+        const element = summary.summary_by_topics[key];
+        summaryByTopics = `${summaryByTopics}${key}:\n${element}\n`;
+      }
+    }
+
     if (teamId === 'T02G37MUWJ1') {
       return `*Summary By Everything*:\n${
         summary.summary_by_everything
       }\n\n*Summary By Bullets*:\n${summary.summary_by_bullets.join(
         '\n',
-      )}\n\n*Summary By Summary*:\n${summary.summary_by_summary}\n\n`;
+      )}\n\n*Summary By Summary*:\n${
+        summary.summary_by_summary
+      }\n\n*Summary By Topics*:\n${summaryByTopics}\n\n`;
     }
 
     if (summary.summary_by_everything) {
       return summary.summary_by_everything;
+    }
+
+    if (summary.summary_by_topics) {
+      return summaryByTopics;
     }
 
     if (summary.summary_by_bullets) {
@@ -409,10 +429,6 @@ export class ChannelSummarizer {
 
     if (summary.summary_by_summary) {
       return summary.summary_by_summary;
-    }
-
-    if (summary.summary_by_topics && summary.summary_by_topics !== 'TBD') {
-      return summary.summary_by_topics;
     }
 
     return '';

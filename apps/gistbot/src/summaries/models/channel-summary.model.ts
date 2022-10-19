@@ -15,7 +15,7 @@ export interface ChannelSummaryModelRequest {
 
 export interface ChannelSummary {
   summary_by_summary: string;
-  summary_by_topics: 'TBD' | string;
+  summary_by_topics: 'TBD' | Record<string, string>;
   summary_by_everything: string;
   summary_by_bullets: string[];
 }
@@ -77,13 +77,27 @@ export class ChannelSummaryModel {
         throw new Error(`Error response: ${res.data.error}`);
       }
 
+      if (res.data.summary_by_topics === 'TBD') {
+        res.data.summary_by_topics = {};
+      }
+
+      let summaryByTopics = '';
+      for (const key in res.data.summary_by_topics) {
+        if (
+          Object.prototype.hasOwnProperty.call(res.data.summary_by_topics, key)
+        ) {
+          const element = res.data.summary_by_topics[key];
+          summaryByTopics = `${summaryByTopics}${key}:\n${element}\n`;
+        }
+      }
+
       try {
         const [resSbS, resSbT, resSbE, resSbB] = await Promise.all([
           this.moderationApi.moderate({
             input: res.data.summary_by_summary,
           }),
           this.moderationApi.moderate({
-            input: res.data.summary_by_topics,
+            input: summaryByTopics,
           }),
           this.moderationApi.moderate({
             input: res.data.summary_by_everything,
@@ -99,7 +113,7 @@ export class ChannelSummaryModel {
           moderatedCount++;
         }
         if (resSbT.flagged) {
-          res.data.summary_by_topics = '';
+          res.data.summary_by_topics = {};
           moderatedCount++;
         }
         if (resSbE.flagged) {
