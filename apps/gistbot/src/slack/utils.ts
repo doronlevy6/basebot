@@ -59,3 +59,15 @@ export const splitTextBlocks = (text: string) => {
 
   return parts;
 };
+
+// TODO: The following utils are problematic and we should avoid using them.
+// We are currently adding them only to be able to do testing on our internal workspace
+// because the data in our internal workspace has been very corrupted, and to be able
+// to test some of our extra models on an external workspace where there is good data.
+export const isBaseTeamWorkspace = (teamId: string): boolean => {
+  return teamId === 'T02G37MUWJ1';
+};
+
+export const isItayOnLenny = (userId: string, teamId: string): boolean => {
+  return teamId === 'T013K620LTW' && userId === 'U02AKBYHV7V';
+};

@@ -36,6 +36,7 @@ import {
   handleUserFeedbackSubmit,
   openFeedbackModalHandler,
 } from '../user-feedback/handler';
+import { isBaseTeamWorkspace } from '../slack/utils';
 
 export enum Routes {
   SUMMARIZE_THREAD = 'summarize-thread',
@@ -182,7 +183,7 @@ export const registerBoltAppRouter = (
       return;
     }
 
-    if (body.team_id === 'T02G37MUWJ1') {
+    if (isBaseTeamWorkspace(body.team_id)) {
       return;
     }
 

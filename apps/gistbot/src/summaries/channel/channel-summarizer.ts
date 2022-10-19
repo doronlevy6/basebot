@@ -4,6 +4,7 @@ import { WebClient } from '@slack/web-api';
 import { AnalyticsManager } from '../../analytics/manager';
 import { Routes } from '../../routes/router';
 import { EphemeralSummary } from '../../slack/components/ephemeral-summary';
+import { isBaseTeamWorkspace, isItayOnLenny } from '../../slack/utils';
 import { ModerationError } from '../errors/moderation-error';
 import {
   ChannelSummary,
@@ -194,6 +195,7 @@ export class ChannelSummarizer {
 
         const selectedSummary = await this.selectSummaryFromResponse(
           summary,
+          userId,
           teamId,
         );
 
@@ -389,6 +391,7 @@ export class ChannelSummarizer {
 
   private async selectSummaryFromResponse(
     summary: ChannelSummary,
+    userId: string,
     teamId: string,
   ): Promise<string> {
     if (summary.summary_by_topics === 'TBD') {
@@ -405,7 +408,7 @@ export class ChannelSummarizer {
       }
     }
 
-    if (teamId === 'T02G37MUWJ1') {
+    if (isBaseTeamWorkspace(teamId) || isItayOnLenny(userId, teamId)) {
       return `*Summary By Everything*:\n${
         summary.summary_by_everything
       }\n\n*Summary By Bullets*:\n${summary.summary_by_bullets.join(
