@@ -232,7 +232,7 @@ export const summarizeSuggestedChannelAfterJoin =
       if (props.triggerContext === 'in_dm') {
         await client.chat.postMessage({
           channel: body.user.id,
-          text: `Great, your summary was created! You can click <#${props.channelId}> to go to the channel and see the summary.`,
+          text: `Great, your summary was created! Go and see your summary at <#${props.channelId}>`,
         });
       }
 

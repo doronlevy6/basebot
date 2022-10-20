@@ -181,7 +181,7 @@ export const summarizeSuggestedThreadAfterMention =
       if (props.triggerContext === 'in_dm') {
         await client.chat.postMessage({
           channel: body.user.id,
-          text: `Great, your summary was created! Click <${props.threadPermalink}|here> to go to the thread and see the summary.`,
+          text: `Great, your summary was created! Go and see your summary <${props.threadPermalink}|here>`,
         });
       }
 
