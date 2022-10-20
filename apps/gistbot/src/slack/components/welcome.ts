@@ -1,41 +1,23 @@
 import { KnownBlock } from '@slack/web-api';
-import { Routes } from '../../routes/router';
 import { Help } from './help';
+import { AddToMultipleChannels } from './add-to-multiple-channels';
+import { OnboardingFirstSummaryDivider } from './onboarding-first-summary-divider';
+import { AddToSingleChannel } from './add-to-single-channel';
+import { isTriggerContext } from '../../onboarding/types';
 
-export const Welcome = (userId: string, myBotUserId: string): KnownBlock[] => {
+export const Welcome = (
+  userId: string,
+  myBotUserId: string,
+  onboardingContext: string,
+): KnownBlock[] => {
+  const closingBlock = isTriggerContext(onboardingContext)
+    ? AddToMultipleChannels()
+    : [...OnboardingFirstSummaryDivider(), ...AddToSingleChannel(true)];
   return [
     ...Help(userId, myBotUserId),
     {
       type: 'divider',
     },
-    {
-      type: 'header',
-      text: {
-        type: 'plain_text',
-        text: "Let's get your first summary 👀",
-        emoji: true,
-      },
-    },
-    {
-      type: 'section',
-      text: {
-        type: 'mrkdwn',
-        text: 'To get started, add me to a busy channel.',
-      },
-      accessory: {
-        type: 'conversations_select',
-        placeholder: {
-          type: 'plain_text',
-          text: 'Select a channel...',
-          emoji: true,
-        },
-        filter: {
-          include: ['public'],
-          exclude_bot_users: true,
-          exclude_external_shared_channels: true,
-        },
-        action_id: Routes.ADD_TO_CHANNEL_FROM_WELCOME_MESSAGE,
-      },
-    },
+    ...closingBlock,
   ];
 };

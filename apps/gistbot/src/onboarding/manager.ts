@@ -9,6 +9,7 @@ import { OnboardingStore } from './onboardingStore';
 import { EmailSender } from '../email/email-sender.util';
 import { InviteUserTemplate } from './invite-user.template';
 import { allowUserByEmails } from '../utils/user-filter.util';
+import { OnBoardingContext } from './types';
 
 export class OnboardingManager {
   constructor(
@@ -33,7 +34,7 @@ export class OnboardingManager {
     teamId: string,
     userId: string,
     client: WebClient,
-    onboardingContext: string,
+    onboardingContext: OnBoardingContext,
     botUserId?: string,
   ): Promise<void> {
     try {
@@ -53,10 +54,11 @@ export class OnboardingManager {
       }
 
       logger.debug(`user ${userId} has not yet been onboarded, onboarding now`);
+
       await client.chat.postMessage({
         channel: userId,
         text: `Hey ${UserLink(userId)} :wave: I'm theGist!`,
-        blocks: Welcome(userId, botUserId || ''),
+        blocks: Welcome(userId, botUserId || '', onboardingContext),
       });
 
       this.analyticsManager.messageSentToUserDM({
