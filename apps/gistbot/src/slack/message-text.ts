@@ -4,22 +4,56 @@ import {
 } from '@slack/web-api/dist/response/ConversationsRepliesResponse';
 import { SlackMessage } from '../summaries/types';
 
-export function extractMessageText(message: SlackMessage): string {
+export function extractMessageText(
+  message: SlackMessage,
+  transform: boolean,
+): string {
   let text = '';
 
   if (message.text) {
-    text = `${message.text}`;
+    text = message.text;
+    if (transform) {
+      text = transformTextToNoLineBreaks(text);
+    }
   }
 
   if (message.blocks) {
-    text = `${text}\n\n${extractTextFromBlocks(message.blocks)}`;
+    let blockText = extractTextFromBlocks(message.blocks);
+    if (transform) {
+      blockText = transformTextToNoLineBreaks(blockText);
+    }
+    if (blockText) {
+      text = `${text}. ${blockText}`;
+    }
   }
 
   if (message.attachments) {
-    text = `${text}\n\n${extractTextFromAttachments(message.attachments)}`;
+    let attachmentsText = extractTextFromAttachments(message.attachments);
+    if (transform) {
+      attachmentsText = transformTextToNoLineBreaks(attachmentsText);
+    }
+
+    if (attachmentsText) {
+      text = `${text}. ${attachmentsText}`;
+    }
   }
 
   return text.trim();
+}
+
+function transformTextToNoLineBreaks(text: string): string {
+  return text
+    .split('\n')
+    .filter((t) => {
+      return t.trim().length > 0;
+    })
+    .map((t) => {
+      if (t[t.length - 1] === '.') {
+        return t;
+      }
+      return `${t}.`;
+    })
+    .join(' ');
 }
 
 function extractTextFromAttachments(attachments: Attachment[]): string {

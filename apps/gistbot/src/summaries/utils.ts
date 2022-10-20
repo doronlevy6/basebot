@@ -17,12 +17,12 @@ export const parseThreadForSummary = async (
   myBotId?: string,
 ) => {
   const messagesWithText = messages?.filter((t) => {
-    return extractMessageText(t) && filterUnwantedMessages(t, myBotId);
+    return extractMessageText(t, false) && filterUnwantedMessages(t, myBotId);
   });
 
   const messagesTexts: string[] = (await Promise.all(
     messagesWithText.map((m) =>
-      parseSlackMrkdwn(extractMessageText(m)).plainText(teamId, client),
+      parseSlackMrkdwn(extractMessageText(m, true)).plainText(teamId, client),
     ),
   )) as string[];
 
