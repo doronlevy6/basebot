@@ -5,7 +5,7 @@ import { AnalyticsManager } from '../../analytics/manager';
 import { Routes } from '../../routes/router';
 import { EphemeralSummary } from '../../slack/components/ephemeral-summary';
 import { responder } from '../../slack/responder';
-import { isBaseTeamWorkspace, isItayOnLenny } from '../../slack/utils';
+import { isBaseTeamWorkspace } from '../../slack/utils';
 import { ModerationError } from '../errors/moderation-error';
 import {
   ChannelSummary,
@@ -398,8 +398,12 @@ export class ChannelSummarizer {
       .map((s, i) => `${i + 1}. ${s}`)
       .join('\n\n');
 
-    if (isBaseTeamWorkspace(teamId) || isItayOnLenny(userId, teamId)) {
+    if (isBaseTeamWorkspace(teamId)) {
       return `*Summary By Everything*:\n${summary.summary_by_everything}\n\n*Summary By Bullets*:\n${summaryByBulletsFormatted}\n\n*Summary By Summary*:\n${summary.summary_by_summary}\n\n*Summary By Topics*:\n${summaryByTopics}\n\n`;
+    }
+
+    if (summary.summary_by_bullets) {
+      return summaryByBulletsFormatted;
     }
 
     if (summary.summary_by_everything) {
@@ -408,10 +412,6 @@ export class ChannelSummarizer {
 
     if (summary.summary_by_topics) {
       return summaryByTopics;
-    }
-
-    if (summary.summary_by_bullets) {
-      return summaryByBulletsFormatted;
     }
 
     if (summary.summary_by_summary) {
