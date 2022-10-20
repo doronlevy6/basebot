@@ -4,6 +4,7 @@ import { WebClient } from '@slack/web-api';
 import { AnalyticsManager } from '../../analytics/manager';
 import { Routes } from '../../routes/router';
 import { EphemeralSummary } from '../../slack/components/ephemeral-summary';
+import { responder } from '../../slack/responder';
 import { isBaseTeamWorkspace, isItayOnLenny } from '../../slack/utils';
 import { ModerationError } from '../errors/moderation-error';
 import {
@@ -84,22 +85,18 @@ export class ChannelSummarizer {
           },
         });
 
-        if (respond) {
-          await respond({
-            response_type: 'ephemeral',
-            text: `This channel does not have any messages in the last ${daysBack} day${
-              daysBack > 1 ? 's' : ''
-            }, so we cannot currently create a summary.`,
-          });
-        } else {
-          await client.chat.postEphemeral({
-            text: `This channel does not have any messages in the last ${daysBack} day${
-              daysBack > 1 ? 's' : ''
-            }, so we cannot currently create a summary.`,
-            channel: props.channelId,
-            user: userId,
-          });
-        }
+        const text = `This channel does not have any messages in the last ${daysBack} day${
+          daysBack > 1 ? 's' : ''
+        }, so we cannot currently create a summary.`;
+        await responder(
+          respond,
+          client,
+          text,
+          undefined,
+          props.channelId,
+          userId,
+          { response_type: 'ephemeral' },
+        );
 
         return;
       }
@@ -236,20 +233,9 @@ export class ChannelSummarizer {
         isThread: false,
       });
 
-      if (respond) {
-        await respond({
-          response_type: 'ephemeral',
-          text: title,
-          blocks,
-        });
-      } else {
-        await client.chat.postEphemeral({
-          text: title,
-          blocks,
-          channel: props.channelId,
-          user: userId,
-        });
-      }
+      await responder(respond, client, title, blocks, props.channelId, userId, {
+        response_type: 'ephemeral',
+      });
 
       this.analyticsManager.channelSummaryFunnel({
         funnelStep: 'summarized',
@@ -267,18 +253,19 @@ export class ChannelSummarizer {
     } catch (error) {
       logger.error(`error in channel summarizer: ${error} ${error.stack}`);
       if (error instanceof ModerationError) {
-        if (respond) {
-          await respond({
+        const text =
+          "This summary seems to be inappropriate :speak_no_evil:\nI'm not able to help you in this case.";
+        await responder(
+          respond,
+          client,
+          text,
+          undefined,
+          props.channelId,
+          userId,
+          {
             response_type: 'ephemeral',
-            text: "This summary seems to be inappropriate :speak_no_evil:\nI'm not able to help you in this case.",
-          });
-        } else {
-          await client.chat.postEphemeral({
-            text: "This summary seems to be inappropriate :speak_no_evil:\nI'm not able to help you in this case.",
-            channel: props.channelId,
-            user: userId,
-          });
-        }
+          },
+        );
 
         this.analyticsManager.channelSummaryFunnel({
           funnelStep: 'moderated',
@@ -292,18 +279,18 @@ export class ChannelSummarizer {
         return;
       }
 
-      if (respond) {
-        await respond({
+      const text = `We had an error processing the summarization: ${error.message}`;
+      await responder(
+        respond,
+        client,
+        text,
+        undefined,
+        props.channelId,
+        userId,
+        {
           response_type: 'ephemeral',
-          text: `We had an error processing the summarization: ${error.message}`,
-        });
-      } else {
-        await client.chat.postEphemeral({
-          text: `We had an error processing the summarization: ${error.message}`,
-          channel: props.channelId,
-          user: userId,
-        });
-      }
+        },
+      );
 
       this.analyticsManager.error({
         slackTeamId: teamId,

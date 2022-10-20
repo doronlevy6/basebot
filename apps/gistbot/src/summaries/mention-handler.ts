@@ -38,6 +38,7 @@ export const mentionHandler =
       });
 
       await summaryInProgressMessage(client, {
+        thread_ts: event.thread_ts,
         channel: event.channel,
         user: event.user,
       });

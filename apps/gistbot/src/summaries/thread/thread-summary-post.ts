@@ -4,6 +4,7 @@ import { SlackBlockActionWrapper } from '../../slack/types';
 import { Routes } from '../../routes/router';
 import { Summary } from '../../slack/components/summary';
 import { SummaryStore } from '../summary-store';
+import { responder } from '../../slack/responder';
 
 export const threadSummaryPostHandler =
   (analyticsManager: AnalyticsManager, summaryStore: SummaryStore) =>
@@ -33,11 +34,20 @@ export const threadSummaryPostHandler =
       const canPost = !!summary;
       if (!canPost) {
         logger.warn(`Post clicked with summary not in cache ${body.team?.id}`);
-        await respond({
-          delete_original: false,
-          response_type: 'ephemeral',
-          text: 'Gistbot does not have access to the summary as more than 1 hour had passed. You can copy and share this text, or create a new summary.',
-        });
+        const text =
+          'Gistbot does not have access to the summary as more than 1 hour had passed. You can copy and share this text, or create a new summary.';
+        await responder(
+          respond,
+          client,
+          text,
+          undefined,
+          body.channel.id,
+          body.user.id,
+          {
+            response_type: 'ephemeral',
+          },
+          body.message?.thread_ts,
+        );
 
         analyticsManager.threadSummaryFunnel({
           funnelStep: 'post_summary',
@@ -72,17 +82,19 @@ export const threadSummaryPostHandler =
         isThread: true,
       });
 
-      await Promise.all([
-        respond({
+      await responder(
+        respond,
+        client,
+        title,
+        blocks,
+        body.channel.id,
+        body.user.id,
+        {
+          response_type: 'in_channel',
           delete_original: true,
-        }),
-        client.chat.postMessage({
-          channel: body.channel.id,
-          blocks,
-          text: title,
-          thread_ts: summary.threadTs,
-        }),
-      ]);
+        },
+        summary.threadTs,
+      );
 
       analyticsManager.threadSummaryFunnel({
         funnelStep: 'post_summary',

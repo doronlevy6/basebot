@@ -3,8 +3,8 @@ import { SummaryActions } from './summary-actions';
 import { SummaryFeedback } from './summary-feedback';
 import { UserLink } from './user-link';
 import { SlackDate } from './date';
-import { splitTextBlocks } from '../utils';
 import { GeneratedByAIBlock } from './generated-by-ai';
+import { SummaryTitleAndText } from './summary-title-and-text';
 
 interface Input {
   actionIds: {
@@ -28,19 +28,11 @@ export const EphemeralSummary = ({
   isThread,
 }: Input): { title: string; blocks: (KnownBlock | Block)[] } => {
   const title = summaryTitle(userId, startTimeStamp, isThread);
-  const fullText = `${title}\n${summary}`;
-  const blocksSplit = splitTextBlocks(fullText);
 
   return {
     title,
     blocks: [
-      ...blocksSplit.map((text) => ({
-        type: 'section',
-        text: {
-          text,
-          type: 'mrkdwn',
-        },
-      })),
+      ...SummaryTitleAndText(title, summary),
       SummaryActions({
         addToChannelsAction: { id: actionIds.addToChannels },
         postAction: { id: actionIds.post, value: cacheKey },

@@ -4,6 +4,7 @@ import { SlackBlockActionWrapper } from '../../slack/types';
 import { Routes } from '../../routes/router';
 import { Summary } from '../../slack/components/summary';
 import { SummaryStore } from '../summary-store';
+import { responder } from '../../slack/responder';
 
 export const channelSummaryPostHandler =
   (analyticsManager: AnalyticsManager, summaryStore: SummaryStore) =>
@@ -14,6 +15,7 @@ export const channelSummaryPostHandler =
     respond,
     payload,
     context,
+    client,
   }: SlackBlockActionWrapper) => {
     try {
       await ack();
@@ -33,11 +35,20 @@ export const channelSummaryPostHandler =
       const canPost = !!summary;
       if (!canPost) {
         logger.warn(`Post clicked with summary not in cache ${body.team?.id}`);
-        await respond({
-          replace_original: false,
-          response_type: 'ephemeral',
-          text: 'Gistbot does not have access to the summary as more than 1 hour had passed. You can copy and share this text, or create a new summary.',
-        });
+
+        const text =
+          'Gistbot does not have access to the summary as more than 1 hour had passed. You can copy and share this text, or create a new summary.';
+        await responder(
+          respond,
+          client,
+          text,
+          undefined,
+          body.channel?.id,
+          body.user.id,
+          {
+            response_type: 'ephemeral',
+          },
+        );
 
         analyticsManager.channelSummaryFunnel({
           funnelStep: 'post_summary',
@@ -65,12 +76,18 @@ export const channelSummaryPostHandler =
         isThread: false,
       });
 
-      await respond({
-        delete_original: true,
-        response_type: 'in_channel',
+      await responder(
+        respond,
+        client,
+        title,
         blocks,
-        text: title,
-      });
+        body.channel?.id,
+        body.user.id,
+        {
+          response_type: 'in_channel',
+          delete_original: true,
+        },
+      );
 
       analyticsManager.channelSummaryFunnel({
         funnelStep: 'post_summary',

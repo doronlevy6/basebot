@@ -4,6 +4,7 @@ import { WebClient } from '@slack/web-api';
 import { AnalyticsManager } from '../../analytics/manager';
 import { Routes } from '../../routes/router';
 import { EphemeralSummary } from '../../slack/components/ephemeral-summary';
+import { responder } from '../../slack/responder';
 import { ModerationError } from '../errors/moderation-error';
 import { MAX_PROMPT_CHARACTER_COUNT } from '../models/prompt-character-calculator';
 import { ThreadSummaryModel } from '../models/thread-summary.model';
@@ -153,18 +154,20 @@ export class ThreadSummarizer {
     } catch (error) {
       logger.error(`error in thread summarizer: ${error}`);
       if (error instanceof ModerationError) {
-        if (respond) {
-          await respond({
+        const text =
+          "This summary seems to be inappropriate :speak_no_evil:\nI'm not able to help you in this case.";
+        await responder(
+          respond,
+          client,
+          text,
+          undefined,
+          props.channelId,
+          userId,
+          {
             response_type: 'ephemeral',
-            text: "This summary seems to be inappropriate :speak_no_evil:\nI'm not able to help you in this case.",
-          });
-        } else {
-          await client.chat.postEphemeral({
-            text: "This summary seems to be inappropriate :speak_no_evil:\nI'm not able to help you in this case.",
-            channel: props.channelId,
-            user: userId,
-          });
-        }
+          },
+          props.threadTs,
+        );
 
         this.analyticsManager.threadSummaryFunnel({
           funnelStep: 'moderated',
@@ -176,20 +179,19 @@ export class ThreadSummarizer {
         return;
       }
 
-      if (respond) {
-        await respond({
+      const text = `We had an error processing the summarization: ${error.message}`;
+      await responder(
+        respond,
+        client,
+        text,
+        undefined,
+        props.channelId,
+        userId,
+        {
           response_type: 'ephemeral',
-          text: `We had an error processing the summarization: ${error.message}`,
-          thread_ts: props.threadTs,
-        });
-      } else {
-        await client.chat.postEphemeral({
-          text: `We had an error processing the summarization: ${error.message}`,
-          channel: props.channelId,
-          user: userId,
-          thread_ts: props.threadTs,
-        });
-      }
+        },
+        props.threadTs,
+      );
 
       this.analyticsManager.error({
         slackTeamId: teamId,

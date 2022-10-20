@@ -1,9 +1,9 @@
 import { Block, KnownBlock } from '@slack/bolt';
-import { splitTextBlocks } from '../utils';
 import { SlackDate } from './date';
 import { PublicGeneratedByAIBlock } from './generated-by-ai';
 import { SummaryActions } from './summary-actions';
 import { SummaryFeedback } from './summary-feedback';
+import { SummaryTitleAndText } from './summary-title-and-text';
 
 interface Input {
   actionIds: {
@@ -29,18 +29,10 @@ export const Summary = ({
 }: Input): { title: string; blocks: (KnownBlock | Block)[] } => {
   const title = summaryTitle(startTimeStamp, isThread);
 
-  const fullText = `${title}\n${summary}`;
-  const blocksSplit = splitTextBlocks(fullText);
   return {
     title,
     blocks: [
-      ...blocksSplit.map((text) => ({
-        type: 'section',
-        text: {
-          text,
-          type: 'mrkdwn',
-        },
-      })),
+      ...SummaryTitleAndText(title, summary),
       SummaryActions({
         addToChannelsAction: { id: actionIds.addToChannels },
       }),
