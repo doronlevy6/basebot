@@ -61,7 +61,7 @@ export const addToChannelFromWelcomeModal =
         user: body.user.id,
         channel: props.originChannel || props.user,
         thread_ts: props.threadTs,
-        text: 'theGist was added to the selected channels!',
+        text: 'theGist was added to the selected channels!:rocket:',
       });
     } catch (err) {
       logger.error(`Add to channel from welcome modal error: ${err.stack}`);
