@@ -37,6 +37,7 @@ import {
   openFeedbackModalHandler,
 } from '../user-feedback/handler';
 import { isBaseTeamWorkspace } from '../slack/utils';
+import { channelSummaryMoreTimeHandler } from '../summaries/channel-summary-more-time';
 
 export enum Routes {
   SUMMARIZE_THREAD = 'summarize-thread',
@@ -53,6 +54,7 @@ export enum Routes {
   SUMMARIZE_CHANNEL_FROM_CHANNEL_JOIN = 'summarize-channel-from-channel-join',
   SEND_USER_FEEDBACK = 'send-user-feedback',
   USER_FEEDBACK_MODAL_SUBMIT = 'user-feedback-modal-submit',
+  SUMMARIZE_CHANNEL_MORE_TIME = 'summarize-channel-more-time',
 }
 
 export const registerBoltAppRouter = (
@@ -124,6 +126,12 @@ export const registerBoltAppRouter = (
     Routes.CHANNEL_SUMMARY_POST,
     onboardingMiddleware,
     channelSummaryPostHandler(analyticsManager, summaryStore),
+  );
+
+  app.action(
+    Routes.SUMMARIZE_CHANNEL_MORE_TIME,
+    onboardingMiddleware,
+    channelSummaryMoreTimeHandler(channelSummarizer),
   );
 
   app.view(

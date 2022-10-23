@@ -1,11 +1,12 @@
 import { logger } from '@base/logger';
 import { RespondFn } from '@slack/bolt';
-import { WebClient } from '@slack/web-api';
+import { KnownBlock, WebClient } from '@slack/web-api';
 import { AnalyticsManager } from '../../analytics/manager';
 import { Routes } from '../../routes/router';
 import { EphemeralSummary } from '../../slack/components/ephemeral-summary';
 import { responder } from '../../slack/responder';
 import { isBaseTeamWorkspace } from '../../slack/utils';
+import { stringifyMoreTimeProps } from '../channel-summary-more-time';
 import { ModerationError } from '../errors/moderation-error';
 import {
   ChannelSummary,
@@ -44,6 +45,7 @@ export class ChannelSummarizer {
     daysBack: number,
     client: WebClient,
     respond?: RespondFn,
+    excludedMessage?: string,
   ): Promise<void> {
     try {
       const {
@@ -72,6 +74,7 @@ export class ChannelSummarizer {
         MAX_MESSAGES_TO_FETCH,
         daysBack,
         userInfo.tz,
+        excludedMessage,
       );
 
       if (rootMessages.length === 0) {
@@ -88,11 +91,36 @@ export class ChannelSummarizer {
         const text = `This channel does not have any messages in the last ${daysBack} day${
           daysBack > 1 ? 's' : ''
         }, so we cannot currently create a summary.`;
+        const blocks: KnownBlock[] = [
+          {
+            type: 'section',
+            text: {
+              type: 'mrkdwn',
+              text: text,
+            },
+          },
+          {
+            type: 'actions',
+            elements: [
+              {
+                type: 'button',
+                text: {
+                  type: 'plain_text',
+                  text: 'Summarize the last week',
+                  emoji: true,
+                },
+                style: 'primary',
+                value: stringifyMoreTimeProps(props, excludedMessage || ''),
+                action_id: Routes.SUMMARIZE_CHANNEL_MORE_TIME,
+              },
+            ],
+          },
+        ];
         await responder(
           respond,
           client,
           text,
-          undefined,
+          blocks,
           props.channelId,
           userId,
           { response_type: 'ephemeral' },
@@ -308,6 +336,7 @@ export class ChannelSummarizer {
     maximumMessageCount: number,
     daysBack: number,
     userTz?: string,
+    excludedMessage?: string,
   ): Promise<SlackMessage[]> {
     const oldestMessageDateToFetch = this.getOldestMessagesDateToFetch(
       userTz || 'UTC',
@@ -345,6 +374,11 @@ export class ChannelSummarizer {
         // and since we are going to fetch the replies anyways, we should
         // remove these from the roots.
         if (m.thread_ts && m.ts !== m.thread_ts) {
+          return false;
+        }
+
+        // Exclude any specifically excluded messages (like the mention that triggered us)
+        if (m.ts && excludedMessage && excludedMessage === m.ts) {
           return false;
         }
 

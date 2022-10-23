@@ -94,6 +94,8 @@ export const mentionHandler =
         },
         daysBack,
         client,
+        undefined,
+        event.ts,
       );
     } catch (error) {
       logger.error(
