@@ -1,4 +1,5 @@
 import { WebClient } from '@slack/web-api';
+import { ParsedMessagePlaintextOpts } from '../parser';
 
 export class LocalizedDateSection {
   type: 'localized_date' = 'localized_date';
@@ -20,7 +21,11 @@ export class LocalizedDateSection {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async plainText(teamId: string, client?: WebClient): Promise<string> {
+  async plainText(
+    teamId: string,
+    client?: WebClient,
+    opts?: ParsedMessagePlaintextOpts,
+  ): Promise<string> {
     return new Date(this.unix * 1000).toISOString();
   }
 }

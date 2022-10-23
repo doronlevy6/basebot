@@ -1,4 +1,5 @@
 import { WebClient } from '@slack/web-api';
+import { ParsedMessagePlaintextOpts } from '../parser';
 
 export class SpecialMentionSection {
   type: 'special_mention' = 'special_mention';
@@ -13,8 +14,14 @@ export class SpecialMentionSection {
     this.label = initial?.label;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async plainText(teamId: string, client?: WebClient): Promise<string> {
+  async plainText(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    teamId: string,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    client?: WebClient,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    opts?: ParsedMessagePlaintextOpts,
+  ): Promise<string> {
     return `@${this.label || this.mention}`;
   }
 }

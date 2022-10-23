@@ -1,4 +1,5 @@
 import { WebClient } from '@slack/web-api';
+import { ParsedMessagePlaintextOpts } from '../parser';
 
 export class UrlLinkSection {
   type: 'url_link' = 'url_link';
@@ -10,8 +11,21 @@ export class UrlLinkSection {
     this.label = initial?.label;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async plainText(teamId: string, client?: WebClient): Promise<string> {
-    return this.label || this.url;
+  async plainText(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    teamId: string,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    client?: WebClient,
+    opts?: ParsedMessagePlaintextOpts,
+  ): Promise<string> {
+    if (this.label) {
+      return this.label;
+    }
+
+    if (opts?.stripUnlabelsUrls) {
+      return opts.unlabeledUrlReplacement || '';
+    }
+
+    return this.url;
   }
 }

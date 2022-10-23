@@ -17,27 +17,6 @@ export function extractMessageText(
     }
   }
 
-  if (message.blocks) {
-    let blockText = extractTextFromBlocks(message.blocks);
-    if (transform) {
-      blockText = transformTextToNoLineBreaks(blockText);
-    }
-    if (blockText) {
-      text = `${text}. ${blockText}`;
-    }
-  }
-
-  if (message.attachments) {
-    let attachmentsText = extractTextFromAttachments(message.attachments);
-    if (transform) {
-      attachmentsText = transformTextToNoLineBreaks(attachmentsText);
-    }
-
-    if (attachmentsText) {
-      text = `${text}. ${attachmentsText}`;
-    }
-  }
-
   return text.trim();
 }
 
@@ -56,6 +35,7 @@ function transformTextToNoLineBreaks(text: string): string {
     .join(' ');
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function extractTextFromAttachments(attachments: Attachment[]): string {
   return attachments.reduce((acc, current, idx) => {
     const internalAcc = `${current.title || ''}\n\n${
@@ -70,6 +50,7 @@ function extractTextFromAttachments(attachments: Attachment[]): string {
   }, '');
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function extractTextFromBlocks(blocks: Block[]): string {
   return blocks.reduce((acc, current, idx) => {
     if (!current.text) {

@@ -22,7 +22,11 @@ export const parseThreadForSummary = async (
 
   const messagesTexts: string[] = (await Promise.all(
     messagesWithText.map((m) =>
-      parseSlackMrkdwn(extractMessageText(m, true)).plainText(teamId, client),
+      parseSlackMrkdwn(extractMessageText(m, true)).plainText(teamId, client, {
+        removeCodeblocks: true,
+        stripUnlabelsUrls: true,
+        unlabeledUrlReplacement: '<LINK>',
+      }),
     ),
   )) as string[];
 

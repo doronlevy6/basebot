@@ -8,6 +8,15 @@ import { UrlLinkSection } from './sections/url-link-section';
 import { UserGroupMentionSection } from './sections/user-group-mention-section';
 import { UserMentionSection } from './sections/user-mention-section';
 
+interface PlaintextOpts {
+  removeCodeblocks: boolean;
+  stripUnlabelsUrls: boolean;
+  unlabeledUrlReplacement: string;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+export interface ParsedMessagePlaintextOpts extends Partial<PlaintextOpts> {}
+
 export class ParsedMessage {
   originalText: string;
   sections: ParsedMessageSection[] = [];
@@ -20,9 +29,13 @@ export class ParsedMessage {
     this.sections = initial?.sections || [];
   }
 
-  async plainText(teamId: string, client?: WebClient): Promise<string> {
+  async plainText(
+    teamId: string,
+    client?: WebClient,
+    opts?: ParsedMessagePlaintextOpts,
+  ): Promise<string> {
     const enrichedSections = await Promise.all(
-      this.sections.map((current) => current.plainText(teamId, client)),
+      this.sections.map((current) => current.plainText(teamId, client, opts)),
     );
 
     return enrichedSections.reduce((acc, current) => `${acc}${current}`, '');

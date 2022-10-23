@@ -19,6 +19,15 @@ describe('stripMrkdwnFormatting', () => {
     );
   });
 
+  it('should strip and exclude multi-line code formatting', async () => {
+    const originalText =
+      'this is some text ```with multiline code formatting\n\nand formatting```';
+    const expectedText = 'this is some text ';
+    expect(stripMrkdwnFormatting(originalText, '```', true, true)).toEqual(
+      expectedText,
+    );
+  });
+
   it('should strip italics formatting', async () => {
     const originalText =
       'this is some text _with italics formatting and formatting_';
@@ -54,5 +63,18 @@ describe('strip TextSection', () => {
     const section = new TextSection({ text: originalText });
 
     expect(await section.plainText('')).toEqual(expectedText);
+  });
+
+  it('should strip all formatting and exclude multiline code', async () => {
+    const originalText =
+      'this is some text `with code formatting` along with _italics_ ~and~ some *bold stuff* as well.\n\nWow heres a ```multiline\n\ncode\n\ncomment```';
+    const expectedText =
+      'this is some text with code formatting along with italics and some bold stuff as well.\n\nWow heres a ';
+
+    const section = new TextSection({ text: originalText });
+
+    expect(
+      await section.plainText('', undefined, { removeCodeblocks: true }),
+    ).toEqual(expectedText);
   });
 });

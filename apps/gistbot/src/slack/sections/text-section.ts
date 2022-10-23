@@ -1,4 +1,5 @@
 import { WebClient } from '@slack/web-api';
+import { ParsedMessagePlaintextOpts } from '../parser';
 
 export class TextSection {
   type: 'text' = 'text';
@@ -8,9 +9,19 @@ export class TextSection {
     this.text = initial?.text || '';
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async plainText(teamId: string, client?: WebClient): Promise<string> {
-    const multilineCodeStripped = stripMrkdwnFormatting(this.text, '```', true);
+  async plainText(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    teamId: string,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    client?: WebClient,
+    opts?: ParsedMessagePlaintextOpts,
+  ): Promise<string> {
+    const multilineCodeStripped = stripMrkdwnFormatting(
+      this.text,
+      '```',
+      true,
+      opts?.removeCodeblocks,
+    );
     const codeStripped = stripMrkdwnFormatting(multilineCodeStripped, '`');
     const italicsStripped = stripMrkdwnFormatting(codeStripped, '_');
     const boldStripped = stripMrkdwnFormatting(italicsStripped, `\\*`);
@@ -24,6 +35,7 @@ export function stripMrkdwnFormatting(
   mrkdwn: string,
   pattern: string,
   multiline?: boolean,
+  exclude?: boolean,
 ): string {
   let rgx: RegExp;
   if (multiline) {
@@ -49,8 +61,10 @@ export function stripMrkdwnFormatting(
       stripped = `${stripped}${mrkdwn.substring(startIndex, fmtMatch.index)}`;
     }
 
-    const extractedValue = fmtMatch[1];
-    stripped = `${stripped}${extractedValue}`;
+    if (!exclude) {
+      const extractedValue = fmtMatch[1];
+      stripped = `${stripped}${extractedValue}`;
+    }
     startIndex = fmtMatch.index + fmtMatch[0].length;
   }
 

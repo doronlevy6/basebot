@@ -314,6 +314,51 @@ describe('parseSlackMrkdwn', () => {
     );
   });
 
+  it('should parse url link as url link and exclude non-labeled from plain text', async () => {
+    const originalText = 'This message contains a URL <http://example.com/>';
+    const expectedPlainText = 'This message contains a URL ';
+    const expected = new ParsedMessage({
+      originalText: originalText,
+      sections: [
+        new TextSection({
+          text: 'This message contains a URL ',
+        }),
+        new UrlLinkSection({
+          url: 'http://example.com/',
+        }),
+      ],
+    });
+    expect(parseSlackMrkdwn(originalText)).toEqual(expected);
+    expect(
+      await parseSlackMrkdwn(originalText).plainText('', undefined, {
+        stripUnlabelsUrls: true,
+      }),
+    ).toEqual(expectedPlainText);
+  });
+
+  it('should parse url link as url link and replace non-labeled in plain text', async () => {
+    const originalText = 'This message contains a URL <http://example.com/>';
+    const expectedPlainText = 'This message contains a URL <LINK>';
+    const expected = new ParsedMessage({
+      originalText: originalText,
+      sections: [
+        new TextSection({
+          text: 'This message contains a URL ',
+        }),
+        new UrlLinkSection({
+          url: 'http://example.com/',
+        }),
+      ],
+    });
+    expect(parseSlackMrkdwn(originalText)).toEqual(expected);
+    expect(
+      await parseSlackMrkdwn(originalText).plainText('', undefined, {
+        stripUnlabelsUrls: true,
+        unlabeledUrlReplacement: '<LINK>',
+      }),
+    ).toEqual(expectedPlainText);
+  });
+
   it('should url link with label as url link with label', async () => {
     const originalText =
       'So does this one: <http://example.com|www.example.com>';
@@ -334,5 +379,54 @@ describe('parseSlackMrkdwn', () => {
     expect(await parseSlackMrkdwn(originalText).plainText('')).toEqual(
       expectedPlainText,
     );
+  });
+
+  it('should url link with label as url link with label (obey opts)', async () => {
+    const originalText =
+      'So does this one: <http://example.com|www.example.com>';
+    const expectedPlainText = 'So does this one: www.example.com';
+    const expected = new ParsedMessage({
+      originalText: originalText,
+      sections: [
+        new TextSection({
+          text: 'So does this one: ',
+        }),
+        new UrlLinkSection({
+          url: 'http://example.com',
+          label: 'www.example.com',
+        }),
+      ],
+    });
+    expect(parseSlackMrkdwn(originalText)).toEqual(expected);
+    expect(
+      await parseSlackMrkdwn(originalText).plainText('', undefined, {
+        stripUnlabelsUrls: true,
+      }),
+    ).toEqual(expectedPlainText);
+  });
+
+  it('should url link with label as url link with label (obey opts)', async () => {
+    const originalText =
+      'So does this one: <http://example.com|www.example.com>';
+    const expectedPlainText = 'So does this one: www.example.com';
+    const expected = new ParsedMessage({
+      originalText: originalText,
+      sections: [
+        new TextSection({
+          text: 'So does this one: ',
+        }),
+        new UrlLinkSection({
+          url: 'http://example.com',
+          label: 'www.example.com',
+        }),
+      ],
+    });
+    expect(parseSlackMrkdwn(originalText)).toEqual(expected);
+    expect(
+      await parseSlackMrkdwn(originalText).plainText('', undefined, {
+        stripUnlabelsUrls: true,
+        unlabeledUrlReplacement: '<LINK>',
+      }),
+    ).toEqual(expectedPlainText);
   });
 });

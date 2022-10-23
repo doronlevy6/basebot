@@ -1,5 +1,6 @@
 import { logger } from '@base/logger';
 import { WebClient } from '@slack/web-api';
+import { ParsedMessagePlaintextOpts } from '../parser';
 
 export class ChannelLinkSection {
   type: 'channel_link' = 'channel_link';
@@ -11,7 +12,13 @@ export class ChannelLinkSection {
     this.label = initial?.label;
   }
 
-  async plainText(teamId: string, client?: WebClient): Promise<string> {
+  async plainText(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    teamId: string,
+    client?: WebClient,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    opts?: ParsedMessagePlaintextOpts,
+  ): Promise<string> {
     if (this.label) {
       return this.label;
     }

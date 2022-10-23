@@ -1,5 +1,6 @@
 import { logger } from '@base/logger';
 import { WebClient } from '@slack/web-api';
+import { ParsedMessagePlaintextOpts } from '../parser';
 
 export class UserGroupMentionSection {
   type: 'user_group_mention' = 'user_group_mention';
@@ -11,7 +12,12 @@ export class UserGroupMentionSection {
     this.label = initial?.label;
   }
 
-  async plainText(teamId: string, client?: WebClient): Promise<string> {
+  async plainText(
+    teamId: string,
+    client?: WebClient,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    opts?: ParsedMessagePlaintextOpts,
+  ): Promise<string> {
     if (this.label) {
       return `@${this.label}`;
     }
