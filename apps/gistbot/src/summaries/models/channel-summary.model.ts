@@ -14,9 +14,9 @@ export interface ChannelSummaryModelRequest {
 }
 
 export interface ChannelSummary {
-  summary_by_summary: string;
-  summary_by_topics: 'TBD' | Record<string, string>;
-  summary_by_everything: string;
+  summary_by_summary?: string;
+  summary_by_topics?: 'TBD' | Record<string, string>;
+  summary_by_everything?: string;
   summary_by_bullets: string[];
 }
 
@@ -94,13 +94,13 @@ export class ChannelSummaryModel {
       try {
         const [resSbS, resSbT, resSbE, resSbB] = await Promise.all([
           this.moderationApi.moderate({
-            input: res.data.summary_by_summary,
+            input: res.data.summary_by_summary || '',
           }),
           this.moderationApi.moderate({
             input: summaryByTopics,
           }),
           this.moderationApi.moderate({
-            input: res.data.summary_by_everything,
+            input: res.data.summary_by_everything || '',
           }),
           this.moderationApi.moderate({
             input: res.data.summary_by_bullets.join('\n'),

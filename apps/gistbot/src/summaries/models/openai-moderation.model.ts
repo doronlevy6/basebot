@@ -35,6 +35,10 @@ export class OpenAiModerationModel {
   }
 
   async moderate(requestBody: IModelRequest): Promise<IResponse> {
+    if (requestBody.input === '') {
+      return { flagged: false };
+    }
+
     try {
       logger.debug({
         msg: 'Calling moderation api',
