@@ -12,6 +12,10 @@ export const installEndpoint = (
       funnelStep: 'begin_install',
       slackTeamId: 'unknown',
       slackUserId: 'unknown',
+      extraParams: {
+        useragent: req.headers['user-agent'] || 'unknown',
+        referer: req.headers.referer || 'unknown',
+      },
     });
 
     return true;

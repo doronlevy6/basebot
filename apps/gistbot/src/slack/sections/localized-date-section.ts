@@ -20,10 +20,12 @@ export class LocalizedDateSection {
     this.fallback = initial?.fallback;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async plainText(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     teamId: string,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     client?: WebClient,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     opts?: ParsedMessagePlaintextOpts,
   ): Promise<string> {
     return new Date(this.unix * 1000).toISOString();
