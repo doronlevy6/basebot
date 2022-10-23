@@ -21,6 +21,7 @@ export class UserFeedbackManager {
     client: WebClient,
     channelId: string,
     userId: string,
+    sessionId: string,
     threadTs?: string,
   ): Promise<void> {
     const text = `Thanks for your feedback ${UserLink(
@@ -48,6 +49,7 @@ export class UserFeedbackManager {
                 type: 'plain_text',
                 text: 'Add a comment',
               },
+              value: sessionId,
               action_id: Routes.SEND_USER_FEEDBACK,
             },
           ],
@@ -60,6 +62,7 @@ export class UserFeedbackManager {
     client: WebClient,
     userId: string,
     teamId: string,
+    sessionId: string,
     feedback: string,
   ): Promise<void> {
     const { email, displayName, userName, tz } =
@@ -105,6 +108,11 @@ export class UserFeedbackManager {
               {
                 title: 'Time Zone',
                 value: tz,
+                short: true,
+              },
+              {
+                title: 'Session ID',
+                value: sessionId,
                 short: true,
               },
               {

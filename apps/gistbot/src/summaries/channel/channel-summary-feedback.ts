@@ -2,9 +2,14 @@ import { SlackBlockActionWrapper } from '../../slack/types';
 import { AnalyticsManager } from '../../analytics/manager';
 import { UserFeedbackManager } from '../../user-feedback/manager';
 import { extractSessionIdAndValueFromFeedback } from '../../slack/components/summary-feedback';
+import { SessionDataStore } from '../session-data/session-data-store';
 
 export const channelSummaryFeedbackHandler =
-  (analyticsManager: AnalyticsManager, feedbackManager: UserFeedbackManager) =>
+  (
+    analyticsManager: AnalyticsManager,
+    feedbackManager: UserFeedbackManager,
+    sessionDataStore: SessionDataStore,
+  ) =>
   async ({ ack, logger, payload, body, client }: SlackBlockActionWrapper) => {
     try {
       await ack();
@@ -18,6 +23,20 @@ export const channelSummaryFeedbackHandler =
       const [sessionId, feedbackValue] = extractSessionIdAndValueFromFeedback(
         payload.selected_option.value,
       );
+
+      sessionDataStore
+        .storeSessionFeedback({
+          sessionId: sessionId,
+          teamId: body.user.team_id || 'unknown',
+          userId: body.user.id,
+          feedback: feedbackValue,
+        })
+        .catch((e) =>
+          logger.error({
+            msg: `failed to store feedback for channel session: ${sessionId}`,
+            error: e,
+          }),
+        );
 
       const messageTs = body.message?.text || body.container['message_ts'];
       if (!body.channel || !messageTs) {
@@ -44,6 +63,7 @@ export const channelSummaryFeedbackHandler =
         client,
         body.channel.id,
         body.user.id,
+        sessionId,
       );
     } catch (error) {
       logger.error(`error in channel summary feedback: ${error.stack}`);

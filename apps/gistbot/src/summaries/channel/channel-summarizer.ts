@@ -16,6 +16,7 @@ import {
   approximatePromptCharacterCountForChannelSummary,
   MAX_PROMPT_CHARACTER_COUNT,
 } from '../models/prompt-character-calculator';
+import { SessionDataStore } from '../session-data/session-data-store';
 import { SummaryStore } from '../summary-store';
 import { ChannelSummarizationProps, SlackMessage } from '../types';
 import {
@@ -34,6 +35,7 @@ export class ChannelSummarizer {
     private channelSummaryModel: ChannelSummaryModel,
     private analyticsManager: AnalyticsManager,
     private summaryStore: SummaryStore,
+    private sessionDataStore: SessionDataStore,
   ) {}
 
   async summarize(
@@ -247,6 +249,28 @@ export class ChannelSummarizer {
       });
 
       logger.info('Saved summary with cache key ' + cacheKey);
+
+      // Don't fail if we can't store session data, we still have the summary and can send it back to the user
+      try {
+        await this.sessionDataStore.storeSession(cacheKey, {
+          summaryType: 'channel',
+          teamId: teamId,
+          channelId: props.channelId,
+          requestingUserId: userId,
+          request: {
+            channel_name: props.channelName,
+            threads: threads.map((t) => {
+              return { messageIds: t.messageIds, userIds: t.userIds };
+            }),
+          },
+          response: successfulSummary,
+        });
+      } catch (error) {
+        logger.error({
+          msg: `error in storing session for session ${cacheKey}`,
+          error: error,
+        });
+      }
 
       const { blocks, title } = EphemeralSummary({
         actionIds: {

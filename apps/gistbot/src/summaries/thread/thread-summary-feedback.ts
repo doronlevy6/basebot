@@ -5,12 +5,14 @@ import { extractSessionIdAndValueFromFeedback } from '../../slack/components/sum
 import { SummaryStore } from '../summary-store';
 import { BlockAction, BlockElementAction } from '@slack/bolt';
 import { logger } from '@base/logger';
+import { SessionDataStore } from '../session-data/session-data-store';
 
 export const threadSummaryFeedbackHandler =
   (
     analyticsManager: AnalyticsManager,
     feedbackManager: UserFeedbackManager,
     summaryStore: SummaryStore,
+    sessionDataStore: SessionDataStore,
   ) =>
   async ({ ack, logger, payload, body, client }: SlackBlockActionWrapper) => {
     try {
@@ -34,6 +36,20 @@ export const threadSummaryFeedbackHandler =
         payload.selected_option.value,
       );
 
+      sessionDataStore
+        .storeSessionFeedback({
+          sessionId: sessionId,
+          teamId: body.user.team_id || 'unknown',
+          userId: body.user.id,
+          feedback: feedbackValue,
+        })
+        .catch((e) =>
+          logger.error({
+            msg: `failed to store feedback for thread session: ${sessionId}`,
+            error: e,
+          }),
+        );
+
       const threadTs = await extractThreadTs(sessionId, summaryStore, body);
 
       logger.info(
@@ -56,6 +72,7 @@ export const threadSummaryFeedbackHandler =
         client,
         body.channel.id,
         body.user.id,
+        sessionId,
         threadTs,
       );
     } catch (error) {

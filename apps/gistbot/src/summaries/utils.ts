@@ -16,26 +16,34 @@ export const parseThreadForSummary = async (
   channelName: string,
   myBotId?: string,
 ) => {
-  const messagesWithText = messages?.filter((t) => {
-    return extractMessageText(t, false) && filterUnwantedMessages(t, myBotId);
-  });
+  const messagesWithText = messages
+    ?.filter((t) => {
+      return extractMessageText(t, false) && filterUnwantedMessages(t, myBotId);
+    })
+    .map((m) => {
+      return { message: m, messageId: m.ts as string }; // The message.ts value should never be undefined... Can we find instances where it is in order to ensure we filter them out?
+    });
 
   const messagesTexts: string[] = (await Promise.all(
     messagesWithText.map((m) =>
-      parseSlackMrkdwn(extractMessageText(m, true)).plainText(teamId, client, {
-        removeCodeblocks: true,
-        stripUnlabelsUrls: true,
-        unlabeledUrlReplacement: '<LINK>',
-      }),
+      parseSlackMrkdwn(extractMessageText(m.message, true)).plainText(
+        teamId,
+        client,
+        {
+          removeCodeblocks: true,
+          stripUnlabelsUrls: true,
+          unlabeledUrlReplacement: '<LINK>',
+        },
+      ),
     ),
   )) as string[];
 
   const messageUserIds: string[] = [
-    ...new Set(messagesWithText.map((m) => m.user)),
+    ...new Set(messagesWithText.map((m) => m.message.user)),
   ].filter((u) => u) as string[];
 
   const messageBotIds: string[] = [
-    ...new Set(messagesWithText.map((m) => m.bot_id)),
+    ...new Set(messagesWithText.map((m) => m.message.bot_id)),
   ].filter((u) => u) as string[];
 
   const userInfoReses = await Promise.all(
@@ -84,7 +92,7 @@ export const parseThreadForSummary = async (
 
   const userNamesAndTitles = messagesWithText.map((m) => {
     const userProfile = userInfoReses.find((uir) => {
-      return uir.id === m.user;
+      return uir.id === m.message.user;
     });
     if (userProfile) {
       const name =
@@ -94,7 +102,11 @@ export const parseThreadForSummary = async (
       if (name) {
         const capitalizedName = name.charAt(0).toUpperCase() + name.slice(1);
 
-        return { name: capitalizedName, title: userProfile.title || '' };
+        return {
+          name: capitalizedName,
+          title: userProfile.title || '',
+          id: m.message.user || 'unknown',
+        };
       }
     }
 
@@ -106,23 +118,27 @@ export const parseThreadForSummary = async (
         throw new Error('message bot user not ok');
       }
 
-      return uir.bot.id === m.bot_id;
+      return uir.bot.id === m.message.bot_id;
     });
 
     if (!botInfo || !botInfo.bot || !botInfo.bot.name) {
       logger.error(
         `no user information or bot information found for user ${
-          m.user || m.bot_id
+          m.message.user || m.message.bot_id
         }`,
       );
-      return { name: 'Unknown User', title: '' };
+      return { name: 'Unknown User', title: '', id: 'unknown' };
     }
 
     const capitalizedName =
       botInfo.bot.name.charAt(0).toUpperCase() + botInfo.bot.name.slice(1);
 
-    return { name: capitalizedName, title: 'Bot' };
-  }) as { name: string; title: 'Bot' | string }[];
+    return {
+      name: capitalizedName,
+      title: 'Bot',
+      id: m.message.bot_id || 'unknown',
+    };
+  }) as { name: string; title: 'Bot' | string; id: string }[];
 
   let cc = approximatePromptCharacterCount({
     messages: messagesTexts,
@@ -131,6 +147,7 @@ export const parseThreadForSummary = async (
     channel_name: channelName,
   });
   while (cc > maxCharacterCountPerThread) {
+    messagesWithText.shift();
     messagesTexts.shift();
     userNamesAndTitles.shift();
     cc = approximatePromptCharacterCount({
@@ -142,8 +159,10 @@ export const parseThreadForSummary = async (
   }
 
   return {
+    messageIds: messagesWithText.map((m) => m.messageId),
     messages: messagesTexts,
     users: userNamesAndTitles.map((u) => u.name),
+    userIds: userNamesAndTitles.map((u) => u.id),
     // TODO: Return the user titles back when they are used in personalization,
     // for now they are taking up space in the available tokens and are not exactly used in the model itself.
     // titles: userNamesAndTitles.map((u) => u.title),

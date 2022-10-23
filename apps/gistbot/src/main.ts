@@ -28,6 +28,7 @@ import { RedisTriggerLock } from './new-user-triggers/trigger-lock';
 import { PgTriggerLock } from './new-user-triggers/trigger-lock-persistent';
 import { UserFeedbackManager } from './user-feedback/manager';
 import { EmailSender } from './email/email-sender.util';
+import { PgSessionDataStore } from './summaries/session-data/session-data-store';
 
 const gracefulShutdown = (server: Server) => (signal: string) => {
   logger.info('starting shutdown, got signal ' + signal);
@@ -71,6 +72,7 @@ const startApp = async () => {
     cluster: process.env.REDIS_CLUSTER === 'true',
   };
   const pgNewUsersTriggersLock = new PgTriggerLock(pgConfig);
+  const pgSessionDataStore = new PgSessionDataStore(pgConfig);
 
   const onboardingLock = new RedisOnboardingLock(redisConfig, env);
   const summaryStore = new SummaryStore(redisConfig, env);
@@ -81,6 +83,7 @@ const startApp = async () => {
     threadSummaryModel,
     analyticsManager,
     summaryStore,
+    pgSessionDataStore,
   );
 
   const channelSummaryModel = new ChannelSummaryModel();
@@ -88,6 +91,7 @@ const startApp = async () => {
     channelSummaryModel,
     analyticsManager,
     summaryStore,
+    pgSessionDataStore,
   );
 
   let ready = await pgStore.isReady();
@@ -117,6 +121,10 @@ const startApp = async () => {
   ready = await newUserTriggersLock.isReady();
   if (!ready) {
     throw new Error('NewUserTriggersLock is not ready');
+  }
+  ready = await pgSessionDataStore.isReady();
+  if (!ready) {
+    throw new Error('PgSessionDataStore is not ready');
   }
 
   const registrationBotToken = process.env.SLACK_REGISTRATIONS_BOT_TOKEN;
@@ -162,6 +170,7 @@ const startApp = async () => {
     summaryStore,
     newUserTriggersManager,
     userFeedbackManager,
+    pgSessionDataStore,
   );
 
   const port = process.env['PORT'] || 3000;

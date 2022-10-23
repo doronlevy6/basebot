@@ -18,6 +18,7 @@ export const handleUserFeedbackSubmit =
       await ack();
 
       const submitted = body.type === 'view_submission';
+      const sessionId = view.private_metadata;
 
       let feedback = '';
       if (submitted) {
@@ -33,6 +34,7 @@ export const handleUserFeedbackSubmit =
         submitted: submitted,
         properties: {
           feedback: feedback,
+          gist_session: sessionId,
         },
       });
 
@@ -44,6 +46,7 @@ export const handleUserFeedbackSubmit =
         client,
         body.user.id,
         body.team?.id || 'unknown',
+        sessionId,
         feedback,
       );
     } catch (err) {
@@ -57,12 +60,25 @@ export const openFeedbackModalHandler =
     try {
       await ack();
 
+      const action = body.actions[0];
+      if (action.type !== 'button') {
+        throw new Error(
+          'open feedback modal handler received non-button action',
+        );
+      }
+      if (action.value === '') {
+        throw new Error(
+          'open feedback modal handler received empty button action',
+        );
+      }
+
       await client.views.open({
         trigger_id: body.trigger_id,
         view: {
           type: 'modal',
           notify_on_close: true,
           callback_id: Routes.USER_FEEDBACK_MODAL_SUBMIT,
+          private_metadata: action.value,
           submit: {
             type: 'plain_text',
             text: 'Submit',

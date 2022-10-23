@@ -38,6 +38,7 @@ import {
 } from '../user-feedback/handler';
 import { isBaseTeamWorkspace } from '../slack/utils';
 import { channelSummaryMoreTimeHandler } from '../summaries/channel-summary-more-time';
+import { SessionDataStore } from '../summaries/session-data/session-data-store';
 
 export enum Routes {
   SUMMARIZE_THREAD = 'summarize-thread',
@@ -67,6 +68,7 @@ export const registerBoltAppRouter = (
   summaryStore: SummaryStore,
   newUserTriggersManager: NewUserTriggersManager,
   userFeedbackManager: UserFeedbackManager,
+  sessionDataStore: SessionDataStore,
 ) => {
   const onboardingMiddleware = userOnboardingMiddleware(onboardingManager);
 
@@ -107,6 +109,7 @@ export const registerBoltAppRouter = (
       analyticsManager,
       userFeedbackManager,
       summaryStore,
+      sessionDataStore,
     ),
   );
 
@@ -119,7 +122,11 @@ export const registerBoltAppRouter = (
   app.action(
     Routes.CHANNEL_SUMMARY_FEEDBACK,
     onboardingMiddleware,
-    channelSummaryFeedbackHandler(analyticsManager, userFeedbackManager),
+    channelSummaryFeedbackHandler(
+      analyticsManager,
+      userFeedbackManager,
+      sessionDataStore,
+    ),
   );
 
   app.action(

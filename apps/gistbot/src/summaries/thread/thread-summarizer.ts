@@ -8,6 +8,7 @@ import { responder } from '../../slack/responder';
 import { ModerationError } from '../errors/moderation-error';
 import { MAX_PROMPT_CHARACTER_COUNT } from '../models/prompt-character-calculator';
 import { ThreadSummaryModel } from '../models/thread-summary.model';
+import { SessionDataStore } from '../session-data/session-data-store';
 import { SummaryStore } from '../summary-store';
 import { SlackMessage, ThreadSummarizationProps } from '../types';
 import { filterUnwantedMessages, parseThreadForSummary } from '../utils';
@@ -17,6 +18,7 @@ export class ThreadSummarizer {
     private threadSummaryModel: ThreadSummaryModel,
     private analyticsManager: AnalyticsManager,
     private summaryStore: SummaryStore,
+    private sessionDataStore: SessionDataStore,
   ) {}
 
   async summarize(
@@ -71,6 +73,8 @@ export class ThreadSummarizer {
         messages: messagesTexts,
         users,
         titles,
+        messageIds,
+        userIds,
       } = await parseThreadForSummary(
         [...messageReplies],
         client,
@@ -117,6 +121,29 @@ export class ThreadSummarizer {
         startDate: startTimeStamp,
         threadTs: props.threadTs,
       });
+
+      // Don't fail if we can't store session data, we still have the summary and can send it back to the user
+      try {
+        await this.sessionDataStore.storeSession(key, {
+          summaryType: 'thread',
+          teamId: teamId,
+          channelId: props.channelId,
+          requestingUserId: userId,
+          threadTs: props.threadTs,
+          request: {
+            channel_name: props.channelName,
+            messageIds: messageIds,
+            userIds: userIds,
+          },
+          response: summary,
+        });
+      } catch (error) {
+        logger.error({
+          msg: `error in storing session for session ${key}`,
+          error: error,
+        });
+      }
+
       const { blocks, title } = EphemeralSummary({
         actionIds: {
           feedback: Routes.THREAD_SUMMARY_FEEDBACK,
