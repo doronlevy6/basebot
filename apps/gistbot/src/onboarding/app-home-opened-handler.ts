@@ -31,7 +31,12 @@ export const appHomeOpenedHandler =
         throw new Error(`Failed to get dm history ${historyErr}`);
       }
 
-      if (messages && messages[0].user === context.botUserId) {
+      if (
+        messages &&
+        messages.length &&
+        messages[0] &&
+        messages[0].user === context.botUserId
+      ) {
         // Skip onboarding if the last message in the DM is from the bot so we don't send onboardings when
         // you open the bot DM and there is already a message waiting for you.
         logger.info(
