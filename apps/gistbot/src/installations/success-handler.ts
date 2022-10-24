@@ -1,3 +1,4 @@
+import { logger } from '@base/logger';
 import { CallbackOptions } from '@slack/oauth';
 import { AnalyticsManager } from '../analytics/manager';
 import { postInstallationMessage } from './post-install';
@@ -7,6 +8,15 @@ export const installationSucccessHandler = (
 ): CallbackOptions['successAsync'] => {
   return async (installation, installOptions, req, res) => {
     const redirectUrl = process.env.SLACK_REDIRECT_URL as string;
+
+    let extras = {};
+    if (installOptions.metadata) {
+      try {
+        extras = JSON.parse(installOptions.metadata);
+      } catch (error) {
+        logger.error(`failed to parse metadata: ${installOptions.metadata}`);
+      }
+    }
 
     await postInstallationMessage(
       installation.user.id,
@@ -21,6 +31,7 @@ export const installationSucccessHandler = (
       slackUserId: installation.user.id,
       extraParams: {
         isEnterprise: installation.isEnterpriseInstall || false,
+        ...extras,
       },
     });
 

@@ -7,6 +7,15 @@ export const installationFailureHandler =
   (error, installOptions, req, res) => {
     logger.error(`failed to install slack: ${error.message} ${error.stack}`);
 
+    let extras = {};
+    if (installOptions.metadata) {
+      try {
+        extras = JSON.parse(installOptions.metadata);
+      } catch (error) {
+        logger.error(`failed to parse metadata: ${installOptions.metadata}`);
+      }
+    }
+
     const params = new URLSearchParams();
     params.set(
       'error',
@@ -18,6 +27,9 @@ export const installationFailureHandler =
       funnelStep: 'failed_install',
       slackTeamId: 'unknown',
       slackUserId: 'unknown',
+      extraParams: {
+        ...extras,
+      },
     });
 
     res.writeHead(302, {
