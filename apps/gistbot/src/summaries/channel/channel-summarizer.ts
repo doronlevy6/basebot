@@ -5,13 +5,9 @@ import { AnalyticsManager } from '../../analytics/manager';
 import { Routes } from '../../routes/router';
 import { EphemeralSummary } from '../../slack/components/ephemeral-summary';
 import { responder } from '../../slack/responder';
-import { isBaseTeamWorkspace } from '../../slack/utils';
 import { stringifyMoreTimeProps } from '../channel-summary-more-time';
 import { ModerationError } from '../errors/moderation-error';
-import {
-  ChannelSummary,
-  ChannelSummaryModel,
-} from '../models/channel-summary.model';
+import { ChannelSummaryModel } from '../models/channel-summary.model';
 import {
   approximatePromptCharacterCountForChannelSummary,
   MAX_PROMPT_CHARACTER_COUNT,
@@ -220,14 +216,12 @@ export class ChannelSummarizer {
           userId,
         );
 
-        const selectedSummary = await this.selectSummaryFromResponse(
-          summary,
-          userId,
-          teamId,
-        );
-
-        if (selectedSummary.length) {
-          successfulSummary = selectedSummary;
+        if (summary.summary_by_threads.length) {
+          successfulSummary = summary.summary_by_threads
+            .map((ts) => {
+              return `> ${ts.replace(/\n/g, '\n> ')}`;
+            })
+            .join('\n\n');
           break;
         }
 
@@ -432,50 +426,5 @@ export class ChannelSummarizer {
       0,
     );
     return prevDate.getTime() / 1000;
-  }
-
-  private async selectSummaryFromResponse(
-    summary: ChannelSummary,
-    userId: string,
-    teamId: string,
-  ): Promise<string> {
-    if (summary.summary_by_topics === 'TBD') {
-      summary.summary_by_topics = {};
-    }
-
-    let summaryByTopics = '';
-    for (const key in summary.summary_by_topics) {
-      if (
-        Object.prototype.hasOwnProperty.call(summary.summary_by_topics, key)
-      ) {
-        const element = summary.summary_by_topics[key];
-        summaryByTopics = `${summaryByTopics}${key}:\n${element}\n`;
-      }
-    }
-    const summaryByBulletsFormatted = summary.summary_by_bullets
-      .map((s, i) => `${i + 1}. ${s}`)
-      .join('\n\n');
-
-    if (isBaseTeamWorkspace(teamId)) {
-      return `*Summary By Everything*:\n${summary.summary_by_everything}\n\n*Summary By Bullets*:\n${summaryByBulletsFormatted}\n\n*Summary By Summary*:\n${summary.summary_by_summary}\n\n*Summary By Topics*:\n${summaryByTopics}\n\n`;
-    }
-
-    if (summary.summary_by_bullets) {
-      return summaryByBulletsFormatted;
-    }
-
-    if (summary.summary_by_everything) {
-      return summary.summary_by_everything;
-    }
-
-    if (summary.summary_by_topics) {
-      return summaryByTopics;
-    }
-
-    if (summary.summary_by_summary) {
-      return summary.summary_by_summary;
-    }
-
-    return '';
   }
 }

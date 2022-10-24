@@ -14,10 +14,7 @@ export interface ChannelSummaryModelRequest {
 }
 
 export interface ChannelSummary {
-  summary_by_summary?: string;
-  summary_by_topics?: 'TBD' | Record<string, string>;
-  summary_by_everything?: string;
-  summary_by_bullets: string[];
+  summary_by_threads: string[];
 }
 
 interface ModelResponse extends ChannelSummary {
@@ -77,56 +74,12 @@ export class ChannelSummaryModel {
         throw new Error(`Error response: ${res.data.error}`);
       }
 
-      if (res.data.summary_by_topics === 'TBD') {
-        res.data.summary_by_topics = {};
-      }
-
-      let summaryByTopics = '';
-      for (const key in res.data.summary_by_topics) {
-        if (
-          Object.prototype.hasOwnProperty.call(res.data.summary_by_topics, key)
-        ) {
-          const element = res.data.summary_by_topics[key];
-          summaryByTopics = `${summaryByTopics}${key}:\n${element}\n`;
-        }
-      }
-
       try {
-        const [resSbS, resSbT, resSbE, resSbB] = await Promise.all([
-          this.moderationApi.moderate({
-            input: res.data.summary_by_summary || '',
-          }),
-          this.moderationApi.moderate({
-            input: summaryByTopics,
-          }),
-          this.moderationApi.moderate({
-            input: res.data.summary_by_everything || '',
-          }),
-          this.moderationApi.moderate({
-            input: res.data.summary_by_bullets.join('\n'),
-          }),
-        ]);
+        const { flagged } = await this.moderationApi.moderate({
+          input: res.data.summary_by_threads.join('\n') || '',
+        });
 
-        let moderatedCount = 0;
-        if (resSbS.flagged) {
-          res.data.summary_by_summary = '';
-          moderatedCount++;
-        }
-        if (resSbT.flagged) {
-          res.data.summary_by_topics = {};
-          moderatedCount++;
-        }
-        if (resSbE.flagged) {
-          res.data.summary_by_everything = '';
-          moderatedCount++;
-        }
-        if (resSbB.flagged) {
-          res.data.summary_by_bullets = [];
-          moderatedCount++;
-        }
-
-        // If all 4 have been moderated then we return a moderation error
-        if (moderatedCount === 4) {
+        if (flagged) {
           throw new ModerationError('moderated');
         }
       } catch (error) {
@@ -142,10 +95,7 @@ export class ChannelSummaryModel {
       }
 
       return {
-        summary_by_summary: res.data.summary_by_summary,
-        summary_by_topics: res.data.summary_by_topics,
-        summary_by_everything: res.data.summary_by_everything,
-        summary_by_bullets: res.data.summary_by_bullets,
+        summary_by_threads: res.data.summary_by_threads,
       };
     } catch (error) {
       logger.error(
