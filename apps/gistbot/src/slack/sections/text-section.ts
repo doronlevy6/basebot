@@ -1,5 +1,6 @@
 import { WebClient } from '@slack/web-api';
 import { ParsedMessagePlaintextOpts } from '../parser';
+import { EmojiConvertor } from 'emoji-js';
 
 export class TextSection {
   type: 'text' = 'text';
@@ -16,8 +17,13 @@ export class TextSection {
     client?: WebClient,
     opts?: ParsedMessagePlaintextOpts,
   ): Promise<string> {
+    const emoji = new EmojiConvertor();
+    emoji.replace_mode = 'unified';
+    const emojisReplaced = emoji.replace_colons(
+      this.text.replace(/::skin-tone(-?\d+)/gi, ''),
+    );
     const multilineCodeStripped = stripMrkdwnFormatting(
-      this.text,
+      emojisReplaced,
       '```',
       true,
       opts?.removeCodeblocks,
