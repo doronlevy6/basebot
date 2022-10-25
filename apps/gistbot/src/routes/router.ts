@@ -203,11 +203,13 @@ export const registerBoltAppRouter = (
     handleUserFeedbackSubmit(analyticsManager, userFeedbackManager),
   );
 
-  app.message(async ({ event, say, body, context, logger }) => {
+  app.message(async ({ event, say, body, context, logger, client }) => {
     if (event.channel_type === 'im' && 'bot_profile' in event) {
       logger.warn({ msg: `a bot is talking to us`, bot: event.bot_profile });
       return;
     }
+
+    logger.debug({ msg: `im to the bot`, event: event });
 
     if (isBaseTeamWorkspace(body.team_id)) {
       return;
@@ -215,24 +217,44 @@ export const registerBoltAppRouter = (
 
     // We are only able to listen to our own IM channels, so if the message channel is an IM, then we can assume it's our own IM
     if (
-      event.channel_type === 'im' &&
-      'user' in event &&
-      event.user !== 'USLACKBOT'
+      event.channel_type !== 'im' ||
+      ('user' in event && event.user === 'USLACKBOT')
     ) {
-      say({
-        text: 'Hi there :wave:',
-        blocks: Help(event.user || '', context.botUserId || ''),
-      });
-      console.log(event);
-      analyticsManager.messageSentToUserDM({
-        type: 'help_response_message',
-        slackTeamId: body.team_id,
-        slackUserId: event['user'] || 'unknown',
-        properties: {
-          triggerMessage: event['text'] || 'unknown text',
-        },
-      });
+      return;
     }
+    if (!('user' in event) || !event.user) {
+      logger.warn({ msg: `im without user`, event: event });
+      return;
+    }
+
+    // If the user hasn't been onboarded yet then we only want to trigger the onboarding
+    const wasOnboarded = await onboardingManager.wasUserOnboarded(
+      body.team_id,
+      event.user,
+    );
+    if (!wasOnboarded) {
+      await onboardingManager.onboardUser(
+        body.team_id,
+        event.user,
+        client,
+        'app_home_opened',
+      );
+      return;
+    }
+
+    say({
+      text: 'Hi there :wave:',
+      blocks: Help(event.user, context.botUserId || ''),
+    });
+
+    analyticsManager.messageSentToUserDM({
+      type: 'help_response_message',
+      slackTeamId: body.team_id,
+      slackUserId: event['user'],
+      properties: {
+        triggerMessage: event['text'] || 'unknown text',
+      },
+    });
   });
 
   app.message(
