@@ -5,6 +5,8 @@ import { SlackMessage, TriggerContext } from './types';
 import { approximatePromptCharacterCount } from './models/prompt-character-calculator';
 import { logger } from '@base/logger';
 import { DEFAULT_DAYS_BACK } from './channel/channel-summarizer';
+import { RespondFn } from '@slack/bolt';
+import { responder } from '../slack/responder';
 
 const MAX_REPLIES_TO_FETCH = 200;
 
@@ -307,4 +309,31 @@ export const extractDaysBack = (text: string): number => {
   }
 
   return DEFAULT_DAYS_BACK;
+};
+
+export const genericErrorMessage = async (
+  userId: string,
+  channelId: string,
+  client: WebClient,
+  threadTs?: string,
+  respond?: RespondFn,
+) => {
+  try {
+    await responder(
+      respond,
+      client,
+      `Something went wrong, sorry! Please try again in 5 minutes`,
+      undefined,
+      channelId,
+      userId,
+      {
+        response_type: 'ephemeral',
+      },
+      threadTs,
+    );
+  } catch (error) {
+    logger.error(
+      `error in generic error message response: ${error} ${error.stack}`,
+    );
+  }
 };

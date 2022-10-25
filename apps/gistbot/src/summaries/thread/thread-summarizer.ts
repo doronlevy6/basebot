@@ -2,16 +2,24 @@ import { logger } from '@base/logger';
 import { RespondFn } from '@slack/bolt';
 import { WebClient } from '@slack/web-api';
 import { AnalyticsManager } from '../../analytics/manager';
+import { Feature } from '../../feature-rate-limiter/limits';
+import { FeatureRateLimiter } from '../../feature-rate-limiter/rate-limiter';
 import { Routes } from '../../routes/router';
 import { EphemeralSummary } from '../../slack/components/ephemeral-summary';
+import { GoPro, GoProText } from '../../slack/components/go-pro';
 import { responder } from '../../slack/responder';
 import { ModerationError } from '../errors/moderation-error';
+import { RateLimitedError } from '../errors/rate-limited-error';
 import { MAX_PROMPT_CHARACTER_COUNT } from '../models/prompt-character-calculator';
 import { ThreadSummaryModel } from '../models/thread-summary.model';
 import { SessionDataStore } from '../session-data/session-data-store';
 import { SummaryStore } from '../summary-store';
 import { SlackMessage, ThreadSummarizationProps } from '../types';
-import { filterUnwantedMessages, parseThreadForSummary } from '../utils';
+import {
+  filterUnwantedMessages,
+  genericErrorMessage,
+  parseThreadForSummary,
+} from '../utils';
 import { IReporter } from '@base/metrics';
 
 export class ThreadSummarizer {
@@ -21,6 +29,7 @@ export class ThreadSummarizer {
     private summaryStore: SummaryStore,
     private sessionDataStore: SessionDataStore,
     private metricsReporter: IReporter,
+    private featureRateLimiter: FeatureRateLimiter,
   ) {}
 
   async summarize(
@@ -32,6 +41,14 @@ export class ThreadSummarizer {
     respond?: RespondFn,
   ): Promise<void> {
     try {
+      const limited = await this.featureRateLimiter.acquire(
+        { teamId: teamId, userId: userId },
+        Feature.SUMMARY,
+      );
+      if (!limited) {
+        throw new RateLimitedError('rate limited');
+      }
+
       const messageReplies: SlackMessage[] = [];
 
       // eslint-disable-next-line no-constant-condition
@@ -208,23 +225,35 @@ export class ThreadSummarizer {
         return;
       }
 
-      const text = `We had an error processing the summarization: ${error.message}`;
-      await responder(
-        respond,
-        client,
-        text,
-        undefined,
-        props.channelId,
-        userId,
-        {
-          response_type: 'ephemeral',
-        },
-        props.threadTs,
-      );
+      if (error instanceof RateLimitedError) {
+        await responder(
+          respond,
+          client,
+          GoProText,
+          GoPro(),
+          props.channelId,
+          userId,
+          {
+            response_type: 'ephemeral',
+          },
+          props.threadTs,
+        );
+
+        this.analyticsManager.threadSummaryFunnel({
+          funnelStep: 'rate_limited',
+          slackTeamId: teamId,
+          slackUserId: userId,
+          channelId: props.channelId,
+          threadTs: props.threadTs,
+        });
+        return;
+      }
+
       this.metricsReporter.error(
         'thread summarizer',
         'summarization-processing',
       );
+
       this.analyticsManager.error({
         slackTeamId: teamId,
         slackUserId: userId,
@@ -234,6 +263,23 @@ export class ThreadSummarizer {
           threadTs: props.threadTs,
         },
       });
+
+      await genericErrorMessage(
+        userId,
+        props.channelId,
+        client,
+        props.threadTs,
+        respond,
+      );
+
+      this.featureRateLimiter
+        .allowMore({ teamId: teamId, userId: userId }, Feature.SUMMARY, 1)
+        .catch((e) =>
+          logger.error({
+            msg: `failed to allow more limit for thread sumary on ${teamId}_${userId}`,
+            error: e,
+          }),
+        );
     }
   }
 }

@@ -84,7 +84,7 @@ export class ThreadSummaryModel {
         logger.error(
           `error in moderation of thread summarization: ${error} ${
             error.stack
-          } ${error.response && error.response.data}`,
+          } ${error.response && JSON.stringify(error.response.data)}`,
         );
       }
 
@@ -92,7 +92,7 @@ export class ThreadSummaryModel {
     } catch (error) {
       logger.error(
         `error in thread summarization model: ${error} ${error.stack} ${
-          error.response && error.response.data
+          error.response && JSON.stringify(error.response.data)
         }`,
       );
       throw error;

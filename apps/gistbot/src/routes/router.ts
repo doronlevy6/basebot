@@ -40,6 +40,8 @@ import { isBaseTeamWorkspace } from '../slack/utils';
 import { channelSummaryMoreTimeHandler } from '../summaries/channel-summary-more-time';
 import { SessionDataStore } from '../summaries/session-data/session-data-store';
 import { IReporter } from '@base/metrics';
+import { SlackBlockActionWrapper } from '../slack/types';
+import { FeatureRateLimiter } from '../feature-rate-limiter/rate-limiter';
 
 export enum Routes {
   SUMMARIZE_THREAD = 'summarize-thread',
@@ -57,6 +59,7 @@ export enum Routes {
   SEND_USER_FEEDBACK = 'send-user-feedback',
   USER_FEEDBACK_MODAL_SUBMIT = 'user-feedback-modal-submit',
   SUMMARIZE_CHANNEL_MORE_TIME = 'summarize-channel-more-time',
+  CLICKED_TO_OPEN_PRICING = 'click-to-open-pricing',
 }
 
 export const registerBoltAppRouter = (
@@ -71,6 +74,7 @@ export const registerBoltAppRouter = (
   newUserTriggersManager: NewUserTriggersManager,
   userFeedbackManager: UserFeedbackManager,
   sessionDataStore: SessionDataStore,
+  featureRateLimiter: FeatureRateLimiter,
 ) => {
   const onboardingMiddleware = userOnboardingMiddleware(onboardingManager);
 
@@ -103,7 +107,7 @@ export const registerBoltAppRouter = (
   app.command(
     /gist.*/,
     onboardingMiddleware,
-    slashCommandRouter(channelSummarizer, analyticsManager),
+    slashCommandRouter(channelSummarizer, analyticsManager, featureRateLimiter),
   );
   app.action(
     Routes.THREAD_SUMMARY_FEEDBACK,
@@ -201,6 +205,18 @@ export const registerBoltAppRouter = (
     { callback_id: Routes.USER_FEEDBACK_MODAL_SUBMIT, type: 'view_closed' },
     onboardingMiddleware,
     handleUserFeedbackSubmit(analyticsManager, userFeedbackManager),
+  );
+
+  app.action(
+    Routes.CLICKED_TO_OPEN_PRICING,
+    async ({ ack, body }: SlackBlockActionWrapper) => {
+      await ack();
+      analyticsManager.buttonClicked({
+        type: 'open_pricing',
+        slackTeamId: body.team?.id || 'unknown',
+        slackUserId: body.user.id,
+      });
+    },
   );
 
   app.message(async ({ event, say, body, context, logger, client }) => {

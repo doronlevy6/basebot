@@ -2,11 +2,15 @@ import { logger } from '@base/logger';
 import { RespondFn } from '@slack/bolt';
 import { KnownBlock, WebClient } from '@slack/web-api';
 import { AnalyticsManager } from '../../analytics/manager';
+import { Feature } from '../../feature-rate-limiter/limits';
+import { FeatureRateLimiter } from '../../feature-rate-limiter/rate-limiter';
 import { Routes } from '../../routes/router';
 import { EphemeralSummary } from '../../slack/components/ephemeral-summary';
+import { GoPro, GoProText } from '../../slack/components/go-pro';
 import { responder } from '../../slack/responder';
 import { stringifyMoreTimeProps } from '../channel-summary-more-time';
 import { ModerationError } from '../errors/moderation-error';
+import { RateLimitedError } from '../errors/rate-limited-error';
 import { ChannelSummaryModel } from '../models/channel-summary.model';
 import {
   approximatePromptCharacterCountForChannelSummary,
@@ -18,6 +22,7 @@ import { ChannelSummarizationProps, SlackMessage } from '../types';
 import {
   enrichWithReplies,
   filterUnwantedMessages,
+  genericErrorMessage,
   parseThreadForSummary,
   sortSlackMessages,
 } from '../utils';
@@ -34,6 +39,7 @@ export class ChannelSummarizer {
     private summaryStore: SummaryStore,
     private sessionDataStore: SessionDataStore,
     private metricsReporter: IReporter,
+    private featureRateLimiter: FeatureRateLimiter,
   ) {}
 
   async summarize(
@@ -48,6 +54,14 @@ export class ChannelSummarizer {
     excludedMessage?: string,
   ): Promise<void> {
     try {
+      const limited = await this.featureRateLimiter.acquire(
+        { teamId: teamId, userId: userId },
+        Feature.SUMMARY,
+      );
+      if (!limited) {
+        throw new RateLimitedError('rate limited');
+      }
+
       const {
         error: infoError,
         ok: infoOk,
@@ -326,21 +340,35 @@ export class ChannelSummarizer {
         });
         return;
       }
+
+      if (error instanceof RateLimitedError) {
+        await responder(
+          respond,
+          client,
+          GoProText,
+          GoPro(),
+          props.channelId,
+          userId,
+          {
+            response_type: 'ephemeral',
+          },
+        );
+
+        this.analyticsManager.channelSummaryFunnel({
+          funnelStep: 'rate_limited',
+          slackTeamId: teamId,
+          slackUserId: userId,
+          channelId: props.channelId,
+          extraParams: {
+            summaryContext: summaryContext,
+          },
+        });
+        return;
+      }
+
       this.metricsReporter.error(
         'channel summarizer',
         'summarization-processing',
-      );
-      const text = `We had an error processing the summarization: ${error.message}`;
-      await responder(
-        respond,
-        client,
-        text,
-        undefined,
-        props.channelId,
-        userId,
-        {
-          response_type: 'ephemeral',
-        },
       );
 
       this.analyticsManager.error({
@@ -349,6 +377,23 @@ export class ChannelSummarizer {
         channelId: props.channelId,
         errorMessage: error.message,
       });
+
+      await genericErrorMessage(
+        userId,
+        props.channelId,
+        client,
+        undefined,
+        respond,
+      );
+
+      this.featureRateLimiter
+        .allowMore({ teamId: teamId, userId: userId }, Feature.SUMMARY, 1)
+        .catch((e) =>
+          logger.error({
+            msg: `failed to allow more limit for channel summary on ${teamId}_${userId}`,
+            error: e,
+          }),
+        );
     }
   }
 

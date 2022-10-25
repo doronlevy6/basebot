@@ -317,4 +317,25 @@ export class AnalyticsManager {
       properties: { ...extraParams, channelId },
     });
   }
+
+  buttonClicked({
+    type,
+    slackUserId,
+    slackTeamId,
+    extraParams,
+  }: {
+    type: string;
+    slackUserId: string;
+    slackTeamId: string;
+    extraParams?: ExtraParams;
+  }) {
+    this.sendEventToAnalytics({
+      eventName: `button_clicked`,
+      slackUserId: slackUserId,
+      slackTeamId: slackTeamId,
+      internalUserId: this.internalId(slackTeamId, slackUserId),
+      timestamp: new Date(),
+      properties: { ...extraParams, type: type },
+    });
+  }
 }

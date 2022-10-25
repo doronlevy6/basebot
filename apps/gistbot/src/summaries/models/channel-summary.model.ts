@@ -90,7 +90,7 @@ export class ChannelSummaryModel {
         logger.error(
           `error in moderation of channel summarization: ${error} ${
             error.stack
-          } ${error.response && error.response.data}`,
+          } ${error.response && JSON.stringify(error.response.data)}`,
         );
       }
 
@@ -100,7 +100,7 @@ export class ChannelSummaryModel {
     } catch (error) {
       logger.error(
         `error in channel summarization model: ${error} ${error.stack} ${
-          error.response && error.response.data
+          error.response && JSON.stringify(error.response.data)
         }`,
       );
       throw error;

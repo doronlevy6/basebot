@@ -29,6 +29,8 @@ import { PgTriggerLock } from './new-user-triggers/trigger-lock-persistent';
 import { UserFeedbackManager } from './user-feedback/manager';
 import { EmailSender } from './email/email-sender.util';
 import { PgSessionDataStore } from './summaries/session-data/session-data-store';
+import { RedisRateLimiter } from './feature-rate-limiter/rate-limiter-store';
+import { FeatureRateLimiter } from './feature-rate-limiter/rate-limiter';
 
 const gracefulShutdown = (server: Server) => (signal: string) => {
   logger.info('starting shutdown, got signal ' + signal);
@@ -74,6 +76,9 @@ const startApp = async () => {
   const pgNewUsersTriggersLock = new PgTriggerLock(pgConfig);
   const pgSessionDataStore = new PgSessionDataStore(pgConfig);
 
+  const redisRateLimiter = new RedisRateLimiter(redisConfig, env);
+  const featureRateLimiter = new FeatureRateLimiter(redisRateLimiter);
+
   const onboardingLock = new RedisOnboardingLock(redisConfig, env);
   const summaryStore = new SummaryStore(redisConfig, env);
   const newUserTriggersLock = new RedisTriggerLock(redisConfig, env);
@@ -85,6 +90,7 @@ const startApp = async () => {
     summaryStore,
     pgSessionDataStore,
     metricsReporter,
+    featureRateLimiter,
   );
 
   const channelSummaryModel = new ChannelSummaryModel();
@@ -94,6 +100,7 @@ const startApp = async () => {
     summaryStore,
     pgSessionDataStore,
     metricsReporter,
+    featureRateLimiter,
   );
 
   let ready = await pgStore.isReady();
@@ -127,6 +134,10 @@ const startApp = async () => {
   ready = await pgSessionDataStore.isReady();
   if (!ready) {
     throw new Error('PgSessionDataStore is not ready');
+  }
+  ready = await redisRateLimiter.isReady();
+  if (!ready) {
+    throw new Error('RedisRateLimiter is not ready');
   }
 
   const registrationBotToken = process.env.SLACK_REGISTRATIONS_BOT_TOKEN;
@@ -175,6 +186,7 @@ const startApp = async () => {
     newUserTriggersManager,
     userFeedbackManager,
     pgSessionDataStore,
+    featureRateLimiter,
   );
 
   const port = process.env['PORT'] || 3000;
