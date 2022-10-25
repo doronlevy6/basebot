@@ -12,6 +12,7 @@ interface ChannelSummarySession {
     threads: {
       messageIds: string[];
       userIds: string[];
+      reactions: number[];
     }[];
   };
   response: string;
@@ -27,6 +28,7 @@ interface ThreadSummarySession {
     channel_name: string;
     messageIds: string[];
     userIds: string[];
+    reactions: number[];
   };
   response: string;
 }

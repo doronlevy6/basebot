@@ -208,6 +208,7 @@ export class ChannelSummarizer {
               messages: t.messages,
               names: t.users,
               titles: t.titles,
+              reactions: t.reactions,
             };
           }),
         };
@@ -221,6 +222,7 @@ export class ChannelSummarizer {
                 messages: t.messages,
                 names: t.users,
                 titles: t.titles,
+                reactions: t.reactions,
               };
             }),
           };
@@ -270,7 +272,11 @@ export class ChannelSummarizer {
           request: {
             channel_name: props.channelName,
             threads: threads.map((t) => {
-              return { messageIds: t.messageIds, userIds: t.userIds };
+              return {
+                messageIds: t.messageIds,
+                userIds: t.userIds,
+                reactions: t.reactions,
+              };
             }),
           },
           response: successfulSummary,

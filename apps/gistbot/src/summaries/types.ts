@@ -12,6 +12,7 @@ export type SlackMessage = Pick<
   | 'attachments'
   | 'text'
   | 'subtype'
+  | 'reactions'
 >;
 
 export type TriggerContext = 'in_channel' | 'in_dm';

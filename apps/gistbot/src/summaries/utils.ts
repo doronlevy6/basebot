@@ -26,6 +26,12 @@ export const parseThreadForSummary = async (
       return { message: m, messageId: m.ts as string }; // The message.ts value should never be undefined... Can we find instances where it is in order to ensure we filter them out?
     });
 
+  const reactions = messagesWithText
+    .map((m) => m.message.reactions || [])
+    .map((reactions) =>
+      reactions.reduce((acc, cur) => acc + (cur.count || 0), 0),
+    );
+
   const messagesTexts: string[] = (await Promise.all(
     messagesWithText.map((m) =>
       parseSlackMrkdwn(extractMessageText(m.message, true)).plainText(
@@ -147,16 +153,19 @@ export const parseThreadForSummary = async (
     names: userNamesAndTitles.map((u) => u.name),
     titles: userNamesAndTitles.map((u) => u.title),
     channel_name: channelName,
+    reactions: reactions,
   });
   while (cc > maxCharacterCountPerThread) {
     messagesWithText.shift();
     messagesTexts.shift();
     userNamesAndTitles.shift();
+    reactions.shift();
     cc = approximatePromptCharacterCount({
       messages: messagesTexts,
       names: userNamesAndTitles.map((u) => u.name),
       titles: userNamesAndTitles.map((u) => u.title),
       channel_name: channelName,
+      reactions: reactions,
     });
   }
 
@@ -165,6 +174,7 @@ export const parseThreadForSummary = async (
     messages: messagesTexts,
     users: userNamesAndTitles.map((u) => u.name),
     userIds: userNamesAndTitles.map((u) => u.id),
+    reactions: reactions,
     // TODO: Return the user titles back when they are used in personalization,
     // for now they are taking up space in the available tokens and are not exactly used in the model itself.
     // titles: userNamesAndTitles.map((u) => u.title),

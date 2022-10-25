@@ -94,6 +94,7 @@ export class ThreadSummarizer {
         titles,
         messageIds,
         userIds,
+        reactions,
       } = await parseThreadForSummary(
         [...messageReplies],
         client,
@@ -126,6 +127,7 @@ export class ThreadSummarizer {
           names: users,
           titles: titles,
           channel_name: props.channelName,
+          reactions: reactions,
         },
         userId,
       );
@@ -153,6 +155,7 @@ export class ThreadSummarizer {
             channel_name: props.channelName,
             messageIds: messageIds,
             userIds: userIds,
+            reactions: reactions,
           },
           response: summary,
         });

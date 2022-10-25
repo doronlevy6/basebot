@@ -10,6 +10,7 @@ export interface ChannelSummaryModelRequest {
     messages: string[];
     names: string[];
     titles: string[];
+    reactions: number[];
   }[];
 }
 

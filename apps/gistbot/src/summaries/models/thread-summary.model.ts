@@ -8,6 +8,7 @@ export interface ThreadSummaryModelRequest {
   messages: string[];
   names: string[];
   titles: string[];
+  reactions: number[];
   channel_name: string;
 }
 
