@@ -11,6 +11,7 @@ import { InviteUserTemplate } from './invite-user.template';
 import { allowUserByEmails } from '../utils/user-filter.util';
 import { OnBoardingContext } from './types';
 import { IReporter } from '@base/metrics';
+import { identifyTriggeringUser } from '../slack/utils';
 
 export class OnboardingManager {
   constructor(
@@ -46,6 +47,11 @@ export class OnboardingManager {
         logger.debug(`user ${userId} has already been onboarded`);
         return;
       }
+
+      // Don't await so that we don't force anything to wait just for the identification.
+      // This handles error handling internally and will never cause an exception, so we
+      // won't have any unhandled promise rejection errors.
+      identifyTriggeringUser(userId, teamId, client, this.analyticsManager);
 
       const acquireOnboarding = await this.lock.lock(teamId, userId);
       if (!acquireOnboarding) {
