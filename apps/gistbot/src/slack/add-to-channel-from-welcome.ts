@@ -342,19 +342,19 @@ async function onBoardingChannelSummarizeSuccessMessage(
 async function onBoardingAddToMoreChannels(client: WebClient, userId: string) {
   await client.chat.postMessage({
     channel: userId,
-    text: 'Add me to more channels',
+    text: 'When you’re back, you can add me to more channels here ➡️',
     blocks: [
       {
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: 'Add me to more channels',
+          text: 'When you’re back, you can add me to more channels here ➡️',
         },
         accessory: {
           type: 'button',
           text: {
             type: 'plain_text',
-            text: 'Select a channel...',
+            text: 'Select channels',
             emoji: true,
           },
           action_id: Routes.ADD_TO_CHANNEL_FROM_WELCOME_MODAL,

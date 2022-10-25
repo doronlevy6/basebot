@@ -29,7 +29,7 @@ export const Help = (userId: string, myBotUserId: string): KnownBlock[] => {
       type: 'section',
       text: {
         type: 'mrkdwn',
-        text: '*1️⃣ Channel summary -* simply type `/gist` within the channel.',
+        text: '*1️⃣ Channel summary -* simply type `/gist` within the channel. You can request a specific time frame by adding a _number_ and either _day_ or _week_ e.g. `/gist 3 days`',
       },
     },
     ChannelSummaryImage(),
@@ -37,7 +37,7 @@ export const Help = (userId: string, myBotUserId: string): KnownBlock[] => {
       type: 'section',
       text: {
         type: 'mrkdwn',
-        text: '*2️⃣ Thread summary -* click on the message menu and tap the `Get the Gist`.',
+        text: '*2️⃣ Thread summary -* click on the message menu and tap `Get theGist`.',
       },
     },
     ThreadSummaryImage(),
@@ -45,9 +45,9 @@ export const Help = (userId: string, myBotUserId: string): KnownBlock[] => {
       type: 'section',
       text: {
         type: 'mrkdwn',
-        text: `3️⃣ You can also always simply ask me to summarize a channel or a thread by mentioning me like this: ${UserLink(
+        text: `3️⃣ You can simply mention ${UserLink(
           myBotUserId,
-        )}.`,
+        )} in a channel or thread to get a summary, however keep in mind that everyone in the channel can see the mention (the summary is still only visible to you).`,
       },
     },
   ];

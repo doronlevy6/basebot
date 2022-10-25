@@ -29,7 +29,7 @@ export const AddToSingleChannel = (onBoarding: boolean): KnownBlock[] => {
 };
 const addToChannelText = (onBoarding: boolean) => {
   if (onBoarding) {
-    return `To get started, add me to a busy channel.`;
+    return `To get started, add me to a busy channel ➡️`;
   }
   return `select a channel`;
 };
