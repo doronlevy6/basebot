@@ -3,10 +3,7 @@ import { AnalyticsManager } from '../analytics/manager';
 import { Routes } from '../routes/router';
 import { addToChannel } from './add-to-channel';
 import { SlackBlockActionWrapper, ViewAction } from './types';
-import {
-  ChannelSummarizer,
-  DEFAULT_DAYS_BACK,
-} from '../summaries/channel/channel-summarizer';
+import { ChannelSummarizer } from '../summaries/channel/channel-summarizer';
 import { WebClient } from '@slack/web-api';
 import { IReporter } from '@base/metrics';
 
@@ -14,6 +11,7 @@ const ADD_TO_CHANNEL_FROM_WELCOME = 'add-to-channel-from-welcome';
 const ADD_TO_CHANNEL_FROM_WELCOME_MESSAGE =
   'add-to-channel-from-welcome-message';
 const MESSAGE_THRESHOLD = 3;
+const DAYS_BACK_FOR_ONBOARDING = 3;
 
 export const addToChannelFromWelcomeModal =
   (analyticsManager: AnalyticsManager, metricsReporter: IReporter) =>
@@ -208,11 +206,15 @@ export const addToChannelFromWelcomeMessageHandler =
         },
       });
       try {
-        const { messages } = await client.conversations.history({
-          channel: selectedConversation,
-        });
+        const rootMessages = await channelSummarizer.fetchChannelRootMessages(
+          client,
+          selectedConversation,
+          context.botId || '',
+          MESSAGE_THRESHOLD,
+          DAYS_BACK_FOR_ONBOARDING,
+        );
 
-        if (!messages || messages.length < MESSAGE_THRESHOLD) {
+        if (!rootMessages || rootMessages.length < MESSAGE_THRESHOLD) {
           analyticsManager.welcomeMessageInteraction({
             type: 'channel_too_few',
             slackUserId: body.user.id,
@@ -246,7 +248,7 @@ export const addToChannelFromWelcomeMessageHandler =
             channelId: selectedConversation,
             channelName: res.channel?.name || '',
           },
-          DEFAULT_DAYS_BACK,
+          DAYS_BACK_FOR_ONBOARDING,
           client,
         );
         analyticsManager.welcomeMessageInteraction({
