@@ -5,9 +5,14 @@ import { Routes } from '../../routes/router';
 import { Summary } from '../../slack/components/summary';
 import { SummaryStore } from '../summary-store';
 import { responder } from '../../slack/responder';
+import { IReporter } from '@base/metrics';
 
 export const threadSummaryPostHandler =
-  (analyticsManager: AnalyticsManager, summaryStore: SummaryStore) =>
+  (
+    analyticsManager: AnalyticsManager,
+    metricsReporter: IReporter,
+    summaryStore: SummaryStore,
+  ) =>
   async ({
     ack,
     logger,
@@ -107,6 +112,7 @@ export const threadSummaryPostHandler =
         },
       });
     } catch (error) {
+      metricsReporter.error('thread Summary Posted', 'thread-summary-post');
       logger.error(`error in post summary to thread: ${error.stack}`);
     }
   };

@@ -6,10 +6,12 @@ import { SlackEventWrapper } from '../slack/types';
 import { ChannelSummarizer } from './channel/channel-summarizer';
 import { ThreadSummarizer } from './thread/thread-summarizer';
 import { extractDaysBack, summaryInProgressMessage } from './utils';
+import { IReporter } from '@base/metrics';
 
 export const mentionHandler =
   (
     analyticsManager: AnalyticsManager,
+    metricsReporter: IReporter,
     channelSummarizer: ChannelSummarizer,
     threadSummarizer: ThreadSummarizer,
     onboardingManager: OnboardingManager,
@@ -98,6 +100,7 @@ export const mentionHandler =
         event.ts,
       );
     } catch (error) {
+      metricsReporter.error('mention summarization', 'mention-summarization');
       logger.error(
         `error in handling mention summarization: ${error} ${error.stack}`,
       );

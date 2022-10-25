@@ -8,6 +8,7 @@ import {
   DEFAULT_DAYS_BACK,
 } from '../summaries/channel/channel-summarizer';
 import { WebClient } from '@slack/web-api';
+import { IReporter } from '@base/metrics';
 
 const ADD_TO_CHANNEL_FROM_WELCOME = 'add-to-channel-from-welcome';
 const ADD_TO_CHANNEL_FROM_WELCOME_MESSAGE =
@@ -15,7 +16,8 @@ const ADD_TO_CHANNEL_FROM_WELCOME_MESSAGE =
 const MESSAGE_THRESHOLD = 3;
 
 export const addToChannelFromWelcomeModal =
-  (analyticsManager: AnalyticsManager) => async (params: ViewAction) => {
+  (analyticsManager: AnalyticsManager, metricsReporter: IReporter) =>
+  async (params: ViewAction) => {
     const { ack, body, client, view } = params;
 
     try {
@@ -64,6 +66,10 @@ export const addToChannelFromWelcomeModal =
         text: 'theGist was added to the selected channels!:rocket:',
       });
     } catch (err) {
+      metricsReporter.error(
+        'add to channel from welcome',
+        'add-to-channel-from-welcome-modal',
+      );
       logger.error(`Add to channel from welcome modal error: ${err.stack}`);
     }
   };
@@ -75,7 +81,7 @@ interface ChannelModalProps {
 }
 
 export const addToChannelFromWelcomeModalHandler =
-  (analyticsManager: AnalyticsManager) =>
+  (analyticsManager: AnalyticsManager, metricsReporter: IReporter) =>
   async ({ ack, logger, body, client }: SlackBlockActionWrapper) => {
     try {
       await ack();
@@ -139,12 +145,20 @@ export const addToChannelFromWelcomeModalHandler =
         slackTeamId: body.user.team_id || 'unknown',
       });
     } catch (error) {
+      metricsReporter.error(
+        'add to channel from welcome modal submit',
+        'add-to-channel-from-welcome-modal-handler',
+      );
       logger.error(`error in add to channel from welcome: ${error.stack}`);
     }
   };
 
 export const addToChannelFromWelcomeMessageHandler =
-  (analyticsManager: AnalyticsManager, channelSummarizer: ChannelSummarizer) =>
+  (
+    analyticsManager: AnalyticsManager,
+    metricsReporter: IReporter,
+    channelSummarizer: ChannelSummarizer,
+  ) =>
   async ({ ack, logger, body, client, context }: SlackBlockActionWrapper) => {
     try {
       await ack();
@@ -261,6 +275,10 @@ export const addToChannelFromWelcomeMessageHandler =
           slackUserId: body.user.id,
         });
       } catch (error) {
+        metricsReporter.error(
+          'add to channel from welcome message',
+          'add-to-channel-from-welcome-message-handler',
+        );
         logger.error(`error in fetching channel message count: ${error.stack}`);
       }
     } catch (error) {

@@ -3,12 +3,14 @@ import { AnalyticsManager } from '../../analytics/manager';
 import { UserFeedbackManager } from '../../user-feedback/manager';
 import { extractSessionIdAndValueFromFeedback } from '../../slack/components/summary-feedback';
 import { SessionDataStore } from '../session-data/session-data-store';
+import { IReporter } from '@base/metrics';
 
 export const channelSummaryFeedbackHandler =
   (
     analyticsManager: AnalyticsManager,
     feedbackManager: UserFeedbackManager,
     sessionDataStore: SessionDataStore,
+    metricsReporter: IReporter,
   ) =>
   async ({ ack, logger, payload, body, client }: SlackBlockActionWrapper) => {
     try {
@@ -66,6 +68,7 @@ export const channelSummaryFeedbackHandler =
         sessionId,
       );
     } catch (error) {
+      metricsReporter.error('channel summarizer', 'summarization-feedback');
       logger.error(`error in channel summary feedback: ${error.stack}`);
     }
   };

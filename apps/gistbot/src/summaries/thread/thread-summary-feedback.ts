@@ -6,10 +6,12 @@ import { SummaryStore } from '../summary-store';
 import { BlockAction, BlockElementAction } from '@slack/bolt';
 import { logger } from '@base/logger';
 import { SessionDataStore } from '../session-data/session-data-store';
+import { IReporter } from '@base/metrics';
 
 export const threadSummaryFeedbackHandler =
   (
     analyticsManager: AnalyticsManager,
+    metricsReporter: IReporter,
     feedbackManager: UserFeedbackManager,
     summaryStore: SummaryStore,
     sessionDataStore: SessionDataStore,
@@ -76,6 +78,7 @@ export const threadSummaryFeedbackHandler =
         threadTs,
       );
     } catch (error) {
+      metricsReporter.error('thread summarizer', 'summarization-feedback');
       logger.error(`error in thread summary feedback: ${error.stack}`);
     }
   };

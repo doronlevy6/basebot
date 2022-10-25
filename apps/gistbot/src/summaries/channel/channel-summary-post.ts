@@ -5,9 +5,14 @@ import { Routes } from '../../routes/router';
 import { Summary } from '../../slack/components/summary';
 import { SummaryStore } from '../summary-store';
 import { responder } from '../../slack/responder';
+import { IReporter } from '@base/metrics';
 
 export const channelSummaryPostHandler =
-  (analyticsManager: AnalyticsManager, summaryStore: SummaryStore) =>
+  (
+    analyticsManager: AnalyticsManager,
+    metricsReporter: IReporter,
+    summaryStore: SummaryStore,
+  ) =>
   async ({
     ack,
     logger,
@@ -99,6 +104,7 @@ export const channelSummaryPostHandler =
         },
       });
     } catch (error) {
+      metricsReporter.error('channel Summary Posted', 'channel-summary-post');
       logger.error(
         `error in post summary to channel: ${body.team?.id} ${body.user.id} ${error.stack}`,
       );

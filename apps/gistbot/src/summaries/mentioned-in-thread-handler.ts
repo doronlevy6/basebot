@@ -10,6 +10,7 @@ import { SlackBlockActionWrapper, SlackEventWrapper } from '../slack/types';
 import { ThreadSummarizer } from './thread/thread-summarizer';
 import { summaryInProgressMessage } from './utils';
 import { TriggerContext } from './types';
+import { IReporter } from '@base/metrics';
 
 const THREAD_LENGTH_LIMIT = 20;
 
@@ -23,6 +24,7 @@ interface MentionedInThreadProps {
 export const mentionedInThreadHandler =
   (
     analyticsManager: AnalyticsManager,
+    metricsReporter: IReporter,
     newUserTriggersManager: NewUserTriggersManager,
   ) =>
   async ({ client, logger, body, context }: SlackEventWrapper<'message'>) => {
@@ -119,6 +121,10 @@ export const mentionedInThreadHandler =
 
       await Promise.all(awaits);
     } catch (error) {
+      metricsReporter.error(
+        'mentioned in thread',
+        'mentioned-in-thread-handler',
+      );
       logger.error(
         `error in handling thread mentioned users: ${error} ${error.stack}`,
       );
@@ -128,6 +134,7 @@ export const mentionedInThreadHandler =
 export const summarizeSuggestedThreadAfterMention =
   (
     analyticsManager: AnalyticsManager,
+    metricsReporter: IReporter,
     threadSummarizer: ThreadSummarizer,
     onboardingManager: OnboardingManager,
   ) =>
@@ -195,6 +202,10 @@ export const summarizeSuggestedThreadAfterMention =
         context.botUserId,
       );
     } catch (error) {
+      metricsReporter.error(
+        'summarize thread after mention',
+        'summarize-thread-after-mention',
+      );
       logger.error(
         `error in summarize suggested thread after mention: ${error} ${error.stack}`,
       );

@@ -84,6 +84,7 @@ const startApp = async () => {
     analyticsManager,
     summaryStore,
     pgSessionDataStore,
+    metricsReporter,
   );
 
   const channelSummaryModel = new ChannelSummaryModel();
@@ -92,6 +93,7 @@ const startApp = async () => {
     analyticsManager,
     summaryStore,
     pgSessionDataStore,
+    metricsReporter,
   );
 
   let ready = await pgStore.isReady();
@@ -147,6 +149,7 @@ const startApp = async () => {
     pgOnboardingStore,
     onboardingLock,
     analyticsManager,
+    metricsReporter,
     userOnboardingNotifier,
     emailSender,
   );
@@ -164,6 +167,7 @@ const startApp = async () => {
     slackApp,
     pgStore,
     analyticsManager,
+    metricsReporter,
     threadSummarizer,
     channelSummarizer,
     onboardingManager,

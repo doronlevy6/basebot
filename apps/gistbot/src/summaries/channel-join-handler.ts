@@ -9,6 +9,7 @@ import { SlackBlockActionWrapper, SlackEventWrapper } from '../slack/types';
 import { ChannelSummarizer } from './channel/channel-summarizer';
 import { summaryInProgressMessage } from './utils';
 import { TriggerContext } from './types';
+import { IReporter } from '@base/metrics';
 
 const MINIMUM_MESSAGES_ON_CHANNEL_JOIN = 10;
 
@@ -20,6 +21,7 @@ interface AddedToChannelProps {
 export const channelJoinHandler =
   (
     analyticsManager: AnalyticsManager,
+    metricsReporter: IReporter,
     channelSummarizer: ChannelSummarizer,
     onboardingManager: OnboardingManager,
     newUserTriggersManager: NewUserTriggersManager,
@@ -75,6 +77,7 @@ export const channelJoinHandler =
         newUserTriggersManager,
       );
     } catch (error) {
+      metricsReporter.error('channel join', 'channel-join-handler');
       logger.error(
         `error in handling channel join summarization: ${error} ${error.stack}`,
       );
@@ -179,6 +182,7 @@ const sendUserSuggestion = async (
 export const summarizeSuggestedChannelAfterJoin =
   (
     analyticsManager: AnalyticsManager,
+    metricsReporter: IReporter,
     channelSummarizer: ChannelSummarizer,
     onboardingManager: OnboardingManager,
   ) =>
@@ -246,6 +250,10 @@ export const summarizeSuggestedChannelAfterJoin =
         context.botUserId,
       );
     } catch (error) {
+      metricsReporter.error(
+        'summarize suggested channel after join',
+        'summarize-suggested-channel-after-join',
+      );
       logger.error(
         `error in summarize suggested channel after join: ${error} ${error.stack}`,
       );

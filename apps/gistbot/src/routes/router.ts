@@ -39,6 +39,7 @@ import {
 import { isBaseTeamWorkspace } from '../slack/utils';
 import { channelSummaryMoreTimeHandler } from '../summaries/channel-summary-more-time';
 import { SessionDataStore } from '../summaries/session-data/session-data-store';
+import { IReporter } from '@base/metrics';
 
 export enum Routes {
   SUMMARIZE_THREAD = 'summarize-thread',
@@ -62,6 +63,7 @@ export const registerBoltAppRouter = (
   app: App,
   installationStore: InstallationStore,
   analyticsManager: AnalyticsManager,
+  metricsReporter: IReporter,
   threadSummarizer: ThreadSummarizer,
   channelSummarizer: ChannelSummarizer,
   onboardingManager: OnboardingManager,
@@ -81,6 +83,7 @@ export const registerBoltAppRouter = (
   const addToChannel = addToChannelHandler(
     analyticsManager,
     channelSummarizer,
+    metricsReporter,
     threadSummarizer,
   );
   const privateChannel = privateChannelHandler(analyticsManager);
@@ -107,6 +110,7 @@ export const registerBoltAppRouter = (
     onboardingMiddleware,
     threadSummaryFeedbackHandler(
       analyticsManager,
+      metricsReporter,
       userFeedbackManager,
       summaryStore,
       sessionDataStore,
@@ -116,7 +120,7 @@ export const registerBoltAppRouter = (
   app.action(
     Routes.THREAD_SUMMARY_POST,
     onboardingMiddleware,
-    threadSummaryPostHandler(analyticsManager, summaryStore),
+    threadSummaryPostHandler(analyticsManager, metricsReporter, summaryStore),
   );
 
   app.action(
@@ -126,13 +130,14 @@ export const registerBoltAppRouter = (
       analyticsManager,
       userFeedbackManager,
       sessionDataStore,
+      metricsReporter,
     ),
   );
 
   app.action(
     Routes.CHANNEL_SUMMARY_POST,
     onboardingMiddleware,
-    channelSummaryPostHandler(analyticsManager, summaryStore),
+    channelSummaryPostHandler(analyticsManager, metricsReporter, summaryStore),
   );
 
   app.action(
@@ -144,18 +149,19 @@ export const registerBoltAppRouter = (
   app.view(
     Routes.ADD_TO_CHANNEL_FROM_WELCOME_SUBMIT,
     onboardingMiddleware,
-    addToChannelFromWelcomeModal(analyticsManager),
+    addToChannelFromWelcomeModal(analyticsManager, metricsReporter),
   );
   app.action(
     Routes.ADD_TO_CHANNEL_FROM_WELCOME_MODAL,
     onboardingMiddleware,
-    addToChannelFromWelcomeModalHandler(analyticsManager),
+    addToChannelFromWelcomeModalHandler(analyticsManager, metricsReporter),
   );
 
   app.action(
     Routes.SUMMARIZE_THREAD_FROM_THREAD_MENTION,
     summarizeSuggestedThreadAfterMention(
       analyticsManager,
+      metricsReporter,
       threadSummarizer,
       onboardingManager,
     ),
@@ -165,6 +171,7 @@ export const registerBoltAppRouter = (
     Routes.SUMMARIZE_CHANNEL_FROM_CHANNEL_JOIN,
     summarizeSuggestedChannelAfterJoin(
       analyticsManager,
+      metricsReporter,
       channelSummarizer,
       onboardingManager,
     ),
@@ -173,7 +180,11 @@ export const registerBoltAppRouter = (
   app.action(
     Routes.ADD_TO_CHANNEL_FROM_WELCOME_MESSAGE,
     onboardingMiddleware,
-    addToChannelFromWelcomeMessageHandler(analyticsManager, channelSummarizer),
+    addToChannelFromWelcomeMessageHandler(
+      analyticsManager,
+      metricsReporter,
+      channelSummarizer,
+    ),
   );
 
   app.action(
@@ -228,6 +239,7 @@ export const registerBoltAppRouter = (
     directMention(),
     mentionHandler(
       analyticsManager,
+      metricsReporter,
       channelSummarizer,
       threadSummarizer,
       onboardingManager,
@@ -236,11 +248,16 @@ export const registerBoltAppRouter = (
 
   app.message(
     mentionedInThreadMessage(),
-    mentionedInThreadHandler(analyticsManager, newUserTriggersManager),
+    mentionedInThreadHandler(
+      analyticsManager,
+      metricsReporter,
+      newUserTriggersManager,
+    ),
   );
 
   const joinHandler = channelJoinHandler(
     analyticsManager,
+    metricsReporter,
     channelSummarizer,
     onboardingManager,
     newUserTriggersManager,

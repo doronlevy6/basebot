@@ -12,6 +12,7 @@ import { SessionDataStore } from '../session-data/session-data-store';
 import { SummaryStore } from '../summary-store';
 import { SlackMessage, ThreadSummarizationProps } from '../types';
 import { filterUnwantedMessages, parseThreadForSummary } from '../utils';
+import { IReporter } from '@base/metrics';
 
 export class ThreadSummarizer {
   constructor(
@@ -19,6 +20,7 @@ export class ThreadSummarizer {
     private analyticsManager: AnalyticsManager,
     private summaryStore: SummaryStore,
     private sessionDataStore: SessionDataStore,
+    private metricsReporter: IReporter,
   ) {}
 
   async summarize(
@@ -219,7 +221,10 @@ export class ThreadSummarizer {
         },
         props.threadTs,
       );
-
+      this.metricsReporter.error(
+        'thread summarizer',
+        'summarization-processing',
+      );
       this.analyticsManager.error({
         slackTeamId: teamId,
         slackUserId: userId,

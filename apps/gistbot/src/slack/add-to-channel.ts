@@ -11,6 +11,7 @@ import { SummarizationProps } from '../summaries/types';
 import { summaryInProgressMessage } from '../summaries/utils';
 import { UserLink } from './components/user-link';
 import { ViewAction } from './types';
+import { IReporter } from '@base/metrics';
 
 interface AddToChannelProps {
   teamId: string;
@@ -84,6 +85,7 @@ export const addToChannelHandler =
   (
     analyticsManager: AnalyticsManager,
     channelSummarizer: ChannelSummarizer,
+    metricsReporter: IReporter,
     threadSummarizer: ThreadSummarizer,
   ) =>
   async (params: ViewAction) => {
@@ -180,6 +182,7 @@ export const addToChannelHandler =
         );
       }
     } catch (err) {
+      metricsReporter.error('add to channel', 'add-to-channel-handler');
       logger.error(`Add to channel handler error: ${err.stack}`);
     }
   };

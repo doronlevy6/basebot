@@ -10,12 +10,14 @@ import { EmailSender } from '../email/email-sender.util';
 import { InviteUserTemplate } from './invite-user.template';
 import { allowUserByEmails } from '../utils/user-filter.util';
 import { OnBoardingContext } from './types';
+import { IReporter } from '@base/metrics';
 
 export class OnboardingManager {
   constructor(
     private store: OnboardingStore,
     private lock: OnboardingLock,
     private analyticsManager: AnalyticsManager,
+    private metricsReporter: IReporter,
     private notifier: UserOnboardedNotifier,
     private emailSender: EmailSender,
   ) {}
@@ -80,6 +82,7 @@ export class OnboardingManager {
       logger.error(
         `User onboarding in ${onboardingContext} error: ${error} ${error.stack}`,
       );
+      this.metricsReporter.error('onboarding', 'onboard-user');
     }
   }
 

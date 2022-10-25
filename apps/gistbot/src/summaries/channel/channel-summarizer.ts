@@ -21,6 +21,7 @@ import {
   parseThreadForSummary,
   sortSlackMessages,
 } from '../utils';
+import { IReporter } from '@base/metrics';
 
 const MAX_MESSAGES_TO_FETCH = 50;
 
@@ -32,6 +33,7 @@ export class ChannelSummarizer {
     private analyticsManager: AnalyticsManager,
     private summaryStore: SummaryStore,
     private sessionDataStore: SessionDataStore,
+    private metricsReporter: IReporter,
   ) {}
 
   async summarize(
@@ -324,7 +326,10 @@ export class ChannelSummarizer {
         });
         return;
       }
-
+      this.metricsReporter.error(
+        'channel summarizer',
+        'summarization-processing',
+      );
       const text = `We had an error processing the summarization: ${error.message}`;
       await responder(
         respond,
