@@ -18,7 +18,11 @@ import {
 } from '../models/prompt-character-calculator';
 import { SessionDataStore } from '../session-data/session-data-store';
 import { SummaryStore } from '../summary-store';
-import { ChannelSummarizationProps, SlackMessage } from '../types';
+import {
+  ChannelSummarizationProps,
+  ChannelSummaryContext,
+  SlackMessage,
+} from '../types';
 import {
   enrichWithReplies,
   filterUnwantedMessages,
@@ -43,7 +47,7 @@ export class ChannelSummarizer {
   ) {}
 
   async summarize(
-    summaryContext: string,
+    summaryContext: ChannelSummaryContext,
     myBotId: string,
     teamId: string,
     userId: string,
@@ -134,7 +138,7 @@ export class ChannelSummarizer {
           respond,
           client,
           text,
-          blocks,
+          summaryContext === 'request_more_time' ? undefined : blocks, // Only show the blocks if we are not in the 'request more time' context, so we don't show another CTA that won't do anything
           props.channelId,
           userId,
           { response_type: 'ephemeral' },

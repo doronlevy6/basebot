@@ -239,7 +239,7 @@ export const addToChannelFromWelcomeMessageHandler =
           channel: selectedConversation,
         });
         await channelSummarizer.summarize(
-          'add_to_channel',
+          'onboarding',
           context.botId || '',
           body.team?.id || 'unknown',
           body.user.id,

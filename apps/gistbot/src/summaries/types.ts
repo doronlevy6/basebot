@@ -33,3 +33,11 @@ export interface ChannelSummarizationProps {
   channelId: string;
   channelName: string;
 }
+
+export type ChannelSummaryContext =
+  | 'onboarding'
+  | 'add_to_channel'
+  | 'slash_command'
+  | 'channel_join'
+  | 'request_more_time'
+  | 'bot_mentioned';
