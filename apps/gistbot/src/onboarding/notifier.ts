@@ -2,14 +2,12 @@ import { logger } from '@base/logger';
 import { WebClient } from '@slack/web-api';
 
 export class UserOnboardedNotifier {
-  private slackClient: WebClient | undefined;
+  private slackClient: WebClient;
   private env: string;
 
-  constructor(env: string, botToken?: string) {
+  constructor(env: string, botToken: string, private enabled: boolean) {
     this.env = env;
-    if (botToken) {
-      this.slackClient = new WebClient(botToken);
-    }
+    this.slackClient = new WebClient(botToken);
   }
 
   async notify(
@@ -17,7 +15,7 @@ export class UserOnboardedNotifier {
     userId: string,
     teamId: string,
   ): Promise<void> {
-    if (!this.slackClient) {
+    if (!this.enabled) {
       return;
     }
 

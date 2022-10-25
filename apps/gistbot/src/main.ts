@@ -146,13 +146,14 @@ const startApp = async () => {
   }
 
   const userOnboardingNotifier = new UserOnboardedNotifier(
-    process.env.ENV || 'local',
+    env,
     registrationBotToken,
+    env !== 'local',
   );
 
   const userFeedbackManager = new UserFeedbackManager(
     analyticsManager,
-    process.env.ENV || 'local',
+    env,
     registrationBotToken, // Just use the auth0 notifier token for now, doesn't really matter at all
   );
   const emailSender = new EmailSender();
