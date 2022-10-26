@@ -31,6 +31,7 @@ import { EmailSender } from './email/email-sender.util';
 import { PgSessionDataStore } from './summaries/session-data/session-data-store';
 import { RedisRateLimiter } from './feature-rate-limiter/rate-limiter-store';
 import { FeatureRateLimiter } from './feature-rate-limiter/rate-limiter';
+import { InternalSessionFetcher } from './summaries/session-data/internal-fetcher';
 
 const gracefulShutdown = (server: Server) => (signal: string) => {
   logger.info('starting shutdown, got signal ' + signal);
@@ -172,7 +173,23 @@ const startApp = async () => {
     pgNewUsersTriggersLock,
   );
 
-  const slackApp = createApp(pgStore, metricsReporter, analyticsManager);
+  const baseApiKey = process.env.BASE_API_KEY;
+  if (!baseApiKey) {
+    throw new Error('no base api key given for internal session fetcher');
+  }
+
+  const internalSessionFetcher = new InternalSessionFetcher(
+    pgSessionDataStore,
+    pgStore,
+  );
+
+  const slackApp = createApp(
+    pgStore,
+    metricsReporter,
+    analyticsManager,
+    internalSessionFetcher,
+    baseApiKey,
+  );
   slackApp.use(slackBoltMetricsMiddleware(metricsReporter));
 
   registerBoltAppRouter(

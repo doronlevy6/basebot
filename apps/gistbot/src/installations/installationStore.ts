@@ -108,6 +108,31 @@ export class PgInstallationStore extends PgUtil implements InstallationStore {
     throw new Error('Failed fetching installation');
   }
 
+  async fetchInstallationByTeamId(
+    teamId: string,
+  ): Promise<Installation<'v1' | 'v2', boolean>> {
+    let enterprise = 'true';
+    let res = await this.db
+      .select('raw')
+      .from('gistbot_slack_enterprise_installations')
+      .where({ slack_id: teamId });
+    if (!res || res.length == 0) {
+      res = await this.db
+        .select('raw')
+        .from('gistbot_slack_installations')
+        .where({ slack_id: teamId });
+      enterprise = 'false';
+    }
+    if (!res || res.length == 0) {
+      throw new Error('no installation found');
+    }
+
+    this.metricsReporter.incrementCounter('fetched_installations_total', 1, {
+      enterprise: enterprise,
+    });
+    return res[0].raw as Installation<'v1' | 'v2', boolean>;
+  }
+
   async deleteInstallation(query: InstallationQuery<boolean>): Promise<void> {
     if (query.isEnterpriseInstall && query.enterpriseId !== undefined) {
       await this.db('gistbot_slack_enterprise_installations')

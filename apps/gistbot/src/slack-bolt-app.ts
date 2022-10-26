@@ -11,11 +11,15 @@ import {
   AUTH_VERSION,
   installEndpoint,
 } from './installations/install-endpoint';
+import { internalSessionFetcherRoute } from './routes/internal-session-fetcher-route';
+import { InternalSessionFetcher } from './summaries/session-data/internal-fetcher';
 
 export function createApp(
   installationStore: PgInstallationStore,
   metricsReporter: IReporter,
   analyticsManager: AnalyticsManager,
+  internalSessionFetcher: InternalSessionFetcher,
+  baseApiKey: string,
 ): App {
   return new App({
     logger: new BoltWrapper(logger),
@@ -23,7 +27,11 @@ export function createApp(
     clientId: process.env.GISTBOT_SLACK_CLIENT_ID,
     clientSecret: process.env.GISTBOT_SLACK_CLIENT_SECRET,
     stateSecret: process.env.GISTBOT_SLACK_STATE_SECRET,
-    customRoutes: [healthRoute(), metricsRoute(metricsReporter)],
+    customRoutes: [
+      healthRoute(),
+      metricsRoute(metricsReporter),
+      internalSessionFetcherRoute(baseApiKey, internalSessionFetcher),
+    ],
     scopes: [
       'chat:write',
       'im:history',

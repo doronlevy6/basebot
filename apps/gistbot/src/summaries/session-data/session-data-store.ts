@@ -1,37 +1,5 @@
 import { PgUtil, PgConfig } from '../../utils/pg-util';
-
-export type Session = ChannelSummarySession | ThreadSummarySession;
-
-interface ChannelSummarySession {
-  summaryType: 'channel';
-  teamId: string;
-  channelId: string;
-  requestingUserId: string;
-  request: {
-    channel_name: string;
-    threads: {
-      messageIds: string[];
-      userIds: string[];
-      reactions: number[];
-    }[];
-  };
-  response: string;
-}
-
-interface ThreadSummarySession {
-  summaryType: 'thread';
-  teamId: string;
-  channelId: string;
-  requestingUserId: string;
-  threadTs: string;
-  request: {
-    channel_name: string;
-    messageIds: string[];
-    userIds: string[];
-    reactions: number[];
-  };
-  response: string;
-}
+import { Session } from './types';
 
 export interface SessionDataStore {
   storeSession(sessionId: string, session: Session): Promise<void>;
@@ -41,6 +9,7 @@ export interface SessionDataStore {
     userId: string;
     feedback: string;
   }): Promise<void>;
+  fetchSession(props: { sessionId: string; teamId: string }): Promise<Session>;
 }
 
 export class PgSessionDataStore extends PgUtil implements SessionDataStore {
@@ -105,5 +74,23 @@ export class PgSessionDataStore extends PgUtil implements SessionDataStore {
       })
       .onConflict(['session_id', 'slack_team_id', 'slack_user_id'])
       .merge(['feedback', 'updated_at_unix']);
+  }
+
+  async fetchSession({
+    sessionId,
+    teamId,
+  }: {
+    sessionId: string;
+    teamId: string;
+  }): Promise<Session> {
+    const res = await this.db
+      .select('session_data')
+      .from('gistbot_session_data_store')
+      .where({ session_id: sessionId, slack_team_id: teamId });
+    if (!res || res.length == 0) {
+      throw new Error('no session found');
+    }
+
+    return res[0].session_data as Session;
   }
 }

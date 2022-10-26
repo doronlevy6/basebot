@@ -9,6 +9,11 @@ export interface OnboardingStore {
 export class PgOnboardingStore extends PgUtil implements OnboardingStore {
   constructor(private metricsReporter: IReporter, cfg: PgConfig) {
     super(cfg);
+    this.metricsReporter.registerCounter(
+      'onboarded_users_total',
+      'A counter for the number of onboarded users',
+      [],
+    );
   }
 
   async synchronizeTables(): Promise<void> {
