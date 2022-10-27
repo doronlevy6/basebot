@@ -42,7 +42,7 @@ export const threadSummaryPostHandler =
         const text =
           'Gistbot does not have access to the summary as more than 1 hour had passed. You can copy and share this text, or create a new summary.';
         await responder(
-          respond,
+          undefined, // Thread ephemeral messages with the respond func don't work correctly so we force undefined in the respond func
           client,
           text,
           undefined,

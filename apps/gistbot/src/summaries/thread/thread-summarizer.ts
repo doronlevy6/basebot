@@ -206,7 +206,7 @@ export class ThreadSummarizer {
         const text =
           "This summary seems to be inappropriate :speak_no_evil:\nI'm not able to help you in this case.";
         await responder(
-          respond,
+          undefined, // Thread ephemeral messages with the respond func don't work correctly so we force undefined in the respond func
           client,
           text,
           undefined,
@@ -230,7 +230,7 @@ export class ThreadSummarizer {
 
       if (error instanceof RateLimitedError) {
         await responder(
-          respond,
+          undefined, // Thread ephemeral messages with the respond func don't work correctly so we force undefined in the respond func
           client,
           GoProText,
           GoPro(),

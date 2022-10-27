@@ -32,6 +32,7 @@ import { PgSessionDataStore } from './summaries/session-data/session-data-store'
 import { RedisRateLimiter } from './feature-rate-limiter/rate-limiter-store';
 import { FeatureRateLimiter } from './feature-rate-limiter/rate-limiter';
 import { InternalSessionFetcher } from './summaries/session-data/internal-fetcher';
+import { PgTiersStore } from './feature-rate-limiter/tiers-store';
 
 const gracefulShutdown = (server: Server) => (signal: string) => {
   logger.info('starting shutdown, got signal ' + signal);
@@ -78,7 +79,11 @@ const startApp = async () => {
   const pgSessionDataStore = new PgSessionDataStore(pgConfig);
 
   const redisRateLimiter = new RedisRateLimiter(redisConfig, env);
-  const featureRateLimiter = new FeatureRateLimiter(redisRateLimiter);
+  const pgTiersStore = new PgTiersStore(pgConfig);
+  const featureRateLimiter = new FeatureRateLimiter(
+    redisRateLimiter,
+    pgTiersStore,
+  );
 
   const onboardingLock = new RedisOnboardingLock(redisConfig, env);
   const summaryStore = new SummaryStore(redisConfig, env);
@@ -139,6 +144,10 @@ const startApp = async () => {
   ready = await redisRateLimiter.isReady();
   if (!ready) {
     throw new Error('RedisRateLimiter is not ready');
+  }
+  ready = await pgTiersStore.isReady();
+  if (!ready) {
+    throw new Error('PgTiersStore is not ready');
   }
 
   const registrationBotToken = process.env.SLACK_REGISTRATIONS_BOT_TOKEN;
