@@ -144,6 +144,16 @@ export class ChannelSummarizer {
           { response_type: 'ephemeral' },
         );
 
+        // If we were unable to get enough messages then we return a budget to the user
+        this.featureRateLimiter
+          .allowMore({ teamId: teamId, userId: userId }, Feature.SUMMARY, 1)
+          .catch((e) =>
+            logger.error({
+              msg: `failed to allow more limit for channel summary on ${teamId}_${userId}`,
+              error: e,
+            }),
+          );
+
         return;
       }
 
@@ -324,6 +334,46 @@ export class ChannelSummarizer {
       });
     } catch (error) {
       logger.error(`error in channel summarizer: ${error} ${error.stack}`);
+
+      // Checking the rate limit should be first. If the error is a rate limit error then we
+      // prompt the user to "go pro" and pay for a subscription.
+      if (error instanceof RateLimitedError) {
+        await responder(
+          respond,
+          client,
+          GoProText,
+          GoPro(),
+          props.channelId,
+          userId,
+          {
+            response_type: 'ephemeral',
+          },
+        );
+
+        this.analyticsManager.channelSummaryFunnel({
+          funnelStep: 'rate_limited',
+          slackTeamId: teamId,
+          slackUserId: userId,
+          channelId: props.channelId,
+          extraParams: {
+            summaryContext: summaryContext,
+          },
+        });
+        return;
+      }
+
+      // Every error other than rate limit errors should give the user back the request on their budget.
+      // If there are errors that we want to not give the user back a budget on, then they should be before
+      // this line.
+      this.featureRateLimiter
+        .allowMore({ teamId: teamId, userId: userId }, Feature.SUMMARY, 1)
+        .catch((e) =>
+          logger.error({
+            msg: `failed to allow more limit for channel summary on ${teamId}_${userId}`,
+            error: e,
+          }),
+        );
+
       if (error instanceof ModerationError) {
         const text =
           "This summary seems to be inappropriate :speak_no_evil:\nI'm not able to help you in this case.";
@@ -341,31 +391,6 @@ export class ChannelSummarizer {
 
         this.analyticsManager.channelSummaryFunnel({
           funnelStep: 'moderated',
-          slackTeamId: teamId,
-          slackUserId: userId,
-          channelId: props.channelId,
-          extraParams: {
-            summaryContext: summaryContext,
-          },
-        });
-        return;
-      }
-
-      if (error instanceof RateLimitedError) {
-        await responder(
-          respond,
-          client,
-          GoProText,
-          GoPro(),
-          props.channelId,
-          userId,
-          {
-            response_type: 'ephemeral',
-          },
-        );
-
-        this.analyticsManager.channelSummaryFunnel({
-          funnelStep: 'rate_limited',
           slackTeamId: teamId,
           slackUserId: userId,
           channelId: props.channelId,
@@ -395,15 +420,6 @@ export class ChannelSummarizer {
         undefined,
         respond,
       );
-
-      this.featureRateLimiter
-        .allowMore({ teamId: teamId, userId: userId }, Feature.SUMMARY, 1)
-        .catch((e) =>
-          logger.error({
-            msg: `failed to allow more limit for channel summary on ${teamId}_${userId}`,
-            error: e,
-          }),
-        );
     }
   }
 

@@ -202,6 +202,45 @@ export class ThreadSummarizer {
       });
     } catch (error) {
       logger.error(`error in thread summarizer: ${error}`);
+
+      // Checking the rate limit should be first. If the error is a rate limit error then we
+      // prompt the user to "go pro" and pay for a subscription.
+      if (error instanceof RateLimitedError) {
+        await responder(
+          undefined, // Thread ephemeral messages with the respond func don't work correctly so we force undefined in the respond func
+          client,
+          GoProText,
+          GoPro(),
+          props.channelId,
+          userId,
+          {
+            response_type: 'ephemeral',
+          },
+          props.threadTs,
+        );
+
+        this.analyticsManager.threadSummaryFunnel({
+          funnelStep: 'rate_limited',
+          slackTeamId: teamId,
+          slackUserId: userId,
+          channelId: props.channelId,
+          threadTs: props.threadTs,
+        });
+        return;
+      }
+
+      // Every error other than rate limit errors should give the user back the request on their budget.
+      // If there are errors that we want to not give the user back a budget on, then they should be before
+      // this line.
+      this.featureRateLimiter
+        .allowMore({ teamId: teamId, userId: userId }, Feature.SUMMARY, 1)
+        .catch((e) =>
+          logger.error({
+            msg: `failed to allow more limit for thread sumary on ${teamId}_${userId}`,
+            error: e,
+          }),
+        );
+
       if (error instanceof ModerationError) {
         const text =
           "This summary seems to be inappropriate :speak_no_evil:\nI'm not able to help you in this case.";
@@ -220,30 +259,6 @@ export class ThreadSummarizer {
 
         this.analyticsManager.threadSummaryFunnel({
           funnelStep: 'moderated',
-          slackTeamId: teamId,
-          slackUserId: userId,
-          channelId: props.channelId,
-          threadTs: props.threadTs,
-        });
-        return;
-      }
-
-      if (error instanceof RateLimitedError) {
-        await responder(
-          undefined, // Thread ephemeral messages with the respond func don't work correctly so we force undefined in the respond func
-          client,
-          GoProText,
-          GoPro(),
-          props.channelId,
-          userId,
-          {
-            response_type: 'ephemeral',
-          },
-          props.threadTs,
-        );
-
-        this.analyticsManager.threadSummaryFunnel({
-          funnelStep: 'rate_limited',
           slackTeamId: teamId,
           slackUserId: userId,
           channelId: props.channelId,
@@ -274,15 +289,6 @@ export class ThreadSummarizer {
         props.threadTs,
         respond,
       );
-
-      this.featureRateLimiter
-        .allowMore({ teamId: teamId, userId: userId }, Feature.SUMMARY, 1)
-        .catch((e) =>
-          logger.error({
-            msg: `failed to allow more limit for thread sumary on ${teamId}_${userId}`,
-            error: e,
-          }),
-        );
     }
   }
 }
