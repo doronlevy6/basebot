@@ -52,6 +52,8 @@ export function createApp(
       installPathOptions: {
         beforeRedirection: installEndpoint(analyticsManager),
       },
+      stateCookieExpirationSeconds: 86400, // 1 day in seconds
+      stateVerification: false, // Must be set to false to allow Org-level apps to be installed (which we need to allow)
       authVersion: AUTH_VERSION,
       callbackOptions: {
         successAsync: installationSucccessHandler(analyticsManager),
