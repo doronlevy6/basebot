@@ -9,7 +9,13 @@ import { OnboardingStore } from './onboardingStore';
 import { EmailSender } from '../email/email-sender.util';
 import { InviteUserTemplate } from './invite-user.template';
 import { allowUserByEmails } from '../utils/user-filter.util';
-import { OnBoardingContext } from './types';
+import { OnBoardedUser, OnBoardingContext } from './types';
+import {
+  NudgeMessage,
+  NudgeMessageText,
+} from '../slack/components/nudge-message';
+import { PgInstallationStore } from '../installations/installationStore';
+import { differenceInDays } from 'date-fns';
 import { IReporter } from '@base/metrics';
 import { identifyTriggeringUser } from '../slack/utils';
 
@@ -21,12 +27,13 @@ export class OnboardingManager {
     private metricsReporter: IReporter,
     private notifier: UserOnboardedNotifier,
     private emailSender: EmailSender,
+    private installationStore: PgInstallationStore,
   ) {}
 
   async wasUserOnboarded(teamId: string, userId: string): Promise<boolean> {
     try {
       const wasOnboarded = await this.store.wasUserOnboarded(teamId, userId);
-      return wasOnboarded;
+      return wasOnboarded ? true : false;
     } catch (error) {
       logger.error(`Was User onboarded error: ${error} ${error.stack}`);
       throw error;
@@ -41,9 +48,9 @@ export class OnboardingManager {
     botUserId?: string,
   ): Promise<void> {
     try {
-      const wasOnboarded = await this.store.wasUserOnboarded(teamId, userId);
+      const onboardedUser = await this.store.wasUserOnboarded(teamId, userId);
 
-      if (wasOnboarded) {
+      if (onboardedUser && onboardedUser.completedAt) {
         logger.debug(`user ${userId} has already been onboarded`);
         return;
       }
@@ -61,29 +68,36 @@ export class OnboardingManager {
         return;
       }
 
-      logger.debug(`user ${userId} has not yet been onboarded, onboarding now`);
+      let onboardingCompletedAt: Date | undefined = undefined;
+      if (onboardingContext !== 'app_home_opened') {
+        onboardingCompletedAt = new Date();
+      }
+      await this.store.userOnboarded(teamId, userId, onboardingCompletedAt);
 
-      await client.chat.postMessage({
-        channel: userId,
-        text: `Hey ${UserLink(userId)} :wave: I'm theGist!`,
-        blocks: Welcome(userId, botUserId || '', onboardingContext),
-      });
+      if (!onboardedUser) {
+        logger.debug(
+          `user ${userId} has not yet been onboarded, onboarding now`,
+        );
+        await client.chat.postMessage({
+          channel: userId,
+          text: `Hey ${UserLink(userId)} :wave: I'm theGist!`,
+          blocks: Welcome(userId, botUserId || '', onboardingContext),
+        });
 
-      this.analyticsManager.messageSentToUserDM({
-        type: 'onboarding_message',
-        slackTeamId: teamId,
-        slackUserId: userId,
-        properties: {
-          onboardingContext: onboardingContext,
-        },
-      });
-      await this.store.userOnboarded(teamId, userId);
-      await this.onboardUserViaMail(teamId, userId, client);
-
-      // Don't await so that we don't force anything to wait just for the notification.
-      // This handles error handling internally and will never cause an exception, so we
-      // won't have any unhandled promise rejection errors.
-      this.notifier.notify(client, userId, teamId);
+        this.analyticsManager.messageSentToUserDM({
+          type: 'onboarding_message',
+          slackTeamId: teamId,
+          slackUserId: userId,
+          properties: {
+            onboardingContext: onboardingContext,
+          },
+        });
+        await this.onboardUserViaMail(teamId, userId, client);
+        // Don't await so that we don't force anything to wait just for the notification.
+        // This handles error handling internally and will never cause an exception, so we
+        // won't have any unhandled promise rejection errors.
+        this.notifier.notify(client, userId, teamId);
+      }
     } catch (error) {
       logger.error(
         `User onboarding in ${onboardingContext} error: ${error} ${error.stack}`,
@@ -120,5 +134,59 @@ export class OnboardingManager {
     } catch (error) {
       logger.error(`user invite mail error: ${error} ${error.stack}`);
     }
+  }
+
+  async filterUsersNotCompletedOnboarding(
+    hoursInterval: number,
+    daysInterval: number,
+    attempts: number,
+    limit?: number,
+    offset?: number,
+  ) {
+    const users = await this.store.getUsersNotCompletedOnboarding(
+      attempts,
+      limit,
+      offset,
+    );
+    logger.debug(`fetched ${users?.length} users to check if should nudge`);
+    const filteredUsers: OnBoardedUser[] = [];
+    for (const user of users || []) {
+      const daysDiff = differenceInDays(new Date(), user.updatedAt);
+      const hoursDiff = Math.abs(
+        new Date().getHours() - user.updatedAt.getHours(),
+      );
+      if (daysDiff >= daysInterval && hoursDiff <= hoursInterval) {
+        filteredUsers.push(user);
+      }
+    }
+    return filteredUsers;
+  }
+
+  async postNudgeMessage(user: OnBoardedUser) {
+    logger.debug(`sending onboarding nudge to user ${user.slackUser}`);
+    const installation = await this.installationStore.fetchInstallationByTeamId(
+      user.slackTeam,
+    );
+    const token = installation?.bot?.token;
+    if (!token) {
+      const errMsg = `no token was found for team ${user.slackTeam} when trying to post onboarding nudge message`;
+      logger.error(errMsg);
+      throw new Error(errMsg);
+    }
+
+    await new WebClient(token).chat.postMessage({
+      channel: user.slackUser,
+      text: NudgeMessageText,
+      blocks: NudgeMessage(),
+    });
+  }
+
+  async attemptToOnboardUser(user: OnBoardedUser) {
+    return this.store.userOnboarded(
+      user.slackTeam,
+      user.slackUser,
+      undefined,
+      ++user.attempts,
+    );
   }
 }

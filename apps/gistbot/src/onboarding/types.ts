@@ -17,3 +17,11 @@ export const isTriggerContext = (
     arg === 'suggested_thread_summary'
   );
 };
+
+export class OnBoardedUser {
+  slackTeam: string;
+  slackUser: string;
+  completedAt?: Date;
+  updatedAt: Date;
+  attempts: number;
+}

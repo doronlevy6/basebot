@@ -28,6 +28,8 @@ import { RedisTriggerLock } from './new-user-triggers/trigger-lock';
 import { PgTriggerLock } from './new-user-triggers/trigger-lock-persistent';
 import { UserFeedbackManager } from './user-feedback/manager';
 import { EmailSender } from './email/email-sender.util';
+import { OnboardingNudgeJob } from './onboarding/onboarding-nudge-job';
+import { RedisOnboardingNudgeLock } from './onboarding/onboarding-nudge-lock';
 import { PgSessionDataStore } from './summaries/session-data/session-data-store';
 import { RedisRateLimiter } from './feature-rate-limiter/rate-limiter-store';
 import { FeatureRateLimiter } from './feature-rate-limiter/rate-limiter';
@@ -88,6 +90,7 @@ const startApp = async () => {
   const onboardingLock = new RedisOnboardingLock(redisConfig, env);
   const summaryStore = new SummaryStore(redisConfig, env);
   const newUserTriggersLock = new RedisTriggerLock(redisConfig, env);
+  const onboardingNudgeLock = new RedisOnboardingNudgeLock(redisConfig, env);
   const analyticsManager = new AnalyticsManager();
   const threadSummaryModel = new ThreadSummaryModel();
   const threadSummarizer = new ThreadSummarizer(
@@ -174,6 +177,11 @@ const startApp = async () => {
     metricsReporter,
     userOnboardingNotifier,
     emailSender,
+    pgStore,
+  );
+  const onboardingNudgeJob = new OnboardingNudgeJob(
+    onboardingManager,
+    onboardingNudgeLock,
   );
 
   const newUserTriggersManager = new NewUserTriggersManager(
@@ -219,6 +227,8 @@ const startApp = async () => {
   const port = process.env['PORT'] || 3000;
   const server = await slackApp.start(port);
   server.on('error', console.error);
+
+  onboardingNudgeJob.start();
 
   const shutdownHandler = gracefulShutdown(server);
   process.on('SIGINT', shutdownHandler);
