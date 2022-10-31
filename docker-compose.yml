@@ -1,25 +1,5 @@
 version: "3.8"
 services:
-  slackbot:
-    build:
-      dockerfile: ./build/Dockerfile.local
-      context: .
-    volumes:
-      - ./apps:/app/apps
-      - ./libs:/app/libs
-      - ./configs:/app/configs
-      - ./secrets:/app/secrets
-    command: npm run start slackbot
-    depends_on:
-      - postgres
-      - redis
-      - base
-    environment:
-      NODE_OVERRIDE_ENV: local
-      PORT: 3000
-    ports:
-      - 3000:3000
-      - 9229:9229
   gistbot:
     build:
       dockerfile: ./build/Dockerfile.local
@@ -39,14 +19,6 @@ services:
     ports:
       - 3002:3000
       - 9230:9229
-# Monolith API
-  base:
-    image: 221762091942.dkr.ecr.us-east-1.amazonaws.com/base:stg
-    environment:
-      NODE_ENV: local
-      PORT: 3001
-    ports:
-      - 3001:3001
 
 # Databases
   postgres:
@@ -61,20 +33,3 @@ services:
     image: redis:latest
     ports:
       - 6379:6379
-  opensearch:
-    image: opensearchproject/opensearch:1.1.0
-    environment:
-      - discovery.type=single-node
-      - bootstrap.memory_lock=true # along with the memlock settings below, disables swapping
-      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m" # minimum and maximum Java heap size, recommend setting both to 50% of system RAM
-      - "DISABLE_INSTALL_DEMO_CONFIG=true" # disables execution of install_demo_configuration.sh bundled with security plugin, which installs demo certificates and security configurations to OpenSearch
-      - "DISABLE_SECURITY_PLUGIN=true" # disables security plugin entirely in OpenSearch by setting plugins.security.disabled: true in opensearch.yml
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
-      nofile:
-        soft: 65536
-        hard: 65536
-    ports:
-      - 9200:9200

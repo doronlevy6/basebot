@@ -28,6 +28,7 @@ export interface SessionFetchResponse {
   threads: Thread[];
   summary: string;
   channel_name: string;
+  feedbacks: Record<string, number>;
 }
 
 export class InternalSessionFetcher {
@@ -54,6 +55,7 @@ export class InternalSessionFetcher {
         session,
         installation.bot.token,
         req.teamId,
+        req.sessionId,
       );
     }
 
@@ -61,6 +63,7 @@ export class InternalSessionFetcher {
       session,
       installation.bot.token,
       req.teamId,
+      req.sessionId,
     );
   }
 
@@ -68,18 +71,25 @@ export class InternalSessionFetcher {
     session: ThreadSummarySession,
     token: string,
     teamId: string,
+    sessionId: string,
   ): Promise<SessionFetchResponse> {
     const client = new WebClient(token);
 
-    const [users, messages] = await this.fetchThreadData(
-      {
-        messageIds: session.request.messageIds,
-        userIds: session.request.userIds,
-      },
-      session.channelId,
-      teamId,
-      client,
-    );
+    const [feedbacks, [users, messages]] = await Promise.all([
+      this.sessionDataStore.fetchSessionFeedbacks({
+        teamId: teamId,
+        sessionId: sessionId,
+      }),
+      this.fetchThreadData(
+        {
+          messageIds: session.request.messageIds,
+          userIds: session.request.userIds,
+        },
+        session.channelId,
+        teamId,
+        client,
+      ),
+    ]);
 
     return {
       threads: [
@@ -91,6 +101,7 @@ export class InternalSessionFetcher {
       ],
       channel_name: session.request.channel_name,
       summary: session.response,
+      feedbacks: feedbacks,
     };
   }
 
@@ -98,10 +109,15 @@ export class InternalSessionFetcher {
     session: ChannelSummarySession,
     token: string,
     teamId: string,
+    sessionId: string,
   ): Promise<SessionFetchResponse> {
     const client = new WebClient(token);
 
-    const threads = await Promise.all(
+    const [feedbacks, threads] = await Promise.all([
+      this.sessionDataStore.fetchSessionFeedbacks({
+        teamId: teamId,
+        sessionId: sessionId,
+      }),
       session.request.threads.map((thread) => {
         return this.fetchThreadData(
           {
@@ -113,7 +129,7 @@ export class InternalSessionFetcher {
           client,
         );
       }),
-    );
+    ]);
 
     return {
       threads: threads.map((t, idx) => {
@@ -125,6 +141,7 @@ export class InternalSessionFetcher {
       }),
       channel_name: session.request.channel_name,
       summary: session.response,
+      feedbacks: feedbacks,
     };
   }
 

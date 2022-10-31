@@ -10,6 +10,10 @@ export interface SessionDataStore {
     feedback: string;
   }): Promise<void>;
   fetchSession(props: { sessionId: string; teamId: string }): Promise<Session>;
+  fetchSessionFeedbacks(props: {
+    sessionId: string;
+    teamId: string;
+  }): Promise<Record<string, number>>;
 }
 
 export class PgSessionDataStore extends PgUtil implements SessionDataStore {
@@ -92,5 +96,35 @@ export class PgSessionDataStore extends PgUtil implements SessionDataStore {
     }
 
     return res[0].session_data as Session;
+  }
+
+  async fetchSessionFeedbacks({
+    sessionId,
+    teamId,
+  }: {
+    sessionId: string;
+    teamId: string;
+  }): Promise<Record<string, number>> {
+    const res = await this.db
+      .select('feedback')
+      .count('slack_team_id', 'slack_user_id')
+      .groupBy('feedback')
+      .from('gistbot_session_feedbacks_store')
+      .where({ session_id: sessionId, slack_team_id: teamId });
+    if (!res || res.length == 0) {
+      throw new Error('no session found');
+    }
+
+    const counts = res.reduce((acc, curr) => {
+      if (acc[curr['feedback']]) {
+        acc[curr['feedback']] += parseInt(curr['count'], 10);
+        return acc;
+      }
+
+      acc[curr['feedback']] = parseInt(curr['count'], 10);
+      return acc;
+    }, {}) as Record<string, number>;
+
+    return counts;
   }
 }
