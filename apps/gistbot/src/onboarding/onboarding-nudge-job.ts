@@ -49,11 +49,11 @@ export class OnboardingNudgeJob {
             this.limit,
             offset,
           );
-        if (!users) {
+        if (!users || users.length === 0) {
           break;
         }
 
-        // logger.debug(`fetched ${users?.length} users to nudge`);
+        logger.debug(`fetched ${users?.length} users to nudge`);
         offset += this.limit;
         const onboardingAttempts = users.map((user) =>
           this.onboardingManager.attemptToOnboardUser(user),
