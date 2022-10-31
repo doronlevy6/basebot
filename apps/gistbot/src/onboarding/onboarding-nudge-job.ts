@@ -53,7 +53,7 @@ export class OnboardingNudgeJob {
           break;
         }
 
-        logger.debug(`fetched ${users?.length} users to nudge`);
+        // logger.debug(`fetched ${users?.length} users to nudge`);
         offset += this.limit;
         const onboardingAttempts = users.map((user) =>
           this.onboardingManager.attemptToOnboardUser(user),

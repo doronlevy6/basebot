@@ -148,7 +148,7 @@ export class OnboardingManager {
       limit,
       offset,
     );
-    logger.debug(`fetched ${users?.length} users to check if should nudge`);
+    //logger.debug(`fetched ${users?.length} users to check if should nudge`);
     const filteredUsers: OnBoardedUser[] = [];
     for (const user of users || []) {
       const daysDiff = differenceInDays(new Date(), user.updatedAt);
