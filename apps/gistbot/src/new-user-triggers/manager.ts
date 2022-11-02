@@ -37,7 +37,7 @@ export class NewUserTriggersManager {
       }
 
       // User was already onboarded so he is not new
-      if (wasOnboarded) {
+      if (wasOnboarded && wasOnboarded?.completedAt) {
         logger.info(
           `user ${userId} on team ${teamId} is already onboarded, no trigger`,
         );

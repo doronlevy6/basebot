@@ -30,10 +30,12 @@ export class OnboardingManager {
     private installationStore: PgInstallationStore,
   ) {}
 
-  async wasUserOnboarded(teamId: string, userId: string): Promise<boolean> {
+  async wasUserOnboarded(
+    teamId: string,
+    userId: string,
+  ): Promise<OnBoardedUser | undefined> {
     try {
-      const wasOnboarded = await this.store.wasUserOnboarded(teamId, userId);
-      return wasOnboarded ? true : false;
+      return await this.store.wasUserOnboarded(teamId, userId);
     } catch (error) {
       logger.error(`Was User onboarded error: ${error} ${error.stack}`);
       throw error;
@@ -178,6 +180,12 @@ export class OnboardingManager {
       channel: user.slackUser,
       text: NudgeMessageText,
       blocks: NudgeMessage(),
+    });
+
+    this.analyticsManager.welcomeMessageInteraction({
+      type: 'onboarding_nudge',
+      slackUserId: user.slackUser,
+      slackTeamId: user.slackTeam,
     });
   }
 
