@@ -44,6 +44,7 @@ import { SlackBlockActionWrapper } from '../slack/types';
 import { FeatureRateLimiter } from '../feature-rate-limiter/rate-limiter';
 import { handleGistlyModalSubmit, openGistlyModal } from '../gistly/handler';
 import { GistlyModel } from '../gistly/gistly.model';
+import { MultiChannelSummarizer } from '../summaries/channel/multi-channel-summarizer';
 
 export enum Routes {
   SUMMARIZE_THREAD = 'summarize-thread',
@@ -79,6 +80,7 @@ export const registerBoltAppRouter = (
   userFeedbackManager: UserFeedbackManager,
   sessionDataStore: SessionDataStore,
   featureRateLimiter: FeatureRateLimiter,
+  multiChannelSummarizer: MultiChannelSummarizer,
 ) => {
   const onboardingMiddleware = userOnboardingMiddleware(onboardingManager);
 
@@ -294,6 +296,7 @@ export const registerBoltAppRouter = (
       channelSummarizer,
       threadSummarizer,
       onboardingManager,
+      multiChannelSummarizer,
     ),
   );
 

@@ -32,7 +32,7 @@ import {
 } from '../utils';
 import { IReporter } from '@base/metrics';
 
-const MAX_MESSAGES_TO_FETCH = 50;
+export const MAX_MESSAGES_TO_FETCH = 50;
 
 export const DEFAULT_DAYS_BACK = 1;
 

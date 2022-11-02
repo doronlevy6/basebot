@@ -1,5 +1,4 @@
 import { logger } from '@base/logger';
-import { AnalyticsManager } from '../analytics/manager';
 import { Routes } from '../routes/router';
 import { SlackShortcutWrapper, ViewAction } from '../slack/types';
 import { GistlyModal } from './gistly-modal';

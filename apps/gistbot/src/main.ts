@@ -35,6 +35,7 @@ import { RedisRateLimiter } from './feature-rate-limiter/rate-limiter-store';
 import { FeatureRateLimiter } from './feature-rate-limiter/rate-limiter';
 import { InternalSessionFetcher } from './summaries/session-data/internal-fetcher';
 import { PgTiersStore } from './feature-rate-limiter/tiers-store';
+import { MultiChannelSummarizer } from './summaries/channel/multi-channel-summarizer';
 
 const gracefulShutdown = (server: Server) => (signal: string) => {
   logger.info('starting shutdown, got signal ' + signal);
@@ -200,6 +201,12 @@ const startApp = async () => {
     pgStore,
   );
 
+  const multiChannelSummarizer = new MultiChannelSummarizer(
+    channelSummaryModel,
+    analyticsManager,
+    channelSummarizer,
+  );
+
   const slackApp = createApp(
     pgStore,
     metricsReporter,
@@ -222,6 +229,7 @@ const startApp = async () => {
     userFeedbackManager,
     pgSessionDataStore,
     featureRateLimiter,
+    multiChannelSummarizer,
   );
 
   const port = process.env['PORT'] || 3000;

@@ -34,6 +34,19 @@ export interface ChannelSummarizationProps {
   channelName: string;
 }
 
+export interface MultiChannelSummarizationProps {
+  type: 'multi_channel';
+  channels: {
+    channelId: string;
+    channelName: string;
+  }[];
+}
+
+export type MultiChannelSummaryContext =
+  | 'subscription'
+  | 'global_shortcut'
+  | 'mention_manually';
+
 export type ChannelSummaryContext =
   | 'onboarding'
   | 'add_to_channel'

@@ -7,6 +7,7 @@ import { ChannelSummarizer } from './channel/channel-summarizer';
 import { ThreadSummarizer } from './thread/thread-summarizer';
 import { extractDaysBack, summaryInProgressMessage } from './utils';
 import { IReporter } from '@base/metrics';
+import { MultiChannelSummarizer } from './channel/multi-channel-summarizer';
 
 export const mentionHandler =
   (
@@ -15,6 +16,7 @@ export const mentionHandler =
     channelSummarizer: ChannelSummarizer,
     threadSummarizer: ThreadSummarizer,
     onboardingManager: OnboardingManager,
+    multiChannelSummarizer: MultiChannelSummarizer,
   ) =>
   async ({ client, logger, body, context }: SlackEventWrapper<'message'>) => {
     try {
@@ -77,6 +79,64 @@ export const mentionHandler =
 
       const parsedMrkdwn = parseSlackMrkdwn(event.text || '');
       parsedMrkdwn.sections.shift();
+
+      if (parsedMrkdwn.sections.find((v) => v.type === 'channel_link')) {
+        const channelIds = parsedMrkdwn.sections
+          .filter((v) => v.type === 'channel_link')
+          .map((v) => {
+            if (v.type !== 'channel_link') {
+              throw new Error('not possible');
+            }
+            return v.channelId;
+          });
+
+        const channelNames = await Promise.all(
+          channelIds.map(async (channelId) => {
+            const {
+              error: infoError,
+              ok: infoOk,
+              channel: channel,
+            } = await client.conversations.info({
+              channel: channelId,
+            });
+            if (infoError || !infoOk) {
+              throw new Error(`Failed to fetch channel info ${infoError}`);
+            }
+
+            if (!channel) {
+              throw new Error(`Failed to fetch channel info not found`);
+            }
+
+            return channel.name;
+          }),
+        );
+
+        const summaries = await multiChannelSummarizer.summarize(
+          'mention_manually',
+          context.botId || '',
+          team_id,
+          event.user,
+          {
+            type: 'multi_channel',
+            channels: channelIds.map((cid, idx) => {
+              return {
+                channelId: cid,
+                channelName: channelNames[idx] as string,
+              };
+            }),
+          },
+          client,
+          1,
+        );
+
+        client.chat.postEphemeral({
+          user: event.user,
+          channel: event.channel,
+          text: JSON.stringify(summaries),
+        });
+        return;
+      }
+
       const textWithoutFirstMention = await parsedMrkdwn.plainText(
         team_id,
         client,
