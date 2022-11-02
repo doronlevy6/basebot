@@ -42,6 +42,8 @@ import { SessionDataStore } from '../summaries/session-data/session-data-store';
 import { IReporter } from '@base/metrics';
 import { SlackBlockActionWrapper } from '../slack/types';
 import { FeatureRateLimiter } from '../feature-rate-limiter/rate-limiter';
+import { handleGistlyModalSubmit, openGistlyModal } from '../gistly/handler';
+import { GistlyModel } from '../gistly/gistly.model';
 
 export enum Routes {
   SUMMARIZE_THREAD = 'summarize-thread',
@@ -60,6 +62,8 @@ export enum Routes {
   USER_FEEDBACK_MODAL_SUBMIT = 'user-feedback-modal-submit',
   SUMMARIZE_CHANNEL_MORE_TIME = 'summarize-channel-more-time',
   CLICKED_TO_OPEN_PRICING = 'click-to-open-pricing',
+  GISTLY_MODAL = 'open-gistly-modal',
+  GISTLY_MODAL_SUBMIT = 'gistly-modal-submit',
 }
 
 export const registerBoltAppRouter = (
@@ -205,6 +209,15 @@ export const registerBoltAppRouter = (
     { callback_id: Routes.USER_FEEDBACK_MODAL_SUBMIT, type: 'view_closed' },
     onboardingMiddleware,
     handleUserFeedbackSubmit(analyticsManager, userFeedbackManager),
+  );
+
+  app.shortcut(Routes.GISTLY_MODAL, onboardingMiddleware, openGistlyModal());
+
+  const gistlyModel = new GistlyModel();
+  app.view(
+    Routes.GISTLY_MODAL_SUBMIT,
+    onboardingMiddleware,
+    handleGistlyModalSubmit(gistlyModel),
   );
 
   app.action(
