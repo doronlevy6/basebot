@@ -26,8 +26,19 @@ export class PgTriggerLock extends PgUtil {
         slack_user_id: userId,
         trigger_context: triggerContext,
       })
-      .onConflict(['slack_team_id', 'slack_user_id'])
+      .onConflict(['slack_team_id', 'slack_user_id', 'trigger_context'])
       .ignore();
+  }
+
+  async unlockUser(
+    triggerContext: string,
+    teamId: string,
+    userId: string,
+  ): Promise<void> {
+    await this.db('gistbot_persistent_trigger_locks').delete().where({
+      slack_team_id: teamId,
+      slack_user_id: userId,
+    });
   }
 
   async isUserLocked(
@@ -41,7 +52,6 @@ export class PgTriggerLock extends PgUtil {
       .where({
         slack_team_id: teamId,
         slack_user_id: userId,
-        trigger_context: triggerContext,
       });
     if (!res || res.length == 0) {
       return false;

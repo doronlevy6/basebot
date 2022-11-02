@@ -3,6 +3,8 @@ import { AnalyticsManager } from '../analytics/manager';
 import { Routes } from '../routes/router';
 import { SlackBlockActionWrapper, ViewAction } from '../slack/types';
 import { UserFeedbackManager } from './manager';
+import { NewUserTriggersManager } from '../new-user-triggers/manager';
+import { extractTriggerFeedback } from '../slack/components/trigger-feedback';
 
 const SEND_USER_FEEDBACK_INPUT = 'user-feedback-input';
 
@@ -49,6 +51,50 @@ export const handleUserFeedbackSubmit =
         sessionId,
         feedback,
       );
+    } catch (err) {
+      logger.error(`user feedback submit handler error: ${err.stack}`);
+    }
+  };
+export const handleUserTriggerFeedback =
+  (
+    analyticsManager: AnalyticsManager,
+    newUserTriggerManager: NewUserTriggersManager,
+  ) =>
+  async ({ ack, logger, body }: SlackBlockActionWrapper) => {
+    try {
+      await ack();
+      if (!body.state?.values) {
+        logger.error(`no content for user action found`);
+        return;
+      }
+      let feedback = '';
+      feedback =
+        Object.values(body.state.values)[0][Routes.TRIGGER_FEEDBACK]
+          .selected_option?.value || '';
+      const [feedbackValue, feedBackContext] = extractTriggerFeedback(feedback);
+      analyticsManager.triggerFeedback({
+        type: 'user_trigger_feedback',
+        slackUserId: body.user.id,
+        slackTeamId: body.team?.id || 'unknown',
+        extraParams: {
+          trigger_source: feedBackContext,
+          trigger_value: feedbackValue,
+        },
+      });
+      if (feedbackValue === 'false') {
+        await newUserTriggerManager.handleTriggerBlock(
+          feedBackContext,
+          body.team?.id || 'unknown',
+          body.user.id,
+        );
+      }
+      if (feedbackValue === 'true') {
+        await newUserTriggerManager.handleTriggerHelpful(
+          feedBackContext,
+          body.team?.id || 'unknown',
+          body.user.id,
+        );
+      }
     } catch (err) {
       logger.error(`user feedback submit handler error: ${err.stack}`);
     }

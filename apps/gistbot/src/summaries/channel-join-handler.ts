@@ -1,4 +1,4 @@
-import { ChannelJoinMessageEvent } from '@slack/bolt';
+import { ChannelJoinMessageEvent, KnownBlock } from '@slack/bolt';
 import { ChatPostEphemeralResponse, WebClient } from '@slack/web-api';
 import { AnalyticsManager } from '../analytics/manager';
 import { NewUserTriggersManager } from '../new-user-triggers/manager';
@@ -10,6 +10,7 @@ import { ChannelSummarizer } from './channel/channel-summarizer';
 import { summaryInProgressMessage } from './utils';
 import { TriggerContext } from './types';
 import { IReporter } from '@base/metrics';
+import { TriggersFeedBack } from '../slack/components/trigger-feedback';
 
 const MINIMUM_MESSAGES_ON_CHANNEL_JOIN = 10;
 
@@ -118,7 +119,6 @@ const sendUserSuggestion = async (
       userId,
       presence,
     );
-
   if (!shouldTrigger) {
     return null;
   }
@@ -127,7 +127,7 @@ const sendUserSuggestion = async (
     botUserId,
   )}, I make life simpler by summarizing discussions on Slack.\n\nYou were just added to <#${channelId}>.\n\nWould you like a summary of the discussion so far?`;
 
-  const blocks = [
+  const blocks: KnownBlock[] = [
     {
       type: 'section',
       text: {
@@ -152,6 +152,7 @@ const sendUserSuggestion = async (
       ],
     },
   ];
+  blocks.push(...TriggersFeedBack('channel_join'));
 
   analyticsManager.messageSentToUserDM({
     type: 'suggest_channel_summary_for_channel',

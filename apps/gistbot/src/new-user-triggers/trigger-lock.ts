@@ -43,6 +43,28 @@ export class RedisTriggerLock extends RedisUtil {
     return `${this.env}:trigger-lock:${teamId}:${userId}:${presence}:${triggerContext}`;
   }
 
+  async clearAllUserTriggersKey(
+    teamId: string,
+    userId: string,
+    triggerContext: string,
+  ) {
+    await this.db.del([
+      this.triggersKey(teamId, userId, 'away', triggerContext),
+      this.triggersKey(teamId, userId, 'active', triggerContext),
+    ]);
+  }
+
+  async clearUserTriggersKey(
+    teamId: string,
+    userId: string,
+    triggerContext: string,
+    presence: string,
+  ) {
+    await this.db.del(
+      this.triggersKey(teamId, userId, presence, triggerContext),
+    );
+  }
+
   private triggersKey(
     teamId: string,
     userId: string,

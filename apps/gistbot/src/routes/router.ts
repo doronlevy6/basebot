@@ -34,6 +34,7 @@ import { userOnboardingMiddleware } from '../onboarding/global-middleware';
 import { UserFeedbackManager } from '../user-feedback/manager';
 import {
   handleUserFeedbackSubmit,
+  handleUserTriggerFeedback,
   openFeedbackModalHandler,
 } from '../user-feedback/handler';
 import { isBaseTeamWorkspace } from '../slack/utils';
@@ -57,6 +58,7 @@ export enum Routes {
   ADD_TO_CHANNEL_FROM_WELCOME_MODAL = 'add-to-channel-from-welcome-modal',
   ADD_TO_CHANNEL_FROM_WELCOME_SUBMIT = 'add-to-channel-from-welcome-submit',
   ADD_TO_CHANNEL_FROM_WELCOME_MESSAGE = 'add-to-channel-from-welcome-message',
+  TRIGGER_FEEDBACK = 'trigger-feedback',
   SUMMARIZE_THREAD_FROM_THREAD_MENTION = 'summarize-thread-from-thread-mention',
   SUMMARIZE_CHANNEL_FROM_CHANNEL_JOIN = 'summarize-channel-from-channel-join',
   SEND_USER_FEEDBACK = 'send-user-feedback',
@@ -201,6 +203,10 @@ export const registerBoltAppRouter = (
     Routes.SEND_USER_FEEDBACK,
     onboardingMiddleware,
     openFeedbackModalHandler(analyticsManager),
+  );
+  app.action(
+    Routes.TRIGGER_FEEDBACK,
+    handleUserTriggerFeedback(analyticsManager, newUserTriggersManager),
   );
   app.view(
     Routes.USER_FEEDBACK_MODAL_SUBMIT,

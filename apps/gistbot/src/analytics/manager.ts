@@ -338,4 +338,24 @@ export class AnalyticsManager {
       properties: { ...extraParams, type: type },
     });
   }
+  triggerFeedback({
+    type,
+    slackUserId,
+    slackTeamId,
+    extraParams,
+  }: {
+    type: string;
+    slackUserId: string;
+    slackTeamId: string;
+    extraParams?: ExtraParams;
+  }) {
+    this.sendEventToAnalytics({
+      eventName: `trigger_feedback_submitted`,
+      slackUserId: slackUserId,
+      slackTeamId: slackTeamId,
+      internalUserId: this.internalId(slackTeamId, slackUserId),
+      timestamp: new Date(),
+      properties: { ...extraParams, type: type },
+    });
+  }
 }

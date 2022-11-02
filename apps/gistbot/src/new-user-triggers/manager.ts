@@ -12,6 +12,49 @@ export class NewUserTriggersManager {
     private persistentTriggerLock: PgTriggerLock,
   ) {}
 
+  async handleTriggerBlock(
+    triggerContext: string,
+    teamId: string,
+    userId: string,
+  ): Promise<void> {
+    try {
+      await this.persistentTriggerLock.lockUser(triggerContext, teamId, userId);
+      logger.info(
+        `user ${userId} on team ${teamId} has requested to stop triggering, no trigger`,
+      );
+    } catch (error) {
+      logger.error(
+        `error handling user trigger feedback: ${error} ${error.stack}`,
+      );
+    }
+  }
+
+  async handleTriggerHelpful(
+    triggerContext: string,
+    teamId: string,
+    userId: string,
+  ): Promise<void> {
+    try {
+      await this.persistentTriggerLock.unlockUser(
+        triggerContext,
+        teamId,
+        userId,
+      );
+      await this.triggerLock.clearAllUserTriggersKey(
+        teamId,
+        userId,
+        triggerContext,
+      );
+      logger.info(
+        `user ${userId} on team ${teamId} has requested to continue triggering`,
+      );
+    } catch (error) {
+      logger.error(
+        `error handling user trigger feedback: ${error} ${error.stack}`,
+      );
+    }
+  }
+
   async shouldTriggerForPotentialUser(
     triggerContext: string,
     teamId: string,

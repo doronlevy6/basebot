@@ -1,4 +1,4 @@
-import { GenericMessageEvent } from '@slack/bolt';
+import { GenericMessageEvent, KnownBlock } from '@slack/bolt';
 import { ChatPostEphemeralResponse, WebClient } from '@slack/web-api';
 import { AnalyticsManager } from '../analytics/manager';
 import { NewUserTriggersManager } from '../new-user-triggers/manager';
@@ -11,6 +11,7 @@ import { ThreadSummarizer } from './thread/thread-summarizer';
 import { summaryInProgressMessage } from './utils';
 import { TriggerContext } from './types';
 import { IReporter } from '@base/metrics';
+import { TriggersFeedBack } from '../slack/components/trigger-feedback';
 
 const THREAD_LENGTH_LIMIT = 20;
 
@@ -266,7 +267,7 @@ const sendUserSuggestion = async (
     )}, I make life simpler by summarizing discussions on Slack.\n\nYou were mentioned in this long thread that you haven't been active in yet.\n\nWould you like a summary of the discussion so far?`;
   }
 
-  const blocks = [
+  const blocks: KnownBlock[] = [
     {
       type: 'section',
       text: {
@@ -291,6 +292,7 @@ const sendUserSuggestion = async (
       ],
     },
   ];
+  blocks.push(...TriggersFeedBack('thread_mention'));
 
   analyticsManager.messageSentToUserDM({
     type: 'suggest_thread_summary_for_thread',
