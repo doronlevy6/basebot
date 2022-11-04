@@ -20,6 +20,26 @@ services:
       - 3002:3000
       - 9230:9229
 
+  treasury:
+    build:
+      dockerfile: ./build/Dockerfile.local
+      context: .
+    volumes:
+      - ./apps:/app/apps
+      - ./libs:/app/libs
+      - ./configs:/app/configs
+      - ./secrets:/app/secrets
+    command: npm run start treasury
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      NODE_OVERRIDE_ENV: local
+      PORT: 3000
+    ports:
+      - 3003:3000
+      - 9233:9229
+
 # Databases
   postgres:
     image: postgres:13.4

@@ -7,6 +7,7 @@
     "logger": "libs/logger",
     "metrics": "libs/metrics",
     "oapigen": "libs/oapigen",
-    "slackbot": "apps/slackbot"
+    "slackbot": "apps/slackbot",
+    "treasury": "apps/treasury"
   }
 }
