@@ -249,11 +249,20 @@ export class ChannelSummarizer {
         );
 
         if (summary.summary_by_threads.length) {
-          successfulSummary = summary.summary_by_threads
-            .map((ts) => {
-              return `> ${ts.replace(/\n/g, '\n> ')}`;
-            })
-            .join('\n\n');
+          let formattedSummaries = summary.summary_by_threads.map((ts) => {
+            return `> ${ts.replace(/\n/g, '\n> ')}`;
+          });
+          if (
+            summary.titles &&
+            summary.summary_by_threads.length === summary.titles.length
+          ) {
+            formattedSummaries = formattedSummaries.map(
+              (formattedContent, index) => {
+                return `> *${summary.titles[index]}*\n${formattedContent}`;
+              },
+            );
+          }
+          successfulSummary = formattedSummaries.join('\n\n');
           break;
         }
 

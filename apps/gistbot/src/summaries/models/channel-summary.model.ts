@@ -16,6 +16,8 @@ export interface ChannelSummaryModelRequest {
 
 export interface ChannelSummary {
   summary_by_threads: string[];
+  titles: string[];
+  languages?: string[];
 }
 
 interface ModelResponse extends ChannelSummary {
@@ -97,6 +99,7 @@ export class ChannelSummaryModel {
 
       return {
         summary_by_threads: res.data.summary_by_threads,
+        titles: res.data.titles,
       };
     } catch (error) {
       logger.error(
