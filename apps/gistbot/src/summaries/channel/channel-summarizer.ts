@@ -11,7 +11,10 @@ import { responder } from '../../slack/responder';
 import { stringifyMoreTimeProps } from '../channel-summary-more-time';
 import { ModerationError } from '../errors/moderation-error';
 import { RateLimitedError } from '../errors/rate-limited-error';
-import { ChannelSummaryModel } from '../models/channel-summary.model';
+import {
+  ChannelSummary,
+  ChannelSummaryModel,
+} from '../models/channel-summary.model';
 import {
   approximatePromptCharacterCountForChannelSummary,
   MAX_PROMPT_CHARACTER_COUNT,
@@ -31,6 +34,7 @@ import {
   sortSlackMessages,
 } from '../utils';
 import { IReporter } from '@base/metrics';
+import { isBaseTeamWorkspace, isItayOnLenny } from '../../slack/utils';
 
 export const MAX_MESSAGES_TO_FETCH = 50;
 
@@ -252,27 +256,9 @@ export class ChannelSummarizer {
           let formattedSummaries = summary.summary_by_threads.map((ts) => {
             return `> ${ts.replace(/\n/g, '\n> ')}`;
           });
-          formattedSummaries = formattedSummaries.map(
-            (formattedContent, index) => {
-              let header = '';
-              if (
-                summary.titles &&
-                summary.titles.length === formattedSummaries.length
-              ) {
-                header += summary.titles[index];
-              }
-              if (
-                summary.tags &&
-                summary.tags.length === formattedSummaries.length
-              ) {
-                header += ` //// ` + summary.tags[index];
-              }
-              if (header) {
-                return `> *${header}*\n${formattedContent}`;
-              }
-              return `${formattedContent}`;
-            },
-          );
+          if (isBaseTeamWorkspace(teamId) || isItayOnLenny(userId, teamId)) {
+            formattedSummaries = this.addHeaders(formattedSummaries, summary);
+          }
           successfulSummary = formattedSummaries.join('\n\n');
           break;
         }
@@ -441,6 +427,26 @@ export class ChannelSummarizer {
         respond,
       );
     }
+  }
+
+  private addHeaders(formattedSummaries: string[], summary: ChannelSummary) {
+    return formattedSummaries.map((formattedContent, index) => {
+      let header = '';
+
+      if (
+        summary.titles &&
+        summary.titles.length === formattedSummaries.length
+      ) {
+        header += summary.titles[index];
+      }
+      if (summary.tags && summary.tags.length === formattedSummaries.length) {
+        header += ` //// ` + summary.tags[index];
+      }
+      if (header) {
+        return `> *${header}*\n${formattedContent}`;
+      }
+      return `${formattedContent}`;
+    });
   }
 
   async fetchChannelRootMessages(
