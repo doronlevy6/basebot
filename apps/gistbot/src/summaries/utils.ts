@@ -270,20 +270,40 @@ export const summaryInProgressMessage = async (
     user,
     thread_ts,
     trigger_context,
+    daysBack,
   }: {
     channel: string;
     user: string;
     thread_ts?: string;
     trigger_context?: TriggerContext;
+    daysBack?: number;
   },
 ) => {
+  const text = getInProgressText(daysBack);
   await client.chat.postEphemeral({
     thread_ts,
     response_type: 'ephemeral',
     channel: trigger_context === 'in_dm' ? user : channel,
-    text: `Creating your summary`,
+    text,
     user,
   });
+};
+
+export const getInProgressText = (daysBack?: number) => {
+  let text = `Creating your summary`;
+  if (!daysBack) {
+    return text;
+  }
+  if (daysBack === 1) {
+    text = 'Creating your last day summary';
+  }
+  if (daysBack > 1 && daysBack < 7) {
+    text = `Creating your last ${daysBack} days summary`;
+  }
+  if (daysBack === 7) {
+    text = `Creating your last week summary`;
+  }
+  return text;
 };
 
 export const extractDaysBack = (text: string): number => {

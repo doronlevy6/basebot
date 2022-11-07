@@ -218,6 +218,7 @@ export const summarizeSuggestedChannelAfterJoin =
         channel: props.channelId,
         user: body.user.id,
         trigger_context: props.triggerContext,
+        daysBack: 7,
       });
 
       await channelSummarizer.summarize(

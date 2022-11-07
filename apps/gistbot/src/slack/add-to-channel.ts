@@ -126,6 +126,7 @@ export const addToChannelHandler =
         await summaryInProgressMessage(client, {
           channel: summarization.channelId,
           user: currentUser,
+          daysBack: DEFAULT_DAYS_BACK,
         });
 
         analyticsManager.channelSummaryFunnel({

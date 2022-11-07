@@ -25,17 +25,6 @@ export const channelSummarizationHandler =
         slackUserId: payload.user_id,
         channelId: payload.channel_id,
       });
-      await summaryInProgressMessage(client, {
-        channel: payload.channel_id,
-        user: payload.user_id,
-      });
-
-      analyticsManager.channelSummaryFunnel({
-        funnelStep: 'in_progress_sent',
-        slackTeamId: payload.team_id,
-        slackUserId: payload.user_id,
-        channelId: payload.channel_id,
-      });
 
       const { text, channel_id, user_id, channel_name, team_id } = payload;
 
@@ -46,6 +35,18 @@ export const channelSummarizationHandler =
 
       const daysBack = extractDaysBack(text);
 
+      await summaryInProgressMessage(client, {
+        channel: payload.channel_id,
+        user: payload.user_id,
+        daysBack: daysBack,
+      });
+
+      analyticsManager.channelSummaryFunnel({
+        funnelStep: 'in_progress_sent',
+        slackTeamId: payload.team_id,
+        slackUserId: payload.user_id,
+        channelId: payload.channel_id,
+      });
       logger.info(
         `${user_id} requested a channel summarization on ${channel_name} for ${daysBack} days`,
       );
