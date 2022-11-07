@@ -1,7 +1,7 @@
 import { logger } from '@base/logger';
 import Segment = require('analytics-node');
 
-type ExtraParams = Record<string, string | boolean | number>;
+type ExtraParams = Record<string, string | boolean | number | string[]>;
 
 interface Event {
   eventName: string;
@@ -9,7 +9,7 @@ interface Event {
   slackTeamId: string;
   internalUserId: string;
   timestamp: Date;
-  properties: Record<string, string | boolean | number>;
+  properties: Record<string, string | boolean | number | string[]>;
 }
 
 interface UserIdentification {
@@ -294,6 +294,29 @@ export class AnalyticsManager {
       internalUserId: this.internalId(slackTeamId, slackUserId),
       timestamp: new Date(),
       properties: { ...extraParams, channelId },
+    });
+  }
+
+  scheduledMultichannelSummaryFunnel({
+    slackUserId,
+    slackTeamId,
+    channedIds,
+    scheduledTime,
+    extraParams,
+  }: {
+    slackUserId: string;
+    slackTeamId: string;
+    channedIds: string[];
+    scheduledTime: string;
+    extraParams?: ExtraParams;
+  }) {
+    this.sendEventToAnalytics({
+      eventName: `scheduled_multi_channel_summary}`,
+      slackUserId: slackUserId,
+      slackTeamId: slackTeamId,
+      internalUserId: this.internalId(slackTeamId, slackUserId),
+      timestamp: new Date(),
+      properties: { ...extraParams, channedIds, scheduledTime },
     });
   }
 

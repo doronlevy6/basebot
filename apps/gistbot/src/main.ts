@@ -36,6 +36,9 @@ import { FeatureRateLimiter } from './feature-rate-limiter/rate-limiter';
 import { InternalSessionFetcher } from './summaries/session-data/internal-fetcher';
 import { PgTiersStore } from './feature-rate-limiter/tiers-store';
 import { MultiChannelSummarizer } from './summaries/channel/multi-channel-summarizer';
+import { SummarySchedulerJob } from './summary-scheduler/summary-scheduler-job';
+import { PgSchedulerSettingsStore } from './summary-scheduler/scheduler-store';
+import { RedisSchedulerSettingsLock } from './summary-scheduler/scheduler-settings-lock';
 
 const gracefulShutdown = (server: Server) => (signal: string) => {
   logger.info('starting shutdown, got signal ' + signal);
@@ -72,6 +75,7 @@ const startApp = async () => {
   };
   const pgStore = new PgInstallationStore(metricsReporter, pgConfig);
   const pgOnboardingStore = new PgOnboardingStore(metricsReporter, pgConfig);
+  const pgSchedulerSettingsStore = new PgSchedulerSettingsStore(pgConfig);
   const redisConfig: RedisConfig = {
     host: process.env.REDIS_HOST || '',
     port: parseInt(process.env.REDIS_PORT || '6379', 10),
@@ -89,6 +93,7 @@ const startApp = async () => {
   );
 
   const onboardingLock = new RedisOnboardingLock(redisConfig, env);
+  const summarySchedulerLock = new RedisSchedulerSettingsLock(redisConfig, env);
   const summaryStore = new SummaryStore(redisConfig, env);
   const newUserTriggersLock = new RedisTriggerLock(redisConfig, env);
   const onboardingNudgeLock = new RedisOnboardingNudgeLock(redisConfig, env);
@@ -121,6 +126,10 @@ const startApp = async () => {
   if (!ready) {
     throw new Error('PgOnboardingStore is not ready');
   }
+  ready = await pgSchedulerSettingsStore.isReady();
+  if (!ready) {
+    throw new Error('PgSchedulerSettingsStore is not ready');
+  }
   ready = await analyticsManager.isReady();
   if (!ready) {
     throw new Error('AnalyticsManager is not ready');
@@ -128,6 +137,10 @@ const startApp = async () => {
   ready = await onboardingLock.isReady();
   if (!ready) {
     throw new Error('OnboardingLock is not ready');
+  }
+  ready = await summarySchedulerLock.isReady();
+  if (!ready) {
+    throw new Error('SummarySchedulerLock is not ready');
   }
   ready = await summaryStore.isReady();
   if (!ready) {
@@ -207,6 +220,14 @@ const startApp = async () => {
     channelSummarizer,
   );
 
+  const summarySchedulerJob = new SummarySchedulerJob(
+    pgSchedulerSettingsStore,
+    summarySchedulerLock,
+    multiChannelSummarizer,
+    pgStore,
+    analyticsManager,
+  );
+
   const slackApp = createApp(
     pgStore,
     metricsReporter,
@@ -237,6 +258,7 @@ const startApp = async () => {
   server.on('error', console.error);
 
   onboardingNudgeJob.start();
+  summarySchedulerJob.start();
 
   const shutdownHandler = gracefulShutdown(server);
   process.on('SIGINT', shutdownHandler);
