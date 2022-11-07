@@ -34,7 +34,7 @@ import {
   sortSlackMessages,
 } from '../utils';
 import { IReporter } from '@base/metrics';
-import { isBaseTeamWorkspace, isItayOnLenny } from '../../slack/utils';
+import { formatSummary } from '../../slack/summary-formatter';
 
 export const MAX_MESSAGES_TO_FETCH = 50;
 
@@ -253,13 +253,11 @@ export class ChannelSummarizer {
         );
 
         if (summary.summary_by_threads.length) {
-          let formattedSummaries = summary.summary_by_threads.map((ts) => {
-            return `> ${ts.replace(/\n/g, '\n> ')}`;
-          });
-          if (isBaseTeamWorkspace(teamId) || isItayOnLenny(userId, teamId)) {
-            formattedSummaries = this.addHeaders(formattedSummaries, summary);
-          }
-          successfulSummary = formattedSummaries.join('\n\n');
+          successfulSummary = formatSummary(
+            summary.summary_by_threads,
+            summary.titles,
+            false,
+          );
           break;
         }
 
@@ -427,26 +425,6 @@ export class ChannelSummarizer {
         respond,
       );
     }
-  }
-
-  private addHeaders(formattedSummaries: string[], summary: ChannelSummary) {
-    return formattedSummaries.map((formattedContent, index) => {
-      let header = '';
-
-      if (
-        summary.titles &&
-        summary.titles.length === formattedSummaries.length
-      ) {
-        header += summary.titles[index];
-      }
-      if (summary.tags && summary.tags.length === formattedSummaries.length) {
-        header += ` //// ` + summary.tags[index];
-      }
-      if (header) {
-        return `> *${header}*\n${formattedContent}`;
-      }
-      return `${formattedContent}`;
-    });
   }
 
   async fetchChannelRootMessages(

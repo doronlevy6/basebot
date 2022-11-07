@@ -11,10 +11,19 @@ export interface ThreadSummaryModelRequest {
   reactions: number[];
   channel_name: string;
 }
+export interface ThreadSummaryModelResponse {
+  summary: string;
+  title: string;
+}
+export interface ThreadSummary {
+  summary_by_threads: string[];
+  titles: string[];
+  tags: string[];
+  languages?: string[];
+}
 
-interface ModelResponse {
-  data: string[];
-  from?: 'model-thread-summary';
+interface ModelResponse extends ThreadSummary {
+  from?: 'model-channel-summary';
   error?: string;
 }
 
@@ -24,7 +33,7 @@ export class ThreadSummaryModel {
   private proxyConfig?: AxiosProxyConfig;
 
   constructor() {
-    this.apiEndpoint = process.env.THREAD_SUMMARY_MODEL_URL as string;
+    this.apiEndpoint = process.env.CHANNEL_SUMMARY_MODEL_URL as string;
     this.moderationApi = new OpenAiModerationModel();
     if (process.env.MODELS_PROXY_URL) {
       this.proxyConfig = {
@@ -38,17 +47,20 @@ export class ThreadSummaryModel {
   async summarizeThread(
     data: ThreadSummaryModelRequest,
     requestingUserId: string,
-  ): Promise<string> {
+  ): Promise<ThreadSummaryModelResponse> {
     try {
       const res = await axios.post<ModelResponse>(
         this.apiEndpoint,
-        { threads: [data], user_id: requestingUserId },
+        {
+          channel_name: data.channel_name,
+          threads: [data],
+          user_id: requestingUserId,
+        },
         {
           timeout: 1000 * (60 * 10), // Milliseconds
           proxy: this.proxyConfig,
         },
       );
-
       logger.info({
         msg: 'Thread Summary Model returned with response',
         status: res.status,
@@ -71,7 +83,7 @@ export class ThreadSummaryModel {
 
       try {
         const { flagged } = await this.moderationApi.moderate({
-          input: res.data.data[0],
+          input: res.data.summary_by_threads[0],
         });
 
         if (flagged) {
@@ -89,7 +101,10 @@ export class ThreadSummaryModel {
         );
       }
 
-      return res.data.data[0];
+      return {
+        summary: res.data.summary_by_threads[0],
+        title: res.data.titles[0],
+      };
     } catch (error) {
       logger.error(
         `error in thread summarization model: ${error} ${error.stack} ${

@@ -21,6 +21,7 @@ import {
   parseThreadForSummary,
 } from '../utils';
 import { IReporter } from '@base/metrics';
+import { formatSummary } from '../../slack/summary-formatter';
 
 export class ThreadSummarizer {
   constructor(
@@ -131,14 +132,18 @@ export class ThreadSummarizer {
         },
         userId,
       );
-
-      if (!summary.length) {
+      if (!summary.summary.length) {
         throw new Error('Invalid response');
       }
+      const formattedSummary = formatSummary(
+        [summary.summary],
+        [summary.title],
+        true,
+      );
 
       const startTimeStamp = Number(props.threadTs);
       const { key } = await this.summaryStore.set({
-        text: summary,
+        text: formattedSummary,
         startDate: startTimeStamp,
         threadTs: props.threadTs,
       });
@@ -157,7 +162,7 @@ export class ThreadSummarizer {
             userIds: userIds,
             reactions: reactions,
           },
-          response: summary,
+          response: formattedSummary,
         });
       } catch (error) {
         logger.error({
@@ -175,7 +180,7 @@ export class ThreadSummarizer {
         cacheKey: key,
         userId,
         startTimeStamp,
-        summary,
+        summary: formattedSummary,
         isThread: true,
       });
 
