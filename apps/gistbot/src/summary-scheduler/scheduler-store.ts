@@ -48,6 +48,27 @@ export class PgSchedulerSettingsStore
       .merge();
   }
 
+  async fetchUserSettings(slackUserId: string, slackTeamId: string) {
+    const res = await this.db
+      .select('*')
+      .from('gistbot_user_scheduler_settings')
+      .where({ slack_team_id: slackTeamId, slack_user_id: slackUserId });
+
+    if (!res || res.length == 0) {
+      return [];
+    }
+
+    const userSettings = new UserSchedulerSettings();
+    userSettings.slackUser = res[0].slack_user_id;
+    userSettings.slackTeam = res[0].slack_team_id;
+    userSettings.enabled = res[0].enabled;
+    userSettings.timeHour = res[0].time_hour;
+    userSettings.days = res[0].days;
+    userSettings.channels = res[0].channels;
+
+    return userSettings;
+  }
+
   async fetchUsersSettingsInInterval(
     timeHour: number,
     limit?: number,

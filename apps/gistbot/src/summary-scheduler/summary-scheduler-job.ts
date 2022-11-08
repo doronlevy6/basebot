@@ -92,7 +92,6 @@ export class SummarySchedulerJob {
       }
 
       const client = new WebClient(token);
-      // TODO handle summaries errors
       const summaries = await this.multiChannelSummarizer.summarize(
         'subscription',
         botId || '',
@@ -114,6 +113,13 @@ export class SummarySchedulerJob {
       logger.debug(
         `found ${summaries.summaries.length} channels summaries for user ${userSettings.slackUser} from team ${userSettings.slackTeam}`,
       );
+
+      // TODO handle if needed
+      if (summaries.error) {
+        logger.debug(
+          `errors from multi channel summarizer:  ${summaries.error}`,
+        );
+      }
 
       const timeToSchedule = new Date();
       timeToSchedule.setHours(userSettings.timeHour, 0, 0);
@@ -143,7 +149,9 @@ export class SummarySchedulerJob {
         scheduledTime: timeToSchedule.toString(),
       });
     } catch (e) {
-      logger.error(e);
+      logger.error(
+        `error in scheduler summaries for user ${userSettings.slackUser} in team ${userSettings.slackTeam}, error: ${e}`,
+      );
     }
   }
 }
