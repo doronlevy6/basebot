@@ -20,6 +20,7 @@ import {
 import { retry } from '../../utils/retry';
 import { Message } from '@slack/web-api/dist/response/ChannelsRepliesResponse';
 import { ModerationError } from '../errors/moderation-error';
+import { formatSummary } from '../../slack/summary-formatter';
 
 type OutputError = 'channel_too_small' | 'moderated' | 'general_error';
 
@@ -345,19 +346,17 @@ export class MultiChannelSummarizer {
             req,
             userId,
           );
-
           if (
             !summary.summary_by_threads.length ||
             summary.summary_by_threads.length === 0
           ) {
             throw new Error('no thread summaries returned');
           }
-
-          return summary.summary_by_threads
-            .map((ts) => {
-              return `> ${ts.replace(/\n/g, '\n> ')}`;
-            })
-            .join('\n\n');
+          return formatSummary(
+            summary.summary_by_threads,
+            summary.titles,
+            false,
+          );
         },
         { count: 10 },
       );
