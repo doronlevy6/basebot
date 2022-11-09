@@ -36,6 +36,8 @@ services:
     environment:
       NODE_OVERRIDE_ENV: local
       PORT: 3000
+      AWS_ACCESS_KEY_ID: xxx
+      AWS_SECRET_ACCESS_KEY: xxx
     ports:
       - 3003:3000
       - 9233:9229
@@ -53,3 +55,13 @@ services:
     image: redis:latest
     ports:
       - 6379:6379
+# AWS Services
+  sqs:
+    image: softwaremill/elasticmq-native:latest
+    logging:
+      driver: none
+    ports:
+      - "9324:9324"
+      - "9325:9325"
+    volumes:
+      - ./build/local_sqs.conf:/opt/elasticmq.conf
