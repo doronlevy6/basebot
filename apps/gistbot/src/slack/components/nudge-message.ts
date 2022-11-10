@@ -9,10 +9,10 @@ export const NudgeMessage = (): KnownBlock[] => {
         text: NudgeMessageText,
       },
       accessory: {
-        type: 'conversations_select',
+        type: 'multi_conversations_select',
         placeholder: {
           type: 'plain_text',
-          text: 'Select a channel...',
+          text: 'Select channels...',
           emoji: true,
         },
         filter: {

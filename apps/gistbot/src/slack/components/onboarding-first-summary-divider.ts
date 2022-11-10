@@ -6,7 +6,7 @@ export const OnboardingFirstSummaryDivider = (): KnownBlock[] => {
       type: 'header',
       text: {
         type: 'plain_text',
-        text: "Let's get your first summary 👀",
+        text: "Let's get your first summaries 👀",
         emoji: true,
       },
     },

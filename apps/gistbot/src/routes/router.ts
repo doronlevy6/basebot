@@ -4,7 +4,7 @@ import { appHomeOpenedHandler } from '../onboarding/app-home-opened-handler';
 import { OnboardingManager } from '../onboarding/manager';
 import { addToChannelHandler } from '../slack/add-to-channel';
 import {
-  addToChannelFromWelcomeMessageHandler,
+  addToChannelsFromWelcomeMessageHandler,
   addToChannelFromWelcomeModal,
   addToChannelFromWelcomeModalHandler,
 } from '../slack/add-to-channel-from-welcome';
@@ -200,7 +200,7 @@ export const registerBoltAppRouter = (
   app.action(
     Routes.ADD_TO_CHANNEL_FROM_WELCOME_MESSAGE,
     onboardingMiddleware,
-    addToChannelFromWelcomeMessageHandler(
+    addToChannelsFromWelcomeMessageHandler(
       analyticsManager,
       metricsReporter,
       channelSummarizer,
