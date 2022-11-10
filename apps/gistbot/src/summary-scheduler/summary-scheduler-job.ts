@@ -3,9 +3,10 @@ import { WebClient } from '@slack/web-api';
 import * as cron from 'node-cron';
 import { AnalyticsManager } from '../analytics/manager';
 import { PgInstallationStore } from '../installations/installationStore';
+import { ScheduledMultiChannelSummary } from '../slack/components/scheduled-multi-channel-summary';
 import { MultiChannelSummarizer } from '../summaries/channel/multi-channel-summarizer';
+import { SchedulerSettingsManager } from './scheduler-manager';
 import { RedisSchedulerSettingsLock } from './scheduler-settings-lock';
-import { SchedulerSettingsStore } from './scheduler-store';
 import {
   JOB_MINUTES_INTERVAL,
   LIMIT,
@@ -15,7 +16,7 @@ import {
 
 export class SummarySchedulerJob {
   constructor(
-    private schedulerStore: SchedulerSettingsStore,
+    private schedulerMgr: SchedulerSettingsManager,
     private schedulerLock: RedisSchedulerSettingsLock,
     private multiChannelSummarizer: MultiChannelSummarizer,
     private installationStore: PgInstallationStore,
@@ -35,7 +36,7 @@ export class SummarySchedulerJob {
       // set interval for next hour, to be able to process summaries ahead of time.
       const timeToFetchSettings = new Date().getUTCHours() + 1;
       const usersSettings =
-        await this.schedulerStore.fetchUsersSettingsInInterval(
+        await this.schedulerMgr.fetchUsersSettingsInInterval(
           timeToFetchSettings,
           LIMIT,
           offset,
@@ -111,24 +112,25 @@ export class SummarySchedulerJob {
       );
 
       logger.debug(
-        `found ${summaries.summaries.length} channels summaries for user ${userSettings.slackUser} from team ${userSettings.slackTeam}`,
+        `found ${summaries?.summaries?.length} channels summaries for user ${userSettings.slackUser} from team ${userSettings.slackTeam}`,
       );
 
-      // TODO handle if needed
-      if (summaries.error) {
-        logger.debug(
-          `errors from multi channel summarizer:  ${summaries.error}`,
+      const summariesFormatted =
+        await this.multiChannelSummarizer.getMultiChannelSummaryFormatted(
+          summaries,
+          client,
         );
-      }
 
       const timeToSchedule = new Date();
-      timeToSchedule.setHours(userSettings.timeHour, 0, 0);
-
+      timeToSchedule.setUTCHours(userSettings.timeHour, 0, 0);
       // post scheduled message to slack
       await client.chat.scheduleMessage({
         channel: userSettings.slackUser,
-        text: JSON.stringify(summaries),
+        text: summariesFormatted,
+        blocks: ScheduledMultiChannelSummary(summariesFormatted),
         post_at: (timeToSchedule.getTime() / 1000).toFixed(0),
+        unfurl_links: false,
+        unfurl_media: false,
       });
 
       logger.debug(

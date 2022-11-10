@@ -20,7 +20,10 @@ import {
 import { retry } from '../../utils/retry';
 import { Message } from '@slack/web-api/dist/response/ChannelsRepliesResponse';
 import { ModerationError } from '../errors/moderation-error';
-import { formatSummary } from '../../slack/summary-formatter';
+import {
+  formatMultiChannelSummary,
+  formatSummary,
+} from '../../slack/summary-formatter';
 
 type OutputError = 'channel_too_small' | 'moderated' | 'general_error';
 
@@ -379,5 +382,44 @@ export class MultiChannelSummarizer {
       summary: successfulSummary,
       earliestMessageTs: threads.data[0].messageIds[0],
     };
+  }
+
+  async getMultiChannelSummaryFormatted(
+    summaries: MultiChannelSummarizerOutput,
+    client: WebClient,
+  ) {
+    const channelLinks = await Promise.all(
+      summaries.summaries.map(async (outputSummary) => {
+        try {
+          const {
+            error: infoError,
+            ok: infoOk,
+            permalink,
+          } = await client.chat.getPermalink({
+            channel: outputSummary.channelId,
+            message_ts: outputSummary.earliestMessageTs,
+          });
+          if (infoError || !infoOk || !permalink) {
+            throw new Error(`Failed to fetch chat permalink ${infoError}`);
+          }
+
+          return { link: permalink, channelId: outputSummary.channelId };
+        } catch (e) {
+          logger.error(e);
+          return { channelId: outputSummary.channelId };
+        }
+      }),
+    );
+    const channelMap = new Map(
+      channelLinks.map((object) => {
+        return [object.channelId, object.link];
+      }),
+    );
+    const formattedMultiChannel = formatMultiChannelSummary(
+      summaries,
+      channelMap,
+    );
+
+    return formattedMultiChannel;
   }
 }

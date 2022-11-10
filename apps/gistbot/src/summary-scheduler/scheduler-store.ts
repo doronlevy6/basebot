@@ -8,6 +8,10 @@ export interface SchedulerSettingsStore {
     limit?: number,
     offset?: number,
   ): Promise<UserSchedulerSettings[]>;
+  fetchUserSettings(
+    slackUserId: string,
+    slackTeamId: string,
+  ): Promise<UserSchedulerSettings | undefined>;
 }
 
 export class PgSchedulerSettingsStore
@@ -55,7 +59,7 @@ export class PgSchedulerSettingsStore
       .where({ slack_team_id: slackTeamId, slack_user_id: slackUserId });
 
     if (!res || res.length == 0) {
-      return [];
+      return;
     }
 
     const userSettings = new UserSchedulerSettings();

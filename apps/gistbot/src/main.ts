@@ -39,6 +39,7 @@ import { MultiChannelSummarizer } from './summaries/channel/multi-channel-summar
 import { SummarySchedulerJob } from './summary-scheduler/summary-scheduler-job';
 import { PgSchedulerSettingsStore } from './summary-scheduler/scheduler-store';
 import { RedisSchedulerSettingsLock } from './summary-scheduler/scheduler-settings-lock';
+import { SchedulerSettingsManager } from './summary-scheduler/scheduler-manager';
 
 const gracefulShutdown = (server: Server) => (signal: string) => {
   logger.info('starting shutdown, got signal ' + signal);
@@ -220,8 +221,12 @@ const startApp = async () => {
     channelSummarizer,
   );
 
-  const summarySchedulerJob = new SummarySchedulerJob(
+  const summarySchedulerMgr = new SchedulerSettingsManager(
     pgSchedulerSettingsStore,
+  );
+
+  const summarySchedulerJob = new SummarySchedulerJob(
+    summarySchedulerMgr,
     summarySchedulerLock,
     multiChannelSummarizer,
     pgStore,
@@ -251,6 +256,7 @@ const startApp = async () => {
     pgSessionDataStore,
     featureRateLimiter,
     multiChannelSummarizer,
+    summarySchedulerMgr,
   );
 
   const port = process.env['PORT'] || 3000;

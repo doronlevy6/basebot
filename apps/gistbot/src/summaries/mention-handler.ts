@@ -8,7 +8,6 @@ import { ThreadSummarizer } from './thread/thread-summarizer';
 import { extractDaysBack, summaryInProgressMessage } from './utils';
 import { IReporter } from '@base/metrics';
 import { MultiChannelSummarizer } from './channel/multi-channel-summarizer';
-import { formatMultiChannelSummary } from '../slack/summary-formatter';
 
 export const mentionHandler =
   (
@@ -129,37 +128,12 @@ export const mentionHandler =
           client,
           1,
         );
-        const channelLinks = await Promise.all(
-          summaries.summaries.map(async (outputSummary) => {
-            try {
-              const {
-                error: infoError,
-                ok: infoOk,
-                permalink,
-              } = await client.chat.getPermalink({
-                channel: outputSummary.channelId,
-                message_ts: outputSummary.earliestMessageTs,
-              });
-              if (infoError || !infoOk || !permalink) {
-                throw new Error(`Failed to fetch chat permalink ${infoError}`);
-              }
 
-              return { link: permalink, channelId: outputSummary.channelId };
-            } catch (e) {
-              logger.error(e);
-              return { channelId: outputSummary.channelId };
-            }
-          }),
-        );
-        const channelMap = new Map(
-          channelLinks.map((object) => {
-            return [object.channelId, object.link];
-          }),
-        );
-        const formattedMultiChannel = formatMultiChannelSummary(
-          summaries,
-          channelMap,
-        );
+        const formattedMultiChannel =
+          await multiChannelSummarizer.getMultiChannelSummaryFormatted(
+            summaries,
+            client,
+          );
 
         client.chat.postEphemeral({
           user: event.user,

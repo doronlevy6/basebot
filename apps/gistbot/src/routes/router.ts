@@ -46,6 +46,11 @@ import { FeatureRateLimiter } from '../feature-rate-limiter/rate-limiter';
 import { handleGistlyModalSubmit, openGistlyModal } from '../gistly/handler';
 import { GistlyModel } from '../gistly/gistly.model';
 import { MultiChannelSummarizer } from '../summaries/channel/multi-channel-summarizer';
+import {
+  summarySchedularSettingsButtonHandler,
+  summarySchedularSettingsModalHandler,
+} from '../summary-scheduler/handler';
+import { SchedulerSettingsManager } from '../summary-scheduler/scheduler-manager';
 
 export enum Routes {
   SUMMARIZE_THREAD = 'summarize-thread',
@@ -67,6 +72,8 @@ export enum Routes {
   CLICKED_TO_OPEN_PRICING = 'click-to-open-pricing',
   GISTLY_MODAL = 'open-gistly-modal',
   GISTLY_MODAL_SUBMIT = 'gistly-modal-submit',
+  OPEN_SCHEDULER_SETTINGS = 'open-scheduler-settings',
+  SCHEDULER_SETTINGS_MODAL_SUBMIT = 'scheduler-settings-modal-submit',
 }
 
 export const registerBoltAppRouter = (
@@ -83,6 +90,7 @@ export const registerBoltAppRouter = (
   sessionDataStore: SessionDataStore,
   featureRateLimiter: FeatureRateLimiter,
   multiChannelSummarizer: MultiChannelSummarizer,
+  schedulerSettingsManager: SchedulerSettingsManager,
 ) => {
   const onboardingMiddleware = userOnboardingMiddleware(onboardingManager);
 
@@ -238,6 +246,22 @@ export const registerBoltAppRouter = (
         slackUserId: body.user.id,
       });
     },
+  );
+
+  app.action(
+    Routes.OPEN_SCHEDULER_SETTINGS,
+    summarySchedularSettingsButtonHandler(
+      schedulerSettingsManager,
+      analyticsManager,
+    ),
+  );
+
+  app.view(
+    Routes.SCHEDULER_SETTINGS_MODAL_SUBMIT,
+    summarySchedularSettingsModalHandler(
+      schedulerSettingsManager,
+      analyticsManager,
+    ),
   );
 
   app.message(async ({ event, say, body, context, logger, client }) => {
