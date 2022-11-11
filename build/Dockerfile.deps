@@ -1,4 +1,8 @@
-FROM node:16 AS build-env
+# Always build starting from the previous version of itself.
+# This will let us ideally speed up the installation speed since many of the dependencies will
+# already be installed and loaded.
+ARG STARTING_DEPS_HASH_VERSION
+FROM 221762091942.dkr.ecr.us-east-1.amazonaws.com/custom-basebot-base:${STARTING_DEPS_HASH_VERSION} AS build-env
 WORKDIR /app
 
 COPY ./package.json .

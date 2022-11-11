@@ -158,6 +158,11 @@ jobs:
           context: ./
           file: ./build/Dockerfile.deps
           push: true
+          # For now, we use the `latest` tag since that should be the latest last dependency update.
+          # In the future we can try to calculate the last hash (maybe by checking the last built commit)
+          # and then pull from that one.
+          build-args: |
+            STARTING_DEPS_HASH_VERSION=latest
           tags: |
             ${{ steps.ecr-login.outputs.registry }}/custom-basebot-base:latest
             ${{ steps.ecr-login.outputs.registry }}/custom-basebot-base:${{ github.sha }}
