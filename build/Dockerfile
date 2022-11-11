@@ -1,18 +1,9 @@
-FROM node:16 AS build-env
+ARG DEPS_HASH_VERSION
+
+FROM 221762091942.dkr.ecr.us-east-1.amazonaws.com/custom-basebot-base:${DEPS_HASH_VERSION} AS build-env
 WORKDIR /app
 
 ARG SERVICE_NAME
-
-# Copy the package.json of the app to get any app specific built dependencies
-# COPY ./dist/apps/$SERVICE_NAME/package.json .
-# RUN npm install --omit=dev
-
-# Instead of copying the package.json for the app, we copy the package.json of the main repo.
-# This is due to the app's package.json not including all of the transitive dependencies.
-# When Nx fixes the issue with transitive dependencies, we can move back to the above package.json
-# that pulls only the dependencies of the specified application.
-COPY ./package.json .
-RUN npm install --omit=dev
 
 COPY ./dist/apps/$SERVICE_NAME .
 COPY ./configs ./configs
