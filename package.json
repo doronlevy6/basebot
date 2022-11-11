@@ -19,9 +19,11 @@
     "codegen:staging": "openapi-generator-cli generate -i https://stg.base.la/oapi-json -o libs/oapigen/src/lib -g typescript-axios --additional-properties=supportsES6=true,npmVersion=8.5.0",
     "codegen:local": "openapi-generator-cli generate -i http://localhost:3000/oapi-json -o libs/oapigen/src/lib -g typescript-axios --additional-properties=supportsES6=true,npmVersion=8.5.0",
     "fetch-session-data": "ts-node tools/extract_session_data.ts",
-    "stripesim:local": "ts-node tools/simulate_stripe_webhook.ts local",
-    "stripesim:staging": "ts-node tools/simulate_stripe_webhook.ts staging",
-    "stripesim:production": "ts-node tools/simulate_stripe_webhook.ts production"
+    "stripesim:create-customer": "ts-node tools/stripesim/customer_created.ts",
+    "stripesim:create-subscription": "ts-node tools/stripesim/customer_subscription_created.ts",
+    "stripesim:update-subscription": "ts-node tools/stripesim/customer_subscription_updated.ts",
+    "stripesim:delete-subscription": "ts-node tools/stripesim/customer_subscription_deleted.ts",
+    "stripesim:invoice-paid": "ts-node tools/stripesim/invoice_paid.ts"
   },
   "private": true,
   "dependencies": {

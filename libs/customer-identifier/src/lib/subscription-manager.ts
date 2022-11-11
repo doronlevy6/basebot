@@ -83,15 +83,17 @@ export class SubscriptionManager {
       throw new Error('no subscription on invoice');
     }
     let subscriptionId: string;
+    let subscription: Stripe.Subscription | undefined;
     if (typeof invoice.subscription === 'string') {
       subscriptionId = invoice.subscription;
     } else {
       subscriptionId = invoice.subscription.id;
+      subscription = invoice.subscription;
     }
 
-    const subscription = await this.client.subscriptions.retrieve(
-      subscriptionId,
-    );
+    if (!subscription) {
+      subscription = await this.client.subscriptions.retrieve(subscriptionId);
+    }
 
     // For now it's just going to use the same function, since it's all just doing the same thing.
     // If we implement stuff later for deletion then we can add stuff here
