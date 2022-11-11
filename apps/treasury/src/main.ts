@@ -14,7 +14,14 @@ import { PaymentsManager } from './payments/manager';
 import { SqsPublisher } from './pubsub/sqs-publisher';
 import { SqsConsumer } from './pubsub/sqs-consumer';
 import { RedisFullSyncJobLock } from './payments/joblock';
-import { RedisConfig } from './utils/redis-util';
+import { PgConfig, readyChecker, RedisConfig } from '@base/utils';
+import {
+  CustomerIdentifier,
+  PgCustomerStore,
+  RedisCustomerIdentifierLock,
+  SubscriptionManager,
+} from '@base/customer-identifier';
+import { EmailSender } from '@base/emailer';
 
 const gracefulShutdown = (server: Server) => (signal: string) => {
   logger.info('starting shutdown, got signal ' + signal);
@@ -72,6 +79,34 @@ const startApp = async () => {
     password: process.env.REDIS_PASSWORD,
     cluster: process.env.REDIS_CLUSTER === 'true',
   };
+  const pgConfig: PgConfig = {
+    host: process.env.DB_HOST || 'localhost',
+    port: parseInt(process.env.DB_PORT || '5432', 10),
+    user: process.env.DB_USER || '',
+    password: process.env.DB_PASSWORD || '',
+    database: process.env.DB_DATABASE || '',
+    synchronize: ['development', 'local'].includes(env),
+  };
+
+  const customerStore = new PgCustomerStore(pgConfig);
+  const customerIdentifierLock = new RedisCustomerIdentifierLock(
+    redisConfig,
+    env,
+  );
+  const emailSender = new EmailSender(
+    process.env.SENDGRID_API_KEY || '',
+    'welcome@mail.thegist.ai',
+  );
+  const customerIdentifier = new CustomerIdentifier(
+    customerStore,
+    customerIdentifierLock,
+    emailSender,
+  );
+  const subscriptionManager = new SubscriptionManager(
+    customerStore,
+    stripeApiKey,
+  );
+
   const fullSyncJobLock = new RedisFullSyncJobLock(redisConfig, env);
 
   const paymentsManager = new PaymentsManager({
@@ -80,11 +115,17 @@ const startApp = async () => {
     stripeEventsQueue: stripeEventsQueueName,
     publisher: sqsPublisher,
     lock: fullSyncJobLock,
+    customerIdentifier: customerIdentifier,
+    subscriptionManager: subscriptionManager,
   });
 
   const sqsConsumer = new SqsConsumer(sqsConfig, (msg) => {
     return paymentsManager.consume(msg);
   });
+
+  // readyChecker is a small util for all things that implement `isReady`. It will
+  // check to see if all of these are ready and throw an error if one isn't.
+  await readyChecker(customerStore, customerIdentifierLock, fullSyncJobLock);
 
   const app = createServer(metricsReporter, paymentsManager);
   const port = process.env['PORT'] || 3000;

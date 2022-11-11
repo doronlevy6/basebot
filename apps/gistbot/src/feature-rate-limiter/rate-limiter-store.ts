@@ -1,4 +1,4 @@
-import { RedisUtil } from '../utils/redis-util';
+import { RedisUtil } from '@base/utils';
 import { Feature } from './limits';
 import { Props } from './rate-limiter';
 

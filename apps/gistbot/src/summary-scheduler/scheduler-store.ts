@@ -1,4 +1,4 @@
-import { PgUtil, PgConfig } from '../utils/pg-util';
+import { PgUtil, PgConfig } from '@base/utils';
 import { UserSchedulerSettings } from './types';
 
 export interface SchedulerSettingsStore {
@@ -30,7 +30,7 @@ export class PgSchedulerSettingsStore
         enabled boolean default false,
         time_hour int NOT NULL,
         days int[] not null,
-        channels jsonb NOT NULL,	
+        channels jsonb NOT NULL,
         PRIMARY KEY ("slack_team_id", "slack_user_id")
       );
     `);

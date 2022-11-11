@@ -1,4 +1,4 @@
-import { RedisUtil } from '../utils/redis-util';
+import { RedisUtil } from '@base/utils';
 
 export interface OnboardingLock {
   lock(teamId: string, userId: string): Promise<boolean>;

@@ -8,7 +8,6 @@ import {
   addToChannelFromWelcomeModal,
   addToChannelFromWelcomeModalHandler,
 } from '../slack/add-to-channel-from-welcome';
-import { Help } from '../slack/components/help';
 import { privateChannelHandler } from '../slack/private-channel';
 import { mentionedInThreadMessage } from '../slack/mentioned-in-thread.middleware';
 import {
@@ -37,7 +36,6 @@ import {
   handleUserTriggerFeedback,
   openFeedbackModalHandler,
 } from '../user-feedback/handler';
-import { isBaseTeamWorkspace } from '../slack/utils';
 import { channelSummaryMoreTimeHandler } from '../summaries/channel-summary-more-time';
 import { SessionDataStore } from '../summaries/session-data/session-data-store';
 import { IReporter } from '@base/metrics';
@@ -51,6 +49,8 @@ import {
   summarySchedularSettingsModalHandler,
 } from '../summary-scheduler/handler';
 import { SchedulerSettingsManager } from '../summary-scheduler/scheduler-manager';
+import { botIMRouter } from './bot-im-router';
+import { CustomerIdentifier } from '@base/customer-identifier';
 
 export enum Routes {
   SUMMARIZE_THREAD = 'summarize-thread',
@@ -91,6 +91,7 @@ export const registerBoltAppRouter = (
   featureRateLimiter: FeatureRateLimiter,
   multiChannelSummarizer: MultiChannelSummarizer,
   schedulerSettingsManager: SchedulerSettingsManager,
+  customerIdentifier: CustomerIdentifier,
 ) => {
   const onboardingMiddleware = userOnboardingMiddleware(onboardingManager);
 
@@ -264,59 +265,9 @@ export const registerBoltAppRouter = (
     ),
   );
 
-  app.message(async ({ event, say, body, context, logger, client }) => {
-    if (event.channel_type === 'im' && 'bot_profile' in event) {
-      logger.warn({ msg: `a bot is talking to us`, bot: event.bot_profile });
-      return;
-    }
-
-    logger.debug({ msg: `im to the bot`, event: event });
-
-    if (isBaseTeamWorkspace(body.team_id)) {
-      return;
-    }
-
-    // We are only able to listen to our own IM channels, so if the message channel is an IM, then we can assume it's our own IM
-    if (
-      event.channel_type !== 'im' ||
-      ('user' in event && event.user === 'USLACKBOT')
-    ) {
-      return;
-    }
-    if (!('user' in event) || !event.user) {
-      logger.warn({ msg: `im without user`, event: event });
-      return;
-    }
-
-    // If the user hasn't been onboarded yet then we only want to trigger the onboarding
-    const wasOnboarded = await onboardingManager.wasUserOnboarded(
-      body.team_id,
-      event.user,
-    );
-    if (!wasOnboarded) {
-      await onboardingManager.onboardUser(
-        body.team_id,
-        event.user,
-        client,
-        'app_home_opened',
-      );
-      return;
-    }
-
-    say({
-      text: 'Hi there :wave:',
-      blocks: Help(event.user, context.botUserId || ''),
-    });
-
-    analyticsManager.messageSentToUserDM({
-      type: 'help_response_message',
-      slackTeamId: body.team_id,
-      slackUserId: event['user'],
-      properties: {
-        triggerMessage: event['text'] || 'unknown text',
-      },
-    });
-  });
+  app.message(
+    botIMRouter(analyticsManager, onboardingManager, customerIdentifier),
+  );
 
   app.message(
     directMention(),

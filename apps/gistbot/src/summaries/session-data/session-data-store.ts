@@ -1,4 +1,4 @@
-import { PgUtil, PgConfig } from '../../utils/pg-util';
+import { PgUtil, PgConfig } from '@base/utils';
 import { Session } from './types';
 
 export interface SessionDataStore {

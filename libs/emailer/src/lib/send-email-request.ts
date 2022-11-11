@@ -1,7 +1,8 @@
 import { EmailTemplate } from './email-template';
 
-export class SendEmailJob {
+export interface SendEmailRequest {
   from?: string;
+  fromName?: string;
   to: string;
   subject?: string;
   text?: string;

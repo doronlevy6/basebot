@@ -1,4 +1,4 @@
-import { PgUtil, PgConfig } from '../utils/pg-util';
+import { PgUtil, PgConfig } from '@base/utils';
 
 export class PgTriggerLock extends PgUtil {
   constructor(cfg: PgConfig) {

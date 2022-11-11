@@ -6,7 +6,7 @@ import { Welcome } from '../slack/components/welcome';
 import { UserOnboardedNotifier } from './notifier';
 import { OnboardingLock } from './onboarding-lock';
 import { OnboardingStore } from './onboardingStore';
-import { EmailSender } from '../email/email-sender.util';
+import { EmailSender } from '@base/emailer';
 import { InviteUserTemplate } from './invite-user.template';
 import { allowUserByEmails } from '../utils/user-filter.util';
 import { OnBoardedUser, OnBoardingContext } from './types';

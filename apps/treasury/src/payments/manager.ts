@@ -4,6 +4,10 @@ import { Stripe } from 'stripe';
 import { Publisher } from '../pubsub/types';
 import { FullSyncJobLock } from './joblock';
 import * as cron from 'node-cron';
+import {
+  CustomerIdentifier,
+  SubscriptionManager,
+} from '@base/customer-identifier';
 
 export class PaymentsManager {
   private client: Stripe;
@@ -11,6 +15,8 @@ export class PaymentsManager {
   private queue: string;
   private publisher: Publisher;
   private joblock: FullSyncJobLock;
+  private customerIdentifier: CustomerIdentifier;
+  private subscriptionManager: SubscriptionManager;
 
   constructor({
     stripeApiKey,
@@ -18,12 +24,16 @@ export class PaymentsManager {
     stripeEventsQueue,
     publisher,
     lock,
+    customerIdentifier,
+    subscriptionManager,
   }: {
     stripeApiKey: string;
     stripeWebhookSecret: string;
     stripeEventsQueue: string;
     publisher: Publisher;
     lock: FullSyncJobLock;
+    customerIdentifier: CustomerIdentifier;
+    subscriptionManager: SubscriptionManager;
   }) {
     this.client = new Stripe(stripeApiKey, {
       apiVersion: '2022-08-01',
@@ -36,6 +46,8 @@ export class PaymentsManager {
     this.queue = stripeEventsQueue;
     this.publisher = publisher;
     this.joblock = lock;
+    this.customerIdentifier = customerIdentifier;
+    this.subscriptionManager = subscriptionManager;
   }
 
   startFullSyncJob() {
@@ -87,12 +99,16 @@ export class PaymentsManager {
   private async syncSubscriptionFromApi(
     subscription: Stripe.Subscription,
   ): Promise<void> {
-    // TODO: Sync the subscriptions from the API to the DBs.
     // Any canceled subscriptions should ensure that they are canceled in our DB,
     // and any active subscriptions should ensure that they are active in our DB.
     // Stripe's API is the source of truth, so we pull the data from there and ensure the DB is up to date.
     logger.debug({
       msg: `syncing subscription from api`,
+      subscription: subscription,
+    });
+    await this.subscriptionManager.updateSubscription(subscription);
+    logger.debug({
+      msg: `synced subscription from api`,
       subscription: subscription,
     });
   }
@@ -143,6 +159,11 @@ export class PaymentsManager {
       logger.debug({ msg: `payment event`, event: event });
 
       switch (event.type) {
+        case 'customer.created':
+          await this.handleCustomerCreated(
+            event.data.object as Stripe.Customer,
+          );
+          break;
         case 'customer.subscription.created':
           await this.handleSubscriptionCreated(
             event.data.object as Stripe.Subscription,
@@ -180,35 +201,43 @@ export class PaymentsManager {
     }
   }
 
+  private async handleCustomerCreated(event: Stripe.Customer) {
+    // The event will fire when a customer is officially created in the system.
+    // This should kick off our customer matching and verification, so that we
+    // can match the customer to the relevant Slack Team and User ID.
+    await this.customerIdentifier.identifyCustomer(event);
+    logger.info({ msg: 'customer created', data: event });
+  }
+
   private async handleSubscriptionCreated(event: Stripe.Subscription) {
-    // TODO: handle subscription created
     // The event will fire when a customer creates a subscription, but it does not
     // necessarily mean that the customer has completed payment on the subscription.
     // Check status to see if the subscription is active. If it is not active,
     // this means that the customer has not paid yet, or that payment is incomplete.
+    await this.subscriptionManager.createSubscription(event);
     logger.info({ msg: 'subscription created', data: event });
   }
 
   private async handleSubscriptionUpdated(event: Stripe.Subscription) {
-    // TODO: handle subscription updated
     // The event will fire when the subscription is changed, generally when the status updates.
     // When the status updates, we should check to see if it is active. If it is, we can enable
     // the user's subscription in the database.
+    await this.subscriptionManager.updateSubscription(event);
     logger.info({ msg: 'subscription updated', data: event });
   }
 
   private async handleInvoicePaid(event: Stripe.Invoice) {
-    // TODO: handle invoice paid
     // The event will fire when the invoice is officially paid for the subscription.
     // When we receive this we should validate that the subscription status is active in Stripe,
     // and then ensure that the user's subscription is active in our database.
+    await this.subscriptionManager.payInvoice(event);
     logger.info({ msg: 'invoice paid', data: event });
   }
 
   private async handleSubscriptionDeleted(event: Stripe.Subscription) {
-    // TODO: handle subscription deleted
     // The event will fire when the subscription is deleted and the user's subscription ends.
     // This should delete the user's subscription in the database.
+    await this.subscriptionManager.deactivateSubscription(event);
     logger.info({ msg: 'subscription deleted', data: event });
   }
 }

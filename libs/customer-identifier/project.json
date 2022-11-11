@@ -1,0 +1,23 @@
+{
+  "root": "libs/customer-identifier",
+  "sourceRoot": "libs/customer-identifier/src",
+  "projectType": "library",
+  "targets": {
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["libs/customer-identifier/**/*.ts"]
+      }
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": ["coverage/libs/customer-identifier"],
+      "options": {
+        "jestConfig": "libs/customer-identifier/jest.config.ts",
+        "passWithNoTests": true
+      }
+    }
+  },
+  "tags": []
+}

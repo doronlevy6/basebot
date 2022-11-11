@@ -20,26 +20,31 @@ import { ChannelSummarizer } from './summaries/channel/channel-summarizer';
 import { ThreadSummarizer } from './summaries/thread/thread-summarizer';
 import { UserOnboardedNotifier } from './onboarding/notifier';
 import { RedisOnboardingLock } from './onboarding/onboarding-lock';
-import { RedisConfig } from './utils/redis-util';
+import { readyChecker, RedisConfig } from '@base/utils';
 import { SummaryStore } from './summaries/summary-store';
 import { OnboardingManager } from './onboarding/manager';
 import { NewUserTriggersManager } from './new-user-triggers/manager';
 import { RedisTriggerLock } from './new-user-triggers/trigger-lock';
 import { PgTriggerLock } from './new-user-triggers/trigger-lock-persistent';
 import { UserFeedbackManager } from './user-feedback/manager';
-import { EmailSender } from './email/email-sender.util';
 import { OnboardingNudgeJob } from './onboarding/onboarding-nudge-job';
 import { RedisOnboardingNudgeLock } from './onboarding/onboarding-nudge-lock';
 import { PgSessionDataStore } from './summaries/session-data/session-data-store';
 import { RedisRateLimiter } from './feature-rate-limiter/rate-limiter-store';
 import { FeatureRateLimiter } from './feature-rate-limiter/rate-limiter';
 import { InternalSessionFetcher } from './summaries/session-data/internal-fetcher';
-import { PgTiersStore } from './feature-rate-limiter/tiers-store';
 import { MultiChannelSummarizer } from './summaries/channel/multi-channel-summarizer';
 import { SummarySchedulerJob } from './summary-scheduler/summary-scheduler-job';
 import { PgSchedulerSettingsStore } from './summary-scheduler/scheduler-store';
 import { RedisSchedulerSettingsLock } from './summary-scheduler/scheduler-settings-lock';
 import { SchedulerSettingsManager } from './summary-scheduler/scheduler-manager';
+import {
+  CustomerIdentifier,
+  PgCustomerStore,
+  RedisCustomerIdentifierLock,
+  SubscriptionManager,
+} from '@base/customer-identifier';
+import { EmailSender } from '@base/emailer';
 
 const gracefulShutdown = (server: Server) => (signal: string) => {
   logger.info('starting shutdown, got signal ' + signal);
@@ -86,11 +91,34 @@ const startApp = async () => {
   const pgNewUsersTriggersLock = new PgTriggerLock(pgConfig);
   const pgSessionDataStore = new PgSessionDataStore(pgConfig);
 
+  const emailSender = new EmailSender(
+    process.env.SENDGRID_API_KEY || '',
+    'welcome@mail.thegist.ai',
+  );
+
   const redisRateLimiter = new RedisRateLimiter(redisConfig, env);
-  const pgTiersStore = new PgTiersStore(pgConfig);
+  const customerStore = new PgCustomerStore(pgConfig);
+  const customerIdentifierLock = new RedisCustomerIdentifierLock(
+    redisConfig,
+    env,
+  );
+  const customerIdentifier = new CustomerIdentifier(
+    customerStore,
+    customerIdentifierLock,
+    emailSender,
+  );
+
+  const stripeApiKey = process.env.STRIPE_API_KEY;
+  if (!stripeApiKey) {
+    throw new Error('stripe api key is missing in secrets');
+  }
+  const subscriptionManager = new SubscriptionManager(
+    customerStore,
+    stripeApiKey,
+  );
   const featureRateLimiter = new FeatureRateLimiter(
     redisRateLimiter,
-    pgTiersStore,
+    subscriptionManager,
   );
 
   const onboardingLock = new RedisOnboardingLock(redisConfig, env);
@@ -163,10 +191,6 @@ const startApp = async () => {
   if (!ready) {
     throw new Error('RedisRateLimiter is not ready');
   }
-  ready = await pgTiersStore.isReady();
-  if (!ready) {
-    throw new Error('PgTiersStore is not ready');
-  }
 
   const registrationBotToken = process.env.SLACK_REGISTRATIONS_BOT_TOKEN;
   if (!registrationBotToken) {
@@ -184,7 +208,7 @@ const startApp = async () => {
     env,
     registrationBotToken, // Just use the auth0 notifier token for now, doesn't really matter at all
   );
-  const emailSender = new EmailSender();
+
   const onboardingManager = new OnboardingManager(
     pgOnboardingStore,
     onboardingLock,
@@ -233,6 +257,10 @@ const startApp = async () => {
     analyticsManager,
   );
 
+  // readyChecker is a small util for all things that implement `isReady`. It will
+  // check to see if all of these are ready and throw an error if one isn't.
+  await readyChecker(customerStore, customerIdentifierLock);
+
   const slackApp = createApp(
     pgStore,
     metricsReporter,
@@ -257,6 +285,7 @@ const startApp = async () => {
     featureRateLimiter,
     multiChannelSummarizer,
     summarySchedulerMgr,
+    customerIdentifier,
   );
 
   const port = process.env['PORT'] || 3000;

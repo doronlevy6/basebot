@@ -1,6 +1,6 @@
+import { SubscriptionManager } from '@base/customer-identifier';
 import { Feature, FeatureLimits } from './limits';
 import { RateLimiterStore } from './rate-limiter-store';
-import { TiersStore } from './tiers-store';
 
 export interface Props {
   teamId: string;
@@ -10,11 +10,14 @@ export interface Props {
 export class FeatureRateLimiter {
   constructor(
     private store: RateLimiterStore,
-    private tiersStore: TiersStore,
+    private subscriptionManager: SubscriptionManager,
   ) {}
 
   async acquire(props: Props, feature: Feature): Promise<boolean> {
-    const tier = await this.tiersStore.userTier(props.teamId, props.userId);
+    const tier = await this.subscriptionManager.userTier(
+      props.teamId,
+      props.userId,
+    );
     const featureLimit = FeatureLimits[feature][tier];
     if (featureLimit === 'infinite') {
       return true;

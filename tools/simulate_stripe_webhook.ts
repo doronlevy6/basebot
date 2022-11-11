@@ -20,6 +20,8 @@ if (!stripeWebhookSecret) {
 }
 
 const webhookUrl = 'http://localhost:3003/stripe-webhook';
+// const webhookUrl = 'https://treasury.baselabs.dev/stripe-webhook';
+// const webhookUrl = 'https://treasury.thegist.ai/stripe-webhook';
 
 import axios from 'axios';
 import { Stripe } from 'stripe';
@@ -46,6 +48,7 @@ async function main(
   const res = await axios.post(webhookUrl, body, {
     headers: {
       'stripe-signature': header,
+      'User-Agent': 'Stripe/1.0 (+https://stripe.com/docs/webhooks)',
     },
     timeout: 1000 * (60 * 10),
   });
@@ -64,24 +67,24 @@ const event = {
   created: 1667943410,
   data: {
     object: {
-      id: 'sub_1M2GHW2eZvKYlo2C2ed0bwwA',
+      id: 'sub_1M2hmW2eZvKYlo2CQpBzF556',
       object: 'subscription',
       application: null,
       application_fee_percent: null,
       automatic_tax: {
         enabled: false,
       },
-      billing_cycle_anchor: 1668008018,
+      billing_cycle_anchor: 1668113728,
       billing_thresholds: null,
       cancel_at: null,
       cancel_at_period_end: false,
       canceled_at: null,
       collection_method: 'charge_automatically',
-      created: 1668008018,
+      created: 1668113728,
       currency: 'usd',
-      current_period_end: 1670600018,
-      current_period_start: 1668008018,
-      customer: 'cus_9BoKyB2Km2T7TE',
+      current_period_end: 1670705728,
+      current_period_start: 1668113728,
+      customer: 'cus_Mm8PQkQBncel9Jaaa',
       days_until_due: null,
       default_payment_method: null,
       default_source: null,
@@ -93,17 +96,17 @@ const event = {
         object: 'list',
         data: [
           {
-            id: 'si_Mlnte3kYfwtz13',
+            id: 'si_MmGJvp7yCxMWpW',
             object: 'subscription_item',
             billing_thresholds: null,
-            created: 1668008018,
+            created: 1668113728,
             metadata: {},
             price: {
-              id: 'price_1M23ot2eZvKYlo2CzT1LD470',
+              id: 'price_1M2GPd2eZvKYlo2CDKi6TmT5',
               object: 'price',
               active: true,
               billing_scheme: 'per_unit',
-              created: 1667960115,
+              created: 1668008521,
               currency: 'usd',
               custom_unit_amount: null,
               livemode: false,
@@ -125,12 +128,12 @@ const event = {
               unit_amount_decimal: '1200',
             },
             quantity: 1,
-            subscription: 'sub_1M2GHW2eZvKYlo2C2ed0bwwA',
+            subscription: 'sub_1M2hmW2eZvKYlo2CQpBzF556',
             tax_rates: [],
           },
         ],
         has_more: false,
-        url: '/v1/subscription_items?subscription=sub_1M2GHW2eZvKYlo2C2ed0bwwA',
+        url: '/v1/subscription_items?subscription=sub_1M2hmW2eZvKYlo2CQpBzF556',
       },
       latest_invoice: null,
       livemode: false,
@@ -147,8 +150,8 @@ const event = {
       pending_setup_intent: null,
       pending_update: null,
       schedule: null,
-      start_date: 1668008018,
-      status: 'active',
+      start_date: 1668113728,
+      status: 'deleted',
       test_clock: null,
       transfer_data: null,
       trial_end: null,
@@ -161,7 +164,7 @@ const event = {
     id: null,
     idempotency_key: null,
   },
-  type: 'customer.subscription.updated',
+  type: 'customer.subscription.deleted',
 };
 
 main(stripeApiKey as string, stripeWebhookSecret as string, event)

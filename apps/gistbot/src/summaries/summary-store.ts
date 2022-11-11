@@ -1,5 +1,5 @@
 import { generateIDAsync } from '../utils/id-generator.util';
-import { RedisUtil } from '../utils/redis-util';
+import { RedisUtil } from '@base/utils';
 
 const TTL = 60 * 60; // One Hour
 const BASE_KEY = 'summaries';

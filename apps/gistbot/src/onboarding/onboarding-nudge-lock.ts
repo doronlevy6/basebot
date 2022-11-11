@@ -1,4 +1,4 @@
-import { RedisUtil } from '../utils/redis-util';
+import { RedisUtil } from '@base/utils';
 
 export interface OnboardingNudgeLock {
   lock(): Promise<boolean>;

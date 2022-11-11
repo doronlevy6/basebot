@@ -23,7 +23,9 @@
       "@base/metrics": ["libs/metrics/src/index.ts"],
       "@base/oapigen": ["libs/oapigen/src/index.ts"],
       "@base/queues": ["libs/queues/src/index.ts"],
-      "@base/utils": ["libs/utils/src/index.ts"]
+      "@base/utils": ["libs/utils/src/index.ts"],
+      "@base/emailer": ["libs/emailer/src/index.ts"],
+      "@base/customer-identifier": ["libs/customer-identifier/src/index.ts"]
     },
     "types": ["node"]
   },

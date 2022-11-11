@@ -4,7 +4,7 @@ import {
   InstallationQuery,
   InstallationStore,
 } from '@slack/bolt';
-import { PgUtil, PgConfig } from '../utils/pg-util';
+import { PgUtil, PgConfig } from '@base/utils';
 
 export class PgInstallationStore extends PgUtil implements InstallationStore {
   private metricsReporter: IReporter;

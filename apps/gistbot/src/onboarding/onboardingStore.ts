@@ -1,5 +1,5 @@
 import { IReporter } from '@base/metrics';
-import { PgUtil, PgConfig } from '../utils/pg-util';
+import { PgUtil, PgConfig } from '@base/utils';
 import { OnBoardedUser } from './types';
 
 export interface OnboardingStore {
@@ -36,7 +36,7 @@ export class PgOnboardingStore extends PgUtil implements OnboardingStore {
       slack_user_id varchar(36) NOT NULL,
       PRIMARY KEY ("slack_team_id", "slack_user_id")
     );
-    
+
     Alter table gistbot_user_onboardings
     Add column IF NOT EXISTS updated_at timestamp not null default current_timestamp,
     Add column IF NOT EXISTS completed_at timestamp,
