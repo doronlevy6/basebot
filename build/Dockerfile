@@ -2,11 +2,19 @@ FROM node:16 AS build-env
 WORKDIR /app
 
 ARG SERVICE_NAME
-COPY ./dist/apps/$SERVICE_NAME/package.json .
-RUN npm install --production
-RUN npm install --save pg
-RUN npm install --save dayjs
-RUN npm install --save knex
+
+# Copy the package.json of the app to get any app specific built dependencies
+# COPY ./dist/apps/$SERVICE_NAME/package.json .
+# RUN npm install --omit=dev
+
+# Instead of copying the package.json for the app, we copy the package.json of the main repo.
+# This is due to the app's package.json not including all of the transitive dependencies
+COPY ./package.json .
+RUN npm install --omit=dev
+# RUN npm install --save pg
+# RUN npm install --save dayjs
+# RUN npm install --save knex
+# RUN npm install --save ioredis
 
 COPY ./dist/apps/$SERVICE_NAME .
 COPY ./configs ./configs
