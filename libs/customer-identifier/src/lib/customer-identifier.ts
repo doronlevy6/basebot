@@ -32,6 +32,12 @@ export class CustomerIdentifier {
       tries++;
     }
     const customerInfo = await this.customerStore.getCustomerInfo(customer.id);
+    // Should never happen since we just inserted, but let's make sure to check and have safety just in case
+    if (!customerInfo) {
+      throw new Error(
+        `customer not found immediately after insertion! ${customer.id}`,
+      );
+    }
 
     // If we already have both of them filled out, then we just return
     // since there is no need to run any sort of identification function.

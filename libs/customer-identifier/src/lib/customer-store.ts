@@ -14,11 +14,11 @@ interface CustomerInfo {
 
 export interface CustomerStore {
   addCustomer(customerId: string, passphrase: string): Promise<boolean>;
-  getCustomerInfo(customerId: string): Promise<CustomerInfo>;
+  getCustomerInfo(customerId: string): Promise<CustomerInfo | undefined>;
   getCustomerInfoByUser(
     slackTeamId: string,
     slackUserId: string,
-  ): Promise<CustomerInfo>;
+  ): Promise<CustomerInfo | undefined>;
   setCustomerInfo(
     customerId: string,
     slackTeamId: string,
@@ -157,12 +157,12 @@ export class PgCustomerStore extends PgUtil implements CustomerStore {
     };
   }
 
-  async getCustomerInfo(customerId: string): Promise<CustomerInfo> {
+  async getCustomerInfo(customerId: string): Promise<CustomerInfo | undefined> {
     const res = await this.db.select('*').from('treasury_customers').where({
       customer_id: customerId,
     });
     if (!res || res.length == 0) {
-      throw new Error('no customer found');
+      return;
     }
 
     const storedTier = res[0]['subscription_tier'] || 'free';
@@ -188,13 +188,13 @@ export class PgCustomerStore extends PgUtil implements CustomerStore {
   async getCustomerInfoByUser(
     slackTeamId: string,
     slackUserId: string,
-  ): Promise<CustomerInfo> {
+  ): Promise<CustomerInfo | undefined> {
     const res = await this.db.select('*').from('treasury_customers').where({
       slack_team_id: slackTeamId,
       slack_user_id: slackUserId,
     });
     if (!res || res.length == 0) {
-      throw new Error('no customer found');
+      return;
     }
 
     const storedTier = res[0]['subscription_tier'] || 'free';

@@ -11,10 +11,7 @@ import { responder } from '../../slack/responder';
 import { stringifyMoreTimeProps } from '../channel-summary-more-time';
 import { ModerationError } from '../errors/moderation-error';
 import { RateLimitedError } from '../errors/rate-limited-error';
-import {
-  ChannelSummary,
-  ChannelSummaryModel,
-} from '../models/channel-summary.model';
+import { ChannelSummaryModel } from '../models/channel-summary.model';
 import {
   approximatePromptCharacterCountForChannelSummary,
   MAX_PROMPT_CHARACTER_COUNT,

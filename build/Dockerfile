@@ -6,6 +6,7 @@ COPY ./dist/apps/$SERVICE_NAME/package.json .
 RUN npm install --production
 RUN npm install --save pg
 RUN npm install --save dayjs
+RUN npm install --save knex
 
 COPY ./dist/apps/$SERVICE_NAME .
 COPY ./configs ./configs
