@@ -8,13 +8,11 @@ ARG SERVICE_NAME
 # RUN npm install --omit=dev
 
 # Instead of copying the package.json for the app, we copy the package.json of the main repo.
-# This is due to the app's package.json not including all of the transitive dependencies
+# This is due to the app's package.json not including all of the transitive dependencies.
+# When Nx fixes the issue with transitive dependencies, we can move back to the above package.json
+# that pulls only the dependencies of the specified application.
 COPY ./package.json .
 RUN npm install --omit=dev
-# RUN npm install --save pg
-# RUN npm install --save dayjs
-# RUN npm install --save knex
-# RUN npm install --save ioredis
 
 COPY ./dist/apps/$SERVICE_NAME .
 COPY ./configs ./configs
