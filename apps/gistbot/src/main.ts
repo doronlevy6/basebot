@@ -45,6 +45,7 @@ import {
   SubscriptionManager,
 } from '@base/customer-identifier';
 import { EmailSender } from '@base/emailer';
+import { PgOrgSettingsStore } from './orgsettings/store';
 
 const gracefulShutdown = (server: Server) => (signal: string) => {
   logger.info('starting shutdown, got signal ' + signal);
@@ -257,9 +258,11 @@ const startApp = async () => {
     analyticsManager,
   );
 
+  const orgSettingsStore = new PgOrgSettingsStore(pgConfig);
+
   // readyChecker is a small util for all things that implement `isReady`. It will
   // check to see if all of these are ready and throw an error if one isn't.
-  await readyChecker(customerStore, customerIdentifierLock);
+  await readyChecker(customerStore, customerIdentifierLock, orgSettingsStore);
 
   const slackApp = createApp(
     pgStore,
@@ -286,6 +289,7 @@ const startApp = async () => {
     multiChannelSummarizer,
     summarySchedulerMgr,
     customerIdentifier,
+    orgSettingsStore,
   );
 
   const port = process.env['PORT'] || 3000;

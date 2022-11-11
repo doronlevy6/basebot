@@ -12,6 +12,7 @@ import { summaryInProgressMessage } from './utils';
 import { TriggerContext } from './types';
 import { IReporter } from '@base/metrics';
 import { TriggersFeedBack } from '../slack/components/trigger-feedback';
+import { getOrgSettingsFromContext } from '../orgsettings/middleware';
 
 const THREAD_LENGTH_LIMIT = 20;
 
@@ -44,6 +45,18 @@ export const mentionedInThreadHandler =
         logger.warn(
           `received no thread mentioned users in mentioned in thread handler`,
         );
+        return;
+      }
+
+      // If the org settings are undefined (not able to be found on the event for some reason)
+      // or the triggers are not enabled, we drop the event.
+      const orgSettings = getOrgSettingsFromContext(context);
+      if (!orgSettings || !orgSettings.newUserTriggersEnabled) {
+        logger.info({
+          msg: 'triggers are disabled on the organization, skipping mentioned in thread event',
+          event: body,
+          orgSettings: orgSettings,
+        });
         return;
       }
 

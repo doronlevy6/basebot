@@ -1,12 +1,10 @@
+import { AnyMiddlewareArgs, Middleware, RespondFn } from '@slack/bolt';
 import {
-  AnyMiddlewareArgs,
-  Middleware,
-  RespondFn,
-  SlackActionMiddlewareArgs,
-  SlackCommandMiddlewareArgs,
-  SlackShortcutMiddlewareArgs,
-  SlackViewMiddlewareArgs,
-} from '@slack/bolt';
+  isActionArgs,
+  isCommandArgs,
+  isViewArgs,
+  isShortcutArgs,
+} from '../slack/middleware-utils';
 import { OnboardingManager } from './manager';
 
 interface slackIds {
@@ -80,26 +78,4 @@ function getUserIdAndTeamId(args: AnyMiddlewareArgs): slackIds | undefined {
       respond: args.respond,
     };
   }
-}
-
-function isActionArgs(
-  args: AnyMiddlewareArgs,
-): args is SlackActionMiddlewareArgs {
-  return (args as SlackActionMiddlewareArgs).action !== undefined;
-}
-
-function isCommandArgs(
-  args: AnyMiddlewareArgs,
-): args is SlackCommandMiddlewareArgs {
-  return (args as SlackCommandMiddlewareArgs).command !== undefined;
-}
-
-function isViewArgs(args: AnyMiddlewareArgs): args is SlackViewMiddlewareArgs {
-  return (args as SlackViewMiddlewareArgs).view !== undefined;
-}
-
-function isShortcutArgs(
-  args: AnyMiddlewareArgs,
-): args is SlackShortcutMiddlewareArgs {
-  return (args as SlackShortcutMiddlewareArgs).shortcut !== undefined;
 }

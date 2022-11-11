@@ -51,6 +51,8 @@ import {
 import { SchedulerSettingsManager } from '../summary-scheduler/scheduler-manager';
 import { botIMRouter } from './bot-im-router';
 import { CustomerIdentifier } from '@base/customer-identifier';
+import { OrgSettingsStore } from '../orgsettings/store';
+import { orgSettingsMiddleware } from '../orgsettings/middleware';
 
 export enum Routes {
   SUMMARIZE_THREAD = 'summarize-thread',
@@ -92,8 +94,13 @@ export const registerBoltAppRouter = (
   multiChannelSummarizer: MultiChannelSummarizer,
   schedulerSettingsManager: SchedulerSettingsManager,
   customerIdentifier: CustomerIdentifier,
+  orgSettingsStore: OrgSettingsStore,
 ) => {
   const onboardingMiddleware = userOnboardingMiddleware(onboardingManager);
+  const setOrgSettingsMiddleware = orgSettingsMiddleware(orgSettingsStore);
+  // The org settings middleware will run globally on every event, and attach org settings
+  // to the context so that we can use them.
+  app.use(setOrgSettingsMiddleware);
 
   app.shortcut(
     Routes.SUMMARIZE_THREAD,
