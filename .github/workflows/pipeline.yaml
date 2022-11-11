@@ -123,7 +123,7 @@ jobs:
         with:
           filters: |
             deps:
-              - '**/package-lock.json'
+              - 'package-lock.json'
       # run only if 'package-lock.json' file was changed
       - name: Set up Docker Buildx
         if: steps.filter.outputs.deps == 'true' && github.ref == 'refs/heads/main'
@@ -166,7 +166,7 @@ jobs:
           tags: |
             ${{ steps.ecr-login.outputs.registry }}/custom-basebot-base:latest
             ${{ steps.ecr-login.outputs.registry }}/custom-basebot-base:${{ github.sha }}
-            ${{ steps.ecr-login.outputs.registry }}/custom-basebot-base:${{ hashFiles('**/package-lock.json') }}
+            ${{ steps.ecr-login.outputs.registry }}/custom-basebot-base:${{ hashFiles('package-lock.json') }}
           platforms: |
             linux/amd64
             linux/arm64
@@ -236,7 +236,7 @@ jobs:
           push: true
           build-args: |
             SERVICE_NAME=${{ matrix.service }}
-            DEPS_HASH_VERSION=${{ hashFiles('**/package-lock.json') }}
+            DEPS_HASH_VERSION=${{ hashFiles('package-lock.json') }}
           tags: |
             ${{ steps.ecr-login.outputs.registry }}/${{ matrix.service }}:latest
             ${{ steps.ecr-login.outputs.registry }}/${{ matrix.service }}:stg
