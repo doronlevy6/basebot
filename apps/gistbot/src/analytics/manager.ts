@@ -311,7 +311,7 @@ export class AnalyticsManager {
     extraParams?: ExtraParams;
   }) {
     this.sendEventToAnalytics({
-      eventName: `scheduled_multi_channel_summary}`,
+      eventName: `scheduled_multi_channel_summary`,
       slackUserId: slackUserId,
       slackTeamId: slackTeamId,
       internalUserId: this.internalId(slackTeamId, slackUserId),

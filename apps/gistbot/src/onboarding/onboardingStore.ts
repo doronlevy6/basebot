@@ -78,14 +78,15 @@ export class PgOnboardingStore extends PgUtil implements OnboardingStore {
     if (!res || res.length == 0) {
       return undefined;
     }
+
     const user = new OnBoardedUser();
-    user.slackTeam = res['slack_team_id'];
-    user.slackUser = res['slack_user_id'];
-    user.completedAt = res['completedAt']
-      ? new Date(res['completedAt'])
+    user.slackTeam = res[0]['slack_team_id'];
+    user.slackUser = res[0]['slack_user_id'];
+    user.completedAt = res[0]['completed_at']
+      ? new Date(res[0]['completed_at'])
       : undefined;
-    user.updatedAt = new Date(res['updated_at']);
-    user.attempts = res['attempts'];
+    user.updatedAt = new Date(res[0]['updated_at']);
+    user.attempts = res[0]['attempts'];
     return user;
   }
 
