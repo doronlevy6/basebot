@@ -8,6 +8,7 @@ import {
 import { healthRoute } from './routes/health';
 import { stripeWebhookRoute } from './routes/stripe-webhook';
 import { PaymentsManager } from './payments/manager';
+import { internalForceTriggerFullSyncRoute } from './routes/internal-force-trigger-fullsync';
 
 export function createServer(
   metricsReporter: IReporter,
@@ -22,6 +23,11 @@ export function createServer(
     '/stripe-webhook',
     express.raw({ type: 'application/json' }),
     stripeWebhookRoute(paymentsManager),
+  );
+
+  app.post(
+    '/internal/trigger-fullsync',
+    internalForceTriggerFullSyncRoute(paymentsManager),
   );
 
   return app;

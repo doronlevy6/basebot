@@ -57,7 +57,9 @@ export class PaymentsManager {
     });
   }
 
-  private async fullSync(pageLimit: number) {
+  // This is only public in order to allow triggering a full sync via an HTTP request for testing purposes.
+  // This should not be used outside of the internal request handler publicly.
+  async fullSync(pageLimit: number) {
     try {
       logger.debug(`running fullsync job`);
       const acquiredJob = await this.joblock.lock();
