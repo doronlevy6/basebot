@@ -61,10 +61,6 @@ export class NewUserTriggersManager {
     userId: string,
     presence: string,
   ): Promise<boolean> {
-    // TODO: For now we are turning the triggers off so that we can send it out to some communities withou spamming.
-    // When we add in a settings option to turn off the triggers completely, we will add this back.
-    return false;
-
     try {
       const [wasOnboarded, isUserLocked] = await Promise.all([
         this.onboardingManager.wasUserOnboarded(teamId, userId),
