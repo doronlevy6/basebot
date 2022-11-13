@@ -29,11 +29,12 @@ export function createQueue(
   return { queue: queue, scheduler: queueScheduler };
 }
 
-export function createQueueWorker(
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function createQueueWorker<T = any>(
   queueName: string,
   cfg: IQueueConfig,
-  processor: Processor,
-): Worker {
+  processor: Processor<T>,
+): Worker<T> {
   const connection = createRedis(cfg);
 
   const worker = new Worker(queueName, processor, {
@@ -46,7 +47,9 @@ export function createQueueWorker(
   });
 
   worker.on('failed', (job, error) => {
-    logger.error(`failed job ${job.id} with error ${error.message}`);
+    logger.error(
+      `failed job ${job.id} with error ${error.message}, ${error.stack}`,
+    );
   });
 
   return worker;

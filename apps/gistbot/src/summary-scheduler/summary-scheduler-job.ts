@@ -16,6 +16,7 @@ import {
   TIME_MINUTES_TO_LOCK,
   UserSchedulerSettings,
 } from './types';
+import { ScheduledMessageSender } from '../slack/scheduled-messages/manager';
 
 export class SummarySchedulerJob {
   constructor(
@@ -25,6 +26,7 @@ export class SummarySchedulerJob {
     private installationStore: PgInstallationStore,
     private analyticsManager: AnalyticsManager,
     private subscriptionManager: SubscriptionManager,
+    private scheduledMessageSender: ScheduledMessageSender,
   ) {}
 
   start() {
@@ -149,20 +151,24 @@ export class SummarySchedulerJob {
 
       const timeToSchedule = new Date();
       timeToSchedule.setUTCHours(userSettings.timeHour, 0, 0);
+
       // post scheduled message to slack
-      await client.chat.scheduleMessage({
-        channel: userSettings.slackUser,
-        text: summariesFormatted,
-        blocks: ScheduledMultiChannelSummary(
-          summariesFormatted,
-          Number(featureLimit),
-          nonIncludingChannels,
-          sessionId,
-        ),
-        post_at: (timeToSchedule.getTime() / 1000).toFixed(0),
-        unfurl_links: false,
-        unfurl_media: false,
-      });
+      await this.scheduledMessageSender.sendScheduledMessage(
+        {
+          channel: userSettings.slackUser,
+          text: summariesFormatted,
+          blocks: ScheduledMultiChannelSummary(
+            summariesFormatted,
+            Number(featureLimit),
+            nonIncludingChannels,
+            sessionId,
+          ),
+          unfurl_links: false,
+          unfurl_media: false,
+        },
+        userSettings.slackTeam,
+        timeToSchedule,
+      );
 
       logger.debug(
         `${summaries.summaries.length} will scheduled to be sent at ${timeToSchedule} for user ${userSettings.slackUser} from team ${userSettings.slackTeam}`,

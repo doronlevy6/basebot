@@ -8,7 +8,8 @@ export interface IQueueConfig {
   cluster: boolean;
 }
 
-export interface QueueWrapper {
-  queue: Queue;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export interface QueueWrapper<T = any> {
+  queue: Queue<T>;
   scheduler: QueueScheduler;
 }

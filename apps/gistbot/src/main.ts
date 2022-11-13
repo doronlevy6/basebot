@@ -46,6 +46,7 @@ import {
 } from '@base/customer-identifier';
 import { EmailSender } from '@base/emailer';
 import { PgOrgSettingsStore } from './orgsettings/store';
+import { ScheduledMessageSender } from './slack/scheduled-messages/manager';
 
 const gracefulShutdown = (server: Server) => (signal: string) => {
   logger.info('starting shutdown, got signal ' + signal);
@@ -250,6 +251,19 @@ const startApp = async () => {
     pgSchedulerSettingsStore,
   );
 
+  const allQueueCfg = {
+    host: process.env.REDIS_HOST || 'localhost',
+    port: parseInt(process.env.REDIS_PORT || '6379', 10),
+    password: process.env.REDIS_PASSWORD || '',
+    cluster: process.env.REDIS_CLUSTER === 'true',
+    prefix: `{gistbot:queues:${process.env.ENV || 'local'}}`,
+  };
+
+  const scheduledMessageSender = new ScheduledMessageSender(
+    allQueueCfg,
+    pgStore,
+  );
+
   const summarySchedulerJob = new SummarySchedulerJob(
     summarySchedulerMgr,
     summarySchedulerLock,
@@ -257,13 +271,19 @@ const startApp = async () => {
     pgStore,
     analyticsManager,
     subscriptionManager,
+    scheduledMessageSender,
   );
 
   const orgSettingsStore = new PgOrgSettingsStore(pgConfig);
 
   // readyChecker is a small util for all things that implement `isReady`. It will
   // check to see if all of these are ready and throw an error if one isn't.
-  await readyChecker(customerStore, customerIdentifierLock, orgSettingsStore);
+  await readyChecker(
+    customerStore,
+    customerIdentifierLock,
+    orgSettingsStore,
+    scheduledMessageSender,
+  );
 
   const slackApp = createApp(
     pgStore,
