@@ -1,7 +1,7 @@
 import { logger } from '@base/logger';
 import { WebClient } from '@slack/web-api';
 import { AnalyticsManager } from '../analytics/manager';
-import { Routes } from '../routes/router';
+import { FreetextFeedback } from '../slack/components/freetext-feedback';
 import { UserLink } from '../slack/components/user-link';
 
 export class UserFeedbackManager {
@@ -32,29 +32,7 @@ export class UserFeedbackManager {
       user: userId,
       thread_ts: threadTs,
       text: text,
-      blocks: [
-        {
-          type: 'section',
-          text: {
-            type: 'mrkdwn',
-            text: text,
-          },
-        },
-        {
-          type: 'actions',
-          elements: [
-            {
-              type: 'button',
-              text: {
-                type: 'plain_text',
-                text: 'Add a comment',
-              },
-              value: sessionId,
-              action_id: Routes.SEND_USER_FEEDBACK,
-            },
-          ],
-        },
-      ],
+      blocks: FreetextFeedback(text, sessionId),
     });
   }
 

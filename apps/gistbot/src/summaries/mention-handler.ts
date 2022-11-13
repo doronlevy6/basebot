@@ -8,6 +8,8 @@ import { ThreadSummarizer } from './thread/thread-summarizer';
 import { extractDaysBack, summaryInProgressMessage } from './utils';
 import { IReporter } from '@base/metrics';
 import { MultiChannelSummarizer } from './channel/multi-channel-summarizer';
+import { generateIDAsync } from '../utils/id-generator.util';
+import { MultiChannelSummary } from '../slack/components/multi-channel-summary';
 
 export const mentionHandler =
   (
@@ -81,6 +83,8 @@ export const mentionHandler =
       parsedMrkdwn.sections.shift();
 
       if (parsedMrkdwn.sections.find((v) => v.type === 'channel_link')) {
+        const sessionId = await generateIDAsync();
+
         const channelIds = parsedMrkdwn.sections
           .filter((v) => v.type === 'channel_link')
           .map((v) => {
@@ -139,6 +143,7 @@ export const mentionHandler =
           user: event.user,
           channel: event.channel,
           text: formattedMultiChannel,
+          blocks: MultiChannelSummary(formattedMultiChannel, sessionId),
         });
         return;
       }

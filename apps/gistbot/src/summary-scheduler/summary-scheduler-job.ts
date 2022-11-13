@@ -1,5 +1,6 @@
 import { SubscriptionManager } from '@base/customer-identifier';
 import { logger } from '@base/logger';
+import { generateIDAsync } from '../utils/id-generator.util';
 import { WebClient } from '@slack/web-api';
 import * as cron from 'node-cron';
 import { AnalyticsManager } from '../analytics/manager';
@@ -83,6 +84,8 @@ export class SummarySchedulerJob {
         return;
       }
 
+      const sessionId = await generateIDAsync();
+
       const installation =
         await this.installationStore.fetchInstallationByTeamId(
           userSettings.slackTeam,
@@ -154,6 +157,7 @@ export class SummarySchedulerJob {
           summariesFormatted,
           Number(featureLimit),
           nonIncludingChannels,
+          sessionId,
         ),
         post_at: (timeToSchedule.getTime() / 1000).toFixed(0),
         unfurl_links: false,
@@ -176,6 +180,9 @@ export class SummarySchedulerJob {
         slackTeamId: userSettings.slackTeam,
         channedIds: userSettings.channels.map((c) => c.channelId),
         scheduledTime: timeToSchedule.toString(),
+        extraParams: {
+          gist_session: sessionId,
+        },
       });
     } catch (e) {
       logger.error(
