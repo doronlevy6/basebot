@@ -101,6 +101,8 @@ const startApp = async () => {
     customerStore,
     customerIdentifierLock,
     emailSender,
+    process.env.SLACK_REDIRECT_URL ||
+      'https://slack.com/app_redirect?app=A043A1099D1',
   );
   const subscriptionManager = new SubscriptionManager(
     customerStore,

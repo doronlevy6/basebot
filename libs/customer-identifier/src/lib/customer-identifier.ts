@@ -1,5 +1,6 @@
 import { EmailSender } from '@base/emailer';
 import { Stripe } from 'stripe';
+import { ActivateSubscriptionTemplate } from './activate-subscription-template';
 import { CustomerStore } from './customer-store';
 import { CustomerIdentifierLock } from './lock';
 import { generatePassphrase } from './passphrase';
@@ -9,6 +10,7 @@ export class CustomerIdentifier {
     private customerStore: CustomerStore,
     private lock: CustomerIdentifierLock,
     private emailSender: EmailSender,
+    private readonly slackAppLink: string,
   ) {}
 
   async identifyCustomer(customer: Stripe.Customer) {
@@ -66,10 +68,11 @@ export class CustomerIdentifier {
       fromName: 'theGist.AI',
       to: customer.email,
       subject: 'Activate Your Subscription to theGist',
-      text:
-        `Thanks for subscribing to theGist!\n\n` +
-        `Copy the following passphrase and send it to the bot as a message, ` +
-        `and it will activate your subscription:\n\nMy Passphrase Is: ${customerInfo.passphrase}`,
+      template: ActivateSubscriptionTemplate(
+        customerInfo.passphrase,
+        this.slackAppLink,
+        customer.name,
+      ),
     });
   }
 

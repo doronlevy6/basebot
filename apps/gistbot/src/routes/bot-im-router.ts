@@ -1,6 +1,5 @@
 import {
   CustomerIdentifier,
-  extractPassphrase,
   isPassphraseMessage,
 } from '@base/customer-identifier';
 import { AnalyticsManager } from '../analytics/manager';
@@ -57,10 +56,9 @@ export const botIMRouter = (
         return;
       }
 
-      const passphrase = extractPassphrase(event.text);
       try {
         const result = await customerIdentifier.matchUserToCustomer(
-          passphrase,
+          event.text,
           event.user,
           body.team_id,
         );
