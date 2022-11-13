@@ -7,6 +7,7 @@ import { ChannelSummarizer } from '../summaries/channel/channel-summarizer';
 import { WebClient } from '@slack/web-api';
 import { IReporter } from '@base/metrics';
 import { SchedulerSettingsOnboardingButton } from './components/scheduler-settings-onboarding-button';
+import { onboardingChannelSummarizeMessage } from './components/onboarding-channel-summarize-message';
 
 const ADD_TO_CHANNEL_FROM_WELCOME = 'add-to-channel-from-welcome';
 const ADD_TO_CHANNEL_FROM_WELCOME_MESSAGE =
@@ -227,22 +228,20 @@ export const addToChannelsFromWelcomeMessageHandler =
           );
         });
 
-        const channelErrs = await Promise.all(onBoardChannelsPromises);
+        let channelErrs = await Promise.all(onBoardChannelsPromises);
         if (channelErrs?.length) {
-          const channelErrsIds: string[] = channelErrs.filter(
-            (c) => c != undefined,
+          channelErrs = channelErrs.filter(
+            (c) => c != undefined && c != '',
           ) as string[];
-          await onBoardingChannelNotReadyMessage(
-            client,
-            body.user.id,
-            selectedConversations,
-            channelErrsIds,
-          );
         }
 
-        await onBoardingChannelSummarizeSuccessMessage(
+        const successChannels = selectedConversations.filter(
+          (c) => !channelErrs.includes(c),
+        );
+        await postOnboardingChannelSummarizeMessage(
           client,
-          selectedConversations,
+          successChannels,
+          channelErrs,
           body.user.id,
         );
         analyticsManager.messageSentToUserDM({
@@ -288,9 +287,8 @@ async function onBoardAddToAChannel(
     DAYS_BACK_FOR_ONBOARDING,
   );
 
-  let errChannelId = '';
   if (!rootMessages || rootMessages.length < MESSAGE_THRESHOLD) {
-    errChannelId = selectedConversation;
+    const errChannelId = selectedConversation;
     analyticsManager.welcomeMessageInteraction({
       type: 'channel_too_few',
       slackUserId: userId,
@@ -307,7 +305,7 @@ async function onBoardAddToAChannel(
     logger.info(
       `bot was added to a channel with ${MESSAGE_THRESHOLD} or less messages: channel id: ${selectedConversation}`,
     );
-    return;
+    return errChannelId;
   }
 
   const res = await client.conversations.info({
@@ -335,7 +333,7 @@ async function onBoardAddToAChannel(
     },
   });
 
-  return errChannelId;
+  return '';
 }
 async function onBoardingSummarizeLoadingMessage(
   client: WebClient,
@@ -360,46 +358,19 @@ async function onBoardingSummarizeLoadingMessage(
   });
 }
 
-async function onBoardingChannelNotReadyMessage(
+async function postOnboardingChannelSummarizeMessage(
   client: WebClient,
-  userId: string,
-  channelIds: string[],
-  channelErrs: string[],
-) {
-  let text = '';
-  if (channelIds.length === channelErrs.length) {
-    text = `It seems like the chosen channels does not have enough messages for me to summarize, do you want to choose different ones?`;
-  } else {
-    const channelErrsLinks = channelIds.map((c) => `<#${c}> `);
-    const channelSingularOrPlural =
-      channelErrs.length === 1 ? 'channel' : 'channels';
-    text = `It seems like the ${channelSingularOrPlural} ${channelErrsLinks}  does not have enough messages for me to summarize, do you want to choose another one?`;
-  }
-  await client.chat.postMessage({
-    channel: userId,
-    text,
-  });
-}
-
-async function onBoardingChannelSummarizeSuccessMessage(
-  client: WebClient,
-  selectedConversations: string[],
+  succesChannelsIds: string[],
+  errorChannelsIds: string[],
   userId: string,
 ) {
-  const channelsLinks = selectedConversations.map((c) => `<#${c}> `);
-  const text = `Done! Let's go see them at ${channelsLinks.join('')} 👀.`;
   await client.chat.postMessage({
     channel: userId,
-    text: text,
-    blocks: [
-      {
-        type: 'section',
-        text: {
-          type: 'mrkdwn',
-          text: text,
-        },
-      },
-    ],
+    blocks: onboardingChannelSummarizeMessage(
+      succesChannelsIds,
+      errorChannelsIds,
+      DAYS_BACK_FOR_ONBOARDING,
+    ),
   });
 }
 
