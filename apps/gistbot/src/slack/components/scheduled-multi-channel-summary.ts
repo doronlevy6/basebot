@@ -1,8 +1,11 @@
 import { KnownBlock } from '@slack/bolt';
+import { GoProScheduler } from './go-pro-scheduler';
 import { SchedulerSettingsButton } from './scheduler-settings-button';
 
 export const ScheduledMultiChannelSummary = (
   formattedText: string,
+  limit: number,
+  nonIncludedChannedIds: string[],
 ): KnownBlock[] => {
   return [
     {
@@ -16,5 +19,9 @@ export const ScheduledMultiChannelSummary = (
       type: 'divider',
     },
     ...SchedulerSettingsButton(),
+    {
+      type: 'divider',
+    },
+    ...GoProScheduler(limit, nonIncludedChannedIds),
   ];
 };

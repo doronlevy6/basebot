@@ -1,7 +1,9 @@
+import { SubscriptionManager } from '@base/customer-identifier';
 import { logger } from '@base/logger';
 import { WebClient } from '@slack/web-api';
 import * as cron from 'node-cron';
 import { AnalyticsManager } from '../analytics/manager';
+import { FeatureLimits } from '../feature-rate-limiter/limits';
 import { PgInstallationStore } from '../installations/installationStore';
 import { ScheduledMultiChannelSummary } from '../slack/components/scheduled-multi-channel-summary';
 import { MultiChannelSummarizer } from '../summaries/channel/multi-channel-summarizer';
@@ -21,6 +23,7 @@ export class SummarySchedulerJob {
     private multiChannelSummarizer: MultiChannelSummarizer,
     private installationStore: PgInstallationStore,
     private analyticsManager: AnalyticsManager,
+    private subscriptionManager: SubscriptionManager,
   ) {}
 
   start() {
@@ -91,8 +94,28 @@ export class SummarySchedulerJob {
         logger.error(errMsg);
         throw new Error(errMsg);
       }
-
       const client = new WebClient(token);
+
+      let limitedChannelSummries = userSettings.channels;
+      let nonIncludingChannels: string[] = [];
+      let featureLimit: number | 'infinite' = 0;
+      if (
+        userSettings.channels.length > FeatureLimits.SCHEDULED_SUMMARIES.FREE
+      ) {
+        const tier = await this.subscriptionManager.userTier(
+          userSettings.slackTeam,
+          userSettings.slackUser,
+        );
+
+        featureLimit = FeatureLimits.SCHEDULED_SUMMARIES[tier];
+        if (featureLimit !== 'infinite') {
+          limitedChannelSummries = userSettings.channels.slice(0, featureLimit);
+          nonIncludingChannels = userSettings.channels
+            .slice(featureLimit)
+            .map((c) => c.channelId);
+        }
+      }
+
       const summaries = await this.multiChannelSummarizer.summarize(
         'subscription',
         botId || '',
@@ -100,7 +123,7 @@ export class SummarySchedulerJob {
         userSettings.slackUser,
         {
           type: 'multi_channel',
-          channels: userSettings.channels.map(({ channelId, channelName }) => {
+          channels: limitedChannelSummries.map(({ channelId, channelName }) => {
             return {
               channelId: channelId,
               channelName: channelName as string,
@@ -127,7 +150,11 @@ export class SummarySchedulerJob {
       await client.chat.scheduleMessage({
         channel: userSettings.slackUser,
         text: summariesFormatted,
-        blocks: ScheduledMultiChannelSummary(summariesFormatted),
+        blocks: ScheduledMultiChannelSummary(
+          summariesFormatted,
+          Number(featureLimit),
+          nonIncludingChannels,
+        ),
         post_at: (timeToSchedule.getTime() / 1000).toFixed(0),
         unfurl_links: false,
         unfurl_media: false,

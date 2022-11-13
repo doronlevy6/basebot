@@ -165,8 +165,32 @@ export const summarySchedularSettingsModalHandler =
           ? true
           : false;
       usersettings.timeHour = userSettingsHour;
-      usersettings.channels = selectedChannels.map((c) => {
-        return { channelId: c };
+
+      const channelsInfos = await Promise.all(
+        selectedChannels.map((c) => {
+          return client.conversations.info({ channel: c });
+        }),
+      );
+
+      for (const channelInfo of channelsInfos) {
+        if (
+          !channelInfo.ok ||
+          channelInfo.error ||
+          !channelInfo.channel?.id ||
+          !channelInfo.channel?.name
+        ) {
+          logger.error(
+            `error fetching channel info when submitting scheduelr settings modal`,
+          );
+          return;
+        }
+      }
+
+      usersettings.channels = channelsInfos.map((channelInfo) => {
+        return {
+          channelId: channelInfo.channel?.id as string,
+          channelName: channelInfo.channel?.name as string,
+        };
       });
       usersettings.days = [0, 1, 2, 3, 4, 5, 6];
       await schedulerSettingsMgr.saveUserSchedulerSettings(usersettings);

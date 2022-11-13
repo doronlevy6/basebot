@@ -256,6 +256,7 @@ const startApp = async () => {
     multiChannelSummarizer,
     pgStore,
     analyticsManager,
+    subscriptionManager,
   );
 
   const orgSettingsStore = new PgOrgSettingsStore(pgConfig);

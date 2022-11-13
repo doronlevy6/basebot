@@ -15,5 +15,5 @@ export class UserSchedulerSettings {
   enabled: boolean;
   timeHour: number;
   days: number[];
-  channels: { channelId: string; channelName?: string }[];
+  channels: { channelId: string; channelName: string }[];
 }
