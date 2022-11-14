@@ -52,7 +52,7 @@ export const Help = (userId: string, myBotUserId: string): KnownBlock[] => {
       type: 'section',
       text: {
         type: 'mrkdwn',
-        text: `*:four: Mention anywhere:* You can also always summarize a channel or a thread by mentioning:${UserLink(
+        text: `*:four: Mention anywhere:*\n You can also always summarize a channel or a thread by mentioning:${UserLink(
           myBotUserId,
         )}.\nKeep in mind, mentions are visible to all, the summary is still only visible to you.`,
       },

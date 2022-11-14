@@ -4,10 +4,13 @@ import { WebClient } from '@slack/web-api';
 export class UserOnboardedNotifier {
   private slackClient: WebClient;
   private env: string;
+  private notificationChannelId: string;
 
   constructor(env: string, botToken: string, private enabled: boolean) {
     this.env = env;
     this.slackClient = new WebClient(botToken);
+    this.notificationChannelId =
+      process.env.SLACK_NEW_USERS_NOTIFICATION_CHANNEL_ID ?? 'C03S45PEK7Y';
   }
 
   async notify(
@@ -61,7 +64,7 @@ export class UserOnboardedNotifier {
         text: `:fire: New User Registered to theGist on ${this.env}: ${
           email || displayName || userName
         }`,
-        channel: 'C03S45PEK7Y',
+        channel: this.notificationChannelId,
         attachments: [
           {
             color: 'good',
