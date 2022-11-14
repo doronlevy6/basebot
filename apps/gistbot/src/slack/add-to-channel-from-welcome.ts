@@ -390,13 +390,13 @@ async function postOnboardingChannelSummarizeMessage(
 async function onBoardingAddToMoreChannels(client: WebClient, userId: string) {
   await client.chat.postMessage({
     channel: userId,
-    text: 'When you’re back, you can add me to more channels here ➡️',
+    text: '*Add more channels:*',
     blocks: [
       {
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: 'When you’re back, you can add me to more channels here ➡️',
+          text: '*Add more channels:*',
         },
         accessory: {
           type: 'button',
@@ -451,6 +451,7 @@ async function saveDefaultUserSchedulerSettings(
   usersettings.slackTeam = teamId;
   usersettings.enabled = true;
   usersettings.timeHour = defaultHour;
+  usersettings.selectedHour = Number(UserSchedulerOptions.MORNING);
 
   const channelsInfos = await Promise.all(
     selectedChannels.map((c) => {

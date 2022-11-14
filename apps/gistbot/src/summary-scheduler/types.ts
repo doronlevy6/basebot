@@ -16,4 +16,5 @@ export class UserSchedulerSettings {
   timeHour: number;
   days: number[];
   channels: { channelId: string; channelName: string }[];
+  selectedHour: number;
 }

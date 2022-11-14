@@ -60,7 +60,7 @@ export const summarySchedularSettingsButtonHandler =
         | UserSchedulerOptions.ON
         | UserSchedulerOptions.OFF
         | undefined;
-      let hour:
+      let selectedHour:
         | UserSchedulerOptions.MORNING
         | UserSchedulerOptions.EVENING
         | undefined;
@@ -70,11 +70,8 @@ export const summarySchedularSettingsButtonHandler =
         enabled = userSettings?.enabled
           ? UserSchedulerOptions.ON
           : UserSchedulerOptions.OFF;
-        const date = new Date();
-        date.setUTCHours(Number(UserSchedulerOptions.MORNING), 0, 0);
-        hour =
-          date.getUTCHours() ===
-          userSettings.timeHour + userInfo.user.tz_offset / 3600
+        selectedHour =
+          userSettings.selectedHour === Number(UserSchedulerOptions.MORNING)
             ? UserSchedulerOptions.MORNING
             : UserSchedulerOptions.EVENING;
 
@@ -83,7 +80,7 @@ export const summarySchedularSettingsButtonHandler =
 
       await client.views.open({
         trigger_id: body.trigger_id,
-        view: SchedulerSettingsModal(enabled, hour, channels),
+        view: SchedulerSettingsModal(enabled, selectedHour, channels),
       });
 
       analyticsManager.buttonClicked({
@@ -161,13 +158,13 @@ export const summarySchedularSettingsModalHandler =
         return;
       }
 
-      const requestedHour =
+      const selectedHour =
         view.state.values['radio-buttons-time'].value.selected_option?.value ===
         UserSchedulerOptions.MORNING
           ? Number(UserSchedulerOptions.MORNING)
           : Number(UserSchedulerOptions.EVENING);
       const date = new Date();
-      date.setUTCHours(requestedHour, 0, 0);
+      date.setUTCHours(selectedHour, 0, 0);
       const userSettingsHour =
         date.getUTCHours() - userInfo.user.tz_offset / 3600;
 
@@ -180,7 +177,7 @@ export const summarySchedularSettingsModalHandler =
           ? true
           : false;
       usersettings.timeHour = userSettingsHour;
-
+      usersettings.selectedHour = selectedHour;
       const channelsInfos = await Promise.all(
         selectedChannels.map((c) => {
           return client.conversations.info({ channel: c });

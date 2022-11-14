@@ -1,5 +1,5 @@
 import { PgUtil, PgConfig } from '@base/utils';
-import { UserSchedulerSettings } from './types';
+import { UserSchedulerOptions, UserSchedulerSettings } from './types';
 
 export interface SchedulerSettingsStore {
   saveUserSchedulerSettings(settings: UserSchedulerSettings): Promise<void>;
@@ -33,6 +33,11 @@ export class PgSchedulerSettingsStore
         channels jsonb NOT NULL,
         PRIMARY KEY ("slack_team_id", "slack_user_id")
       );
+
+      alter table  gistbot_user_scheduler_settings 
+      add column IF NOT EXISTS selected_hour int not null default ${Number(
+        UserSchedulerOptions.MORNING,
+      )};
     `);
   }
 
@@ -47,6 +52,7 @@ export class PgSchedulerSettingsStore
         time_hour: settings.timeHour,
         days: settings.days,
         channels: JSON.stringify(settings.channels),
+        selected_hour: settings.selectedHour,
       })
       .onConflict(['slack_team_id', 'slack_user_id'])
       .merge();
@@ -69,7 +75,7 @@ export class PgSchedulerSettingsStore
     userSettings.timeHour = res[0].time_hour;
     userSettings.days = res[0].days;
     userSettings.channels = res[0].channels;
-
+    userSettings.selectedHour = res[0].selected_hour;
     return userSettings;
   }
 
@@ -97,6 +103,7 @@ export class PgSchedulerSettingsStore
       userSettings.timeHour = val['time_hour'];
       userSettings.days = val['days'];
       userSettings.channels = val['channels'];
+      userSettings.selectedHour = val['selected_hour'];
       return userSettings;
     });
 

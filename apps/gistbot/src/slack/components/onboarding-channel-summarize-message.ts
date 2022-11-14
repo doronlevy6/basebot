@@ -11,7 +11,7 @@ export const onboardingChannelSummarizeMessage = (
   }
 
   const successLinks = succesChannelsIds.map((c) => `<#${c}> `);
-  const text = `Done! Let's go see them at ${successLinks.join('')} 👀.`;
+  const text = `*Done! Let's go see them at* ${successLinks.join('')} 👀.`;
   return [
     {
       type: 'section',
@@ -21,5 +21,8 @@ export const onboardingChannelSummarizeMessage = (
       },
     },
     ...onboardingChannelNotReadyMessage(errorChannelsIds, daysBack),
+    {
+      type: 'divider',
+    },
   ];
 };
