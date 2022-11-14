@@ -1,6 +1,7 @@
 import { SlackBlockActionWrapper } from '../slack/types';
 import { ChannelSummarizer } from './channel/channel-summarizer';
 import { ChannelSummarizationProps } from './types';
+import { summaryInProgressMessage } from './utils';
 
 const ONE_WEEK_DAYS_BACK = 7;
 
@@ -18,6 +19,11 @@ export const channelSummaryMoreTimeHandler =
       }
 
       const [props, excludedMessageId] = parseMoreTimeProps(action.value);
+
+      await summaryInProgressMessage(client, {
+        channel: props.channelId,
+        user: body.user.id,
+      });
 
       await channelSummarizer.summarize(
         'request_more_time',
