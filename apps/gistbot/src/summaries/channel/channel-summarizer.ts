@@ -244,6 +244,14 @@ export class ChannelSummarizer {
           cc = approximatePromptCharacterCountForChannelSummary(req);
         }
 
+        const didFilter = threads.length < rootMessages.length;
+        if (didFilter) {
+          logger.info(
+            `Filtered ${
+              rootMessages.length - threads.length
+            } threads to avoid hitting the character limit`,
+          );
+        }
         const summary = await this.channelSummaryModel.summarizeChannel(
           req,
           userId,
@@ -334,11 +342,10 @@ export class ChannelSummarizer {
         },
       });
     } catch (error) {
-      logger.error(`error in channel summarizer: ${error} ${error.stack}`);
-
       // Checking the rate limit should be first. If the error is a rate limit error then we
       // prompt the user to "go pro" and pay for a subscription.
       if (error instanceof RateLimitedError) {
+        logger.info('User had been rate limited');
         await responder(
           respond,
           client,
@@ -362,6 +369,8 @@ export class ChannelSummarizer {
         });
         return;
       }
+
+      logger.error(`error in channel summarizer: ${error} ${error.stack}`);
 
       // Every error other than rate limit errors should give the user back the request on their budget.
       // If there are errors that we want to not give the user back a budget on, then they should be before

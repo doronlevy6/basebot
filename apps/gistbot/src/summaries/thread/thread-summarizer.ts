@@ -206,11 +206,10 @@ export class ThreadSummarizer {
         },
       });
     } catch (error) {
-      logger.error(`error in thread summarizer: ${error}`);
-
       // Checking the rate limit should be first. If the error is a rate limit error then we
       // prompt the user to "go pro" and pay for a subscription.
       if (error instanceof RateLimitedError) {
+        logger.info(`User has been rate limited`);
         await responder(
           undefined, // Thread ephemeral messages with the respond func don't work correctly so we force undefined in the respond func
           client,
@@ -233,6 +232,8 @@ export class ThreadSummarizer {
         });
         return;
       }
+
+      logger.error(`error in thread summarizer: ${error}`);
 
       // Every error other than rate limit errors should give the user back the request on their budget.
       // If there are errors that we want to not give the user back a budget on, then they should be before
