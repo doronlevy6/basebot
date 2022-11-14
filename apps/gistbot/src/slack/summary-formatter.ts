@@ -25,15 +25,24 @@ export const formatMultiChannelSummary = (
   multiChannelSummaries: MultiChannelSummarizerOutput,
   channelLinks: Map<string, string | undefined>,
 ) => {
-  if (multiChannelSummaries.error) {
-    return `:warning: ️The channels either didn’t have enough messages or failed to generate.`;
+  const generalErrorText = multiChannelGeneralErrorMessage(
+    multiChannelSummaries,
+  );
+  if (generalErrorText !== false) {
+    const channelLinks = multiChannelSummaries.summaries.reduce((acc, t) => {
+      return acc + `<#${t.channelId}>,`;
+    }, '');
+    return `${channelLinks}\n${generalErrorText}`;
   }
   const formattedSummaries = multiChannelSummaries.summaries.map((summary) => {
     if (summary.error) {
       if (summary.error === 'moderated') {
         return `<#${summary.channelId}>\n :warning: The channel content was flagged as inapropriate.`;
       }
-      return `<#${summary.channelId}>\n :warning: The channel either didn’t have enough messages or failed to generate.`;
+      if (summary.error === 'channel_too_small') {
+        return `<#${summary.channelId}>\n :warning: The channel didn’t have enough messages.`;
+      }
+      return `<#${summary.channelId}>\n :warning: The channel failed to generate.`;
     }
     const link = channelLinks.get(summary.channelId);
 
@@ -43,4 +52,64 @@ export const formatMultiChannelSummary = (
     return `<#${summary.channelId}>\n${summary.summary}`;
   });
   return formattedSummaries.join('\n\n');
+};
+
+const multiChannelGeneralErrorMessage = (
+  multiChannelSummaries: MultiChannelSummarizerOutput,
+): string | false => {
+  let error = 0;
+  let moderated = 0;
+  let tooSmall = 0;
+  multiChannelSummaries.summaries.forEach((s) => {
+    if (s.error === 'channel_too_small') {
+      tooSmall++;
+    }
+    if (s.error === 'moderated') {
+      moderated++;
+    }
+    if (s.error === 'general_error') {
+      error++;
+    }
+  });
+  const sumErrors = error + moderated + tooSmall;
+  if (multiChannelSummaries.summaries.length === tooSmall) {
+    return `:warning: None of the channel had any meaningful conversations to summarize.`;
+  }
+  if (multiChannelSummaries.summaries.length === moderated) {
+    return `:warning: All channels discussions were flagged as inappropriate`;
+  }
+  if (multiChannelSummaries.summaries.length === error) {
+    return `:warning: Summary generation failed, we are on it!`;
+  }
+  if (
+    moderated > 0 &&
+    tooSmall > 0 &&
+    sumErrors === multiChannelSummaries.summaries.length
+  ) {
+    return `:warning: The channels either didn’t have enough messages or were flagged as inappropriate`;
+  }
+  if (
+    moderated > 0 &&
+    error > 0 &&
+    sumErrors === multiChannelSummaries.summaries.length
+  ) {
+    return `:warning: The channels were either flagged as inappropriate or failed to generate”`;
+  }
+  if (
+    tooSmall > 0 &&
+    error > 0 &&
+    sumErrors === multiChannelSummaries.summaries.length
+  ) {
+    return `:warning: The channels either didn’t have enough messages or failed to generate”`;
+  }
+  if (
+    (moderated > 0 &&
+      error > 0 &&
+      tooSmall > 0 &&
+      sumErrors === multiChannelSummaries.summaries.length) ||
+    multiChannelSummaries.error
+  ) {
+    return `:warning: The channels either didn’t have enough messages, were flagged as inappropriate, or failed to generate`;
+  }
+  return false;
 };
