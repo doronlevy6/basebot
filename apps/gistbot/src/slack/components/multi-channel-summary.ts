@@ -1,5 +1,5 @@
 import { KnownBlock } from '@slack/bolt';
-import { FreetextFeedback } from './freetext-feedback';
+import { Routes } from '../../routes/router';
 
 export const MultiChannelSummary = (
   formattedText: string,
@@ -16,6 +16,32 @@ export const MultiChannelSummary = (
     {
       type: 'divider',
     },
-    ...FreetextFeedback('How was this digest?', sessionId),
+    Actions(sessionId),
   ];
+};
+
+const Actions = (sessionId: string): KnownBlock => {
+  return {
+    type: 'actions',
+    elements: [
+      {
+        type: 'button',
+        text: {
+          type: 'plain_text',
+          text: 'Got Feedback?',
+        },
+        action_id: Routes.SEND_USER_FEEDBACK,
+        value: sessionId,
+      },
+      {
+        type: 'button',
+        text: {
+          type: 'plain_text',
+          text: 'Schedule Summary Settings',
+        },
+        value: 'scheduler-settings-button',
+        action_id: Routes.OPEN_SCHEDULER_SETTINGS,
+      },
+    ],
+  };
 };
