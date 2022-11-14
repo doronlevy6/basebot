@@ -190,7 +190,7 @@ export class TasksManager {
       task: job.data.task,
     });
 
-    this.messageSenderQueue.queue.add('sendTaskUpdateMessage', {
+    await this.messageSenderQueue.queue.add('sendTaskUpdateMessage', {
       ...message,
       userEmail: job.data.user.email,
     } as SlackMessageSenderMetadata);

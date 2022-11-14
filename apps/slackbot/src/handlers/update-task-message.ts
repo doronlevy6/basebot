@@ -89,6 +89,7 @@ export const updateTaskAndSendEvent = async (
     );
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-floating-promises
   sendEvent(
     client,
     { slackUserId, action: analytics.action, taskId: task.id },
@@ -101,17 +102,25 @@ const sendEvent = async (
   data: { slackUserId: string; action: string; taskId: string },
   extraData?: Record<string, string>,
 ) => {
-  const { action, slackUserId, taskId } = data;
-  const user = await client.users.profile.get({ user: slackUserId });
-  if (!user.profile?.email) {
-    logger.warn(
-      `unable to send user interaction for analytics without user profile`,
-    );
-    return;
+  try {
+    const { action, slackUserId, taskId } = data;
+    const user = await client.users.profile.get({ user: slackUserId });
+    if (!user.profile?.email) {
+      logger.warn(
+        `unable to send user interaction for analytics without user profile`,
+      );
+      return;
+    }
+    AnalyticsManager.getInstance().userInteraction(user?.profile.email, {
+      action,
+      taskId: taskId,
+      ...extraData,
+    });
+  } catch (error) {
+    logger.error({
+      msg: `error in sending event to base`,
+      error: error.message,
+      stack: error.stack,
+    });
   }
-  AnalyticsManager.getInstance().userInteraction(user?.profile.email, {
-    action,
-    taskId: taskId,
-    ...extraData,
-  });
 };

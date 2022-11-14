@@ -33,6 +33,8 @@ export const expressHttpMetricsMiddleware: (
     ['path', 'method', 'code'],
   );
 
+  // The signature here should allow an async function and it is handled correctly internally
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises
   return async (req, res, next) => {
     const start = new Date();
     const { path, method } = req;

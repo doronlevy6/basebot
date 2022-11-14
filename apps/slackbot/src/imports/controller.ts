@@ -86,7 +86,7 @@ export class ImportController {
 
           const token = installation.bot?.token || '';
           const teamId = installation.team?.id || '';
-          this.startImport({
+          await this.startImport({
             token,
             slackTeamEmailDomains: [job.data.organization.domain],
             slackTeamId: teamId,

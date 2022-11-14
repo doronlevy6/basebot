@@ -107,7 +107,7 @@ export const summarySchedularSettingsModalHandler =
           .selected_conversations;
       if (!selectedChannels?.length) {
         logger.error('no channels were selected in scheduler settings modal');
-        ack({
+        await ack({
           response_action: 'errors',
           errors: {
             multi_conversations_select: 'channels must be selected',
@@ -120,7 +120,7 @@ export const summarySchedularSettingsModalHandler =
         logger.error(
           `team id not exist for user ${body.user.id} in scheduler settings modal`,
         );
-        ack({
+        await ack({
           response_action: 'errors',
           errors: {
             multi_conversations_select: 'team id not exist for user',

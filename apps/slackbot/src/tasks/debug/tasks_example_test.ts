@@ -183,5 +183,5 @@ export const runDebugMessage = async () => {
   };
 
   const taskStatusTriggerer = new TriggerTester(allQueueCfg);
-  runTestExample(taskStatusTriggerer);
+  await runTestExample(taskStatusTriggerer);
 };

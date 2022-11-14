@@ -47,7 +47,7 @@ export class UserFeedbackManager {
       await this.extractUserProfileDetails(client, userId);
 
     try {
-      this.slackClient.chat.postMessage({
+      await this.slackClient.chat.postMessage({
         text: `:exclamation: New Feedback for theGist on ${this.env}: ${
           email || displayName || userName
         }`,

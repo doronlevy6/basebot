@@ -76,7 +76,7 @@ export class EventsHandler {
         msg: `error in changing acknowledgement for task`,
         error: e,
       });
-      say(`Error in acknowledging task`);
+      await say(`Error in acknowledging task`);
     }
   };
 

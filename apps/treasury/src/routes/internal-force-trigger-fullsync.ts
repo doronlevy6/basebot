@@ -1,9 +1,10 @@
 import { logger } from '@base/logger';
-import { Request, Response } from 'express';
+import { Request, Response, RequestHandler } from 'express';
 import { PaymentsManager } from '../payments/manager';
 
 export const internalForceTriggerFullSyncRoute =
-  (paymentsManager: PaymentsManager) => async (req: Request, res: Response) => {
+  (paymentsManager: PaymentsManager): RequestHandler =>
+  async (req: Request, res: Response) => {
     try {
       logger.debug({ msg: `triggering fullsync job` });
       // Return immediately and run this as an async promise
@@ -23,6 +24,7 @@ export const internalForceTriggerFullSyncRoute =
     } catch (error) {
       res.writeHead(200);
       res.end(JSON.stringify({ ok: false }));
+      return;
     }
 
     res.writeHead(200);

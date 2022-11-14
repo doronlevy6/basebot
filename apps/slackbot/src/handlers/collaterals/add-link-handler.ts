@@ -72,7 +72,7 @@ export const addLinkHandler =
         return;
       }
 
-      showOauthModalIfNeeded(
+      await showOauthModalIfNeeded(
         {
           orgId: organizationId,
           provider,

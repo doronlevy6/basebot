@@ -61,6 +61,8 @@ export const slashCommandRouter = (
       );
       await Promise.all(
         Object.values(Feature).map((f) => {
+          // Instead of awaiting internally we are using Promise.all and awaiting on the whole list here.
+          // eslint-disable-next-line @typescript-eslint/no-floating-promises
           featureRateLimiter.allowMore(
             { teamId: team_id, userId: user_id },
             f,

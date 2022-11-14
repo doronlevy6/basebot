@@ -139,7 +139,7 @@ export const mentionHandler =
             client,
           );
 
-        client.chat.postEphemeral({
+        await client.chat.postEphemeral({
           user: event.user,
           channel: event.channel,
           text: `Your summaries for ${channelIds.length} channels`,

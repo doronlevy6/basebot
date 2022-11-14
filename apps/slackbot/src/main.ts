@@ -146,6 +146,10 @@ const startApp = async () => {
   process.on('SIGTERM', shutdownHandler);
   process.on(
     'beforeExit',
+    // The 'beforeExit' event is supposed to allow promises and is the place where
+    // we are supposed to do graceful async shutdowns. Not sure why the signature
+    // doesn't accept a promise...
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
     gracefulShutdownAsync(
       importController,
       taskStatusManager,
@@ -155,4 +159,5 @@ const startApp = async () => {
   );
 };
 
+// eslint-disable-next-line @typescript-eslint/no-floating-promises
 startApp();

@@ -413,6 +413,7 @@ async function onBoardingAddToMoreChannels(client: WebClient, userId: string) {
 }
 
 function postOnBoardingSchedulerSettingsBtn(client: WebClient, userId: string) {
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises
   setTimeout(async () => {
     await client.chat.postMessage({
       channel: userId,

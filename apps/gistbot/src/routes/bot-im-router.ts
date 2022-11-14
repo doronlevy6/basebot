@@ -68,7 +68,7 @@ export const botIMRouter = (
             msg: `user sent us a passphrase that doesn't match a customer`,
             event: event,
           });
-          say(
+          await say(
             'I tried activating your subscription, ' +
               'but I was unable to find your customer account :frowning: ' +
               'are you sure you copied it correctly?\n\n' +
@@ -82,7 +82,7 @@ export const botIMRouter = (
             msg: `user sent us a passphrase that matches an already subscribed customer`,
             event: event,
           });
-          say(
+          await say(
             // Send the same "not found text" to avoid some brute force security shit?
             'I tried activating your subscription, ' +
               'but I was unable to find your customer account :frowning: ' +
@@ -92,7 +92,7 @@ export const botIMRouter = (
           return;
         }
 
-        say(
+        await say(
           'Great! I have connected your customer account and have activated your subscription!\n\n' +
             'Happy Gist-ing :smile:!',
         );
@@ -130,7 +130,7 @@ export const botIMRouter = (
       return;
     }
 
-    say({
+    await say({
       text: 'Hi there :wave:',
       blocks: Help(event.user, context.botUserId || ''),
     });

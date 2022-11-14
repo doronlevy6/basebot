@@ -33,6 +33,8 @@ export class SummarySchedulerJob {
   start() {
     cron.schedule(
       `0 */${JOB_MINUTES_INTERVAL} * * * ${this.tempWeekDays}`,
+      // Internally the cron should handle promises, this is an incorrect signature.
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
       async () => {
         await this.handleScheduler();
       },
@@ -69,6 +71,7 @@ export class SummarySchedulerJob {
         );
       }
       // execute all promises - resolved and rejected, that one rejected promise won't effect to send summaries to other users
+      // eslint-disable-next-line @typescript-eslint/no-floating-promises
       Promise.allSettled(usersScheduledNotifications);
     }
   }

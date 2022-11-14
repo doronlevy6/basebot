@@ -60,7 +60,7 @@ export class UserOnboardedNotifier {
         userProfile.real_name ||
         userProfile.first_name;
 
-      this.slackClient.chat.postMessage({
+      await this.slackClient.chat.postMessage({
         text: `:fire: New User Registered to theGist on ${this.env}: ${
           email || displayName || userName
         }`,

@@ -19,6 +19,8 @@ export class OnboardingNudgeJob {
   start() {
     cron.schedule(
       `0 0 */${this.jobHourInterval} * * ${this.weekDays}`,
+      // Internally the cron should handle promises, this is an incorrect signature.
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
       async () => {
         await this.executeJob();
       },

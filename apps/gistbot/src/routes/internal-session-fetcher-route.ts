@@ -11,6 +11,8 @@ export const internalSessionFetcherRoute = (
 ): CustomRoute => ({
   path: '/internal/feedback/fetch',
   method: ['POST'],
+  // The signature here should allow an async function and it is handled correctly internally
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises
   handler: async (req, res) => {
     if (!req.headers.authorization) {
       res.statusCode = 401;

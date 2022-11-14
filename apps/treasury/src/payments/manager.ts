@@ -52,6 +52,8 @@ export class PaymentsManager {
 
   startFullSyncJob() {
     // Every Hour Crontab: https://crontab.guru/every-1-hour
+    // Internally the cron should handle promises, this is an incorrect signature.
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
     cron.schedule(`0 * * * *`, async () => {
       await this.fullSync(100);
     });

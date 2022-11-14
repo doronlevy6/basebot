@@ -14,14 +14,14 @@ export const installationSucccessHandler: (
       (await fetchTeamDomains(installation)) || {};
 
     if (domains) {
-      updateSettings(
+      await updateSettings(
         domains,
         installation,
         baseApi,
         logo?.image_230 || '',
         displayName || '',
       );
-      startImport(domains, installation, importController);
+      await startImport(domains, installation, importController);
     } else {
       logger.warn(`no domains found for ${JSON.stringify(installation)}`);
     }
@@ -60,7 +60,7 @@ const startImport = async (
 ) => {
   const token = installation.bot?.token || '';
   const teamId = installation.team?.id || '';
-  importController.startImport({
+  await importController.startImport({
     token,
     slackTeamEmailDomains: teamDomains,
     slackTeamId: teamId,

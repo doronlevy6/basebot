@@ -47,13 +47,21 @@ export class SqsConsumer {
   }
 
   private pollSqsMessages(queueUrl: string) {
-    this.consume(queueUrl).then(() => {
-      if (this.stopped) {
-        this.stoppedWait.resolve();
-        return;
-      }
-      setTimeout(() => this.pollSqsMessages(queueUrl));
-    });
+    this.consume(queueUrl)
+      .then(() => {
+        if (this.stopped) {
+          this.stoppedWait.resolve();
+          return;
+        }
+        setTimeout(() => this.pollSqsMessages(queueUrl));
+      })
+      .catch((error) =>
+        logger.error({
+          msg: `error in consume on message from sqs`,
+          error: error.message,
+          stack: error.stack,
+        }),
+      );
   }
 
   private async consume(queueUrl: string): Promise<void> {

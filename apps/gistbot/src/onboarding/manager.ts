@@ -60,6 +60,7 @@ export class OnboardingManager {
       // Don't await so that we don't force anything to wait just for the identification.
       // This handles error handling internally and will never cause an exception, so we
       // won't have any unhandled promise rejection errors.
+      // eslint-disable-next-line @typescript-eslint/no-floating-promises
       identifyTriggeringUser(userId, teamId, client, this.analyticsManager);
 
       const acquireOnboarding = await this.lock.lock(teamId, userId);
@@ -98,6 +99,7 @@ export class OnboardingManager {
         // Don't await so that we don't force anything to wait just for the notification.
         // This handles error handling internally and will never cause an exception, so we
         // won't have any unhandled promise rejection errors.
+        // eslint-disable-next-line @typescript-eslint/no-floating-promises
         this.notifier.notify(client, userId, teamId);
       }
     } catch (error) {

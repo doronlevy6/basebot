@@ -12,7 +12,7 @@ class Analytics {
     this.queueCfg = queueCfg;
   }
 
-  async startQueue() {
+  startQueue() {
     this.analyticsQueue = createQueue('analytics', this.queueCfg);
   }
 
@@ -22,12 +22,21 @@ class Analytics {
   }
 
   private async sendEventToBase(data: IAnalyticsEvent) {
-    logger.info({ msg: 'send event to base', job: data });
-    data.eventSource = EventSource.Slackbot;
-    await this.analyticsQueue.queue.add('slack_events', data);
+    try {
+      logger.info({ msg: 'send event to base', job: data });
+      data.eventSource = EventSource.Slackbot;
+      await this.analyticsQueue.queue.add('slack_events', data);
+    } catch (error) {
+      logger.error({
+        msg: `error in sending analytics event to base`,
+        error: error.message,
+        stack: error.stack,
+      });
+    }
   }
 
   modalView(type: string, baseUserId: string, properties?: ExtraParams) {
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
     this.sendEventToBase({
       userId: baseUserId,
       name: 'slack_modal_view',
@@ -36,6 +45,7 @@ class Analytics {
   }
 
   messageSentToUser(email: string, extraParams?: ExtraParams) {
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
     this.sendEventToBase({
       name: 'message_sent_to_user',
       properties: { ...extraParams, email },
@@ -43,6 +53,7 @@ class Analytics {
   }
 
   userInteraction(email: string, extraParams?: ExtraParams) {
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
     this.sendEventToBase({
       name: 'user_interacted',
       properties: { ...extraParams, email },
@@ -50,6 +61,7 @@ class Analytics {
   }
 
   userCreateDraft(email: string, extraParams?: ExtraParams) {
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
     this.sendEventToBase({
       name: 'user_create_draft',
       properties: { ...extraParams, email },
