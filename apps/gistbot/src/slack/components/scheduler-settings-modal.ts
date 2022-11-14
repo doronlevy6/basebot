@@ -100,9 +100,9 @@ export const SchedulerSettingsModal = (
           type: 'radio_buttons',
           options: [morningOption, eveningOption],
           initial_option:
-            hour === UserSchedulerOptions.MORNING
-              ? morningOption
-              : eveningOption,
+            hour === UserSchedulerOptions.EVENING
+              ? eveningOption
+              : morningOption,
           action_id: 'value',
         },
       },
@@ -125,7 +125,7 @@ export const SchedulerSettingsModal = (
           type: 'radio_buttons',
           options: [onOption, offOption],
           initial_option:
-            enabled === UserSchedulerOptions.ON ? onOption : offOption,
+            enabled === UserSchedulerOptions.OFF ? offOption : onOption,
           action_id: 'value',
         },
       },
