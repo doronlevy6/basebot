@@ -290,20 +290,16 @@ export const summaryInProgressMessage = async (
 };
 
 export const getInProgressText = (daysBack?: number) => {
-  let text = `Creating your summary`;
   if (!daysBack) {
-    return text;
+    return `Creating your summary`;
   }
   if (daysBack === 1) {
-    text = 'Creating your last day summary';
-  }
-  if (daysBack > 1 && daysBack < 7) {
-    text = `Creating your last ${daysBack} days summary`;
+    return 'Creating a summary of your last day';
   }
   if (daysBack === 7) {
-    text = `Creating your last week summary`;
+    return `Creating a summary of your last week`;
   }
-  return text;
+  return `Creating a summary of your last ${daysBack} days`;
 };
 
 export const extractDaysBack = (text: string): number => {

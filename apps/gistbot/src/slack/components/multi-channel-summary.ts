@@ -37,7 +37,7 @@ const Actions = (sessionId: string): KnownBlock => {
         type: 'button',
         text: {
           type: 'plain_text',
-          text: 'Schedule Summary Settings',
+          text: 'Scheduled Summary Settings',
         },
         value: 'scheduler-settings-button',
         action_id: Routes.OPEN_SCHEDULER_SETTINGS,
