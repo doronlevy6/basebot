@@ -131,7 +131,12 @@ export const registerBoltAppRouter = (
   app.command(
     /gist.*/,
     onboardingMiddleware,
-    slashCommandRouter(channelSummarizer, analyticsManager, featureRateLimiter),
+    slashCommandRouter(
+      channelSummarizer,
+      analyticsManager,
+      featureRateLimiter,
+      schedulerSettingsManager,
+    ),
   );
   app.action(
     Routes.THREAD_SUMMARY_FEEDBACK,

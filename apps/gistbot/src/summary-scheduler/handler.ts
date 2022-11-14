@@ -1,8 +1,13 @@
 import { logger } from '@base/logger';
+import { SlashCommand } from '@slack/bolt';
 import { AnalyticsManager } from '../analytics/manager';
 import { addToChannel } from '../slack/add-to-channel';
 import { SchedulerSettingsModal } from '../slack/components/scheduler-settings-modal';
-import { SlackBlockActionWrapper, ViewAction } from '../slack/types';
+import {
+  SlackBlockActionWrapper,
+  SlackSlashCommandWrapper,
+  ViewAction,
+} from '../slack/types';
 import { SchedulerSettingsManager } from './scheduler-manager';
 import { UserSchedulerOptions, UserSchedulerSettings } from './types';
 
@@ -11,21 +16,31 @@ export const summarySchedularSettingsButtonHandler =
     schedulerSettingsMgr: SchedulerSettingsManager,
     analyticsManager: AnalyticsManager,
   ) =>
-  async ({ ack, logger, body, client }: SlackBlockActionWrapper) => {
+  async ({
+    ack,
+    logger,
+    body,
+    client,
+  }: SlackBlockActionWrapper | SlackSlashCommandWrapper) => {
     try {
       await ack();
-      if (!body.state?.values || !body.team) {
+
+      const teamId = (body as SlashCommand).team_id ?? body.team?.id;
+      const userId = (body as SlashCommand).user_id ?? body.user?.id;
+      if (!teamId || !userId) {
         logger.error(
-          `no content for user action found in scheduler button handler`,
+          `no teamId or userId in handler for summarySchedularSettingsButtonHandler ${JSON.stringify(
+            body,
+          )}`,
         );
         return;
       }
 
       const userSettingsPromise = schedulerSettingsMgr.fetchUserSettings(
-        body.user.id,
-        body.team.id,
+        userId,
+        teamId,
       );
-      const userInfoPromise = client.users.info({ user: body.user.id });
+      const userInfoPromise = client.users.info({ user: userId });
       const [userSettings, userInfo] = await Promise.all([
         userSettingsPromise,
         userInfoPromise,
@@ -73,11 +88,11 @@ export const summarySchedularSettingsButtonHandler =
 
       analyticsManager.buttonClicked({
         type: 'scheduler-settings-button',
-        slackTeamId: body.team?.id || 'unknown',
-        slackUserId: body.user.id,
+        slackTeamId: teamId,
+        slackUserId: userId,
       });
     } catch (err) {
-      logger.error(`user feedback submit handler error: ${err.stack}`);
+      logger.error(`schedule settings load error: ${err} ${err.stack}`);
     }
   };
 

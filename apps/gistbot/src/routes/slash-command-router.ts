@@ -8,15 +8,23 @@ import { SlackSlashCommandWrapper } from '../slack/types';
 import { isBaseTeamWorkspace, isItayOnLenny } from '../slack/utils';
 import { channelSummarizationHandler } from '../summaries/channel-handler';
 import { ChannelSummarizer } from '../summaries/channel/channel-summarizer';
+import { summarySchedularSettingsButtonHandler } from '../summary-scheduler/handler';
+import { SchedulerSettingsManager } from '../summary-scheduler/scheduler-manager';
 
 export const slashCommandRouter = (
   channelSummarizer: ChannelSummarizer,
   analyticsManager: AnalyticsManager,
   featureRateLimiter: FeatureRateLimiter,
+  schedulerSettingsMgr: SchedulerSettingsManager,
 ) => {
   const handler = channelSummarizationHandler(
     analyticsManager,
     channelSummarizer,
+  );
+
+  const summarySchedulerSettings = summarySchedularSettingsButtonHandler(
+    schedulerSettingsMgr,
+    analyticsManager,
   );
 
   return async (props: SlackSlashCommandWrapper) => {
@@ -60,6 +68,11 @@ export const slashCommandRouter = (
           );
         }),
       );
+      return;
+    }
+
+    if (text === 'settings') {
+      await summarySchedulerSettings(props);
       return;
     }
 
