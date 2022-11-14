@@ -8,6 +8,11 @@ import { WebClient } from '@slack/web-api';
 import { IReporter } from '@base/metrics';
 import { SchedulerSettingsOnboardingButton } from './components/scheduler-settings-onboarding-button';
 import { onboardingChannelSummarizeMessage } from './components/onboarding-channel-summarize-message';
+import { SchedulerSettingsManager } from '../summary-scheduler/scheduler-manager';
+import {
+  UserSchedulerOptions,
+  UserSchedulerSettings,
+} from '../summary-scheduler/types';
 
 const ADD_TO_CHANNEL_FROM_WELCOME = 'add-to-channel-from-welcome';
 const ADD_TO_CHANNEL_FROM_WELCOME_MESSAGE =
@@ -158,6 +163,7 @@ export const addToChannelsFromWelcomeMessageHandler =
     analyticsManager: AnalyticsManager,
     metricsReporter: IReporter,
     channelSummarizer: ChannelSummarizer,
+    schedulerManager: SchedulerSettingsManager,
   ) =>
   async ({ ack, logger, body, client, context }: SlackBlockActionWrapper) => {
     try {
@@ -258,6 +264,13 @@ export const addToChannelsFromWelcomeMessageHandler =
         });
 
         postOnBoardingSchedulerSettingsBtn(client, body.user.id);
+        await saveDefaultUserSchedulerSettings(
+          client,
+          schedulerManager,
+          body.user.id,
+          body.team?.id || 'unknown',
+          selectedConversations,
+        );
       } catch (error) {
         metricsReporter.error(
           'add to channel from welcome message',
@@ -406,4 +419,65 @@ function postOnBoardingSchedulerSettingsBtn(client: WebClient, userId: string) {
       blocks: SchedulerSettingsOnboardingButton(),
     });
   }, 5000);
+}
+
+async function saveDefaultUserSchedulerSettings(
+  client: WebClient,
+  schedulerMgr: SchedulerSettingsManager,
+  userId: string,
+  teamId: string,
+  selectedChannels: string[],
+) {
+  const userInfo = await client.users.info({ user: userId });
+  if (
+    !userInfo ||
+    !userInfo.ok ||
+    userInfo.error ||
+    !userInfo.user?.tz_offset
+  ) {
+    logger.error(
+      `could not fetch user: ${userId} info to get timezone in user onboarding`,
+    );
+    return;
+  }
+
+  // set default hour
+  const date = new Date();
+  date.setUTCHours(Number(UserSchedulerOptions.MORNING), 0, 0);
+  const defaultHour = date.getUTCHours() - userInfo.user.tz_offset / 3600;
+
+  const usersettings = new UserSchedulerSettings();
+  usersettings.slackUser = userId;
+  usersettings.slackTeam = teamId;
+  usersettings.enabled = true;
+  usersettings.timeHour = defaultHour;
+
+  const channelsInfos = await Promise.all(
+    selectedChannels.map((c) => {
+      return client.conversations.info({ channel: c });
+    }),
+  );
+
+  for (const channelInfo of channelsInfos) {
+    if (
+      !channelInfo.ok ||
+      channelInfo.error ||
+      !channelInfo.channel?.id ||
+      !channelInfo.channel?.name
+    ) {
+      logger.error(
+        `error fetching channel info when saving default user settings in user onboarding`,
+      );
+      return;
+    }
+  }
+
+  usersettings.channels = channelsInfos.map((channelInfo) => {
+    return {
+      channelId: channelInfo.channel?.id as string,
+      channelName: channelInfo.channel?.name as string,
+    };
+  });
+  usersettings.days = [0, 1, 2, 3, 4, 5, 6];
+  await schedulerMgr.saveUserSchedulerSettings(usersettings);
 }

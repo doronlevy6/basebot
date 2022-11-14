@@ -217,6 +217,7 @@ export const registerBoltAppRouter = (
       analyticsManager,
       metricsReporter,
       channelSummarizer,
+      schedulerSettingsManager,
     ),
   );
 
