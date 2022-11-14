@@ -3,13 +3,13 @@ import { GoProScheduler } from './go-pro-scheduler';
 import { MultiChannelSummary } from './multi-channel-summary';
 
 export const ScheduledMultiChannelSummary = (
-  formattedText: string,
+  formattedSummaries: string[],
   limit: number,
   nonIncludedChannedIds: string[],
   sessionId: string,
 ): KnownBlock[] => {
   return [
-    ...MultiChannelSummary(formattedText, sessionId),
+    ...MultiChannelSummary(formattedSummaries, sessionId),
     {
       type: 'divider',
     },

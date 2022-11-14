@@ -380,14 +380,16 @@ export class MultiChannelSummarizer {
 
     return {
       summary: successfulSummary,
-      earliestMessageTs: threads.data[0].messageIds[0],
+      earliestMessageTs: threads.data.filter(
+        (td) => td.messageIds.length > 0,
+      )[0].messageIds[0],
     };
   }
 
   async getMultiChannelSummaryFormatted(
     summaries: MultiChannelSummarizerOutput,
     client: WebClient,
-  ) {
+  ): Promise<string[]> {
     const channelLinks = await Promise.all(
       summaries.summaries.map(async (outputSummary) => {
         try {

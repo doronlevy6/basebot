@@ -2,17 +2,19 @@ import { KnownBlock } from '@slack/bolt';
 import { Routes } from '../../routes/router';
 
 export const MultiChannelSummary = (
-  formattedText: string,
+  formattedSummaries: string[],
   sessionId: string,
 ): KnownBlock[] => {
   return [
-    {
-      type: 'section',
-      text: {
-        type: 'mrkdwn',
-        text: formattedText,
-      },
-    },
+    ...formattedSummaries.map((fs): KnownBlock => {
+      return {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: fs,
+        },
+      };
+    }),
     {
       type: 'divider',
     },

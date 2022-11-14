@@ -24,7 +24,7 @@ export const formatSummary = (
 export const formatMultiChannelSummary = (
   multiChannelSummaries: MultiChannelSummarizerOutput,
   channelLinks: Map<string, string | undefined>,
-) => {
+): string[] => {
   const generalErrorText = multiChannelGeneralErrorMessage(
     multiChannelSummaries,
   );
@@ -32,8 +32,9 @@ export const formatMultiChannelSummary = (
     const channelLinks = multiChannelSummaries.summaries.reduce((acc, t) => {
       return acc + `<#${t.channelId}>,`;
     }, '');
-    return `${channelLinks}\n${generalErrorText}`;
+    return [`${channelLinks}\n${generalErrorText}`];
   }
+
   const formattedSummaries = multiChannelSummaries.summaries.map((summary) => {
     if (summary.error) {
       if (summary.error === 'moderated') {
@@ -51,7 +52,8 @@ export const formatMultiChannelSummary = (
     }
     return `<#${summary.channelId}>\n${summary.summary}`;
   });
-  return formattedSummaries.join('\n\n');
+
+  return formattedSummaries;
 };
 
 const multiChannelGeneralErrorMessage = (

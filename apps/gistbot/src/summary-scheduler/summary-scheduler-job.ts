@@ -156,7 +156,7 @@ export class SummarySchedulerJob {
       await this.scheduledMessageSender.sendScheduledMessage(
         {
           channel: userSettings.slackUser,
-          text: summariesFormatted,
+          text: `Your summaries for ${limitedChannelSummries.length} channels`,
           blocks: ScheduledMultiChannelSummary(
             summariesFormatted,
             Number(featureLimit),
