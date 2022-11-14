@@ -19,6 +19,7 @@ import {
 import { ScheduledMessageSender } from '../slack/scheduled-messages/manager';
 
 export class SummarySchedulerJob {
+  private readonly tempWeekDays = '0,1,2,3,4,5';
   constructor(
     private schedulerMgr: SchedulerSettingsManager,
     private schedulerLock: RedisSchedulerSettingsLock,
@@ -30,9 +31,12 @@ export class SummarySchedulerJob {
   ) {}
 
   start() {
-    cron.schedule(`0 */${JOB_MINUTES_INTERVAL} * * * *`, async () => {
-      await this.handleScheduler();
-    });
+    cron.schedule(
+      `0 */${JOB_MINUTES_INTERVAL} * * * ${this.tempWeekDays}`,
+      async () => {
+        await this.handleScheduler();
+      },
+    );
   }
 
   async handleScheduler() {
