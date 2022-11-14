@@ -354,8 +354,8 @@ async function onBoardingSummarizeLoadingMessage(
   channels: string[],
 ) {
   const summarySingularOrPlural =
-    channels.length === 1 ? 'summary' : 'summaries';
-  const text = `Awesome! Getting that ${summarySingularOrPlural} ready for you! 🦾`;
+    channels.length === 1 ? 'that summary' : 'those summaries';
+  const text = `Awesome! Getting ${summarySingularOrPlural} ready for you! 🦾`;
   await client.chat.postMessage({
     channel: userId,
     text: text,

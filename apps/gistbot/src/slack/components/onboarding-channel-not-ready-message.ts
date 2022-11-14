@@ -15,7 +15,7 @@ export const onboardingChannelNotReadyMessage = (
       elements: [
         {
           type: 'mrkdwn',
-          text: `There was no meaningful conversation to summarize at ${channelErrsLinks} in the last ${daysBack} days.`,
+          text: `There weren't any meaningful conversations to summarize in ${channelErrsLinks} in the last ${daysBack} days.`,
         },
       ],
     },
