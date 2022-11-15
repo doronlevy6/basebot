@@ -44,7 +44,7 @@ export const SchedulerSettingsModal = (
     callback_id: Routes.SCHEDULER_SETTINGS_MODAL_SUBMIT,
     title: {
       type: 'plain_text',
-      text: 'Daily Summary Settings',
+      text: 'Scheduled Summary Settings',
       emoji: true,
     },
     submit: {
@@ -118,7 +118,7 @@ export const SchedulerSettingsModal = (
         block_id: 'radio-buttons-switch',
         label: {
           type: 'plain_text',
-          text: 'Daily Summary',
+          text: 'Get daily summaries',
           emoji: true,
         },
         element: {

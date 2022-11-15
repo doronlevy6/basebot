@@ -16,7 +16,7 @@ export const SchedulerSettingsOnboardingButton = (): KnownBlock[] => {
         type: 'button',
         text: {
           type: 'plain_text',
-          text: 'Daily Summary Settings',
+          text: 'Scheduled Summary Settings',
           emoji: true,
         },
         value: 'scheduler-settings-button',
