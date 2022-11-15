@@ -4,10 +4,17 @@ import { onboardingChannelNotReadyMessage } from './onboarding-channel-not-ready
 export const onboardingChannelSummarizeMessage = (
   succesChannelsIds: string[],
   errorChannelsIds: string[],
+  allChannelsIds: string[],
   daysBack: number,
 ): KnownBlock[] => {
   if (!succesChannelsIds?.length) {
-    return [...onboardingChannelNotReadyMessage(errorChannelsIds, daysBack)];
+    return [
+      ...onboardingChannelNotReadyMessage(
+        errorChannelsIds,
+        allChannelsIds,
+        daysBack,
+      ),
+    ];
   }
 
   const successLinks = succesChannelsIds.map((c) => `<#${c}> `);
@@ -20,7 +27,11 @@ export const onboardingChannelSummarizeMessage = (
         text: text,
       },
     },
-    ...onboardingChannelNotReadyMessage(errorChannelsIds, daysBack),
+    ...onboardingChannelNotReadyMessage(
+      errorChannelsIds,
+      allChannelsIds,
+      daysBack,
+    ),
     {
       type: 'divider',
     },

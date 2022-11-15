@@ -248,6 +248,7 @@ export const addToChannelsFromWelcomeMessageHandler =
           client,
           successChannels,
           channelErrs,
+          selectedConversations,
           body.user.id,
         );
         analyticsManager.messageSentToUserDM({
@@ -256,14 +257,18 @@ export const addToChannelsFromWelcomeMessageHandler =
           slackUserId: body.user.id || 'unknown',
         });
 
-        await onBoardingAddToMoreChannels(client, body.user.id);
-        analyticsManager.messageSentToUserDM({
-          type: 'onboarding_add_to_more_channels',
-          slackTeamId: body.team?.id || 'unknown',
-          slackUserId: body.user.id,
-        });
+        // send more options to user only if not all the channels summaries failed
+        if (selectedConversations?.length !== channelErrs?.length) {
+          await onBoardingAddToMoreChannels(client, body.user.id);
+          analyticsManager.messageSentToUserDM({
+            type: 'onboarding_add_to_more_channels',
+            slackTeamId: body.team?.id || 'unknown',
+            slackUserId: body.user.id,
+          });
 
-        postOnBoardingSchedulerSettingsBtn(client, body.user.id);
+          postOnBoardingSchedulerSettingsBtn(client, body.user.id);
+        }
+
         await saveDefaultUserSchedulerSettings(
           client,
           schedulerManager,
@@ -361,6 +366,9 @@ async function onBoardingSummarizeLoadingMessage(
     text: text,
     blocks: [
       {
+        type: 'divider',
+      },
+      {
         type: 'section',
         text: {
           type: 'mrkdwn',
@@ -375,6 +383,7 @@ async function postOnboardingChannelSummarizeMessage(
   client: WebClient,
   succesChannelsIds: string[],
   errorChannelsIds: string[],
+  allChannelsIds: string[],
   userId: string,
 ) {
   await client.chat.postMessage({
@@ -382,6 +391,7 @@ async function postOnboardingChannelSummarizeMessage(
     blocks: onboardingChannelSummarizeMessage(
       succesChannelsIds,
       errorChannelsIds,
+      allChannelsIds,
       DAYS_BACK_FOR_ONBOARDING,
     ),
   });
