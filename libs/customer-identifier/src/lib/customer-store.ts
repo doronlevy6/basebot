@@ -150,7 +150,7 @@ export class PgCustomerStore extends PgUtil implements CustomerStore {
       subscriptionTier: tier,
       subscriptionActive: res[0]['subscription_active'],
       subscriptionEndsAt: res[0]['subscription_ends_at']
-        ? new Date(res[0]['subscription_ends_at'])
+        ? new Date(res[0]['subscription_ends_at'] * 1000) // Multiply by 1000 because JS dates are milliseconds and normal dates are seconds
         : undefined,
       slackTeamId: res[0]['slack_team_id'],
       slackUserId: res[0]['slack_user_id'],
@@ -178,7 +178,7 @@ export class PgCustomerStore extends PgUtil implements CustomerStore {
       subscriptionTier: tier,
       subscriptionActive: res[0]['subscription_active'],
       subscriptionEndsAt: res[0]['subscription_ends_at']
-        ? new Date(res[0]['subscription_ends_at'])
+        ? new Date(res[0]['subscription_ends_at'] * 1000) // Multiply by 1000 because JS dates are milliseconds and normal dates are seconds
         : undefined,
       slackTeamId: res[0]['slack_team_id'],
       slackUserId: res[0]['slack_user_id'],
@@ -210,7 +210,7 @@ export class PgCustomerStore extends PgUtil implements CustomerStore {
       subscriptionTier: tier,
       subscriptionActive: res[0]['subscription_active'],
       subscriptionEndsAt: res[0]['subscription_ends_at']
-        ? new Date(res[0]['subscription_ends_at'])
+        ? new Date(res[0]['subscription_ends_at'] * 1000) // Multiply by 1000 because JS dates are milliseconds and normal dates are seconds
         : undefined,
       slackTeamId: res[0]['slack_team_id'],
       slackUserId: res[0]['slack_user_id'],
