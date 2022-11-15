@@ -74,6 +74,16 @@ const multiChannelGeneralErrorMessage = (
     }
   });
   const sumErrors = error + moderated + tooSmall;
+  if (
+    (moderated > 0 &&
+      error > 0 &&
+      tooSmall > 0 &&
+      sumErrors === multiChannelSummaries.summaries.length) ||
+    multiChannelSummaries.error ||
+    multiChannelSummaries.summaries.length === 0
+  ) {
+    return `:warning: The channels either didn’t have enough messages, were flagged as inappropriate, or failed to generate`;
+  }
   if (multiChannelSummaries.summaries.length === tooSmall) {
     return `:warning: None of the channel had any meaningful conversations to summarize.`;
   }
@@ -103,15 +113,6 @@ const multiChannelGeneralErrorMessage = (
     sumErrors === multiChannelSummaries.summaries.length
   ) {
     return `:warning: The channels either didn’t have enough messages or failed to generate”`;
-  }
-  if (
-    (moderated > 0 &&
-      error > 0 &&
-      tooSmall > 0 &&
-      sumErrors === multiChannelSummaries.summaries.length) ||
-    multiChannelSummaries.error
-  ) {
-    return `:warning: The channels either didn’t have enough messages, were flagged as inappropriate, or failed to generate`;
   }
   return false;
 };
