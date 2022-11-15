@@ -33,7 +33,7 @@ import {
 import { IReporter } from '@base/metrics';
 import { formatSummary } from '../../slack/summary-formatter';
 
-export const MAX_MESSAGES_TO_FETCH = 50;
+export const MAX_MESSAGES_TO_FETCH = 100;
 
 export const DEFAULT_DAYS_BACK = 1;
 
