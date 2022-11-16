@@ -8,11 +8,14 @@ import {
 } from '@base/queues';
 import { ChatPostMessageArguments, WebClient } from '@slack/web-api';
 import { PgInstallationStore } from '../../installations/installationStore';
+import { AnalyticsManager } from '../../analytics/manager';
 
 const QUEUE_NAME = 'sendScheduledMessage';
 
 interface ScheduledMessageJob {
+  messageType: string;
   teamId: string;
+  slackUserId: string;
   args: ChatPostMessageArguments;
 }
 
@@ -20,11 +23,13 @@ export class ScheduledMessageSender {
   private queueCfg: IQueueConfig;
   private messageSenderWorker: Worker<ScheduledMessageJob>;
   private messageSenderQueue: QueueWrapper<ScheduledMessageJob>;
-  private installationStore: PgInstallationStore;
 
-  constructor(queueCfg: IQueueConfig, installationStore: PgInstallationStore) {
+  constructor(
+    queueCfg: IQueueConfig,
+    private installationStore: PgInstallationStore,
+    private analyticsManager: AnalyticsManager,
+  ) {
     this.queueCfg = queueCfg;
-    this.installationStore = installationStore;
   }
 
   async isReady(): Promise<boolean> {
@@ -62,7 +67,9 @@ export class ScheduledMessageSender {
   }
 
   async sendScheduledMessage(
+    messageType: string,
     args: ChatPostMessageArguments,
+    userId: string,
     teamId: string,
     post_at: Date,
   ) {
@@ -78,7 +85,12 @@ export class ScheduledMessageSender {
 
     await this.messageSenderQueue.queue.add(
       QUEUE_NAME,
-      { args: args, teamId: teamId },
+      {
+        messageType: messageType,
+        slackUserId: userId,
+        args: args,
+        teamId: teamId,
+      },
       {
         delay: delay,
       },
@@ -96,7 +108,7 @@ export class ScheduledMessageSender {
   private async sendMessage(job: Job<ScheduledMessageJob>) {
     logger.debug({ msg: 'send scheduled message starting', job: job.data });
 
-    const { args, teamId } = job.data;
+    const { messageType, slackUserId, args, teamId } = job.data;
 
     const installation = await this.installationStore.fetchInstallationByTeamId(
       teamId,
@@ -109,5 +121,11 @@ export class ScheduledMessageSender {
     const client = new WebClient(installation.bot?.token);
     await client.chat.postMessage(args);
     logger.debug({ msg: 'send scheduled message completed', job: job.data });
+
+    this.analyticsManager.messageSentToUserDM({
+      type: messageType,
+      slackTeamId: teamId,
+      slackUserId: slackUserId,
+    });
   }
 }

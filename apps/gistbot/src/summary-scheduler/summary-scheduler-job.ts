@@ -161,6 +161,7 @@ export class SummarySchedulerJob {
 
       // post scheduled message to slack
       await this.scheduledMessageSender.sendScheduledMessage(
+        'scheduled_multi_channel_summary',
         {
           channel: userSettings.slackUser,
           text: `Your summaries for ${limitedChannelSummries.length} channels`,
@@ -174,6 +175,7 @@ export class SummarySchedulerJob {
           unfurl_links: false,
           unfurl_media: false,
         },
+        userSettings.slackUser,
         userSettings.slackTeam,
         timeToSchedule,
       );

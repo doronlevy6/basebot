@@ -264,6 +264,7 @@ const startApp = async () => {
   const scheduledMessageSender = new ScheduledMessageSender(
     allQueueCfg,
     pgStore,
+    analyticsManager,
   );
 
   const summarySchedulerJob = new SummarySchedulerJob(
