@@ -1,8 +1,8 @@
 import { KnownBlock } from '@slack/web-api';
 import { GoProButton } from './go-pro-button';
+import { PromoCodeText } from './promo-code-text';
 
-export const GoProText =
-  'It looks like you have exceeded your daily summary limit. To get more summaries per day, please subscribe to our pro tier';
+export const GoProText = `It looks like you have exceeded your daily summary limit. To get more summaries per day, please subscribe to our pro tier. ${PromoCodeText()}`;
 
 export const GoPro = (): KnownBlock[] => {
   return [
