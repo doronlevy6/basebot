@@ -169,6 +169,7 @@ export class SummarySchedulerJob {
             Number(featureLimit),
             nonIncludingChannels,
             sessionId,
+            userSettings.selectedHour,
           ),
           unfurl_links: false,
           unfurl_media: false,

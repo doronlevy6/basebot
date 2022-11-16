@@ -45,7 +45,7 @@ export const Help = (userId: string, myBotUserId: string): KnownBlock[] => {
       type: 'section',
       text: {
         type: 'mrkdwn',
-        text: '*:three: Scheduled summaries:*\n You can get a daily summary of your selected channels by typing `/gist settings`\n',
+        text: '*:three: Daily Digest:*\n You can get a daily summary of your selected channels by typing `/gist settings`\n',
       },
     },
     {

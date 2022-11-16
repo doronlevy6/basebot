@@ -44,7 +44,7 @@ export const SchedulerSettingsModal = (
     callback_id: Routes.SCHEDULER_SETTINGS_MODAL_SUBMIT,
     title: {
       type: 'plain_text',
-      text: 'Scheduling Settings',
+      text: 'Digest Settings',
       emoji: true,
     },
     submit: {

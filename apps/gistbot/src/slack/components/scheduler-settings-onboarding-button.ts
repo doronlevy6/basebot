@@ -10,13 +10,13 @@ export const SchedulerSettingsOnboardingButton = (): KnownBlock[] => {
       type: 'section',
       text: {
         type: 'mrkdwn',
-        text: '*Scheduled summaries:*\n We got you started getting a daily summary of your selected channels\n customize here 👉',
+        text: '*Daily Digest:*\n We got you started getting a daily summary of your selected channels\n customize here 👉',
       },
       accessory: {
         type: 'button',
         text: {
           type: 'plain_text',
-          text: 'Scheduled Summary Settings',
+          text: 'Daily Digest Settings',
           emoji: true,
         },
         value: 'scheduler-settings-button',
