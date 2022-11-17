@@ -5,6 +5,7 @@ import {
   InstallationStore,
 } from '@slack/bolt';
 import { PgUtil, PgConfig } from '@base/utils';
+import { logger } from '@base/logger';
 
 export class PgInstallationStore extends PgUtil implements InstallationStore {
   private metricsReporter: IReporter;
@@ -77,12 +78,14 @@ export class PgInstallationStore extends PgUtil implements InstallationStore {
   async fetchInstallation(
     query: InstallationQuery<boolean>,
   ): Promise<Installation<'v1' | 'v2', boolean>> {
+    logger.debug({ msg: `starting fetch installation`, query: query });
     if (query.isEnterpriseInstall && query.enterpriseId !== undefined) {
       const res = await this.db
         .select('raw')
         .from('gistbot_slack_enterprise_installations')
         .where({ slack_id: query.enterpriseId });
       if (!res || res.length == 0) {
+        logger.debug({ msg: `fetch installation not found`, query: query });
         throw new Error('no installation found');
       }
 
@@ -97,6 +100,7 @@ export class PgInstallationStore extends PgUtil implements InstallationStore {
         .from('gistbot_slack_installations')
         .where({ slack_id: query.teamId });
       if (!res || res.length == 0) {
+        logger.debug({ msg: `fetch installation not found`, query: query });
         throw new Error('no installation found');
       }
 

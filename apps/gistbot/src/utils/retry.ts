@@ -1,8 +1,11 @@
 interface RetryOpts {
   count: number;
+  delayer?: (iteration: number) => Promise<unknown>;
 }
 
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+export const delay = (ms: number) =>
+  new Promise((resolve) => setTimeout(resolve, ms));
+const defaultDelayer = (iteration: number) => delay(1000 * (iteration + 1));
 
 export async function retry<T>(
   func: () => Promise<T>,
@@ -16,7 +19,7 @@ export async function retry<T>(
       return res;
     } catch (error) {
       err = error as Error;
-      await delay(1000 * (i + 1));
+      await defaultDelayer(i);
     }
   }
 

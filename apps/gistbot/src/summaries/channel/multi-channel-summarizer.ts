@@ -17,7 +17,7 @@ import {
   approximatePromptCharacterCountForChannelSummary,
   MAX_PROMPT_CHARACTER_COUNT,
 } from '../models/prompt-character-calculator';
-import { retry } from '../../utils/retry';
+import { retry, delay } from '../../utils/retry';
 import { Message } from '@slack/web-api/dist/response/ChannelsRepliesResponse';
 import { ModerationError } from '../errors/moderation-error';
 import {
@@ -361,7 +361,16 @@ export class MultiChannelSummarizer {
             false,
           );
         },
-        { count: 10 },
+        {
+          count: 10,
+          delayer: (iteration) => {
+            const max = iteration + 1; // Max possible minutes to wait
+            const min = 1; // Min possible minutes to wait
+            const minute = 60 * 1000; // Milliseconds in a minute
+            const random = Math.floor(Math.random() * (max - min) + min); // Random between max and min
+            return delay(minute * random);
+          },
+        },
       );
 
       if (successfulSummary && successfulSummary.length > 0) {
