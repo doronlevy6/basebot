@@ -85,7 +85,7 @@ const multiChannelGeneralErrorMessage = (
     return `:warning: The channels either didn’t have enough messages, were flagged as inappropriate, or failed to generate`;
   }
   if (multiChannelSummaries.summaries.length === tooSmall) {
-    return `:warning: None of the channel had any meaningful conversations to summarize.`;
+    return `:warning: None of the channels had any meaningful conversations to summarize.`;
   }
   if (multiChannelSummaries.summaries.length === moderated) {
     return `:warning: All channels discussions were flagged as inappropriate`;
