@@ -71,6 +71,12 @@ export class PgOnboardingStore extends PgUtil implements OnboardingStore {
     teamId: string,
     userId: string,
   ): Promise<OnBoardedUser | undefined> {
+    if (!teamId || !userId) {
+      throw new Error(
+        `user id or team id can not be empty when trying to onboard a user, user id: [${userId}], team id: [${teamId}]`,
+      );
+    }
+
     const res = await this.db
       .select('*')
       .from('gistbot_user_onboardings')
