@@ -59,13 +59,14 @@ export const SchedulerSettingsModal = (
     },
     blocks: [
       {
-        type: 'section',
+        type: 'input',
+        optional: false,
         block_id: 'multi_conversations_select',
-        text: {
-          type: 'mrkdwn',
+        label: {
+          type: 'plain_text',
           text: 'Add/Remove channels from the summary:',
         },
-        accessory: {
+        element: {
           type: 'multi_conversations_select',
           placeholder: {
             type: 'plain_text',
