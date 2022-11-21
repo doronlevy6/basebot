@@ -1,12 +1,14 @@
 import { KnownBlock } from '@slack/bolt';
 import { Routes } from '../../routes/router';
+import { splitTextBlocks } from '../utils';
 
 export const MultiChannelSummary = (
   formattedSummaries: string[],
   sessionId: string,
 ): KnownBlock[] => {
+  const blocksText = formattedSummaries.flatMap((fs) => splitTextBlocks(fs));
   return [
-    ...formattedSummaries.map((fs): KnownBlock => {
+    ...blocksText.map((fs): KnownBlock => {
       return {
         type: 'section',
         text: {
