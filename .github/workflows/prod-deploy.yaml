@@ -20,7 +20,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        service: [slackbot, gistbot, treasury]
+        service: [slackbot, gistbot, treasury, slacker]
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v2
