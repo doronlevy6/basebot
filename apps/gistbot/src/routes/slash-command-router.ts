@@ -1,5 +1,5 @@
 import { logger } from '@base/logger';
-import { AnalyticsManager } from '../analytics/manager';
+import { AnalyticsManager } from '@base/gistbot-shared';
 import { Feature } from '../feature-rate-limiter/limits';
 import { FeatureRateLimiter } from '../feature-rate-limiter/rate-limiter';
 import { Help } from '../slack/components/help';

@@ -1,6 +1,6 @@
 import { logger } from '@base/logger';
 import { WebClient } from '@slack/web-api';
-import { AnalyticsManager } from '../../analytics/manager';
+import { AnalyticsManager } from '@base/gistbot-shared';
 import { ChannelSummarizer, MAX_MESSAGES_TO_FETCH } from './channel-summarizer';
 import { ChannelSummaryModel } from '../models/channel-summary.model';
 import {

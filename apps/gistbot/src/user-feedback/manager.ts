@@ -1,6 +1,6 @@
 import { logger } from '@base/logger';
 import { WebClient } from '@slack/web-api';
-import { AnalyticsManager } from '../analytics/manager';
+import { AnalyticsManager } from '@base/gistbot-shared';
 import { FreetextFeedback } from '../slack/components/freetext-feedback';
 import { UserLink } from '../slack/components/user-link';
 

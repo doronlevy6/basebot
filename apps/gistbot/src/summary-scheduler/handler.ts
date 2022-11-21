@@ -1,6 +1,6 @@
 import { logger } from '@base/logger';
 import { SlashCommand } from '@slack/bolt';
-import { AnalyticsManager } from '../analytics/manager';
+import { AnalyticsManager } from '@base/gistbot-shared';
 import { addToChannel } from '../slack/add-to-channel';
 import { SchedulerSettingsModal } from '../slack/components/scheduler-settings-modal';
 import {
@@ -101,18 +101,13 @@ export const summarySchedularSettingsModalHandler =
   async (params: ViewAction) => {
     try {
       const { ack, body, client, view } = params;
+      await ack();
 
       const selectedChannels =
         view.state.values['multi_conversations_select'].value
           .selected_conversations;
       if (!selectedChannels?.length) {
         logger.error('no channels were selected in scheduler settings modal');
-        await ack({
-          response_action: 'errors',
-          errors: {
-            multi_conversations_select: 'channels must be selected',
-          },
-        });
         return;
       }
 
@@ -120,16 +115,8 @@ export const summarySchedularSettingsModalHandler =
         logger.error(
           `team id not exist for user ${body.user.id} in scheduler settings modal`,
         );
-        await ack({
-          response_action: 'errors',
-          errors: {
-            multi_conversations_select: 'team id not exist for user',
-          },
-        });
         return;
       }
-
-      await ack();
 
       const joinChannelsPromises = selectedChannels.map((c) => {
         return addToChannel(

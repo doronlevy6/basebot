@@ -2,7 +2,7 @@ import {
   CustomerIdentifier,
   isPassphraseMessage,
 } from '@base/customer-identifier';
-import { AnalyticsManager } from '../analytics/manager';
+import { AnalyticsManager } from '@base/gistbot-shared';
 import { OnboardingManager } from '../onboarding/manager';
 import { Help } from '../slack/components/help';
 import { SlackEventWrapper } from '../slack/types';

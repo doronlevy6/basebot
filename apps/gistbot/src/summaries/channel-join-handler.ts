@@ -1,6 +1,6 @@
 import { ChannelJoinMessageEvent, KnownBlock } from '@slack/bolt';
 import { ChatPostEphemeralResponse, WebClient } from '@slack/web-api';
-import { AnalyticsManager } from '../analytics/manager';
+import { AnalyticsManager } from '@base/gistbot-shared';
 import { NewUserTriggersManager } from '../new-user-triggers/manager';
 import { OnboardingManager } from '../onboarding/manager';
 import { Routes } from '../routes/router';

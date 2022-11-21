@@ -1,5 +1,5 @@
 import { GenericMessageEvent } from '@slack/bolt';
-import { AnalyticsManager } from '../analytics/manager';
+import { AnalyticsManager } from '@base/gistbot-shared';
 import { OnboardingManager } from '../onboarding/manager';
 import { parseSlackMrkdwn } from '../slack/parser';
 import { SlackEventWrapper } from '../slack/types';

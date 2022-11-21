@@ -1,6 +1,6 @@
 import { logger } from '@base/logger';
 import { WebClient } from '@slack/web-api';
-import { AnalyticsManager } from '../analytics/manager';
+import { AnalyticsManager } from '@base/gistbot-shared';
 import { Routes } from '../routes/router';
 import {
   ChannelSummarizer,

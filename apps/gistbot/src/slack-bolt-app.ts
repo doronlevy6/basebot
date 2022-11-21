@@ -1,37 +1,23 @@
-import { App } from '@slack/bolt';
-import { IReporter } from '@base/metrics';
-import { logger, BoltWrapper } from '@base/logger';
-import { PgInstallationStore } from './installations/installationStore';
-import { installationSucccessHandler } from './installations/success-handler';
-import { installationFailureHandler } from './installations/failure-handler';
-import { healthRoute } from './routes/health-route';
-import { metricsRoute } from './routes/metrics-route';
-import { AnalyticsManager } from './analytics/manager';
 import {
-  AUTH_VERSION,
-  installEndpoint,
-} from './installations/install-endpoint';
-import { internalSessionFetcherRoute } from './routes/internal-session-fetcher-route';
-import { InternalSessionFetcher } from './summaries/session-data/internal-fetcher';
+  App,
+  AuthorizeResult,
+  Installation,
+  InstallationStore,
+  Receiver,
+} from '@slack/bolt';
+import { logger, BoltWrapper } from '@base/logger';
 
 export function createApp(
-  installationStore: PgInstallationStore,
-  metricsReporter: IReporter,
-  analyticsManager: AnalyticsManager,
-  internalSessionFetcher: InternalSessionFetcher,
-  baseApiKey: string,
+  receiver: Receiver,
+  installationStore: InstallationStore,
 ): App {
   return new App({
+    receiver: receiver,
     logger: new BoltWrapper(logger),
     signingSecret: process.env.GISTBOT_SLACK_SIGNING_SECRET,
     clientId: process.env.GISTBOT_SLACK_CLIENT_ID,
     clientSecret: process.env.GISTBOT_SLACK_CLIENT_SECRET,
     stateSecret: process.env.GISTBOT_SLACK_STATE_SECRET,
-    customRoutes: [
-      healthRoute(),
-      metricsRoute(metricsReporter),
-      internalSessionFetcherRoute(baseApiKey, internalSessionFetcher),
-    ],
     scopes: [
       'chat:write',
       'im:history',
@@ -46,19 +32,43 @@ export function createApp(
       'channels:read',
       'groups:read',
     ],
-    installationStore: installationStore,
-    installerOptions: {
-      directInstall: true,
-      installPathOptions: {
-        beforeRedirection: installEndpoint(analyticsManager),
-      },
-      stateCookieExpirationSeconds: 86400, // 1 day in seconds
-      stateVerification: false, // Must be set to false to allow Org-level apps to be installed (which we need to allow)
-      authVersion: AUTH_VERSION,
-      callbackOptions: {
-        successAsync: installationSucccessHandler(analyticsManager),
-        failure: installationFailureHandler(analyticsManager),
-      },
+    // All of the installation stuff cannot happen on this app, since the receiver is an asynchronous receiver
+    // listening to SQS. The actual installation handling should be in the `apps/slacker` slack bolt app.
+    // The installation store itself is passed in for a readonly capacity, to add an authorized token to each request received.
+    authorize: async ({
+      teamId,
+      enterpriseId,
+      isEnterpriseInstall,
+    }): Promise<AuthorizeResult> => {
+      const installation = await installationStore.fetchInstallation({
+        teamId: teamId,
+        enterpriseId: enterpriseId,
+        isEnterpriseInstall: isEnterpriseInstall,
+      });
+
+      if (isEnterpriseInstall) {
+        const orgInstallation = installation as Installation<'v2', true>;
+
+        return {
+          botToken: orgInstallation.bot?.token,
+          userToken: orgInstallation.user.token,
+          botId: orgInstallation.bot?.id,
+          botUserId: orgInstallation.bot?.userId,
+          teamId: undefined, // We actually have the team id on the installation value, but the type won't let us extract it.
+          enterpriseId: orgInstallation.enterprise.id,
+        };
+      }
+
+      const normalInstallation = installation as Installation<'v2', false>;
+
+      return {
+        botToken: normalInstallation.bot?.token,
+        userToken: normalInstallation.user.token,
+        botId: normalInstallation.bot?.id,
+        botUserId: normalInstallation.bot?.userId,
+        teamId: normalInstallation.team.id,
+        enterpriseId: normalInstallation.enterprise?.id,
+      };
     },
     socketMode: false,
     developerMode: true,

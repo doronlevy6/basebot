@@ -1,4 +1,4 @@
-import { AnalyticsManager } from '../../analytics/manager';
+import { AnalyticsManager } from '@base/gistbot-shared';
 import { SlackBlockActionWrapper } from '../../slack/types';
 
 import { Routes } from '../../routes/router';

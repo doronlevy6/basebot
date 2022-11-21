@@ -1,6 +1,10 @@
 import { logger } from '@base/logger';
 import { WebClient } from '@slack/web-api';
-import { AnalyticsManager } from '../analytics/manager';
+import {
+  AnalyticsManager,
+  PgInstallationStore,
+  identifyTriggeringUser,
+} from '@base/gistbot-shared';
 import { UserLink } from '../slack/components/user-link';
 import { Welcome } from '../slack/components/welcome';
 import { UserOnboardedNotifier } from './notifier';
@@ -14,10 +18,8 @@ import {
   NudgeMessage,
   NudgeMessageText,
 } from '../slack/components/nudge-message';
-import { PgInstallationStore } from '../installations/installationStore';
 import { differenceInDays } from 'date-fns';
 import { IReporter } from '@base/metrics';
-import { identifyTriggeringUser } from '../slack/utils';
 
 export class OnboardingManager {
   constructor(

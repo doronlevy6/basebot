@@ -1,9 +1,8 @@
 import { SlackShortcutWrapper } from '../slack/types';
 import { addToChannel } from '../slack/add-to-channel';
 import { summaryInProgressMessage } from './utils';
-import { AnalyticsManager } from '../analytics/manager';
+import { AnalyticsManager, identifyTriggeringUser } from '@base/gistbot-shared';
 import { privateChannelInstructions } from '../slack/private-channel';
-import { identifyTriggeringUser } from '../slack/utils';
 import { ThreadSummarizer } from './thread/thread-summarizer';
 import { Logger, WebClient } from '@slack/web-api';
 import { Context, MessageShortcut, RespondFn } from '@slack/bolt';

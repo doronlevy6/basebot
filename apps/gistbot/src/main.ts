@@ -6,13 +6,12 @@ import { loadEnvs } from '@base/env';
 import { environment } from './environments/environment';
 loadEnvs(environment, ['configs', 'secrets']);
 
-import { logger } from '@base/logger';
+import { BoltWrapper, logger } from '@base/logger';
 import { PrometheusReporter, slackBoltMetricsMiddleware } from '@base/metrics';
 import { Server } from 'http';
-import { PgInstallationStore } from './installations/installationStore';
+import { PgInstallationStore, AnalyticsManager } from '@base/gistbot-shared';
 import { createApp } from './slack-bolt-app';
 import { registerBoltAppRouter } from './routes/router';
-import { AnalyticsManager } from './analytics/manager';
 import { ThreadSummaryModel } from './summaries/models/thread-summary.model';
 import { ChannelSummaryModel } from './summaries/models/channel-summary.model';
 import { PgOnboardingStore } from './onboarding/onboardingStore';
@@ -47,6 +46,10 @@ import {
 import { EmailSender } from '@base/emailer';
 import { PgOrgSettingsStore } from './orgsettings/store';
 import { ScheduledMessageSender } from './slack/scheduled-messages/manager';
+import AwsSQSReceiver from './slack/sqs-receiver';
+import { SqsConsumer } from '@base/pubsub';
+import { createServer } from './server';
+import { App } from '@slack/bolt';
 
 const gracefulShutdown = (server: Server) => (signal: string) => {
   logger.info('starting shutdown, got signal ' + signal);
@@ -61,9 +64,17 @@ const gracefulShutdown = (server: Server) => (signal: string) => {
   });
 };
 
-const gracefulShutdownAsync = (analyticsManager: AnalyticsManager) => {
+const gracefulShutdownAsync = (
+  app: App,
+  sqsConsumer: SqsConsumer,
+  analyticsManager: AnalyticsManager,
+) => {
   return async () => {
-    await Promise.all([analyticsManager.close()]);
+    await Promise.all([
+      sqsConsumer.stop(),
+      app.stop(),
+      analyticsManager.close(),
+    ]);
   };
 };
 
@@ -288,13 +299,27 @@ const startApp = async () => {
     scheduledMessageSender,
   );
 
-  const slackApp = createApp(
-    pgStore,
-    metricsReporter,
-    analyticsManager,
-    internalSessionFetcher,
-    baseApiKey,
-  );
+  const sqsRegion = process.env.SQS_REGION;
+  const sqsBaseUrl = process.env.SQS_BASE_URL;
+  const sqsAccountId = process.env.SQS_ACCOUNT_ID;
+  const slackEventsQueueName = process.env.SLACK_SQS_QUEUE_NAME;
+  if (!sqsRegion || !sqsBaseUrl || !sqsAccountId || !slackEventsQueueName) {
+    throw new Error('missing sqs details in configs');
+  }
+
+  const sqsConfig = {
+    baseUrl: sqsBaseUrl,
+    region: sqsRegion,
+    accountId: sqsAccountId,
+  };
+
+  const sqsReceiver = new AwsSQSReceiver({
+    sqsConfig: sqsConfig,
+    sqsQueueName: slackEventsQueueName,
+    logger: new BoltWrapper(logger),
+  });
+
+  const slackApp = createApp(sqsReceiver, pgStore);
   slackApp.use(slackBoltMetricsMiddleware(metricsReporter));
 
   registerBoltAppRouter(
@@ -316,8 +341,17 @@ const startApp = async () => {
     orgSettingsStore,
   );
 
+  // Bolt's Receiver implements a start function that returns a generic value,
+  // but the App start function is hardcoded to return an Http Server value.
+  // Because we are forcing this to be our implementation of an SqsReceiver then we
+  // force the type to be an SqsReceiver type.
+  const sqsConsumer = (await slackApp.start()) as unknown as SqsConsumer;
+
+  const app = createServer(metricsReporter, internalSessionFetcher, baseApiKey);
   const port = process.env['PORT'] || 3000;
-  const server = await slackApp.start(port);
+  const server = app.listen(port, () => {
+    logger.debug(`running ${env} server on port ${port}`);
+  });
   server.on('error', console.error);
 
   onboardingNudgeJob.start();
@@ -326,11 +360,14 @@ const startApp = async () => {
   const shutdownHandler = gracefulShutdown(server);
   process.on('SIGINT', shutdownHandler);
   process.on('SIGTERM', shutdownHandler);
-  // The 'beforeExit' event is supposed to allow promises and is the place where
-  // we are supposed to do graceful async shutdowns. Not sure why the signature
-  // doesn't accept a promise...
-  // eslint-disable-next-line @typescript-eslint/no-misused-promises
-  process.on('beforeExit', gracefulShutdownAsync(analyticsManager));
+  process.on(
+    'beforeExit',
+    // The 'beforeExit' event is supposed to allow promises and is the place where
+    // we are supposed to do graceful async shutdowns. Not sure why the signature
+    // doesn't accept a promise...
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
+    gracefulShutdownAsync(slackApp, sqsConsumer, analyticsManager),
+  );
 };
 
 // eslint-disable-next-line @typescript-eslint/no-floating-promises

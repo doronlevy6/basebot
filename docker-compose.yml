@@ -1,5 +1,28 @@
 version: "3.8"
 services:
+  slacker:
+    build:
+      dockerfile: ./build/Dockerfile.local
+      context: .
+    volumes:
+      - ./apps:/app/apps
+      - ./libs:/app/libs
+      - ./configs:/app/configs
+      - ./secrets:/app/secrets
+    command: npm run start slacker
+    depends_on:
+      - postgres
+      - redis
+      - sqs
+    environment:
+      NODE_OVERRIDE_ENV: local
+      PORT: 3000
+      AWS_ACCESS_KEY_ID: xxx
+      AWS_SECRET_ACCESS_KEY: xxx
+    ports:
+      - 3000:3000
+      - 9229:9229
+
   gistbot:
     build:
       dockerfile: ./build/Dockerfile.local
@@ -13,9 +36,12 @@ services:
     depends_on:
       - postgres
       - redis
+      - sqs
     environment:
       NODE_OVERRIDE_ENV: local
       PORT: 3000
+      AWS_ACCESS_KEY_ID: xxx
+      AWS_SECRET_ACCESS_KEY: xxx
     ports:
       - 3002:3000
       - 9230:9229
@@ -33,6 +59,7 @@ services:
     depends_on:
       - postgres
       - redis
+      - sqs
     environment:
       NODE_OVERRIDE_ENV: local
       PORT: 3000

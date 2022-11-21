@@ -1,0 +1,23 @@
+{
+  "root": "libs/gistbot-shared",
+  "sourceRoot": "libs/gistbot-shared/src",
+  "projectType": "library",
+  "targets": {
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["libs/gistbot-shared/**/*.ts"]
+      }
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": ["coverage/libs/gistbot-shared"],
+      "options": {
+        "jestConfig": "libs/gistbot-shared/jest.config.ts",
+        "passWithNoTests": true
+      }
+    }
+  },
+  "tags": []
+}

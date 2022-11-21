@@ -1,6 +1,6 @@
 import { logger } from '@base/logger';
 import { WebClient } from '@slack/web-api';
-import { PgInstallationStore } from '../../installations/installationStore';
+import { PgInstallationStore } from '@base/gistbot-shared';
 import { SlackMessage } from '../types';
 import { SessionDataStore } from './session-data-store';
 import { ChannelSummarySession, ThreadSummarySession } from './types';

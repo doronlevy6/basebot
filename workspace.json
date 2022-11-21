@@ -2,12 +2,19 @@
   "$schema": "./node_modules/nx/schemas/workspace-schema.json",
   "version": 2,
   "projects": {
+    "customer-identifier": "libs/customer-identifier",
+    "emailer": "libs/emailer",
     "env": "libs/env",
     "gistbot": "apps/gistbot",
+    "gistbot-shared": "libs/gistbot-shared",
     "logger": "libs/logger",
     "metrics": "libs/metrics",
     "oapigen": "libs/oapigen",
+    "pubsub": "libs/pubsub",
+    "queues": "libs/queues",
     "slackbot": "apps/slackbot",
-    "treasury": "apps/treasury"
+    "slacker": "apps/slacker",
+    "treasury": "apps/treasury",
+    "utils": "libs/utils"
   }
 }

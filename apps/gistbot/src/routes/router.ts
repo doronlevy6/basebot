@@ -1,5 +1,5 @@
 import { App, directMention, InstallationStore, subtype } from '@slack/bolt';
-import { AnalyticsManager } from '../analytics/manager';
+import { AnalyticsManager } from '@base/gistbot-shared';
 import { appHomeOpenedHandler } from '../onboarding/app-home-opened-handler';
 import { OnboardingManager } from '../onboarding/manager';
 import { addToChannelHandler } from '../slack/add-to-channel';

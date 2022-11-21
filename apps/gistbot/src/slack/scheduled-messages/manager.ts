@@ -7,8 +7,7 @@ import {
   QueueWrapper,
 } from '@base/queues';
 import { ChatPostMessageArguments, WebClient } from '@slack/web-api';
-import { PgInstallationStore } from '../../installations/installationStore';
-import { AnalyticsManager } from '../../analytics/manager';
+import { AnalyticsManager, PgInstallationStore } from '@base/gistbot-shared';
 
 const QUEUE_NAME = 'sendScheduledMessage';
 

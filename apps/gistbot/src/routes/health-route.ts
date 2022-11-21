@@ -1,11 +1,7 @@
-import { CustomRoute } from '@slack/bolt';
+import { Request, Response, RequestHandler } from 'express';
 
-export const healthRoute = (): CustomRoute => ({
-  path: '/health',
-  method: ['GET'],
-  // The signature here should allow an async function and it is handled correctly internally
-  // eslint-disable-next-line @typescript-eslint/no-misused-promises
-  handler: async (_, res) => {
+export const healthRoute =
+  (): RequestHandler => async (_req: Request, res: Response) => {
     res.writeHead(200);
     const healthRes = {
       status: 'ok',
@@ -28,5 +24,4 @@ export const healthRoute = (): CustomRoute => ({
       },
     };
     res.end(JSON.stringify(healthRes));
-  },
-});
+  };

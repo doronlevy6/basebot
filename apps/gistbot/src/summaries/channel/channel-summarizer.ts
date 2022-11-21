@@ -1,7 +1,7 @@
 import { logger } from '@base/logger';
 import { RespondFn } from '@slack/bolt';
 import { KnownBlock, WebClient } from '@slack/web-api';
-import { AnalyticsManager } from '../../analytics/manager';
+import { AnalyticsManager } from '@base/gistbot-shared';
 import { Feature } from '../../feature-rate-limiter/limits';
 import { FeatureRateLimiter } from '../../feature-rate-limiter/rate-limiter';
 import { Routes } from '../../routes/router';

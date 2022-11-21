@@ -1,19 +1,13 @@
 import { logger } from '@base/logger';
-import { CustomRoute } from '@slack/bolt';
+import { Request, Response, RequestHandler } from 'express';
 import {
   InternalSessionFetcher,
   SessionFetchRequest,
 } from '../summaries/session-data/internal-fetcher';
 
-export const internalSessionFetcherRoute = (
-  apiKey: string,
-  fetcher: InternalSessionFetcher,
-): CustomRoute => ({
-  path: '/internal/feedback/fetch',
-  method: ['POST'],
-  // The signature here should allow an async function and it is handled correctly internally
-  // eslint-disable-next-line @typescript-eslint/no-misused-promises
-  handler: async (req, res) => {
+export const internalSessionFetcherRoute =
+  (apiKey: string, fetcher: InternalSessionFetcher): RequestHandler =>
+  async (req: Request, res: Response) => {
     if (!req.headers.authorization) {
       res.statusCode = 401;
       res.setHeader('Content-Type', 'application/json');
@@ -51,8 +45,7 @@ export const internalSessionFetcherRoute = (
           res.end(JSON.stringify({ error: error }));
         });
     });
-  },
-});
+  };
 
 const parseRequest = (req: string): SessionFetchRequest | undefined => {
   try {

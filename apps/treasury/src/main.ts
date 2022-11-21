@@ -11,8 +11,7 @@ import { PrometheusReporter } from '@base/metrics';
 import { Server } from 'http';
 import { createServer } from './server';
 import { PaymentsManager } from './payments/manager';
-import { SqsPublisher } from './pubsub/sqs-publisher';
-import { SqsConsumer } from './pubsub/sqs-consumer';
+import { SqsPublisher, SqsConsumer } from '@base/pubsub';
 import { RedisFullSyncJobLock } from './payments/joblock';
 import { PgConfig, readyChecker, RedisConfig } from '@base/utils';
 import {

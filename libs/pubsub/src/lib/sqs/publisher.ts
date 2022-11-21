@@ -1,7 +1,8 @@
 import { Endpoint, SQS } from 'aws-sdk';
 import { logger } from '@base/logger';
 import * as path from 'path';
-import { Publisher, SqsConfig } from './types';
+import { Publisher } from '../types';
+import { SqsConfig } from './types';
 
 export class SqsPublisher implements Publisher {
   private client: SQS;
@@ -38,8 +39,8 @@ export class SqsPublisher implements Publisher {
     } catch (error) {
       logger.error({
         msg: `error in publishing message to sqs`,
-        error: error.message,
-        stack: error.stack,
+        error: (error as Error).message,
+        stack: (error as Error).stack,
       });
       throw error;
     }

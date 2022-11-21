@@ -1,7 +1,7 @@
 import { logger } from '@base/logger';
 import { IncomingHttpHeaders } from 'http';
 import { Stripe } from 'stripe';
-import { Publisher } from '../pubsub/types';
+import { Publisher } from '@base/pubsub';
 import { FullSyncJobLock } from './joblock';
 import * as cron from 'node-cron';
 import {

@@ -2,22 +2,9 @@ import { Endpoint, SQS } from 'aws-sdk';
 import { logger } from '@base/logger';
 import * as path from 'path';
 import { SqsConfig } from './types';
+import { Consumer, Deferred } from '../types';
 
-class Deferred {
-  promise: Promise<void>;
-  resolve: () => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  reject: (reason?: any) => void;
-
-  constructor() {
-    this.promise = new Promise<void>((resolve, reject) => {
-      this.resolve = resolve;
-      this.reject = reject;
-    });
-  }
-}
-
-export class SqsConsumer {
+export class SqsConsumer implements Consumer {
   private client: SQS;
   private stopped: boolean;
   private stoppedWait: Deferred;
@@ -111,8 +98,8 @@ export class SqsConsumer {
         } catch (error) {
           logger.error({
             msg: `error in running consumer function on message from sqs`,
-            error: error.message,
-            stack: error.stack,
+            error: (error as Error).message,
+            stack: (error as Error).stack,
           });
         }
       });
@@ -121,8 +108,8 @@ export class SqsConsumer {
     } catch (error) {
       logger.error({
         msg: `error in receiving messages from sqs`,
-        error: error.message,
-        stack: error.stack,
+        error: (error as Error).message,
+        stack: (error as Error).stack,
       });
     }
   }

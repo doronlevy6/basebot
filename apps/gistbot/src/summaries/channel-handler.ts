@@ -1,8 +1,7 @@
 import { addToChannel } from '../slack/add-to-channel';
 import { SlackSlashCommandWrapper } from '../slack/types';
-import { AnalyticsManager } from '../analytics/manager';
+import { AnalyticsManager, identifyTriggeringUser } from '@base/gistbot-shared';
 import { privateChannelInstructions } from '../slack/private-channel';
-import { identifyTriggeringUser } from '../slack/utils';
 import { ChannelSummarizer } from './channel/channel-summarizer';
 import { extractDaysBack, summaryInProgressMessage } from './utils';
 import { RespondFn, SlashCommand, Context } from '@slack/bolt';

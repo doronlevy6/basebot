@@ -1,5 +1,5 @@
 import { SlackBlockActionWrapper } from '../../slack/types';
-import { AnalyticsManager } from '../../analytics/manager';
+import { AnalyticsManager } from '@base/gistbot-shared';
 import { UserFeedbackManager } from '../../user-feedback/manager';
 import { extractSessionIdAndValueFromFeedback } from '../../slack/components/summary-feedback';
 import { SummaryStore } from '../summary-store';

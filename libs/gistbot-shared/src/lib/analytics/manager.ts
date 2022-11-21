@@ -38,7 +38,9 @@ export class AnalyticsManager {
     try {
       await this.client.flush();
     } catch (error) {
-      logger.error(`failed to flush analytics batch on close: ${error.stack}`);
+      logger.error(
+        `failed to flush analytics batch on close: ${(error as Error).stack}`,
+      );
     }
   }
 

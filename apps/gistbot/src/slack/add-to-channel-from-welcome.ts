@@ -1,5 +1,5 @@
 import { logger } from '@base/logger';
-import { AnalyticsManager } from '../analytics/manager';
+import { AnalyticsManager } from '@base/gistbot-shared';
 import { Routes } from '../routes/router';
 import { addToChannel } from './add-to-channel';
 import { SlackBlockActionWrapper, ViewAction } from './types';
