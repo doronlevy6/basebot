@@ -14,6 +14,12 @@ interface PlaintextOpts {
   unlabeledUrlReplacement: string;
 }
 
+export const defaultParseTextOpts = {
+  removeCodeblocks: true,
+  stripUnlabelsUrls: true,
+  unlabeledUrlReplacement: '<LINK>',
+};
+
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface ParsedMessagePlaintextOpts extends Partial<PlaintextOpts> {}
 
