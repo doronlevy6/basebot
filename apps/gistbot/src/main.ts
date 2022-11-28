@@ -12,8 +12,6 @@ import { Server } from 'http';
 import { PgInstallationStore, AnalyticsManager } from '@base/gistbot-shared';
 import { createApp } from './slack-bolt-app';
 import { registerBoltAppRouter } from './routes/router';
-import { ThreadSummaryModel } from './summaries/models/thread-summary.model';
-import { ChannelSummaryModel } from './summaries/models/channel-summary.model';
 import { PgOnboardingStore } from './onboarding/onboardingStore';
 import { ChannelSummarizer } from './summaries/channel/channel-summarizer';
 import { ThreadSummarizer } from './summaries/thread/thread-summarizer';
@@ -50,6 +48,8 @@ import AwsSQSReceiver from './slack/sqs-receiver';
 import { SqsConsumer } from '@base/pubsub';
 import { createServer } from './server';
 import { App } from '@slack/bolt';
+import { MessagesSummaryModel } from './summaries/models/messages-summary.model';
+import { MessagesSummarizer } from './summaries/messages/messages-summarizer';
 
 const gracefulShutdown = (server: Server) => (signal: string) => {
   logger.info('starting shutdown, got signal ' + signal);
@@ -136,15 +136,22 @@ const startApp = async () => {
     subscriptionManager,
   );
 
+  const messagesSummaryModel = new MessagesSummaryModel();
+
   const onboardingLock = new RedisOnboardingLock(redisConfig, env);
   const summarySchedulerLock = new RedisSchedulerSettingsLock(redisConfig, env);
   const summaryStore = new SummaryStore(redisConfig, env);
   const newUserTriggersLock = new RedisTriggerLock(redisConfig, env);
   const onboardingNudgeLock = new RedisOnboardingNudgeLock(redisConfig, env);
   const analyticsManager = new AnalyticsManager();
-  const threadSummaryModel = new ThreadSummaryModel();
+
+  const messagesSummarizer = new MessagesSummarizer(
+    messagesSummaryModel,
+    pgSessionDataStore,
+  );
+
   const threadSummarizer = new ThreadSummarizer(
-    threadSummaryModel,
+    messagesSummarizer,
     analyticsManager,
     summaryStore,
     pgSessionDataStore,
@@ -152,9 +159,8 @@ const startApp = async () => {
     featureRateLimiter,
   );
 
-  const channelSummaryModel = new ChannelSummaryModel();
   const channelSummarizer = new ChannelSummarizer(
-    channelSummaryModel,
+    messagesSummarizer,
     analyticsManager,
     summaryStore,
     pgSessionDataStore,
@@ -255,7 +261,7 @@ const startApp = async () => {
   );
 
   const multiChannelSummarizer = new MultiChannelSummarizer(
-    channelSummaryModel,
+    messagesSummarizer,
     analyticsManager,
     channelSummarizer,
   );

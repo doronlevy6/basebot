@@ -363,3 +363,83 @@ export const genericErrorMessage = async (
     );
   }
 };
+
+export const getUserOrBotDetails = async (
+  userOrBotIds: { user_id: string; is_bot: boolean }[],
+  teamId: string,
+  client: WebClient,
+): Promise<
+  {
+    name: string;
+    title: string;
+    id: string;
+  }[]
+> => {
+  return Promise.all(
+    userOrBotIds.map((u) => {
+      if (u.is_bot) {
+        return client.bots
+          .info({ bot: u.user_id, team_id: teamId })
+          .catch((reason) => {
+            logger.error(
+              `failed to get bot info for bot ${u} on team ${teamId}: ${reason}`,
+            );
+            return {
+              bot: { bot_id: u, name: 'Unknown Bot' },
+              ok: true,
+            } as BotsInfoResponse;
+          })
+          .then((bir) => {
+            if (!bir.bot?.name) {
+              return {
+                name: 'Unknown Bot',
+                title: 'Bot',
+                id: u.user_id,
+              };
+            }
+
+            const capitalizedName =
+              bir.bot.name.charAt(0).toUpperCase() + bir.bot.name.slice(1);
+
+            return {
+              name: capitalizedName,
+              title: 'Bot',
+              id: u.user_id,
+            };
+          });
+      }
+
+      return client.users.profile
+        .get({ user: u.user_id })
+        .then((res) => {
+          if (res.error) {
+            throw new Error(`message user error: ${res.error}`);
+          }
+          if (!res.ok || !res.profile) {
+            throw new Error('message user not ok');
+          }
+
+          const name =
+            res.profile.display_name ||
+            res.profile.real_name ||
+            res.profile.first_name ||
+            'Unknown User';
+
+          const capitalizedName = name.charAt(0).toUpperCase() + name.slice(1);
+
+          return {
+            name: capitalizedName,
+            title: res.profile.title || '',
+            id: u.user_id,
+          };
+        })
+        .catch((reason) => {
+          logger.error(
+            `failed to get user info for user ${u} on team ${teamId}: ${reason}`,
+          );
+
+          return { name: 'Unknown User', title: '', id: u.user_id };
+        });
+    }),
+  );
+};
