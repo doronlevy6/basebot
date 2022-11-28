@@ -340,7 +340,10 @@ export const registerBoltAppRouter = (
     });
   });
 
-  app.event('app_home_opened', appHomeOpenedHandler(onboardingManager));
+  app.event(
+    'app_home_opened',
+    appHomeOpenedHandler(onboardingManager, analyticsManager),
+  );
 
   // This is the global action handler, which will match all unmatched actions
   // The global action handler will wait 2500 milliseconds and then ack the received action.

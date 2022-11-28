@@ -383,4 +383,23 @@ export class AnalyticsManager {
       properties: { ...extraParams, type: type },
     });
   }
+
+  appHomeOpened({
+    slackUserId,
+    slackTeamId,
+    extraParams,
+  }: {
+    slackUserId: string;
+    slackTeamId: string;
+    extraParams?: ExtraParams;
+  }) {
+    this.sendEventToAnalytics({
+      eventName: `app_home_opened`,
+      slackUserId: slackUserId,
+      slackTeamId: slackTeamId,
+      internalUserId: this.internalId(slackTeamId, slackUserId),
+      timestamp: new Date(),
+      properties: { ...extraParams },
+    });
+  }
 }

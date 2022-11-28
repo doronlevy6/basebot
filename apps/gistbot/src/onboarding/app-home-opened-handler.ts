@@ -1,8 +1,9 @@
+import { AnalyticsManager } from '@base/gistbot-shared';
 import { SlackEventWrapper } from '../slack/types';
 import { OnboardingManager } from './manager';
 
 export const appHomeOpenedHandler =
-  (onboardingManager: OnboardingManager) =>
+  (onboardingManager: OnboardingManager, analyticsManager: AnalyticsManager) =>
   async ({
     client,
     logger,
@@ -15,6 +16,11 @@ export const appHomeOpenedHandler =
 
     try {
       logger.info(`user ${user} opened the bot DMs`);
+
+      analyticsManager.appHomeOpened({
+        slackTeamId: team_id,
+        slackUserId: user,
+      });
 
       const latest = (new Date().getTime() / 1000).toFixed(6);
       const {
