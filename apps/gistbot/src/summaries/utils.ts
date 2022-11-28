@@ -1,5 +1,5 @@
 import { BotsInfoResponse, WebClient } from '@slack/web-api';
-import { defaultParseTextOpts, parseSlackMrkdwn } from '../slack/parser';
+import { parseSlackMrkdwn } from '../slack/parser';
 import { extractMessageText } from '../slack/message-text';
 import { SlackMessage, TriggerContext } from './types';
 import { approximatePromptCharacterCount } from './models/prompt-character-calculator';
@@ -18,14 +18,9 @@ export const parseThreadForSummary = async (
   channelName: string,
   myBotId?: string,
 ) => {
-  const extractedMessagesTexts = await Promise.all(
-    messages.map((m) => {
-      return extractMessageText(m, false, teamId, client);
-    }),
-  );
   const messagesWithText = messages
-    ?.filter((t, idx) => {
-      return extractedMessagesTexts[idx] && filterUnwantedMessages(t, myBotId);
+    ?.filter((t) => {
+      return extractMessageText(t, false) && filterUnwantedMessages(t, myBotId);
     })
     .map((m) => {
       return { message: m, messageId: m.ts as string }; // The message.ts value should never be undefined... Can we find instances where it is in order to ensure we filter them out?
@@ -37,14 +32,17 @@ export const parseThreadForSummary = async (
       reactions.reduce((acc, cur) => acc + (cur.count || 0), 0),
     );
 
-  const extractedTransformed = await Promise.all(
-    messagesWithText.map((m) =>
-      extractMessageText(m.message, true, teamId, client),
-    ),
-  );
   const messagesTexts: string[] = (await Promise.all(
-    extractedTransformed.map((m) =>
-      parseSlackMrkdwn(m).plainText(teamId, client, defaultParseTextOpts),
+    messagesWithText.map((m) =>
+      parseSlackMrkdwn(extractMessageText(m.message, true)).plainText(
+        teamId,
+        client,
+        {
+          removeCodeblocks: true,
+          stripUnlabelsUrls: true,
+          unlabeledUrlReplacement: '<LINK>',
+        },
+      ),
     ),
   )) as string[];
 
