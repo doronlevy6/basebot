@@ -6,7 +6,10 @@ import * as cron from 'node-cron';
 import { AnalyticsManager, PgInstallationStore } from '@base/gistbot-shared';
 import { FeatureLimits } from '../feature-rate-limiter/limits';
 import { ScheduledMultiChannelSummary } from '../slack/components/scheduled-multi-channel-summary';
-import { MultiChannelSummarizer } from '../summaries/channel/multi-channel-summarizer';
+import {
+  MultiChannelSummarizer,
+  OutputError,
+} from '../summaries/channel/multi-channel-summarizer';
 import { SchedulerSettingsManager } from './scheduler-manager';
 import { RedisSchedulerSettingsLock } from './scheduler-settings-lock';
 import {
@@ -149,6 +152,20 @@ export class SummarySchedulerJob {
         `found ${summaries?.summaries?.length} channels summaries for user ${userSettings.slackUser} from team ${userSettings.slackTeam}`,
       );
 
+      const summaryMetrics: Record<OutputError | 'successful', number> = {
+        moderated: 0,
+        channel_too_small: 0,
+        general_error: 0,
+        successful: 0,
+      };
+      summaries.summaries.forEach((summary) => {
+        if (summary.error) {
+          summaryMetrics[summary.error]++;
+          return;
+        }
+        summaryMetrics.successful++;
+      });
+
       const summariesFormatted =
         await this.multiChannelSummarizer.getMultiChannelSummaryFormatted(
           summaries,
@@ -197,6 +214,11 @@ export class SummarySchedulerJob {
         scheduledTime: timeToSchedule.toString(),
         extraParams: {
           gist_session: sessionId,
+          number_of_summarized_channels: limitedChannelSummries.length,
+          number_of_successful_summaries: summaryMetrics.successful,
+          number_of_moderated_summaries: summaryMetrics.moderated,
+          number_of_too_small_summaries: summaryMetrics.channel_too_small,
+          number_of_error_summaries: summaryMetrics.general_error,
         },
       });
     } catch (e) {

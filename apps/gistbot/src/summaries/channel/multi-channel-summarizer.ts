@@ -25,7 +25,7 @@ import {
   formatSummary,
 } from '../../slack/summary-formatter';
 
-type OutputError = 'channel_too_small' | 'moderated' | 'general_error';
+export type OutputError = 'channel_too_small' | 'moderated' | 'general_error';
 
 interface Summarization {
   channelId: string;
