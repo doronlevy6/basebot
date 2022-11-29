@@ -1,9 +1,4 @@
-import { ModelMessage } from '../models/messages-summary.model';
-
-export type Session =
-  | ChannelSummarySession
-  | ThreadSummarySession
-  | MessagesSummarySession;
+export type Session = ChannelSummarySession | ThreadSummarySession;
 
 export interface ChannelSummarySession {
   summaryType: 'channel';
@@ -18,15 +13,6 @@ export interface ChannelSummarySession {
       reactions: number[];
     }[];
   };
-  response: string;
-}
-
-export interface MessagesSummarySession {
-  summaryType: 'channel' | 'thread';
-  teamId: string;
-  channelId: string;
-  requestingUserId: string;
-  messages: ModelMessage[];
   response: string;
 }
 

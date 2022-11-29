@@ -134,7 +134,10 @@ export const mentionHandler =
         );
 
         const formattedMultiChannel =
-          multiChannelSummarizer.getMultiChannelSummaryFormatted(summaries);
+          await multiChannelSummarizer.getMultiChannelSummaryFormatted(
+            summaries,
+            client,
+          );
 
         await client.chat.postEphemeral({
           user: event.user,

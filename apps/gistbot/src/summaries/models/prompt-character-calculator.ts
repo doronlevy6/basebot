@@ -1,5 +1,4 @@
 import { ChannelSummaryModelRequest } from './channel-summary.model';
-import { MessagesSummaryRequest } from './messages-summary.model';
 import { ThreadSummaryModelRequest } from './thread-summary.model';
 
 export const MAX_PROMPT_CHARACTER_COUNT = 10000;
@@ -55,40 +54,6 @@ export function approximatePromptCharacterCountForChannelSummary(
         approximateNewlinesAndColons;
 
       return acc + approximatePerThread;
-    }, 0)
-  );
-}
-
-export function approximatePromptCharacterCountForChannelSummaryModelMessages(
-  data: MessagesSummaryRequest,
-): number {
-  const escapeUnicode = (str: string) => {
-    return str.replace(/[\u00A0-\uffff]/gu, function (c) {
-      return '\\u' + ('000' + c.charCodeAt(0).toString(16)).slice(-4);
-    });
-  };
-
-  return (
-    4 * data.length +
-    data.reduce((acc, currentMessage) => {
-      const messageText = escapeUnicode(currentMessage.text);
-      const name = escapeUnicode(currentMessage.user_name);
-      const title = escapeUnicode(currentMessage.user_title);
-      const reactions = currentMessage.reactions.reduce((acc, reaction) => {
-        return acc + reaction.name.length + 2;
-      }, 0);
-
-      const approximateNewlinesAndColons = 6; // Just based on what we will send?
-
-      const approximatePerMessage =
-        currentMessage.channel.length +
-        messageText.length +
-        name.length +
-        title.length +
-        reactions +
-        approximateNewlinesAndColons;
-
-      return acc + approximatePerMessage;
     }, 0)
   );
 }

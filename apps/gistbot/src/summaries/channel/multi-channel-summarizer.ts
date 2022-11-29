@@ -2,16 +2,28 @@ import { logger } from '@base/logger';
 import { WebClient } from '@slack/web-api';
 import { AnalyticsManager } from '@base/gistbot-shared';
 import { ChannelSummarizer, MAX_MESSAGES_TO_FETCH } from './channel-summarizer';
+import { ChannelSummaryModel } from '../models/channel-summary.model';
 import {
   MultiChannelSummarizationProps,
   MultiChannelSummaryContext,
   SlackMessage,
 } from '../types';
+import {
+  enrichWithReplies,
+  parseThreadForSummary,
+  sortSlackMessages,
+} from '../utils';
+import {
+  approximatePromptCharacterCountForChannelSummary,
+  MAX_PROMPT_CHARACTER_COUNT,
+} from '../models/prompt-character-calculator';
 import { retry, delay } from '../../utils/retry';
+import { Message } from '@slack/web-api/dist/response/ChannelsRepliesResponse';
 import { ModerationError } from '../errors/moderation-error';
-import { formatMultiChannelSummary } from '../../slack/summary-formatter';
-import { MessagesSummarizer } from '../messages/messages-summarizer';
-import { generateIDAsync } from '../../utils/id-generator.util';
+import {
+  formatMultiChannelSummary,
+  formatSummary,
+} from '../../slack/summary-formatter';
 
 type OutputError = 'channel_too_small' | 'moderated' | 'general_error';
 
@@ -22,10 +34,23 @@ interface Summarization {
   error?: OutputError;
 }
 
+interface ThreadData {
+  data: {
+    messageIds: string[];
+    messages: string[];
+    users: string[];
+    userIds: string[];
+    reactions: number[];
+    titles: string[];
+  }[];
+  error?: OutputError;
+}
+
 interface OutputSummary {
   channelId: string;
   channelName: string;
   summary: string;
+  earliestMessageTs: string;
   error?: OutputError;
 }
 
@@ -36,7 +61,7 @@ export interface MultiChannelSummarizerOutput {
 
 export class MultiChannelSummarizer {
   constructor(
-    private messagesSummarizer: MessagesSummarizer,
+    private channelSummaryModel: ChannelSummaryModel,
     private analyticsManager: AnalyticsManager,
     private channelSummarizer: ChannelSummarizer,
   ) {}
@@ -50,7 +75,6 @@ export class MultiChannelSummarizer {
     client: WebClient,
     daysBack: number,
   ): Promise<MultiChannelSummarizerOutput> {
-    const sessionId = await generateIDAsync();
     try {
       logger.info({
         msg: `starting multi-channel summary`,
@@ -128,14 +152,7 @@ export class MultiChannelSummarizer {
 
       const channelSummaries = await Promise.all(
         channels.map((channel) =>
-          this.summarizeChannel(
-            sessionId,
-            channel,
-            myBotId,
-            userId,
-            teamId,
-            client,
-          ),
+          this.summarizeChannel(channel, myBotId, userId, teamId, client),
         ),
       );
 
@@ -150,7 +167,6 @@ export class MultiChannelSummarizer {
   }
 
   private async summarizeChannel(
-    sessionId: string,
     channel: Summarization,
     myBotId: string,
     userId: string,
@@ -162,23 +178,39 @@ export class MultiChannelSummarizer {
         channelId: channel.channelId,
         channelName: channel.channelName,
         summary: '',
+        earliestMessageTs: '',
         error: channel.error,
       };
     }
 
+    const threadData = await this.parseThreadsForChannel(
+      channel,
+      myBotId,
+      teamId,
+      client,
+    );
+
+    if (threadData.error) {
+      return {
+        channelId: channel.channelId,
+        channelName: channel.channelName,
+        summary: '',
+        earliestMessageTs: '',
+        error: threadData.error,
+      };
+    }
+
     try {
-      const { summary } = await this.summarizeChannelThreads(
-        sessionId,
+      const { summary, earliestMessageTs } = await this.summarizeChannelThreads(
         channel,
-        myBotId,
+        threadData,
         userId,
-        teamId,
-        client,
       );
       return {
         channelId: channel.channelId,
         channelName: channel.channelName,
         summary: summary,
+        earliestMessageTs: earliestMessageTs,
       };
     } catch (error) {
       logger.error(
@@ -190,6 +222,7 @@ export class MultiChannelSummarizer {
           channelId: channel.channelId,
           channelName: channel.channelName,
           summary: '',
+          earliestMessageTs: '',
           error: 'moderated',
         };
       }
@@ -198,56 +231,199 @@ export class MultiChannelSummarizer {
         channelId: channel.channelId,
         channelName: channel.channelName,
         summary: '',
+        earliestMessageTs: '',
+        error: 'general_error',
+      };
+    }
+  }
+
+  private async parseThreadsForChannel(
+    channel: Summarization,
+    myBotId: string,
+    teamId: string,
+    client: WebClient,
+  ): Promise<ThreadData> {
+    channel.rootMessages.sort(sortSlackMessages);
+
+    let messagesWithReplies: {
+      message: SlackMessage;
+      replies: Message[];
+    }[];
+    try {
+      messagesWithReplies = await retry(
+        async () => {
+          return await enrichWithReplies(
+            channel.channelId,
+            channel.rootMessages,
+            client,
+            myBotId,
+          );
+        },
+        { count: 10 },
+      );
+    } catch (error) {
+      logger.error(
+        `error in multi-channel summarizer during enrich with replies: ${error} ${error.stack}`,
+      );
+      return { data: [], error: 'general_error' };
+    }
+
+    try {
+      const threads = await retry(
+        async () => {
+          return await Promise.all(
+            messagesWithReplies.map((mwr) => {
+              const thread = parseThreadForSummary(
+                [mwr.message, ...mwr.replies],
+                client,
+                teamId,
+                MAX_PROMPT_CHARACTER_COUNT,
+                channel.channelName,
+                myBotId,
+              );
+
+              return thread;
+            }),
+          );
+        },
+        { count: 10 },
+      );
+
+      return {
+        data: threads,
+      };
+    } catch (error) {
+      logger.error(
+        `error in multi-channel summarizer during parse thread for summary: ${error} ${error.stack}`,
+      );
+      return {
+        data: [],
         error: 'general_error',
       };
     }
   }
 
   private async summarizeChannelThreads(
-    sessionId: string,
-    channel: Summarization,
-    myBotId: string,
+    channel: {
+      channelId: string;
+      channelName: string;
+    },
+    threads: ThreadData,
     userId: string,
-    teamId: string,
-    client: WebClient,
-  ): Promise<{ summary: string }> {
-    const summarization = await retry(
-      async () => {
-        return await this.messagesSummarizer.summarize(
-          'multi_channel',
-          `${sessionId}_${channel.channelId}`,
-          channel.rootMessages,
-          userId,
-          teamId,
-          channel.channelId,
-          channel.channelName,
-          myBotId,
-          client,
-        );
-      },
-      {
-        count: 10,
-        delayer: (iteration) => {
-          const max = iteration + 1; // Max possible minutes to wait
-          const min = 1; // Min possible minutes to wait
-          const minute = 60 * 1000; // Milliseconds in a minute
-          const random = Math.floor(Math.random() * (max - min) + min); // Random between max and min
-          return delay(minute * random);
+  ): Promise<{ summary: string; earliestMessageTs: string }> {
+    let successfulSummary = '';
+
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      let req = {
+        channel_name: channel.channelName,
+        threads: threads.data.map((t) => {
+          return {
+            messages: t.messages,
+            names: t.users,
+            titles: t.titles,
+            reactions: t.reactions,
+          };
+        }),
+      };
+      let cc = approximatePromptCharacterCountForChannelSummary(req);
+      while (cc > MAX_PROMPT_CHARACTER_COUNT) {
+        threads.data.shift();
+        req = {
+          channel_name: channel.channelName,
+          threads: threads.data.map((t) => {
+            return {
+              messages: t.messages,
+              names: t.users,
+              titles: t.titles,
+              reactions: t.reactions,
+            };
+          }),
+        };
+        cc = approximatePromptCharacterCountForChannelSummary(req);
+      }
+
+      successfulSummary = await retry(
+        async () => {
+          const summary = await this.channelSummaryModel.summarizeChannel(
+            req,
+            userId,
+          );
+          if (
+            !summary.summary_by_threads.length ||
+            summary.summary_by_threads.length === 0
+          ) {
+            throw new Error('no thread summaries returned');
+          }
+          return formatSummary(
+            summary.summary_by_threads,
+            summary.titles,
+            false,
+          );
         },
-      },
-    );
+        {
+          count: 10,
+          delayer: (iteration) => {
+            const max = iteration + 1; // Max possible minutes to wait
+            const min = 1; // Min possible minutes to wait
+            const minute = 60 * 1000; // Milliseconds in a minute
+            const random = Math.floor(Math.random() * (max - min) + min); // Random between max and min
+            return delay(minute * random);
+          },
+        },
+      );
+
+      if (successfulSummary && successfulSummary.length > 0) {
+        break;
+      }
+
+      threads.data.shift();
+      if (threads.data.length === 0) {
+        break;
+      }
+    }
+
+    if (!successfulSummary.length) {
+      throw new Error('Invalid response');
+    }
 
     return {
-      summary: summarization.summary,
+      summary: successfulSummary,
+      earliestMessageTs: threads.data.filter(
+        (td) => td.messageIds.length > 0,
+      )[0].messageIds[0],
     };
   }
 
-  getMultiChannelSummaryFormatted(
+  async getMultiChannelSummaryFormatted(
     summaries: MultiChannelSummarizerOutput,
-  ): string[] {
+    client: WebClient,
+  ): Promise<string[]> {
+    const channelLinks = await Promise.all(
+      summaries.summaries.map(async (outputSummary) => {
+        try {
+          const {
+            error: infoError,
+            ok: infoOk,
+            permalink,
+          } = await client.chat.getPermalink({
+            channel: outputSummary.channelId,
+            message_ts: outputSummary.earliestMessageTs,
+          });
+          if (infoError || !infoOk || !permalink) {
+            throw new Error(`Failed to fetch chat permalink ${infoError}`);
+          }
+
+          return { link: permalink, channelId: outputSummary.channelId };
+        } catch (e) {
+          logger.error(e);
+          return { channelId: outputSummary.channelId };
+        }
+      }),
+    );
     const channelMap = new Map(
-      summaries.summaries.map((object) => {
-        return [object.channelId, undefined];
+      channelLinks.map((object) => {
+        return [object.channelId, object.link];
       }),
     );
     const formattedMultiChannel = formatMultiChannelSummary(

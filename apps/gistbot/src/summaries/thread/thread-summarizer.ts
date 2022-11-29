@@ -10,17 +10,22 @@ import { GoPro, GoProText } from '../../slack/components/go-pro';
 import { responder } from '../../slack/responder';
 import { ModerationError } from '../errors/moderation-error';
 import { RateLimitedError } from '../errors/rate-limited-error';
+import { MAX_PROMPT_CHARACTER_COUNT } from '../models/prompt-character-calculator';
+import { ThreadSummaryModel } from '../models/thread-summary.model';
 import { SessionDataStore } from '../session-data/session-data-store';
 import { SummaryStore } from '../summary-store';
-import { ThreadSummarizationProps } from '../types';
-import { genericErrorMessage } from '../utils';
+import { SlackMessage, ThreadSummarizationProps } from '../types';
+import {
+  filterUnwantedMessages,
+  genericErrorMessage,
+  parseThreadForSummary,
+} from '../utils';
 import { IReporter } from '@base/metrics';
-import { MessagesSummarizer } from '../messages/messages-summarizer';
-import { generateIDAsync } from '../../utils/id-generator.util';
+import { formatSummary } from '../../slack/summary-formatter';
 
 export class ThreadSummarizer {
   constructor(
-    private messagesSummarizer: MessagesSummarizer,
+    private threadSummaryModel: ThreadSummaryModel,
     private analyticsManager: AnalyticsManager,
     private summaryStore: SummaryStore,
     private sessionDataStore: SessionDataStore,
@@ -36,7 +41,6 @@ export class ThreadSummarizer {
     client: WebClient,
     respond?: RespondFn,
   ): Promise<void> {
-    const sessionId = await generateIDAsync();
     try {
       const limited = await this.featureRateLimiter.acquire(
         { teamId: teamId, userId: userId },
@@ -46,30 +50,64 @@ export class ThreadSummarizer {
         throw new RateLimitedError('rate limited');
       }
 
-      const { ok, error, messages } = await client.conversations.history({
-        channel: props.channelId,
-        limit: 1,
-        oldest: props.threadTs,
-        inclusive: true,
-      });
+      const messageReplies: SlackMessage[] = [];
 
-      if (error || !ok) {
-        throw new Error(
-          `error in fetching root message from conversation: ${error} ${ok}`,
+      // eslint-disable-next-line no-constant-condition
+      while (true) {
+        let cursor = '';
+        const messageRepliesRes = await client.conversations.replies({
+          channel: props.channelId,
+          ts: props.threadTs,
+          limit: 200,
+          cursor: cursor,
+        });
+
+        if (messageRepliesRes.error) {
+          throw new Error(`message replies error: ${messageRepliesRes.error}`);
+        }
+        if (!messageRepliesRes.ok) {
+          throw new Error('message replies not ok');
+        }
+
+        if (!messageRepliesRes.messages) {
+          break;
+        }
+
+        messageReplies.push(
+          ...messageRepliesRes.messages.filter((m) => {
+            return filterUnwantedMessages(m, myBotId);
+          }),
         );
+
+        if (!messageRepliesRes.has_more) {
+          break;
+        }
+
+        if (!messageRepliesRes.response_metadata?.next_cursor) {
+          break;
+        }
+        cursor = messageRepliesRes.response_metadata.next_cursor;
       }
 
-      if (!messages || messages.length === 0) {
-        throw new Error(
-          `error in fetching root message from conversation: no messages found`,
-        );
-      }
+      const {
+        messages: messagesTexts,
+        users,
+        titles,
+        messageIds,
+        userIds,
+        reactions,
+      } = await parseThreadForSummary(
+        [...messageReplies],
+        client,
+        teamId,
+        MAX_PROMPT_CHARACTER_COUNT,
+        props.channelName,
+        myBotId,
+      );
 
-      if (messages[0].ts !== props.threadTs) {
-        throw new Error(
-          `received unexpected ts from conversation: expected=${props.threadTs}; got=${messages[0].ts}`,
-        );
-      }
+      logger.info(
+        `Attempting to summarize thread with ${messagesTexts.length} messages and ${users.length} users`,
+      );
 
       this.analyticsManager.threadSummaryFunnel({
         funnelStep: 'requesting_from_api',
@@ -78,45 +116,60 @@ export class ThreadSummarizer {
         channelId: props.channelId,
         threadTs: props.threadTs,
         extraParams: {
-          gist_session: sessionId,
+          numberOfMessages: messagesTexts.length,
+          numberOfUsers: users.length,
+          numberOfUniqueUsers: new Set(users).size,
         },
       });
 
-      const summarization = await this.messagesSummarizer.summarize(
-        'thread',
-        sessionId,
-        [messages[0]],
+      const summary = await this.threadSummaryModel.summarizeThread(
+        {
+          messages: messagesTexts,
+          names: users,
+          titles: titles,
+          channel_name: props.channelName,
+          reactions: reactions,
+        },
         userId,
-        teamId,
-        props.channelId,
-        props.channelName,
-        myBotId,
-        client,
       );
-
-      this.analyticsManager.threadSummaryFunnel({
-        funnelStep: 'completed_requesting_from_api',
-        slackTeamId: teamId,
-        slackUserId: userId,
-        channelId: props.channelId,
-        threadTs: props.threadTs,
-        extraParams: {
-          numberOfMessages: summarization.numberOfMessages,
-          numberOfUsers: summarization.numberOfUsers,
-          numberOfUniqueUsers: summarization.uniqueUsers,
-          gist_session: sessionId,
-        },
-      });
+      if (!summary.summary.length) {
+        throw new Error('Invalid response');
+      }
+      const formattedSummary = formatSummary(
+        [summary.summary],
+        [summary.title],
+        true,
+      );
 
       const startTimeStamp = Number(props.threadTs);
-      await this.summaryStore.set(
-        {
-          text: summarization.summary,
-          startDate: startTimeStamp,
+      const { key } = await this.summaryStore.set({
+        text: formattedSummary,
+        startDate: startTimeStamp,
+        threadTs: props.threadTs,
+      });
+
+      // Don't fail if we can't store session data, we still have the summary and can send it back to the user
+      try {
+        await this.sessionDataStore.storeSession(key, {
+          summaryType: 'thread',
+          teamId: teamId,
+          channelId: props.channelId,
+          requestingUserId: userId,
           threadTs: props.threadTs,
-        },
-        sessionId,
-      );
+          request: {
+            channel_name: props.channelName,
+            messageIds: messageIds,
+            userIds: userIds,
+            reactions: reactions,
+          },
+          response: formattedSummary,
+        });
+      } catch (error) {
+        logger.error({
+          msg: `error in storing session for session ${key}`,
+          error: error,
+        });
+      }
 
       const { blocks, title } = EphemeralSummary({
         actionIds: {
@@ -124,10 +177,10 @@ export class ThreadSummarizer {
           addToChannels: Routes.ADD_TO_CHANNEL_FROM_WELCOME_MODAL,
           post: Routes.THREAD_SUMMARY_POST,
         },
-        cacheKey: sessionId,
+        cacheKey: key,
         userId,
         startTimeStamp,
-        summary: summarization.summary,
+        summary: formattedSummary,
         isThread: true,
       });
 
@@ -147,10 +200,9 @@ export class ThreadSummarizer {
         channelId: props.channelId,
         threadTs: props.threadTs,
         extraParams: {
-          numberOfMessages: summarization.numberOfMessages,
-          numberOfUsers: summarization.numberOfUsers,
-          numberOfUniqueUsers: summarization.uniqueUsers,
-          gist_session: sessionId,
+          numberOfMessages: messagesTexts.length,
+          numberOfUsers: users.length,
+          numberOfUniqueUsers: new Set(users).size,
         },
       });
     } catch (error) {
@@ -177,9 +229,6 @@ export class ThreadSummarizer {
           slackUserId: userId,
           channelId: props.channelId,
           threadTs: props.threadTs,
-          extraParams: {
-            gist_session: sessionId,
-          },
         });
         return;
       }
@@ -220,9 +269,6 @@ export class ThreadSummarizer {
           slackUserId: userId,
           channelId: props.channelId,
           threadTs: props.threadTs,
-          extraParams: {
-            gist_session: sessionId,
-          },
         });
         return;
       }
@@ -239,7 +285,6 @@ export class ThreadSummarizer {
         errorMessage: error.message,
         extraParams: {
           threadTs: props.threadTs,
-          gist_session: sessionId,
         },
       });
 

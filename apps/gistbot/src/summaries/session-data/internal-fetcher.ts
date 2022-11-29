@@ -3,12 +3,7 @@ import { WebClient } from '@slack/web-api';
 import { PgInstallationStore } from '@base/gistbot-shared';
 import { SlackMessage } from '../types';
 import { SessionDataStore } from './session-data-store';
-import {
-  ChannelSummarySession,
-  MessagesSummarySession,
-  ThreadSummarySession,
-} from './types';
-import { ModelMessageReaction } from '../models/messages-summary.model';
+import { ChannelSummarySession, ThreadSummarySession } from './types';
 
 interface SimpleUser {
   name: string;
@@ -26,7 +21,7 @@ export interface SessionFetchRequest {
 interface Thread {
   messages: Message[];
   users: SimpleUser[];
-  reactions: number[] | ModelMessageReaction[];
+  reactions: number[];
 }
 
 export interface SessionFetchResponse {
@@ -54,15 +49,6 @@ export class InternalSessionFetcher {
       sessionId: req.sessionId,
       teamId: req.teamId,
     });
-
-    if ('messages' in session) {
-      return this.fetchSummarySession(
-        session,
-        installation.bot.token,
-        req.teamId,
-        req.sessionId,
-      );
-    }
 
     if (session.summaryType === 'thread') {
       return this.fetchThreadSummarySession(
@@ -119,48 +105,6 @@ export class InternalSessionFetcher {
     };
   }
 
-  private async fetchSummarySession(
-    session: MessagesSummarySession,
-    token: string,
-    teamId: string,
-    sessionId: string,
-  ): Promise<SessionFetchResponse> {
-    const client = new WebClient(token);
-
-    const [feedbacks, threads] = await Promise.all([
-      this.sessionDataStore.fetchSessionFeedbacks({
-        teamId: teamId,
-        sessionId: sessionId,
-      }),
-      Promise.all(
-        session.messages.map((message) => {
-          return this.fetchThreadData(
-            {
-              messageIds: [message.ts],
-              userIds: [message.user_id],
-            },
-            session.channelId,
-            teamId,
-            client,
-          );
-        }),
-      ),
-    ]);
-
-    return {
-      threads: threads.map((t, idx) => {
-        return {
-          messages: t[1],
-          users: t[0],
-          reactions: session.messages[idx].reactions,
-        };
-      }),
-      channel_name: session.channelId,
-      summary: session.response,
-      feedbacks: feedbacks,
-    };
-  }
-
   private async fetchChannelSummarySession(
     session: ChannelSummarySession,
     token: string,
@@ -174,19 +118,17 @@ export class InternalSessionFetcher {
         teamId: teamId,
         sessionId: sessionId,
       }),
-      Promise.all(
-        session.request.threads.map((thread) => {
-          return this.fetchThreadData(
-            {
-              messageIds: thread.messageIds,
-              userIds: thread.userIds,
-            },
-            session.channelId,
-            teamId,
-            client,
-          );
-        }),
-      ),
+      session.request.threads.map((thread) => {
+        return this.fetchThreadData(
+          {
+            messageIds: thread.messageIds,
+            userIds: thread.userIds,
+          },
+          session.channelId,
+          teamId,
+          client,
+        );
+      }),
     ]);
 
     return {

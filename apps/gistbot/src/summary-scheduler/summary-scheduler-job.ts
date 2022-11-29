@@ -150,7 +150,10 @@ export class SummarySchedulerJob {
       );
 
       const summariesFormatted =
-        this.multiChannelSummarizer.getMultiChannelSummaryFormatted(summaries);
+        await this.multiChannelSummarizer.getMultiChannelSummaryFormatted(
+          summaries,
+          client,
+        );
 
       const timeToSchedule = new Date();
       timeToSchedule.setUTCHours(userSettings.timeHour, 0, 0);
