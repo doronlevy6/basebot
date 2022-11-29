@@ -24,6 +24,7 @@ import {
   formatMultiChannelSummary,
   formatSummary,
 } from '../../slack/summary-formatter';
+import { BotsManager } from '../../bots-integrations/bots-manager';
 
 export type OutputError = 'channel_too_small' | 'moderated' | 'general_error';
 
@@ -64,6 +65,7 @@ export class MultiChannelSummarizer {
     private channelSummaryModel: ChannelSummaryModel,
     private analyticsManager: AnalyticsManager,
     private channelSummarizer: ChannelSummarizer,
+    private botsManager: BotsManager,
   ) {}
 
   async summarize(
@@ -183,11 +185,68 @@ export class MultiChannelSummarizer {
       };
     }
 
+    let messagesWithReplies: {
+      message: SlackMessage;
+      replies: Message[];
+    }[];
+    try {
+      messagesWithReplies = await retry(
+        async () => {
+          return await enrichWithReplies(
+            channel.channelId,
+            channel.rootMessages,
+            client,
+            myBotId,
+          );
+        },
+        { count: 10 },
+      );
+    } catch (error) {
+      logger.error(
+        `error in multi-channel summarizer during enrich with replies: ${error} ${error.stack}`,
+      );
+      return {
+        channelId: channel.channelId,
+        channelName: channel.channelName,
+        summary: '',
+        earliestMessageTs: '',
+        error: 'general_error',
+      };
+    }
+
+    const flattenedMessages = messagesWithReplies.flatMap((mwr) => [
+      mwr.message,
+      ...mwr.replies,
+    ]);
+    const botsIntegrationSummarize =
+      this.botsManager.handleBots(flattenedMessages);
+    // If the channel is a bot channel
+    if (botsIntegrationSummarize) {
+      this.analyticsManager.channelSummaryFunnel({
+        funnelStep: 'bot_summarized',
+        channelId: channel.channelId,
+        slackTeamId: teamId,
+        slackUserId: userId,
+        extraParams: {
+          botName: botsIntegrationSummarize.botName,
+          numberOfMessages: botsIntegrationSummarize.numberOfMessages,
+        },
+      });
+
+      return {
+        channelId: channel.channelId,
+        channelName: channel.channelName,
+        summary: botsIntegrationSummarize.summary,
+        earliestMessageTs: channel.rootMessages[0].ts || '',
+      };
+    }
+
     const threadData = await this.parseThreadsForChannel(
       channel,
       myBotId,
       teamId,
       client,
+      messagesWithReplies,
     );
 
     if (threadData.error) {
@@ -242,37 +301,18 @@ export class MultiChannelSummarizer {
     myBotId: string,
     teamId: string,
     client: WebClient,
-  ): Promise<ThreadData> {
-    channel.rootMessages.sort(sortSlackMessages);
-
-    let messagesWithReplies: {
+    messageWithReplies: {
       message: SlackMessage;
       replies: Message[];
-    }[];
-    try {
-      messagesWithReplies = await retry(
-        async () => {
-          return await enrichWithReplies(
-            channel.channelId,
-            channel.rootMessages,
-            client,
-            myBotId,
-          );
-        },
-        { count: 10 },
-      );
-    } catch (error) {
-      logger.error(
-        `error in multi-channel summarizer during enrich with replies: ${error} ${error.stack}`,
-      );
-      return { data: [], error: 'general_error' };
-    }
+    }[],
+  ): Promise<ThreadData> {
+    channel.rootMessages.sort(sortSlackMessages);
 
     try {
       const threads = await retry(
         async () => {
           return await Promise.all(
-            messagesWithReplies.map((mwr) => {
+            messageWithReplies.map((mwr) => {
               const thread = parseThreadForSummary(
                 [mwr.message, ...mwr.replies],
                 client,

@@ -50,6 +50,8 @@ import AwsSQSReceiver from './slack/sqs-receiver';
 import { SqsConsumer } from '@base/pubsub';
 import { createServer } from './server';
 import { App } from '@slack/bolt';
+import { BotsManager } from './bots-integrations/bots-manager';
+import { GithubBot } from './bots-integrations/github-bot';
 
 const gracefulShutdown = (server: Server) => (signal: string) => {
   logger.info('starting shutdown, got signal ' + signal);
@@ -143,6 +145,8 @@ const startApp = async () => {
   const onboardingNudgeLock = new RedisOnboardingNudgeLock(redisConfig, env);
   const analyticsManager = new AnalyticsManager();
   const threadSummaryModel = new ThreadSummaryModel();
+  const botsManager = new BotsManager(new GithubBot());
+
   const threadSummarizer = new ThreadSummarizer(
     threadSummaryModel,
     analyticsManager,
@@ -160,6 +164,7 @@ const startApp = async () => {
     pgSessionDataStore,
     metricsReporter,
     featureRateLimiter,
+    botsManager,
   );
 
   let ready = await pgStore.isReady();
@@ -258,6 +263,7 @@ const startApp = async () => {
     channelSummaryModel,
     analyticsManager,
     channelSummarizer,
+    botsManager,
   );
 
   const summarySchedulerMgr = new SchedulerSettingsManager(

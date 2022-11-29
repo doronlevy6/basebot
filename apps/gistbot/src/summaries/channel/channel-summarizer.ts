@@ -32,6 +32,7 @@ import {
 } from '../utils';
 import { IReporter } from '@base/metrics';
 import { formatSummary } from '../../slack/summary-formatter';
+import { BotsManager } from '../../bots-integrations/bots-manager';
 import { NoMessagesError } from '../errors/no-messages-error';
 
 export const MAX_MESSAGES_TO_FETCH = 100;
@@ -46,6 +47,7 @@ export class ChannelSummarizer {
     private sessionDataStore: SessionDataStore,
     private metricsReporter: IReporter,
     private featureRateLimiter: FeatureRateLimiter,
+    private botsManager: BotsManager,
   ) {}
 
   async summarize(
@@ -169,6 +171,26 @@ export class ChannelSummarizer {
         myBotId,
       );
 
+      const flattenedMessages = messagesWithReplies.flatMap((mwr) => [
+        mwr.message,
+        ...mwr.replies,
+      ]);
+      const botsIntegrationSummarize =
+        this.botsManager.handleBots(flattenedMessages);
+      // If the channel is a bot channel
+      if (botsIntegrationSummarize) {
+        this.analyticsManager.channelSummaryFunnel({
+          funnelStep: 'bot_summarized',
+          channelId: props.channelId,
+          slackTeamId: teamId,
+          slackUserId: userId,
+          extraParams: {
+            botName: botsIntegrationSummarize.botName,
+            numberOfMessages: botsIntegrationSummarize.numberOfMessages,
+          },
+        });
+      }
+
       const threads = await Promise.all(
         messagesWithReplies.map((mwr) => {
           const thread = parseThreadForSummary(
@@ -195,43 +217,33 @@ export class ChannelSummarizer {
         return acc;
       }, new Set<string>());
 
-      let successfulSummary = '';
       let analyticsPrefix = '';
-      // eslint-disable-next-line no-constant-condition
-      while (true) {
-        logger.info(
-          `Attempting to summarize channel with ${threads.length} threads, ${numberOfMessages} messages, and ${numberOfUsers} users`,
-        );
+      let successfulSummary = '';
+      if (botsIntegrationSummarize) {
+        successfulSummary = botsIntegrationSummarize.summary;
+      }
+      if (successfulSummary.length === 0) {
+        // eslint-disable-next-line no-constant-condition
+        while (true) {
+          logger.info(
+            `Attempting to summarize channel with ${threads.length} threads, ${numberOfMessages} messages, and ${numberOfUsers} users`,
+          );
 
-        this.analyticsManager.channelSummaryFunnel({
-          funnelStep: `${analyticsPrefix}requesting_from_api`,
-          slackTeamId: teamId,
-          slackUserId: userId,
-          channelId: props.channelId,
-          extraParams: {
-            summaryContext: summaryContext,
-            numberOfThreads: threads.length,
-            numberOfMessages: numberOfMessages,
-            numberOfUsers: numberOfUsers,
-            numberOfUniqueUsers: uniqueUsers.size,
-          },
-        });
+          this.analyticsManager.channelSummaryFunnel({
+            funnelStep: `${analyticsPrefix}requesting_from_api`,
+            slackTeamId: teamId,
+            slackUserId: userId,
+            channelId: props.channelId,
+            extraParams: {
+              summaryContext: summaryContext,
+              numberOfThreads: threads.length,
+              numberOfMessages: numberOfMessages,
+              numberOfUsers: numberOfUsers,
+              numberOfUniqueUsers: uniqueUsers.size,
+            },
+          });
 
-        let req = {
-          channel_name: props.channelName,
-          threads: threads.map((t) => {
-            return {
-              messages: t.messages,
-              names: t.users,
-              titles: t.titles,
-              reactions: t.reactions,
-            };
-          }),
-        };
-        let cc = approximatePromptCharacterCountForChannelSummary(req);
-        while (cc > MAX_PROMPT_CHARACTER_COUNT) {
-          threads.shift();
-          req = {
+          let req = {
             channel_name: props.channelName,
             threads: threads.map((t) => {
               return {
@@ -242,38 +254,52 @@ export class ChannelSummarizer {
               };
             }),
           };
-          cc = approximatePromptCharacterCountForChannelSummary(req);
-        }
+          let cc = approximatePromptCharacterCountForChannelSummary(req);
+          while (cc > MAX_PROMPT_CHARACTER_COUNT) {
+            threads.shift();
+            req = {
+              channel_name: props.channelName,
+              threads: threads.map((t) => {
+                return {
+                  messages: t.messages,
+                  names: t.users,
+                  titles: t.titles,
+                  reactions: t.reactions,
+                };
+              }),
+            };
+            cc = approximatePromptCharacterCountForChannelSummary(req);
+          }
 
-        const didFilter = threads.length < rootMessages.length;
-        if (didFilter) {
-          logger.info(
-            `Filtered ${
-              rootMessages.length - threads.length
-            } threads to avoid hitting the character limit`,
+          const didFilter = threads.length < rootMessages.length;
+          if (didFilter) {
+            logger.info(
+              `Filtered ${
+                rootMessages.length - threads.length
+              } threads to avoid hitting the character limit`,
+            );
+          }
+          const summary = await this.channelSummaryModel.summarizeChannel(
+            req,
+            userId,
           );
-        }
-        const summary = await this.channelSummaryModel.summarizeChannel(
-          req,
-          userId,
-        );
 
-        if (summary.summary_by_threads.length) {
-          successfulSummary = formatSummary(
-            summary.summary_by_threads,
-            summary.titles,
-            false,
-          );
-          break;
-        }
+          if (summary.summary_by_threads.length) {
+            successfulSummary = formatSummary(
+              summary.summary_by_threads,
+              summary.titles,
+              false,
+            );
+            break;
+          }
 
-        analyticsPrefix = 'redo_';
-        threads.shift();
-        if (threads.length === 0) {
-          break;
+          analyticsPrefix = 'redo_';
+          threads.shift();
+          if (threads.length === 0) {
+            break;
+          }
         }
       }
-
       if (!successfulSummary.length) {
         throw new NoMessagesError('Invalid response');
       }

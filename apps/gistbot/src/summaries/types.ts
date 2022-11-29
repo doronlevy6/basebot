@@ -13,6 +13,7 @@ export type SlackMessage = Pick<
   | 'text'
   | 'subtype'
   | 'reactions'
+  | 'bot_profile'
 >;
 
 export type TriggerContext = 'in_channel' | 'in_dm';
