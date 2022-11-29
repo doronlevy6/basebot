@@ -1,13 +1,17 @@
+import { WebClient } from '@slack/web-api';
 import {
   Attachment,
   Block,
 } from '@slack/web-api/dist/response/ConversationsRepliesResponse';
 import { SlackMessage } from '../summaries/types';
+import { defaultParseTextOpts, parseSlackMrkdwn } from './parser';
 
-export function extractMessageText(
+export async function extractMessageText(
   message: SlackMessage,
   transform: boolean,
-): string {
+  teamId: string,
+  client: WebClient,
+): Promise<string> {
   let text = '';
 
   if (message.text) {
@@ -15,6 +19,36 @@ export function extractMessageText(
     if (transform) {
       text = transformTextToNoLineBreaks(text);
     }
+  }
+
+  if (!message.bot_id) {
+    return text.trim();
+  }
+
+  if (message.blocks?.length) {
+    let blocksText = await parseSlackMrkdwn(
+      extractTextFromBlocks(message.blocks),
+    ).plainText(teamId, client, defaultParseTextOpts);
+    if (transform) {
+      blocksText = transformTextToNoLineBreaks(blocksText);
+    }
+    if (text) {
+      text += '.';
+    }
+    text = `${text}${blocksText}`;
+  }
+
+  if (message.attachments?.length) {
+    let attachmentsText = await parseSlackMrkdwn(
+      extractTextFromAttachments(message.attachments),
+    ).plainText(teamId, client, defaultParseTextOpts);
+    if (transform) {
+      attachmentsText = transformTextToNoLineBreaks(attachmentsText);
+    }
+    if (text) {
+      text += '.';
+    }
+    text = `${text}${attachmentsText}`;
   }
 
   return text.trim();
