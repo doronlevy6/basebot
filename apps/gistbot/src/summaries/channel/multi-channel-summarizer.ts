@@ -184,6 +184,7 @@ export class MultiChannelSummarizer {
         error: channel.error,
       };
     }
+    channel.rootMessages.sort(sortSlackMessages);
 
     let messagesWithReplies: {
       message: SlackMessage;
@@ -306,8 +307,6 @@ export class MultiChannelSummarizer {
       replies: Message[];
     }[],
   ): Promise<ThreadData> {
-    channel.rootMessages.sort(sortSlackMessages);
-
     try {
       const threads = await retry(
         async () => {
