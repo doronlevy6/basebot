@@ -32,6 +32,7 @@ import {
 } from '../utils';
 import { IReporter } from '@base/metrics';
 import { formatSummary } from '../../slack/summary-formatter';
+import { NoMessagesError } from '../errors/no-messages-error';
 
 export const MAX_MESSAGES_TO_FETCH = 100;
 
@@ -274,7 +275,7 @@ export class ChannelSummarizer {
       }
 
       if (!successfulSummary.length) {
-        throw new Error('Invalid response');
+        throw new NoMessagesError('Invalid response');
       }
 
       const startTimeStamp = Number(rootMessages[0].ts);
@@ -383,6 +384,33 @@ export class ChannelSummarizer {
             error: e,
           }),
         );
+
+      if (error instanceof NoMessagesError) {
+        const text =
+          "Unfortunately we couldn't process a summarization on these messages at the moment, but we are adding more and more capabilities and languages every day. If you'd like to request something specific feel free to reach out to us at support@thegist.ai";
+        await responder(
+          respond,
+          client,
+          text,
+          undefined,
+          props.channelId,
+          userId,
+          {
+            response_type: 'ephemeral',
+          },
+        );
+
+        this.analyticsManager.channelSummaryFunnel({
+          funnelStep: 'no_messages_after_processing',
+          slackTeamId: teamId,
+          slackUserId: userId,
+          channelId: props.channelId,
+          extraParams: {
+            summaryContext: summaryContext,
+          },
+        });
+        return;
+      }
 
       if (error instanceof ModerationError) {
         const text =

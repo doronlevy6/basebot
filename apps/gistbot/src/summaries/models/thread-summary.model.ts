@@ -81,9 +81,10 @@ export class ThreadSummaryModel {
         throw new Error(`Error response: ${res.data.error}`);
       }
 
+      const summary = res.data.summary_by_threads.join('\n') || '';
       try {
         const { flagged } = await this.moderationApi.moderate({
-          input: res.data.summary_by_threads[0],
+          input: summary,
         });
 
         if (flagged) {
@@ -102,8 +103,8 @@ export class ThreadSummaryModel {
       }
 
       return {
-        summary: res.data.summary_by_threads[0],
-        title: res.data.titles[0],
+        summary: summary,
+        title: res.data.titles[0] || '',
       };
     } catch (error) {
       logger.error(
