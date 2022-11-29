@@ -102,6 +102,9 @@ export class GithubBot implements IBotIntegration {
         if (action.toLowerCase().endsWith('opened')) {
           action += ' :eyes:';
         }
+        if (action.toLowerCase().endsWith('ready for review')) {
+          action += ' :eyes:';
+        }
         return {
           userName: user,
           action: action,
