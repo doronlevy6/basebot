@@ -1,4 +1,4 @@
-const endPromoCode = new Date('2022-12-16');
+const endPromoCode = new Date('2022-11-29');
 const currentPromoCode = 'BETA80';
 const currentPromoCodeAmount = '80%';
 
