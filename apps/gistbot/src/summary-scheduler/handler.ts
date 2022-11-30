@@ -153,7 +153,7 @@ export const summarySchedularSettingsModalHandler =
       const date = new Date();
       date.setUTCHours(selectedHour, 0, 0);
       const userSettingsHour =
-        date.getUTCHours() - userInfo.user.tz_offset / 3600;
+        date.getUTCHours() - Math.floor(userInfo.user.tz_offset / 3600);
 
       const usersettings = new UserSchedulerSettings();
       usersettings.slackUser = body.user.id;
