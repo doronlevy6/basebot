@@ -52,7 +52,7 @@ export const summarySchedularSettingsButtonHandler =
         !userInfo.user?.tz_offset
       ) {
         logger.error(
-          `could not fetch user: ${body.user.id} info to get timezone in summary scheduler button handler`,
+          `could not fetch user: ${userId} info to get timezone in summary scheduler button handler, err: ${userInfo.error}`,
         );
         return;
       }
