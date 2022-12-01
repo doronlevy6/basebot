@@ -74,6 +74,17 @@ export const botIMRouter = (
               'are you sure you copied it correctly?\n\n' +
               'If you have more trouble with this, feel free to contact our support at support@thegist.ai',
           );
+
+          analyticsManager.messageSentToUserDM({
+            type: 'attempt_to_connect_payment_failed',
+            slackTeamId: body.team_id,
+            slackUserId: event['user'],
+            properties: {
+              failure: result,
+              triggerMessage: event['text'] || 'unknown text',
+            },
+          });
+
           return;
         }
 
@@ -89,6 +100,17 @@ export const botIMRouter = (
               'are you sure you copied it correctly?\n\n' +
               'If you have more trouble with this, feel free to contact our support at support@thegist.ai',
           );
+
+          analyticsManager.messageSentToUserDM({
+            type: 'attempt_to_connect_payment_failed',
+            slackTeamId: body.team_id,
+            slackUserId: event['user'],
+            properties: {
+              failure: result,
+              triggerMessage: event['text'] || 'unknown text',
+            },
+          });
+
           return;
         }
 
@@ -96,6 +118,15 @@ export const botIMRouter = (
           'Great! I have connected your customer account and have activated your subscription!\n\n' +
             'Happy Gist-ing :smile:!',
         );
+
+        analyticsManager.messageSentToUserDM({
+          type: 'payment_connected',
+          slackTeamId: body.team_id,
+          slackUserId: event['user'],
+          properties: {
+            triggerMessage: event['text'] || 'unknown text',
+          },
+        });
       } catch (error) {
         logger.error({
           msg: `error in matching user to customer`,
