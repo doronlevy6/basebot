@@ -455,7 +455,8 @@ async function saveDefaultUserSchedulerSettings(
   // set default hour
   const date = new Date();
   date.setUTCHours(Number(UserSchedulerOptions.MORNING), 0, 0);
-  const defaultHour = date.getUTCHours() - userInfo.user.tz_offset / 3600;
+  const defaultHour =
+    date.getUTCHours() - Math.floor(userInfo.user.tz_offset / 3600);
 
   const usersettings = new UserSchedulerSettings();
   usersettings.slackUser = userId;
