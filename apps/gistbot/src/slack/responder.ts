@@ -32,6 +32,8 @@ export const responder = async (
         text: text,
         blocks,
         thread_ts: threadTs,
+        unfurl_links: false,
+        unfurl_media: false,
       });
       return;
     }
@@ -47,6 +49,8 @@ export const responder = async (
         channel: channelId,
         user: userId,
         thread_ts: threadTs,
+        unfurl_links: false,
+        unfurl_media: false,
       });
       return;
     }
@@ -56,6 +60,8 @@ export const responder = async (
       blocks,
       channel: channelId,
       thread_ts: threadTs,
+      unfurl_links: false,
+      unfurl_media: false,
     });
   } catch (error) {
     logger.error(`error in responder: ${error} ${error.stack}`);
@@ -71,6 +77,8 @@ export const responder = async (
           channel: channelId,
           user: userId,
           thread_ts: threadTs,
+          unfurl_links: false,
+          unfurl_media: false,
         });
 
         // Make sure to still delete the original if we can
@@ -88,6 +96,8 @@ export const responder = async (
         blocks,
         channel: channelId,
         thread_ts: threadTs,
+        unfurl_links: false,
+        unfurl_media: false,
       });
 
       // Make sure to still delete the original if we can

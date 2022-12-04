@@ -1,12 +1,12 @@
-import { SlackMessage } from '../summaries/types';
+import { SlackMessage } from '../../summaries/types';
 import {
   Attachment,
   Message,
 } from '@slack/web-api/dist/response/ConversationsRepliesResponse';
-import { IBotIntegration } from './ibot-integration';
-import { parseSlackMrkdwn } from '../slack/parser';
-import { TextSection } from '../slack/sections/text-section';
-import { UrlLinkSection } from '../slack/sections/url-link-section';
+import { IBotIntegration } from '../ibot-integration';
+import { parseSlackMrkdwn } from '../../slack/parser';
+import { TextSection } from '../../slack/sections/text-section';
+import { UrlLinkSection } from '../../slack/sections/url-link-section';
 
 export type GithubStructuredData = {
   userName: string;
@@ -16,7 +16,7 @@ export type GithubStructuredData = {
 
 const GITHUB_BOT_NAME = 'GitHub';
 
-export class GithubBot implements IBotIntegration {
+export class GithubBot extends IBotIntegration {
   getName(): string {
     return GITHUB_BOT_NAME;
   }
@@ -57,7 +57,9 @@ export class GithubBot implements IBotIntegration {
     };
   }
 
-  extractGithubMessagesText(message: SlackMessage): GithubStructuredData[] {
+  private extractGithubMessagesText(
+    message: SlackMessage,
+  ): GithubStructuredData[] {
     if (
       message.bot_id &&
       message.bot_profile?.name?.toLowerCase() === 'github' &&
@@ -71,7 +73,7 @@ export class GithubBot implements IBotIntegration {
     return [];
   }
 
-  extractDataFromAttachments(attachments: Attachment[]) {
+  private extractDataFromAttachments(attachments: Attachment[]) {
     return attachments.flatMap((attachment) => {
       let user = '';
       let action = '';

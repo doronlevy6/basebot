@@ -11,11 +11,6 @@ import { responder } from '../../slack/responder';
 import { stringifyMoreTimeProps } from '../channel-summary-more-time';
 import { ModerationError } from '../errors/moderation-error';
 import { RateLimitedError } from '../errors/rate-limited-error';
-import { ChannelSummaryModel } from '../models/channel-summary.model';
-import {
-  approximatePromptCharacterCountForChannelSummary,
-  MAX_PROMPT_CHARACTER_COUNT,
-} from '../models/prompt-character-calculator';
 import { SessionDataStore } from '../session-data/session-data-store';
 import { SummaryStore } from '../summary-store';
 import {
@@ -24,15 +19,13 @@ import {
   SlackMessage,
 } from '../types';
 import {
-  enrichWithReplies,
   filterUnwantedMessages,
   genericErrorMessage,
-  parseThreadForSummary,
   sortSlackMessages,
 } from '../utils';
 import { IReporter } from '@base/metrics';
-import { formatSummary } from '../../slack/summary-formatter';
-import { BotsManager } from '../../bots-integrations/bots-manager';
+import { MessagesSummarizer } from '../messages/messages-summarizer';
+import { generateIDAsync } from '../../utils/id-generator.util';
 import { NoMessagesError } from '../errors/no-messages-error';
 
 export const MAX_MESSAGES_TO_FETCH = 100;
@@ -41,13 +34,12 @@ export const DEFAULT_DAYS_BACK = 1;
 
 export class ChannelSummarizer {
   constructor(
-    private channelSummaryModel: ChannelSummaryModel,
+    private messagesSummarizer: MessagesSummarizer,
     private analyticsManager: AnalyticsManager,
     private summaryStore: SummaryStore,
     private sessionDataStore: SessionDataStore,
     private metricsReporter: IReporter,
     private featureRateLimiter: FeatureRateLimiter,
-    private botsManager: BotsManager,
   ) {}
 
   async summarize(
@@ -61,6 +53,7 @@ export class ChannelSummarizer {
     respond?: RespondFn,
     excludedMessage?: string,
   ): Promise<void> {
+    const sessionId = await generateIDAsync();
     try {
       const limited = await this.featureRateLimiter.acquire(
         { teamId: teamId, userId: userId },
@@ -107,6 +100,7 @@ export class ChannelSummarizer {
           channelId: props.channelId,
           extraParams: {
             summaryContext: summaryContext,
+            gist_session: sessionId,
           },
         });
 
@@ -164,179 +158,66 @@ export class ChannelSummarizer {
       // Ensure that we sort the messages oldest first (so that the model receives a conversation in order)
       rootMessages.sort(sortSlackMessages);
 
-      const messagesWithReplies = await enrichWithReplies(
-        props.channelId,
+      this.analyticsManager.channelSummaryFunnel({
+        funnelStep: `requesting_from_api`,
+        slackTeamId: teamId,
+        slackUserId: userId,
+        channelId: props.channelId,
+        extraParams: {
+          summaryContext: summaryContext,
+          gist_session: sessionId,
+        },
+      });
+
+      const summarization = await this.messagesSummarizer.summarize(
+        'channel',
+        sessionId,
         rootMessages,
-        client,
+        userId,
+        teamId,
+        props.channelId,
+        props.channelName,
         myBotId,
+        client,
       );
 
-      const flattenedMessages = messagesWithReplies.flatMap((mwr) => [
-        mwr.message,
-        ...mwr.replies,
-      ]);
-      const botsIntegrationSummarize =
-        this.botsManager.handleBots(flattenedMessages);
-      // If the channel is a bot channel
-      if (botsIntegrationSummarize) {
+      this.analyticsManager.channelSummaryFunnel({
+        funnelStep: `completed_requesting_from_api`,
+        slackTeamId: teamId,
+        slackUserId: userId,
+        channelId: props.channelId,
+        extraParams: {
+          summaryContext: summaryContext,
+          numberOfMessages: summarization.numberOfMessages,
+          numberOfUsers: summarization.numberOfUsers,
+          numberOfUniqueUsers: summarization.uniqueUsers,
+          gist_session: sessionId,
+        },
+      });
+
+      if (summarization.singleBotChannelDetected) {
         this.analyticsManager.channelSummaryFunnel({
           funnelStep: 'bot_summarized',
           channelId: props.channelId,
           slackTeamId: teamId,
           slackUserId: userId,
           extraParams: {
-            botName: botsIntegrationSummarize.botName,
-            numberOfMessages: botsIntegrationSummarize.numberOfMessages,
+            botName: summarization.botName,
+            numberOfMessages: summarization.numberOfMessages,
           },
         });
-      }
-
-      const threads = await Promise.all(
-        messagesWithReplies.map((mwr) => {
-          const thread = parseThreadForSummary(
-            [mwr.message, ...mwr.replies],
-            client,
-            teamId,
-            MAX_PROMPT_CHARACTER_COUNT,
-            props.channelName,
-            myBotId,
-          );
-
-          return thread;
-        }),
-      );
-
-      const numberOfMessages = threads.reduce((acc, t) => {
-        return acc + t.messages.length;
-      }, 0);
-      const numberOfUsers = threads.reduce((acc, t) => {
-        return acc + t.users.length;
-      }, 0);
-      const uniqueUsers = threads.reduce((acc, t) => {
-        t.users.forEach((u) => acc.add(u));
-        return acc;
-      }, new Set<string>());
-
-      let analyticsPrefix = '';
-      let successfulSummary = '';
-      if (botsIntegrationSummarize) {
-        successfulSummary = botsIntegrationSummarize.summary;
-      }
-      if (successfulSummary.length === 0) {
-        // eslint-disable-next-line no-constant-condition
-        while (true) {
-          logger.info(
-            `Attempting to summarize channel with ${threads.length} threads, ${numberOfMessages} messages, and ${numberOfUsers} users`,
-          );
-
-          this.analyticsManager.channelSummaryFunnel({
-            funnelStep: `${analyticsPrefix}requesting_from_api`,
-            slackTeamId: teamId,
-            slackUserId: userId,
-            channelId: props.channelId,
-            extraParams: {
-              summaryContext: summaryContext,
-              numberOfThreads: threads.length,
-              numberOfMessages: numberOfMessages,
-              numberOfUsers: numberOfUsers,
-              numberOfUniqueUsers: uniqueUsers.size,
-            },
-          });
-
-          let req = {
-            channel_name: props.channelName,
-            threads: threads.map((t) => {
-              return {
-                messages: t.messages,
-                names: t.users,
-                titles: t.titles,
-                reactions: t.reactions,
-              };
-            }),
-          };
-          let cc = approximatePromptCharacterCountForChannelSummary(req);
-          while (cc > MAX_PROMPT_CHARACTER_COUNT) {
-            threads.shift();
-            req = {
-              channel_name: props.channelName,
-              threads: threads.map((t) => {
-                return {
-                  messages: t.messages,
-                  names: t.users,
-                  titles: t.titles,
-                  reactions: t.reactions,
-                };
-              }),
-            };
-            cc = approximatePromptCharacterCountForChannelSummary(req);
-          }
-
-          const didFilter = threads.length < rootMessages.length;
-          if (didFilter) {
-            logger.info(
-              `Filtered ${
-                rootMessages.length - threads.length
-              } threads to avoid hitting the character limit`,
-            );
-          }
-          const summary = await this.channelSummaryModel.summarizeChannel(
-            req,
-            userId,
-          );
-
-          if (summary.summary_by_threads.length) {
-            successfulSummary = formatSummary(
-              summary.summary_by_threads,
-              summary.titles,
-              false,
-            );
-            break;
-          }
-
-          analyticsPrefix = 'redo_';
-          threads.shift();
-          if (threads.length === 0) {
-            break;
-          }
-        }
-      }
-      if (!successfulSummary.length) {
-        throw new NoMessagesError('Invalid response');
       }
 
       const startTimeStamp = Number(rootMessages[0].ts);
-      const { key: cacheKey } = await this.summaryStore.set({
-        text: successfulSummary,
-        startDate: startTimeStamp,
-      });
+      await this.summaryStore.set(
+        {
+          text: summarization.summary,
+          startDate: startTimeStamp,
+        },
+        sessionId,
+      );
 
-      logger.info('Saved summary with cache key ' + cacheKey);
-
-      // Don't fail if we can't store session data, we still have the summary and can send it back to the user
-      try {
-        await this.sessionDataStore.storeSession(cacheKey, {
-          summaryType: 'channel',
-          teamId: teamId,
-          channelId: props.channelId,
-          requestingUserId: userId,
-          request: {
-            channel_name: props.channelName,
-            threads: threads.map((t) => {
-              return {
-                messageIds: t.messageIds,
-                userIds: t.userIds,
-                reactions: t.reactions,
-              };
-            }),
-          },
-          response: successfulSummary,
-        });
-      } catch (error) {
-        logger.error({
-          msg: `error in storing session for session ${cacheKey}`,
-          error: error,
-        });
-      }
+      logger.info('Saved summary with cache key ' + sessionId);
 
       const { blocks, title } = EphemeralSummary({
         actionIds: {
@@ -344,10 +225,10 @@ export class ChannelSummarizer {
           addToChannels: Routes.ADD_TO_CHANNEL_FROM_WELCOME_MODAL,
           post: Routes.CHANNEL_SUMMARY_POST,
         },
-        cacheKey,
+        cacheKey: sessionId,
         startTimeStamp,
         userId,
-        summary: successfulSummary,
+        summary: summarization.summary,
         isThread: false,
       });
 
@@ -362,10 +243,10 @@ export class ChannelSummarizer {
         channelId: props.channelId,
         extraParams: {
           summaryContext: summaryContext,
-          numberOfThreads: threads.length,
-          numberOfMessages: numberOfMessages,
-          numberOfUsers: numberOfUsers,
-          numberOfUniqueUsers: uniqueUsers.size,
+          numberOfMessages: summarization.numberOfMessages,
+          numberOfUsers: summarization.numberOfUsers,
+          numberOfUniqueUsers: summarization.uniqueUsers,
+          gist_session: sessionId,
         },
       });
     } catch (error) {
@@ -392,6 +273,7 @@ export class ChannelSummarizer {
           channelId: props.channelId,
           extraParams: {
             summaryContext: summaryContext,
+            gist_session: sessionId,
           },
         });
         return;
@@ -460,6 +342,7 @@ export class ChannelSummarizer {
           channelId: props.channelId,
           extraParams: {
             summaryContext: summaryContext,
+            gist_session: sessionId,
           },
         });
         return;
@@ -475,6 +358,9 @@ export class ChannelSummarizer {
         slackUserId: userId,
         channelId: props.channelId,
         errorMessage: error.message,
+        extraParams: {
+          gist_session: sessionId,
+        },
       });
 
       await genericErrorMessage(
