@@ -1,6 +1,6 @@
 export const JOB_MINUTES_INTERVAL = 10;
 export const TIME_MINUTES_TO_LOCK = 180;
-export const LIMIT = 100;
+export const LIMIT = 10;
 
 export enum UserSchedulerOptions {
   ON = 'on',

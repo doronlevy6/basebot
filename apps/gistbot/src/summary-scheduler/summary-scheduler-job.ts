@@ -19,6 +19,7 @@ import {
   UserSchedulerSettings,
 } from './types';
 import { ScheduledMessageSender } from '../slack/scheduled-messages/manager';
+import { delay } from '../utils/retry';
 
 export class SummarySchedulerJob {
   private readonly tempWeekDays = '0,1,2,3,4,5';
@@ -218,6 +219,8 @@ export class SummarySchedulerJob {
           number_of_error_summaries: summaryMetrics.general_error,
         },
       });
+
+      await delay(1000 * 60);
     } catch (e) {
       logger.error(
         `error in scheduler summaries for user ${userSettings.slackUser} in team ${userSettings.slackTeam}, error: ${e}`,
