@@ -194,6 +194,7 @@ export class OnboardingManager {
   }
 
   async attemptToOnboardUser(user: OnBoardedUser) {
+    logger.debug(`attempt to onboard user [${user.slackUser}]`);
     return this.store.userOnboarded(
       user.slackTeam,
       user.slackUser,
