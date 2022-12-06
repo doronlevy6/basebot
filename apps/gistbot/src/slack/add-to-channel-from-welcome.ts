@@ -13,6 +13,7 @@ import {
   UserSchedulerOptions,
   UserSchedulerSettings,
 } from '../summary-scheduler/types';
+import { OnboardingManager } from '../onboarding/manager';
 
 const ADD_TO_CHANNEL_FROM_WELCOME = 'add-to-channel-from-welcome';
 const ADD_TO_CHANNEL_FROM_WELCOME_MESSAGE =
@@ -164,6 +165,7 @@ export const addToChannelsFromWelcomeMessageHandler =
     metricsReporter: IReporter,
     channelSummarizer: ChannelSummarizer,
     schedulerManager: SchedulerSettingsManager,
+    onboardingManager: OnboardingManager,
   ) =>
   async ({ ack, logger, body, client, context }: SlackBlockActionWrapper) => {
     try {
@@ -190,6 +192,11 @@ export const addToChannelsFromWelcomeMessageHandler =
           channelIds: selectedConversations,
         },
       });
+
+      await onboardingManager.completeOnboarding(
+        body.team?.id || 'unknown',
+        body.user.id,
+      );
       await onBoardingSummarizeLoadingMessage(
         client,
         body.user.id,

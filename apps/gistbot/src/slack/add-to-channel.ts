@@ -93,7 +93,6 @@ export const addToChannelHandler =
 
     try {
       await ack();
-
       const submitted = body.type === 'view_submission';
 
       const props = JSON.parse(view.private_metadata) as AddToChannelProps;

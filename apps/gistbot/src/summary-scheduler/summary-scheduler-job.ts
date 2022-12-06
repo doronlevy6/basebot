@@ -20,6 +20,7 @@ import {
 } from './types';
 import { ScheduledMessageSender } from '../slack/scheduled-messages/manager';
 import { delay } from '../utils/retry';
+import { OnboardingManager } from '../onboarding/manager';
 
 export class SummarySchedulerJob {
   private readonly tempWeekDays = '0,1,2,3,4,5';
@@ -31,6 +32,7 @@ export class SummarySchedulerJob {
     private analyticsManager: AnalyticsManager,
     private subscriptionManager: SubscriptionManager,
     private scheduledMessageSender: ScheduledMessageSender,
+    private onboardingManager: OnboardingManager,
   ) {}
 
   start() {
@@ -220,6 +222,10 @@ export class SummarySchedulerJob {
         },
       });
 
+      await this.onboardingManager.completeOnboarding(
+        userSettings.slackTeam,
+        userSettings.slackUser,
+      );
       await delay(1000 * 60);
     } catch (e) {
       logger.error(

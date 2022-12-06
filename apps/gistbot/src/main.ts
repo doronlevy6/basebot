@@ -303,6 +303,7 @@ const startApp = async () => {
     analyticsManager,
     subscriptionManager,
     scheduledMessageSender,
+    onboardingManager,
   );
 
   const orgSettingsStore = new PgOrgSettingsStore(pgConfig);

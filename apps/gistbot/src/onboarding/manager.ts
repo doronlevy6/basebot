@@ -202,4 +202,13 @@ export class OnboardingManager {
       ++user.attempts,
     );
   }
+
+  async completeOnboarding(teamId: string, userId: string) {
+    const onboardedUser = await this.store.wasUserOnboarded(teamId, userId);
+    if (onboardedUser && onboardedUser.completedAt) {
+      return;
+    }
+
+    await this.store.userOnboarded(teamId, userId, new Date());
+  }
 }
