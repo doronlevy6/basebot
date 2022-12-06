@@ -181,8 +181,8 @@ export class MessagesSummarizer {
         };
       }
 
-      req.shift();
-      if (req.length === 0) {
+      originalReq.shift();
+      if (originalReq.length === 0) {
         break;
       }
     }
