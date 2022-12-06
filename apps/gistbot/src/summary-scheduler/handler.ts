@@ -36,26 +36,11 @@ export const summarySchedularSettingsButtonHandler =
         return;
       }
 
-      const userSettingsPromise = schedulerSettingsMgr.fetchUserSettings(
+      const userSettings = await schedulerSettingsMgr.fetchUserSettings(
         userId,
         teamId,
       );
-      const userInfoPromise = client.users.info({ user: userId });
-      const [userSettings, userInfo] = await Promise.all([
-        userSettingsPromise,
-        userInfoPromise,
-      ]);
-      if (
-        !userInfo ||
-        !userInfo.ok ||
-        userInfo.error ||
-        !userInfo.user?.tz_offset
-      ) {
-        logger.error(
-          `could not fetch user: ${userId} info to get timezone in summary scheduler button handler, err: ${userInfo.error}`,
-        );
-        return;
-      }
+
       let enabled:
         | UserSchedulerOptions.ON
         | UserSchedulerOptions.OFF
@@ -152,8 +137,12 @@ export const summarySchedularSettingsModalHandler =
           : Number(UserSchedulerOptions.EVENING);
       const date = new Date();
       date.setUTCHours(selectedHour, 0, 0);
-      const userSettingsHour =
+      let userSettingsHour =
         date.getUTCHours() - Math.floor(userInfo.user.tz_offset / 3600);
+      userSettingsHour = userSettingsHour % 24;
+      if (userSettingsHour < 0) {
+        userSettingsHour = 24 + userSettingsHour;
+      }
 
       const usersettings = new UserSchedulerSettings();
       usersettings.slackUser = body.user.id;
