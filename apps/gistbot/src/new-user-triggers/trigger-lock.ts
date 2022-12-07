@@ -48,9 +48,9 @@ export class RedisTriggerLock extends RedisUtil {
     userId: string,
     triggerContext: string,
   ) {
-    await this.db.del([
-      this.triggersKey(teamId, userId, 'away', triggerContext),
-      this.triggersKey(teamId, userId, 'active', triggerContext),
+    await Promise.all([
+      this.clearUserTriggersKey(teamId, userId, triggerContext, 'away'),
+      this.clearUserTriggersKey(teamId, userId, triggerContext, 'active'),
     ]);
   }
 
