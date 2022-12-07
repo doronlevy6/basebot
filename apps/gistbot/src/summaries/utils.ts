@@ -384,7 +384,7 @@ export const getUserOrBotDetails = async (
           .info({ bot: u.user_id, team_id: teamId })
           .catch((reason) => {
             logger.error(
-              `failed to get bot info for bot ${u} on team ${teamId}: ${reason}`,
+              `failed to get bot info for bot ${u.user_id} on team ${teamId}: ${reason}`,
             );
             return {
               bot: { bot_id: u, name: 'Unknown Bot' },
@@ -437,7 +437,7 @@ export const getUserOrBotDetails = async (
         })
         .catch((reason) => {
           logger.error(
-            `failed to get user info for user ${u} on team ${teamId}: ${reason}`,
+            `failed to get user info for user ${u.user_id} on team ${teamId}: ${reason}`,
           );
 
           return { name: 'Unknown User', title: '', id: u.user_id };
