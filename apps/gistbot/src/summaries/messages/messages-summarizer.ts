@@ -22,6 +22,7 @@ import { NoMessagesError } from '../errors/no-messages-error';
 import { BotsManager } from '../../bots-integrations/bots-manager';
 import { ChannelModelTranslator } from '../models/channel-model-translator';
 import { ChannelSummaryModel } from '../models/channel-summary.model';
+import { AllMessagesPrefilteredError } from '../errors/all-messages-filtered-error';
 
 export interface Summarization {
   summary: string;
@@ -133,6 +134,12 @@ export class MessagesSummarizer {
       while (cc > MAX_PROMPT_CHARACTER_COUNT) {
         req.shift();
         cc = approximatePromptCharacterCountForChannelSummaryModelMessages(req);
+      }
+
+      if (req.length === 0) {
+        throw new AllMessagesPrefilteredError(
+          `all messages pre-filtered before request, original size ${originalReq.length}`,
+        );
       }
 
       const didFilter = req.length < originalReq.length;
