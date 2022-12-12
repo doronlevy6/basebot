@@ -1,5 +1,6 @@
 import { PgUtil, PgConfig } from '@base/utils';
 import { Session } from './types';
+import { anonymizeSession } from './utils';
 
 export interface SessionDataStore {
   storeSession(sessionId: string, session: Session): Promise<void>;
@@ -44,12 +45,13 @@ export class PgSessionDataStore extends PgUtil implements SessionDataStore {
   }
 
   async storeSession(sessionId: string, session: Session): Promise<void> {
+    const anonymized = anonymizeSession(session);
     await this.db('gistbot_session_data_store')
       .insert({
         session_id: sessionId,
         slack_team_id: session.teamId,
         summary_type: session.summaryType,
-        session_data: session,
+        session_data: anonymized,
         created_at_unix: Math.floor(new Date().getTime() / 1000),
       })
       .onConflict(['session_id', 'slack_team_id'])
