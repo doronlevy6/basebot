@@ -14,7 +14,7 @@ import { IReporter } from '@base/metrics';
 import { TriggersFeedBack } from '../slack/components/trigger-feedback';
 import { getOrgSettingsFromContext } from '../orgsettings/middleware';
 
-const THREAD_LENGTH_LIMIT = 20;
+const THREAD_LENGTH_LIMIT = 6;
 
 interface MentionedInThreadProps {
   threadTs: string;
