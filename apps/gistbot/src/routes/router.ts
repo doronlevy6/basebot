@@ -32,6 +32,7 @@ import { NewUserTriggersManager } from '../new-user-triggers/manager';
 import { userOnboardingMiddleware } from '../onboarding/global-middleware';
 import { UserFeedbackManager } from '../user-feedback/manager';
 import {
+  handleStopNudge,
   handleUserFeedbackSubmit,
   handleUserTriggerFeedback,
   openFeedbackModalHandler,
@@ -66,6 +67,7 @@ export enum Routes {
   ADD_TO_CHANNEL_FROM_WELCOME_SUBMIT = 'add-to-channel-from-welcome-submit',
   ADD_TO_CHANNEL_FROM_WELCOME_MESSAGE = 'add-to-channel-from-welcome-message',
   TRIGGER_FEEDBACK = 'trigger-feedback',
+  STOP_NUDGE_MESSAGES = 'stop-nudge-messages',
   SUMMARIZE_THREAD_FROM_THREAD_MENTION = 'summarize-thread-from-thread-mention',
   SUMMARIZE_CHANNEL_FROM_CHANNEL_JOIN = 'summarize-channel-from-channel-join',
   SEND_USER_FEEDBACK = 'send-user-feedback',
@@ -231,6 +233,11 @@ export const registerBoltAppRouter = (
     Routes.TRIGGER_FEEDBACK,
     handleUserTriggerFeedback(analyticsManager, newUserTriggersManager),
   );
+  app.action(
+    Routes.STOP_NUDGE_MESSAGES,
+    handleStopNudge(analyticsManager, onboardingManager),
+  );
+
   app.view(
     Routes.USER_FEEDBACK_MODAL_SUBMIT,
     onboardingMiddleware,

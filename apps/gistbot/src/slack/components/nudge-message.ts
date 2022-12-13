@@ -8,22 +8,44 @@ export const NudgeMessage = (): KnownBlock[] => {
         type: 'mrkdwn',
         text: NudgeMessageText,
       },
+    },
+    {
+      type: 'actions',
+      elements: [
+        {
+          type: 'button',
+          style: 'primary',
+          text: {
+            type: 'plain_text',
+            text: 'Daily Digest Settings',
+          },
+          value: 'scheduler-settings-button',
+          action_id: Routes.OPEN_SCHEDULER_SETTINGS,
+        },
+      ],
+    },
+    {
+      type: 'divider',
+    },
+    {
+      type: 'section',
+      text: {
+        type: 'mrkdwn',
+        text: RemoveNudge,
+      },
       accessory: {
-        type: 'multi_conversations_select',
-        placeholder: {
+        type: 'button',
+        style: 'danger',
+        text: {
           type: 'plain_text',
-          text: 'Select channels...',
-          emoji: true,
+          text: 'Unsubscribe',
         },
-        filter: {
-          include: ['public'],
-          exclude_bot_users: true,
-          exclude_external_shared_channels: true,
-        },
-        action_id: Routes.ADD_TO_CHANNEL_FROM_WELCOME_MESSAGE,
+        value: 'scheduler-settings-button',
+        action_id: Routes.STOP_NUDGE_MESSAGES,
       },
     },
   ];
 };
 
-export const NudgeMessageText = `You haven't added me to any channel yet 🥺. theGist likes channels 👉`;
+export const NudgeMessageText = `Hey there,\n most users use theGist to get a daily digest of their busiest channels in slack, you can set up your daily digest here`;
+export const RemoveNudge = `Click here to stop receiving these messages`;

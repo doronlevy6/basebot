@@ -343,6 +343,23 @@ export class AnalyticsManager {
     });
   }
 
+  stopNudge({
+    slackUserId,
+    slackTeamId,
+  }: {
+    slackUserId: string;
+    slackTeamId: string;
+  }) {
+    this.sendEventToAnalytics({
+      eventName: `stop_nudge_requested`,
+      slackUserId: slackUserId,
+      slackTeamId: slackTeamId,
+      internalUserId: this.internalId(slackTeamId, slackUserId),
+      timestamp: new Date(),
+      properties: {},
+    });
+  }
+
   buttonClicked({
     type,
     slackUserId,

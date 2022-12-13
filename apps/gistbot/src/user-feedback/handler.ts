@@ -5,6 +5,7 @@ import { SlackBlockActionWrapper, ViewAction } from '../slack/types';
 import { UserFeedbackManager } from './manager';
 import { NewUserTriggersManager } from '../new-user-triggers/manager';
 import { extractTriggerFeedback } from '../slack/components/trigger-feedback';
+import { OnboardingManager } from '../onboarding/manager';
 
 const SEND_USER_FEEDBACK_INPUT = 'user-feedback-input';
 
@@ -53,6 +54,33 @@ export const handleUserFeedbackSubmit =
       );
     } catch (err) {
       logger.error(`user feedback submit handler error: ${err.stack}`);
+    }
+  };
+
+export const handleStopNudge =
+  (analyticsManager: AnalyticsManager, onboardingManager: OnboardingManager) =>
+  async ({ ack, logger, body, client }: SlackBlockActionWrapper) => {
+    try {
+      await ack();
+      if (!body.state?.values || !body.team || !body.user.id) {
+        logger.error(`no content for user action found`);
+        return;
+      }
+      if (!body.team) {
+        logger.error(`no team id for user stop nudge request`);
+        return;
+      }
+      analyticsManager.stopNudge({
+        slackUserId: body.user.id,
+        slackTeamId: body.team.id,
+      });
+      await onboardingManager.completeOnboarding(body.user.id, body.team.id);
+      await client.chat.postMessage({
+        channel: body.user.id,
+        text: 'You will not receive these messages any more.',
+      });
+    } catch (err) {
+      logger.error(`user stop nudge handler error: ${err.stack}`);
     }
   };
 export const handleUserTriggerFeedback =
