@@ -22,8 +22,9 @@ export function mentionedInChannelMessage(): Middleware<
     const event = body.event as GenericMessageEvent;
 
     // If there's no text, then there's definitely no mention,
+    // If event has thread_ts it is a thread replay not channel message,
     // so we skip the event entirely.
-    if (!event.text) {
+    if (!event.text || event.thread_ts) {
       return;
     }
 
