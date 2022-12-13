@@ -41,7 +41,7 @@ export const formatMultiChannelSummary = (
         return `<#${summary.channelId}>\n :warning: The channel content was flagged as inapropriate.`;
       }
       if (summary.error === 'channel_too_small') {
-        return `<#${summary.channelId}>\n :warning: The channel didn’t have enough messages.`;
+        return `<#${summary.channelId}>\n The channel didn’t have enough messages.`;
       }
       return `<#${summary.channelId}>\n :warning: The channel failed to generate.`;
     }
@@ -85,7 +85,7 @@ const multiChannelGeneralErrorMessage = (
     return `:warning: The channels either didn’t have enough messages, were flagged as inappropriate, or failed to generate`;
   }
   if (multiChannelSummaries.summaries.length === tooSmall) {
-    return `:warning: None of the channels had any meaningful conversations to summarize.`;
+    return `None of the channels had any meaningful conversations to summarize.`;
   }
   if (multiChannelSummaries.summaries.length === moderated) {
     return `:warning: All channels discussions were flagged as inappropriate`;
