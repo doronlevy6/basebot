@@ -54,6 +54,11 @@ import { botIMRouter } from './bot-im-router';
 import { CustomerIdentifier } from '@base/customer-identifier';
 import { OrgSettingsStore } from '../orgsettings/store';
 import { orgSettingsMiddleware } from '../orgsettings/middleware';
+import {
+  mentionedInChannelHandler,
+  summarizeSuggestedChannelAfterMention,
+} from '../summaries/mentioned-in-channel-handler';
+import { mentionedInChannelMessage } from '../slack/mentioned-in-channel.middleware';
 
 export enum Routes {
   SUMMARIZE_THREAD = 'summarize-thread',
@@ -69,6 +74,7 @@ export enum Routes {
   TRIGGER_FEEDBACK = 'trigger-feedback',
   STOP_NUDGE_MESSAGES = 'stop-nudge-messages',
   SUMMARIZE_THREAD_FROM_THREAD_MENTION = 'summarize-thread-from-thread-mention',
+  SUMMARIZE_CHANNEL_FROM_CHANNEL_MENTION = 'summarize-channel-from-channel-mention',
   SUMMARIZE_CHANNEL_FROM_CHANNEL_JOIN = 'summarize-channel-from-channel-join',
   SEND_USER_FEEDBACK = 'send-user-feedback',
   USER_FEEDBACK_MODAL_SUBMIT = 'user-feedback-modal-submit',
@@ -201,6 +207,15 @@ export const registerBoltAppRouter = (
       onboardingManager,
     ),
   );
+  app.action(
+    Routes.SUMMARIZE_CHANNEL_FROM_CHANNEL_MENTION,
+    summarizeSuggestedChannelAfterMention(
+      analyticsManager,
+      metricsReporter,
+      channelSummarizer,
+      onboardingManager,
+    ),
+  );
 
   app.action(
     Routes.SUMMARIZE_CHANNEL_FROM_CHANNEL_JOIN,
@@ -305,6 +320,14 @@ export const registerBoltAppRouter = (
   app.message(
     mentionedInThreadMessage(),
     mentionedInThreadHandler(
+      analyticsManager,
+      metricsReporter,
+      newUserTriggersManager,
+    ),
+  );
+  app.message(
+    mentionedInChannelMessage(),
+    mentionedInChannelHandler(
       analyticsManager,
       metricsReporter,
       newUserTriggersManager,

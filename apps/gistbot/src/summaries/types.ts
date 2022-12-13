@@ -54,4 +54,5 @@ export type ChannelSummaryContext =
   | 'slash_command'
   | 'channel_join'
   | 'request_more_time'
-  | 'bot_mentioned';
+  | 'bot_mentioned'
+  | 'user_mentioned';
