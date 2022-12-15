@@ -279,6 +279,7 @@ const startApp = async () => {
 
   const summarySchedulerMgr = new SchedulerSettingsManager(
     pgSchedulerSettingsStore,
+    analyticsManager,
   );
 
   const allQueueCfg = {

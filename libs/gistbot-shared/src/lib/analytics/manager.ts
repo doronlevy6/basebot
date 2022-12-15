@@ -322,6 +322,29 @@ export class AnalyticsManager {
     });
   }
 
+  scheduleSettingsSaved({
+    slackUserId,
+    slackTeamId,
+    channelIds,
+    scheduledTime,
+    extraParams,
+  }: {
+    slackUserId: string;
+    slackTeamId: string;
+    channelIds: string[];
+    scheduledTime: string;
+    extraParams?: ExtraParams;
+  }) {
+    this.sendEventToAnalytics({
+      eventName: `scheduled_settings_saved`,
+      slackUserId: slackUserId,
+      slackTeamId: slackTeamId,
+      internalUserId: this.internalId(slackTeamId, slackUserId),
+      timestamp: new Date(),
+      properties: { ...extraParams, channelIds, scheduledTime },
+    });
+  }
+
   addedToChannel({
     slackUserId,
     slackTeamId,

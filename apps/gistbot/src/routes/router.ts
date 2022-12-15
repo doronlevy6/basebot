@@ -205,6 +205,7 @@ export const registerBoltAppRouter = (
       metricsReporter,
       threadSummarizer,
       onboardingManager,
+      schedulerSettingsManager,
     ),
   );
   app.action(
@@ -214,6 +215,7 @@ export const registerBoltAppRouter = (
       metricsReporter,
       channelSummarizer,
       onboardingManager,
+      schedulerSettingsManager,
     ),
   );
 
@@ -224,6 +226,7 @@ export const registerBoltAppRouter = (
       metricsReporter,
       channelSummarizer,
       onboardingManager,
+      schedulerSettingsManager,
     ),
   );
 

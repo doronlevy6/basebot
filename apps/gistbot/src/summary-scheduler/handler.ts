@@ -135,14 +135,6 @@ export const summarySchedularSettingsModalHandler =
         UserSchedulerOptions.MORNING
           ? Number(UserSchedulerOptions.MORNING)
           : Number(UserSchedulerOptions.EVENING);
-      const date = new Date();
-      date.setUTCHours(selectedHour, 0, 0);
-      let userSettingsHour =
-        date.getUTCHours() - Math.floor(userInfo.user.tz_offset / 3600);
-      userSettingsHour = userSettingsHour % 24;
-      if (userSettingsHour < 0) {
-        userSettingsHour = 24 + userSettingsHour;
-      }
 
       const usersettings = new UserSchedulerSettings();
       usersettings.slackUser = body.user.id;
@@ -152,7 +144,10 @@ export const summarySchedularSettingsModalHandler =
           ?.value === UserSchedulerOptions.ON
           ? true
           : false;
-      usersettings.timeHour = userSettingsHour;
+      usersettings.timeHour = schedulerSettingsMgr.calculateUserDefaultHour(
+        userInfo.user.tz_offset,
+        selectedHour,
+      );
       usersettings.selectedHour = selectedHour;
       const channelsInfos = await Promise.all(
         selectedChannels.map((c) => {

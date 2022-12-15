@@ -6,10 +6,12 @@ import { ChannelSummarizer } from './channel/channel-summarizer';
 import { extractDaysBack, summaryInProgressMessage } from './utils';
 import { RespondFn, SlashCommand, Context } from '@slack/bolt';
 import { Logger, WebClient } from '@slack/web-api';
+import { SchedulerSettingsManager } from '../summary-scheduler/scheduler-manager';
 
 const runSlashCommand = async (
   analyticsManager: AnalyticsManager,
   channelSummarizer: ChannelSummarizer,
+  schedulerManager: SchedulerSettingsManager,
   client: WebClient,
   logger: Logger,
   payload: SlashCommand,
@@ -88,6 +90,7 @@ const runSlashCommand = async (
       await runSlashCommand(
         analyticsManager,
         channelSummarizer,
+        schedulerManager,
         client,
         logger,
         payload,
@@ -126,7 +129,11 @@ const runSlashCommand = async (
 };
 
 export const channelSummarizationHandler =
-  (analyticsManager: AnalyticsManager, channelSummarizer: ChannelSummarizer) =>
+  (
+    analyticsManager: AnalyticsManager,
+    channelSummarizer: ChannelSummarizer,
+    schedulerManager: SchedulerSettingsManager,
+  ) =>
   async ({
     ack,
     client,
@@ -137,9 +144,20 @@ export const channelSummarizationHandler =
   }: SlackSlashCommandWrapper) => {
     try {
       await ack();
+      const { channel_id, user_id, team_id } = payload;
+      schedulerManager
+        .saveDefaultUserSchedulerSettings(client, user_id, team_id, [
+          channel_id,
+        ])
+        .catch((e) => {
+          logger.error(
+            `error in saving default user settings in slash command, ${e}`,
+          );
+        });
       await runSlashCommand(
         analyticsManager,
         channelSummarizer,
+        schedulerManager,
         client,
         logger,
         payload,

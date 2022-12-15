@@ -13,6 +13,7 @@ import { TriggerContext } from './types';
 import { IReporter } from '@base/metrics';
 import { TriggersFeedBack } from '../slack/components/trigger-feedback';
 import { getOrgSettingsFromContext } from '../orgsettings/middleware';
+import { SchedulerSettingsManager } from '../summary-scheduler/scheduler-manager';
 
 const THREAD_LENGTH_LIMIT = 6;
 
@@ -151,6 +152,7 @@ export const summarizeSuggestedThreadAfterMention =
     metricsReporter: IReporter,
     threadSummarizer: ThreadSummarizer,
     onboardingManager: OnboardingManager,
+    schedulerManager: SchedulerSettingsManager,
   ) =>
   async ({ ack, logger, body, client, context }: SlackBlockActionWrapper) => {
     try {
@@ -215,6 +217,18 @@ export const summarizeSuggestedThreadAfterMention =
         'suggested_thread_summary',
         context.botUserId,
       );
+      schedulerManager
+        .saveDefaultUserSchedulerSettings(
+          client,
+          body.user.id,
+          body.team?.id || 'unknown',
+          [props.channelId],
+        )
+        .catch((e) => {
+          logger.error(
+            `error in saving default user settings in thread mention, ${e}`,
+          );
+        });
     } catch (error) {
       metricsReporter.error(
         'summarize thread after mention',

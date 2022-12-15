@@ -15,6 +15,7 @@ import {
   MentionedInChannel,
   MentionedInChannelText,
 } from '../slack/components/mentioned-in-channel';
+import { SchedulerSettingsManager } from '../summary-scheduler/scheduler-manager';
 
 const CHANNEL_LENGTH_LIMIT = 10;
 
@@ -118,6 +119,7 @@ export const summarizeSuggestedChannelAfterMention =
     metricsReporter: IReporter,
     channelSummarizer: ChannelSummarizer,
     onboardingManager: OnboardingManager,
+    schedulerManager: SchedulerSettingsManager,
   ) =>
   async ({ ack, logger, body, client, context }: SlackBlockActionWrapper) => {
     try {
@@ -182,6 +184,18 @@ export const summarizeSuggestedChannelAfterMention =
         'suggested_channel_summary',
         context.botUserId,
       );
+      schedulerManager
+        .saveDefaultUserSchedulerSettings(
+          client,
+          body.user.id,
+          body.team?.id || 'unknown',
+          [props.channelId],
+        )
+        .catch((e) => {
+          logger.error(
+            `error in saving default user settings in channel mention, ${e}`,
+          );
+        });
     } catch (error) {
       metricsReporter.error(
         'summarize channel after mention',

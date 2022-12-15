@@ -12,6 +12,7 @@ import { TriggerContext } from './types';
 import { IReporter } from '@base/metrics';
 import { TriggersFeedBack } from '../slack/components/trigger-feedback';
 import { getOrgSettingsFromContext } from '../orgsettings/middleware';
+import { SchedulerSettingsManager } from '../summary-scheduler/scheduler-manager';
 
 const MINIMUM_MESSAGES_ON_CHANNEL_JOIN = 10;
 
@@ -199,6 +200,7 @@ export const summarizeSuggestedChannelAfterJoin =
     metricsReporter: IReporter,
     channelSummarizer: ChannelSummarizer,
     onboardingManager: OnboardingManager,
+    schedulerManager: SchedulerSettingsManager,
   ) =>
   async ({ ack, logger, body, client, context }: SlackBlockActionWrapper) => {
     try {
@@ -264,6 +266,18 @@ export const summarizeSuggestedChannelAfterJoin =
         'suggested_channel_summary',
         context.botUserId,
       );
+      schedulerManager
+        .saveDefaultUserSchedulerSettings(
+          client,
+          body.user.id,
+          body.team?.id || 'unknown',
+          [props.channelId],
+        )
+        .catch((e) => {
+          logger.error(
+            `error in saving default user settings in channel join, ${e}`,
+          );
+        });
     } catch (error) {
       metricsReporter.error(
         'summarize suggested channel after join',

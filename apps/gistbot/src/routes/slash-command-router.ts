@@ -20,6 +20,7 @@ export const slashCommandRouter = (
   const handler = channelSummarizationHandler(
     analyticsManager,
     channelSummarizer,
+    schedulerSettingsMgr,
   );
 
   const summarySchedulerSettings = summarySchedularSettingsButtonHandler(
