@@ -52,7 +52,7 @@ export class SchedulerSettingsManager {
       !userInfo ||
       !userInfo.ok ||
       userInfo.error ||
-      !userInfo.user?.tz_offset
+      userInfo.user?.tz_offset === undefined
     ) {
       logger.error(
         `could not fetch user: ${userId} info to get timezone when saving default user settings`,
