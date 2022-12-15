@@ -42,8 +42,11 @@ import { SessionDataStore } from '../summaries/session-data/session-data-store';
 import { IReporter } from '@base/metrics';
 import { SlackBlockActionWrapper } from '../slack/types';
 import { FeatureRateLimiter } from '../feature-rate-limiter/rate-limiter';
-import { handleGistlyModalSubmit, openGistlyModal } from '../gistly/handler';
-import { GistlyModel } from '../gistly/gistly.model';
+import {
+  handleGistlyModalSubmit,
+  openGistlyModal,
+} from '../experimental/gistly/handler';
+import { GistlyModel } from '../experimental/gistly/gistly.model';
 import { MultiChannelSummarizer } from '../summaries/channel/multi-channel-summarizer';
 import {
   summarySchedularSettingsButtonHandler,

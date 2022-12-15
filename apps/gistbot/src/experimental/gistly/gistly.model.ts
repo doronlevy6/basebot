@@ -39,7 +39,7 @@ export class GistlyModel {
 
   private async callApi(prompt: string, temperature = 1) {
     const response = await this.openai.createCompletion({
-      model: 'text-davinci-002',
+      model: 'text-davinci-003',
       prompt,
       temperature,
       max_tokens: 1000,

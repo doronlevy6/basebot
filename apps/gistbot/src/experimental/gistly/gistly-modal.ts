@@ -1,5 +1,5 @@
 import { ModalView } from '@slack/web-api';
-import { UserLink } from '../slack/components/user-link';
+import { UserLink } from '../../slack/components/user-link';
 import { GistlyCommandType } from './types';
 
 interface IProps {

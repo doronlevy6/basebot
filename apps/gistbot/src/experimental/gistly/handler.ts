@@ -1,6 +1,6 @@
 import { logger } from '@base/logger';
-import { Routes } from '../routes/router';
-import { SlackShortcutWrapper, ViewAction } from '../slack/types';
+import { Routes } from '../../routes/router';
+import { SlackShortcutWrapper, ViewAction } from '../../slack/types';
 import { GistlyModal } from './gistly-modal';
 import { GistlyModel } from './gistly.model';
 import { GistlyCommandType } from './types';

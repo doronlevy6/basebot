@@ -10,6 +10,8 @@ import { channelSummarizationHandler } from '../summaries/channel-handler';
 import { ChannelSummarizer } from '../summaries/channel/channel-summarizer';
 import { summarySchedularSettingsButtonHandler } from '../summary-scheduler/handler';
 import { SchedulerSettingsManager } from '../summary-scheduler/scheduler-manager';
+import { chatHandler } from '../experimental/chat/handler';
+import { ChatModel } from '../experimental/chat/chat.model';
 
 export const slashCommandRouter = (
   channelSummarizer: ChannelSummarizer,
@@ -27,6 +29,9 @@ export const slashCommandRouter = (
     schedulerSettingsMgr,
     analyticsManager,
   );
+
+  const chatModel = new ChatModel();
+  const chatMessagesHandler = chatHandler(analyticsManager, chatModel);
 
   return async (props: SlackSlashCommandWrapper) => {
     const {
@@ -76,6 +81,12 @@ export const slashCommandRouter = (
 
     if (text === 'settings') {
       await summarySchedulerSettings(props);
+      return;
+    }
+
+    if (text === 'chat' && isBaseTeamWorkspace(team_id)) {
+      logger.info(`Handling chat command`);
+      await chatMessagesHandler(props);
       return;
     }
 
