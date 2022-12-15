@@ -84,18 +84,24 @@ export const summarySchedularSettingsModalHandler =
     analyticsManager: AnalyticsManager,
   ) =>
   async (params: ViewAction) => {
+    const { ack, body, client, view } = params;
     try {
-      const { ack, body, client, view } = params;
       await ack();
 
+      logger.debug(`scheduler modal submited for user ${body.user.id}`);
       const selectedChannels =
         view.state.values['multi_conversations_select'].value
           .selected_conversations;
       if (!selectedChannels?.length) {
-        logger.error('no channels were selected in scheduler settings modal');
+        logger.error(
+          `no channels were selected in scheduler settings modal for user ${body.user.id}`,
+        );
         return;
       }
 
+      logger.debug(
+        `scheduler modal selected channels ${selectedChannels} for user ${body.user.id}`,
+      );
       if (!body.team?.id) {
         logger.error(
           `team id not exist for user ${body.user.id} in scheduler settings modal`,
@@ -117,6 +123,7 @@ export const summarySchedularSettingsModalHandler =
 
       await Promise.all(joinChannelsPromises);
 
+      logger.debug(`scheduler modal joined channels for user ${body.user.id}`);
       const userInfo = await client.users.info({ user: body.user.id });
       if (
         !userInfo ||
@@ -130,6 +137,9 @@ export const summarySchedularSettingsModalHandler =
         return;
       }
 
+      logger.debug(
+        `scheduler modal fetched user info and timezone for user ${body.user.id}`,
+      );
       const selectedHour =
         view.state.values['radio-buttons-time'].value.selected_option?.value ===
         UserSchedulerOptions.MORNING
@@ -170,12 +180,15 @@ export const summarySchedularSettingsModalHandler =
           !channelInfo.channel?.name
         ) {
           logger.error(
-            `error fetching channel info when submitting scheduelr settings modal`,
+            `error fetching channel info when submitting scheduelr settings modal for user ${body.user.id}`,
           );
           return;
         }
       }
 
+      logger.debug(
+        `scheduler modal fetched channels info for user ${body.user.id}`,
+      );
       usersettings.channels = channelsInfos.map((channelInfo) => {
         return {
           channelId: channelInfo.channel?.id as string,
@@ -183,9 +196,12 @@ export const summarySchedularSettingsModalHandler =
         };
       });
       usersettings.days = [0, 1, 2, 3, 4, 5, 6];
+      logger.debug(
+        `scheduler modal start saving user settings ${usersettings},  for user ${body.user.id}`,
+      );
       await schedulerSettingsMgr.saveUserSchedulerSettings(usersettings);
       logger.debug(
-        `saved user ${body.user.id} settings from scheduler settings modal`,
+        `successfully saved user ${body.user.id} settings from scheduler settings modal`,
       );
 
       analyticsManager.buttonClicked({
@@ -194,6 +210,8 @@ export const summarySchedularSettingsModalHandler =
         slackUserId: body.user.id,
       });
     } catch (ex) {
-      logger.error(`error occured in scheduler settings modal, error:  ${ex}`);
+      logger.error(
+        `error occured in scheduler settings modal for user ${body.user.id}, error:  ${ex}`,
+      );
     }
   };
