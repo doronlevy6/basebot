@@ -345,6 +345,25 @@ export class AnalyticsManager {
     });
   }
 
+  scheduleSettingsDigestStopped({
+    slackUserId,
+    slackTeamId,
+    extraParams,
+  }: {
+    slackUserId: string;
+    slackTeamId: string;
+    extraParams?: ExtraParams;
+  }) {
+    this.sendEventToAnalytics({
+      eventName: `scheduled_settings_digest_stopped`,
+      slackUserId: slackUserId,
+      slackTeamId: slackTeamId,
+      internalUserId: this.internalId(slackTeamId, slackUserId),
+      timestamp: new Date(),
+      properties: { ...extraParams },
+    });
+  }
+
   addedToChannel({
     slackUserId,
     slackTeamId,

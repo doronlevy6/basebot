@@ -144,6 +144,13 @@ export const summarySchedularSettingsModalHandler =
           ?.value === UserSchedulerOptions.ON
           ? true
           : false;
+
+      if (!usersettings.enabled) {
+        analyticsManager.scheduleSettingsDigestStopped({
+          slackUserId: usersettings.slackUser,
+          slackTeamId: usersettings.slackTeam,
+        });
+      }
       usersettings.timeHour = schedulerSettingsMgr.calculateUserDefaultHour(
         userInfo.user.tz_offset,
         selectedHour,
