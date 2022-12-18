@@ -1,8 +1,8 @@
 import { KnownBlock } from '@slack/web-api';
 import { Routes } from '../../routes/router';
 
-export const AddToMultipleChannels = (onBoarding: boolean): KnownBlock[] => {
-  const text = addToChannelText(onBoarding);
+export const AddToMultipleChannels = (): KnownBlock[] => {
+  const text = addToChannelText();
   return [
     {
       type: 'section',
@@ -27,9 +27,6 @@ export const AddToMultipleChannels = (onBoarding: boolean): KnownBlock[] => {
     },
   ];
 };
-const addToChannelText = (onBoarding: boolean) => {
-  if (onBoarding) {
-    return `To get started, add me to few busy channels ➡️`;
-  }
-  return `select channels`;
+const addToChannelText = () => {
+  return `Add me to few busy channels ➡️`;
 };
