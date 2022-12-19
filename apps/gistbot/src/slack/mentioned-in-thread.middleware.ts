@@ -23,7 +23,7 @@ export function mentionedInThreadMessage(): Middleware<
 
     // No thread_ts means skip because it's not a thread mention
     // so we skip the event entirely.
-    if (!event.thread_ts) {
+    if (!event.thread_ts || event.bot_id) {
       return;
     }
 
