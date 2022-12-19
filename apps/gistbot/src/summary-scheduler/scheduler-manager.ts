@@ -110,4 +110,8 @@ export class SchedulerSettingsManager {
 
     return defaultHour;
   }
+
+  async disableSchedulerSettings(userId: string, teamId: string) {
+    return this.store.disableSchedulerSettings(userId, teamId);
+  }
 }

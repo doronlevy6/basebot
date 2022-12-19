@@ -46,6 +46,15 @@ const Actions = (sessionId: string): KnownBlock => {
         value: 'scheduler-settings-button',
         action_id: Routes.OPEN_SCHEDULER_SETTINGS,
       },
+      {
+        type: 'button',
+        text: {
+          type: 'plain_text',
+          text: 'Turn off Digest',
+        },
+        value: 'scheduler-settings-disable-button',
+        action_id: Routes.SCHEDULER_SETTINGS_DISABLE_OPEN_MODAL,
+      },
     ],
   };
 };

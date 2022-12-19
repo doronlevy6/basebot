@@ -12,6 +12,10 @@ export interface SchedulerSettingsStore {
     slackUserId: string,
     slackTeamId: string,
   ): Promise<UserSchedulerSettings | undefined>;
+  disableSchedulerSettings(
+    slackUserId: string,
+    slackTeamId: string,
+  ): Promise<void>;
 }
 
 export class PgSchedulerSettingsStore
@@ -56,6 +60,20 @@ export class PgSchedulerSettingsStore
       })
       .onConflict(['slack_team_id', 'slack_user_id'])
       .merge();
+  }
+
+  async disableSchedulerSettings(
+    slackUserId: string,
+    slackTeamId: string,
+  ): Promise<void> {
+    await this.db('gistbot_user_scheduler_settings')
+      .update({
+        enabled: false,
+      })
+      .where({
+        slack_team_id: slackTeamId,
+        slack_user_id: slackUserId,
+      });
   }
 
   async fetchUserSettings(slackUserId: string, slackTeamId: string) {

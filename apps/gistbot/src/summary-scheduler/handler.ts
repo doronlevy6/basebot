@@ -10,6 +10,7 @@ import {
 } from '../slack/types';
 import { SchedulerSettingsManager } from './scheduler-manager';
 import { UserSchedulerOptions, UserSchedulerSettings } from './types';
+import { SchedulerSettingsDisableModal } from '../slack/components/disable-digest-modal';
 
 export const summarySchedularSettingsButtonHandler =
   (
@@ -213,5 +214,74 @@ export const summarySchedularSettingsModalHandler =
       logger.error(
         `error occured in scheduler settings modal for user ${body.user.id}, error:  ${ex}`,
       );
+    }
+  };
+
+export const summarySchedularSettingsDisableHandler =
+  (
+    schedulerSettingsMgr: SchedulerSettingsManager,
+    analyticsManager: AnalyticsManager,
+  ) =>
+  async (params: ViewAction) => {
+    const { ack, body } = params;
+    try {
+      await ack();
+      if (!body.team?.id || !body.user?.id) {
+        logger.error(
+          `no teamId or userId in handler for summarySchedularSettingsDisableHandler ${JSON.stringify(
+            body,
+          )}`,
+        );
+        return;
+      }
+      analyticsManager.scheduleSettingsDigestStopped({
+        slackUserId: body.user.id,
+        slackTeamId: body.team.id,
+      });
+      await schedulerSettingsMgr.disableSchedulerSettings(
+        body.user.id,
+        body.team.id,
+      );
+    } catch (err) {
+      logger.error(
+        `schedule settings disabled error for user ${body.user.id}: ${err} ${err.stack}`,
+      );
+    }
+  };
+
+export const summarySchedularSettingsDisableOpenModal =
+  (analyticsManager: AnalyticsManager) =>
+  async ({
+    ack,
+    logger,
+    body,
+    client,
+  }: SlackBlockActionWrapper | SlackSlashCommandWrapper) => {
+    try {
+      await ack();
+
+      const teamId = (body as SlashCommand).team_id ?? body.team?.id;
+      const userId = (body as SlashCommand).user_id ?? body.user?.id;
+      if (!teamId || !userId) {
+        logger.error(
+          `no teamId or userId in handler for summarySchedularSettingsDisableOpenModal ${JSON.stringify(
+            body,
+          )}`,
+        );
+        return;
+      }
+
+      await client.views.open({
+        trigger_id: body.trigger_id,
+        view: SchedulerSettingsDisableModal(),
+      });
+
+      analyticsManager.buttonClicked({
+        type: 'scheduler-settings-disable-modal-open',
+        slackTeamId: teamId,
+        slackUserId: userId,
+      });
+    } catch (err) {
+      logger.error(`schedule settings load error: ${err} ${err.stack}`);
     }
   };

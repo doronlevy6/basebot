@@ -50,6 +50,8 @@ import { GistlyModel } from '../experimental/gistly/gistly.model';
 import { MultiChannelSummarizer } from '../summaries/channel/multi-channel-summarizer';
 import {
   summarySchedularSettingsButtonHandler,
+  summarySchedularSettingsDisableHandler,
+  summarySchedularSettingsDisableOpenModal,
   summarySchedularSettingsModalHandler,
 } from '../summary-scheduler/handler';
 import { SchedulerSettingsManager } from '../summary-scheduler/scheduler-manager';
@@ -87,6 +89,8 @@ export enum Routes {
   GISTLY_MODAL_SUBMIT = 'gistly-modal-submit',
   OPEN_SCHEDULER_SETTINGS = 'open-scheduler-settings',
   SCHEDULER_SETTINGS_MODAL_SUBMIT = 'scheduler-settings-modal-submit',
+  SCHEDULER_SETTINGS_DISABLE = 'scheduler-settings-disabled',
+  SCHEDULER_SETTINGS_DISABLE_OPEN_MODAL = 'scheduler-settings-open-modal',
 }
 
 export const registerBoltAppRouter = (
@@ -302,6 +306,19 @@ export const registerBoltAppRouter = (
   app.view(
     Routes.SCHEDULER_SETTINGS_MODAL_SUBMIT,
     summarySchedularSettingsModalHandler(
+      schedulerSettingsManager,
+      analyticsManager,
+    ),
+  );
+
+  app.action(
+    Routes.SCHEDULER_SETTINGS_DISABLE_OPEN_MODAL,
+    summarySchedularSettingsDisableOpenModal(analyticsManager),
+  );
+
+  app.view(
+    Routes.SCHEDULER_SETTINGS_DISABLE,
+    summarySchedularSettingsDisableHandler(
       schedulerSettingsManager,
       analyticsManager,
     ),
