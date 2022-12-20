@@ -5,7 +5,6 @@ import {
 import { AnalyticsManager } from '@base/gistbot-shared';
 import { ChatManager } from '../experimental/chat/manager';
 import { OnboardingManager } from '../onboarding/manager';
-import { Help } from '../slack/components/help';
 import { SlackEventWrapper } from '../slack/types';
 import { isBaseTeamWorkspace } from '../slack/utils';
 
@@ -153,35 +152,21 @@ export const botIMRouter = (
 
     // On our internal workspace we avoid sending the help message in order to allow us to test the onboarding.
     // This is only for internal use and is ignored externally.
-    if (isBaseTeamWorkspace(body.team_id)) {
-      const specialKeywordForTesting = 'break';
-      if (event.text && event.text === specialKeywordForTesting) {
-        return;
-      }
-
-      // TODO: move to outside isBaseTeamWorkspace clause soon
-      await chatManager.handleChatMessage({
-        client,
-        logger,
-        userId: event.user,
-        channelId: event.channel,
-        teamId: body.team_id,
-      });
+    const specialKeywordForTesting = 'break';
+    if (
+      isBaseTeamWorkspace(body.team_id) &&
+      event.text &&
+      event.text === specialKeywordForTesting
+    ) {
       return;
     }
 
-    await say({
-      text: 'Hi there :wave:',
-      blocks: Help(event.user),
-    });
-
-    analyticsManager.messageSentToUserDM({
-      type: 'help_response_message',
-      slackTeamId: body.team_id,
-      slackUserId: event['user'],
-      properties: {
-        triggerMessage: event['text'] || 'unknown text',
-      },
+    await chatManager.handleChatMessage({
+      client,
+      logger,
+      userId: event.user,
+      channelId: event.channel,
+      teamId: body.team_id,
     });
   };
 };

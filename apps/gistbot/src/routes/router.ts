@@ -349,10 +349,7 @@ export const registerBoltAppRouter = (
     mentionHandler(
       analyticsManager,
       metricsReporter,
-      channelSummarizer,
-      threadSummarizer,
       onboardingManager,
-      multiChannelSummarizer,
       chatMessagesManager,
     ),
   );
