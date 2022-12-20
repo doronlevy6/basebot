@@ -1,4 +1,3 @@
-import { logger } from '@base/logger';
 import { AnalyticsManager } from '@base/gistbot-shared';
 import { Feature } from '../feature-rate-limiter/limits';
 import { FeatureRateLimiter } from '../feature-rate-limiter/rate-limiter';
@@ -10,14 +9,14 @@ import { channelSummarizationHandler } from '../summaries/channel-handler';
 import { ChannelSummarizer } from '../summaries/channel/channel-summarizer';
 import { summarySchedularSettingsButtonHandler } from '../summary-scheduler/handler';
 import { SchedulerSettingsManager } from '../summary-scheduler/scheduler-manager';
-import { chatHandler } from '../experimental/chat/handler';
-import { ChatModel } from '../experimental/chat/chat.model';
+import { ChatManager } from '../experimental/chat/manager';
 
 export const slashCommandRouter = (
   channelSummarizer: ChannelSummarizer,
   analyticsManager: AnalyticsManager,
   featureRateLimiter: FeatureRateLimiter,
   schedulerSettingsMgr: SchedulerSettingsManager,
+  chatManager: ChatManager,
 ) => {
   const handler = channelSummarizationHandler(
     analyticsManager,
@@ -30,14 +29,12 @@ export const slashCommandRouter = (
     analyticsManager,
   );
 
-  const chatModel = new ChatModel();
-  const chatMessagesHandler = chatHandler(analyticsManager, chatModel);
-
   return async (props: SlackSlashCommandWrapper) => {
     const {
       command: { text },
       respond,
       client,
+      logger,
       body: { channel_id, user_id, team_id },
     } = props;
     logger.info(`Running command ${text}`);
@@ -85,7 +82,13 @@ export const slashCommandRouter = (
 
     if (text === 'chat' && isBaseTeamWorkspace(team_id)) {
       logger.info(`Handling chat command`);
-      await chatMessagesHandler(props);
+      await chatManager.handleChatMessage({
+        logger,
+        client,
+        userId: user_id,
+        channelId: channel_id,
+        teamId: team_id,
+      });
       return;
     }
 

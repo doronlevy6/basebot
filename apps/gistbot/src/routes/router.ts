@@ -64,6 +64,8 @@ import {
   summarizeSuggestedChannelAfterMention,
 } from '../summaries/mentioned-in-channel-handler';
 import { mentionedInChannelMessage } from '../slack/mentioned-in-channel.middleware';
+import { ChatManager } from '../experimental/chat/manager';
+import { ChatModel } from '../experimental/chat/chat.model';
 
 export enum Routes {
   SUMMARIZE_THREAD = 'summarize-thread',
@@ -131,6 +133,11 @@ export const registerBoltAppRouter = (
   );
   const privateChannel = privateChannelHandler(analyticsManager);
 
+  const chatMessagesManager = new ChatManager(
+    new ChatModel(),
+    analyticsManager,
+  );
+
   app.view(Routes.ADD_TO_CHANNEL_SUBMIT, onboardingMiddleware, addToChannel);
   app.view(
     { callback_id: Routes.ADD_TO_CHANNEL_SUBMIT, type: 'view_closed' },
@@ -151,6 +158,7 @@ export const registerBoltAppRouter = (
       analyticsManager,
       featureRateLimiter,
       schedulerSettingsManager,
+      chatMessagesManager,
     ),
   );
   app.action(
@@ -325,7 +333,12 @@ export const registerBoltAppRouter = (
   );
 
   app.message(
-    botIMRouter(analyticsManager, onboardingManager, customerIdentifier),
+    botIMRouter(
+      analyticsManager,
+      onboardingManager,
+      customerIdentifier,
+      chatMessagesManager,
+    ),
   );
 
   app.message(

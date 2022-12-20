@@ -461,4 +461,27 @@ export class AnalyticsManager {
       properties: { ...extraParams },
     });
   }
+
+  chatMessage({
+    type,
+    slackUserId,
+    slackTeamId,
+    channelId,
+    extraParams,
+  }: {
+    type: string;
+    slackUserId: string;
+    slackTeamId: string;
+    channelId: string;
+    extraParams?: ExtraParams;
+  }) {
+    this.sendEventToAnalytics({
+      eventName: `chat_message_sent`,
+      slackUserId: slackUserId,
+      slackTeamId: slackTeamId,
+      internalUserId: this.internalId(slackTeamId, slackUserId),
+      timestamp: new Date(),
+      properties: { ...extraParams, type, channelId },
+    });
+  }
 }

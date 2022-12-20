@@ -3,6 +3,7 @@ import {
   isPassphraseMessage,
 } from '@base/customer-identifier';
 import { AnalyticsManager } from '@base/gistbot-shared';
+import { ChatManager } from '../experimental/chat/manager';
 import { OnboardingManager } from '../onboarding/manager';
 import { Help } from '../slack/components/help';
 import { SlackEventWrapper } from '../slack/types';
@@ -12,14 +13,10 @@ export const botIMRouter = (
   analyticsManager: AnalyticsManager,
   onboardingManager: OnboardingManager,
   customerIdentifier: CustomerIdentifier,
+  chatManager: ChatManager,
 ) => {
-  return async ({
-    event,
-    say,
-    body,
-    logger,
-    client,
-  }: SlackEventWrapper<'message'>) => {
+  return async (props: SlackEventWrapper<'message'>) => {
+    const { event, say, body, logger, client } = props;
     if (event.channel_type !== 'im') {
       // Just a normal message. This will be caught by other handlers and doesn't need to be handled here.
       return;
@@ -157,6 +154,19 @@ export const botIMRouter = (
     // On our internal workspace we avoid sending the help message in order to allow us to test the onboarding.
     // This is only for internal use and is ignored externally.
     if (isBaseTeamWorkspace(body.team_id)) {
+      const specialKeywordForTesting = 'break';
+      if (event.text && event.text === specialKeywordForTesting) {
+        return;
+      }
+
+      // TODO: move to outside isBaseTeamWorkspace clause soon
+      await chatManager.handleChatMessage({
+        client,
+        logger,
+        userId: event.user,
+        channelId: event.channel,
+        teamId: body.team_id,
+      });
       return;
     }
 
