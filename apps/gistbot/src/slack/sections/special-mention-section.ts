@@ -1,5 +1,6 @@
 import { WebClient } from '@slack/web-api';
 import { ParsedMessagePlaintextOpts } from '../parser';
+import { SlackDataStore } from '../../utils/slack-data-store';
 
 export class SpecialMentionSection {
   type: 'special_mention' = 'special_mention';
@@ -21,6 +22,8 @@ export class SpecialMentionSection {
     client?: WebClient,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     opts?: ParsedMessagePlaintextOpts,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    slackDataStore?: SlackDataStore,
   ): Promise<string> {
     return `@${this.label || this.mention}`;
   }

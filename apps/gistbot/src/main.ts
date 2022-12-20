@@ -54,6 +54,7 @@ import { BotsManager } from './bots-integrations/bots-manager';
 import { GithubBot } from './bots-integrations/bots/github.bot';
 import { ChannelModelTranslator } from './summaries/models/channel-model-translator';
 import { ChannelSummaryModel } from './summaries/models/channel-summary.model';
+import { SlackDataStore } from './utils/slack-data-store';
 
 const gracefulShutdown = (server: Server) => (signal: string) => {
   logger.info('starting shutdown, got signal ' + signal);
@@ -146,6 +147,7 @@ const startApp = async () => {
   const onboardingLock = new RedisOnboardingLock(redisConfig, env);
   const summarySchedulerLock = new RedisSchedulerSettingsLock(redisConfig, env);
   const summaryStore = new SummaryStore(redisConfig, env);
+  const slackDataStore = new SlackDataStore(redisConfig, env);
   const newUserTriggersLock = new RedisTriggerLock(redisConfig, env);
   const onboardingNudgeLock = new RedisOnboardingNudgeLock(redisConfig, env);
   const analyticsManager = new AnalyticsManager();
@@ -158,6 +160,7 @@ const startApp = async () => {
     channelModelTranslator,
     pgSessionDataStore,
     botsManager,
+    slackDataStore,
     false,
   );
 
@@ -174,6 +177,7 @@ const startApp = async () => {
     messagesSummarizer,
     analyticsManager,
     summaryStore,
+    slackDataStore,
     pgSessionDataStore,
     metricsReporter,
     featureRateLimiter,
@@ -233,12 +237,14 @@ const startApp = async () => {
     env,
     registrationBotToken,
     env !== 'local',
+    slackDataStore,
   );
 
   const userFeedbackManager = new UserFeedbackManager(
     analyticsManager,
     env,
     registrationBotToken, // Just use the auth0 notifier token for now, doesn't really matter at all
+    slackDataStore,
   );
 
   const onboardingManager = new OnboardingManager(
@@ -247,6 +253,7 @@ const startApp = async () => {
     analyticsManager,
     metricsReporter,
     userOnboardingNotifier,
+    slackDataStore,
     emailSender,
     pgStore,
   );
@@ -275,11 +282,13 @@ const startApp = async () => {
     messagesSummarizer,
     analyticsManager,
     channelSummarizer,
+    slackDataStore,
   );
 
   const summarySchedulerMgr = new SchedulerSettingsManager(
     pgSchedulerSettingsStore,
     analyticsManager,
+    slackDataStore,
   );
 
   const allQueueCfg = {
@@ -316,6 +325,7 @@ const startApp = async () => {
     customerIdentifierLock,
     orgSettingsStore,
     scheduledMessageSender,
+    slackDataStore,
   );
 
   const sqsRegion = process.env.SQS_REGION;
@@ -350,6 +360,7 @@ const startApp = async () => {
     channelSummarizer,
     onboardingManager,
     summaryStore,
+    slackDataStore,
     newUserTriggersManager,
     userFeedbackManager,
     pgSessionDataStore,

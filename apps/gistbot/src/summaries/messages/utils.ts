@@ -8,6 +8,7 @@ import {
   ModelMessageReaction,
 } from '../models/messages-summary.model';
 import { filterUnwantedMessages } from '../utils';
+import { SlackDataStore } from '../../utils/slack-data-store';
 
 export interface PickedMessage
   extends Pick<
@@ -22,6 +23,7 @@ export const parseModelMessage = async (
   client: WebClient,
   teamId: string,
   channelId: string,
+  slackDataStore: SlackDataStore,
   myBotId?: string,
 ): Promise<PickedMessage | undefined> => {
   const messageIsOkay =
@@ -36,7 +38,7 @@ export const parseModelMessage = async (
 
   const messageText = await parseSlackMrkdwn(
     await extractMessageText(message, false, teamId, client),
-  ).plainText(teamId, client, defaultParseTextOpts);
+  ).plainText(teamId, client, defaultParseTextOpts, slackDataStore);
 
   return {
     ts: message.ts,

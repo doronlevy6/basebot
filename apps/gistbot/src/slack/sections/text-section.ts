@@ -1,6 +1,7 @@
 import { WebClient } from '@slack/web-api';
 import { ParsedMessagePlaintextOpts } from '../parser';
 import { EmojiConvertor } from 'emoji-js';
+import { SlackDataStore } from '../../utils/slack-data-store';
 
 export class TextSection {
   type: 'text' = 'text';
@@ -16,6 +17,8 @@ export class TextSection {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     client?: WebClient,
     opts?: ParsedMessagePlaintextOpts,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    slackDataStore?: SlackDataStore,
   ): Promise<string> {
     const emoji = new EmojiConvertor();
     emoji.replace_mode = 'unified';

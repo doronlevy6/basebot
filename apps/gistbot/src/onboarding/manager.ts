@@ -20,6 +20,7 @@ import {
 } from '../slack/components/nudge-message';
 import { differenceInDays } from 'date-fns';
 import { IReporter } from '@base/metrics';
+import { SlackDataStore } from '../utils/slack-data-store';
 
 export class OnboardingManager {
   constructor(
@@ -28,6 +29,7 @@ export class OnboardingManager {
     private analyticsManager: AnalyticsManager,
     private metricsReporter: IReporter,
     private notifier: UserOnboardedNotifier,
+    private slackDataStore: SlackDataStore,
     private emailSender: EmailSender,
     private installationStore: PgInstallationStore,
   ) {}
@@ -118,18 +120,22 @@ export class OnboardingManager {
     client: WebClient,
   ): Promise<void> {
     try {
-      const data = await client.users.profile.get({ user: userId });
-      if (!data?.profile?.email) {
-        logger.error(`Could not get user data`);
+      const userProfile = await this.slackDataStore.getUserProfileData(
+        userId,
+        teamId,
+        client,
+      );
+      if (!userProfile.email) {
+        logger.warn(`Could not get user data`);
         return;
       }
 
-      if (!allowUserByEmails(data?.profile?.email)) {
+      if (!allowUserByEmails(userProfile.email)) {
         return;
       }
 
       await this.emailSender.sendEmail({
-        to: data.profile.email,
+        to: userProfile.email,
         ...InviteUserTemplate(),
       });
       this.analyticsManager.emailSentToUserDM({

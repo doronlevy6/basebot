@@ -23,6 +23,7 @@ import { BotsManager } from '../../bots-integrations/bots-manager';
 import { ChannelModelTranslator } from '../models/channel-model-translator';
 import { ChannelSummaryModel } from '../models/channel-summary.model';
 import { AllMessagesPrefilteredError } from '../errors/all-messages-filtered-error';
+import { SlackDataStore } from '../../utils/slack-data-store';
 
 export interface Summarization {
   summary: string;
@@ -50,6 +51,7 @@ export class MessagesSummarizer {
     private translator: ChannelModelTranslator,
     private sessionDataStore: SessionDataStore,
     private botsManager: BotsManager,
+    private slackDataStore: SlackDataStore,
     private readonly enableV3: boolean,
   ) {}
 
@@ -94,7 +96,14 @@ export class MessagesSummarizer {
     const pickedModelMessages = (
       await Promise.all(
         flattenedMessages.map((msg) =>
-          parseModelMessage(msg, client, teamId, channelId, myBotId),
+          parseModelMessage(
+            msg,
+            client,
+            teamId,
+            channelId,
+            this.slackDataStore,
+            myBotId,
+          ),
         ),
       )
     ).filter((m) => m) as PickedMessage[]; // Filter should remove any undefineds but the typescript isn't picking that up so we force the cast...

@@ -27,6 +27,7 @@ import { IReporter } from '@base/metrics';
 import { MessagesSummarizer } from '../messages/messages-summarizer';
 import { generateIDAsync } from '../../utils/id-generator.util';
 import { NoMessagesError } from '../errors/no-messages-error';
+import { SlackDataStore } from '../../utils/slack-data-store';
 
 export const MAX_MESSAGES_TO_FETCH = 100;
 
@@ -37,6 +38,7 @@ export class ChannelSummarizer {
     private messagesSummarizer: MessagesSummarizer,
     private analyticsManager: AnalyticsManager,
     private summaryStore: SummaryStore,
+    private slackDataStore: SlackDataStore,
     private sessionDataStore: SessionDataStore,
     private metricsReporter: IReporter,
     private featureRateLimiter: FeatureRateLimiter,
@@ -63,24 +65,11 @@ export class ChannelSummarizer {
         throw new RateLimitedError('rate limited');
       }
 
-      const {
-        error: infoError,
-        ok: infoOk,
-        user: userInfo,
-      } = await client.users.info({
-        user: userId,
-      });
-      if (infoError || !infoOk) {
-        throw new Error(
-          `Failed to fetch user from slack when trying to summarize a channel ${infoError}`,
-        );
-      }
-
-      if (!userInfo) {
-        throw new Error(
-          `Failed to fetch user from slack when trying to summarize a channel, user not found`,
-        );
-      }
+      const userInfo = await this.slackDataStore.getUserInfoData(
+        userId,
+        teamId,
+        client,
+      );
 
       const rootMessages = await this.fetchChannelRootMessages(
         client,

@@ -1,6 +1,7 @@
 import { logger } from '@base/logger';
 import { WebClient } from '@slack/web-api';
 import { ParsedMessagePlaintextOpts } from '../parser';
+import { SlackDataStore } from '../../utils/slack-data-store';
 
 export class UserMentionSection {
   type: 'user_mention' = 'user_mention';
@@ -18,6 +19,7 @@ export class UserMentionSection {
     client?: WebClient,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     opts?: ParsedMessagePlaintextOpts,
+    slackDataStore?: SlackDataStore,
   ): Promise<string> {
     if (this.label) {
       return `@${this.label}`;
@@ -27,22 +29,22 @@ export class UserMentionSection {
       return `@${this.userId}`;
     }
 
+    if (!slackDataStore) {
+      return `@${this.userId}`;
+    }
+
     try {
-      const res = await client.users.info({ user: this.userId });
-      if (res.error || !res.ok) {
-        throw new Error(`error returned from users.info: ${res.error}`);
-      }
+      const res = await slackDataStore.getUserInfoData(
+        this.userId,
+        teamId,
+        client,
+      );
 
-      if (!res.user) {
-        throw new Error(`error returned from users.info: not found`);
-      }
-
-      if (!res.user.name) {
+      if (!res.name) {
         throw new Error(`error returned from users.info: no name found`);
       }
-
       const capitalizedName =
-        res.user.name.charAt(0).toUpperCase() + res.user.name.slice(1);
+        res.name.charAt(0).toUpperCase() + res.name.slice(1);
       return `@${capitalizedName}`;
     } catch (error) {
       logger.error({

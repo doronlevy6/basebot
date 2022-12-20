@@ -10,6 +10,7 @@ import {
 } from '../slack/types';
 import { SchedulerSettingsManager } from './scheduler-manager';
 import { UserSchedulerOptions, UserSchedulerSettings } from './types';
+import { SlackDataStore } from '../utils/slack-data-store';
 import { SchedulerSettingsDisableModal } from '../slack/components/disable-digest-modal';
 
 export const summarySchedularSettingsButtonHandler =
@@ -83,6 +84,7 @@ export const summarySchedularSettingsModalHandler =
   (
     schedulerSettingsMgr: SchedulerSettingsManager,
     analyticsManager: AnalyticsManager,
+    slackDataStore: SlackDataStore,
   ) =>
   async (params: ViewAction) => {
     const { ack, body, client, view } = params;
@@ -125,13 +127,12 @@ export const summarySchedularSettingsModalHandler =
       await Promise.all(joinChannelsPromises);
 
       logger.debug(`scheduler modal joined channels for user ${body.user.id}`);
-      const userInfo = await client.users.info({ user: body.user.id });
-      if (
-        !userInfo ||
-        !userInfo.ok ||
-        userInfo.error ||
-        userInfo.user?.tz_offset === undefined
-      ) {
+      const userInfo = await slackDataStore.getUserInfoData(
+        body.user.id,
+        body.team.id,
+        client,
+      );
+      if (userInfo.tz_offset === undefined) {
         logger.error(
           `could not fetch user: ${body.user.id} info to get timezone in summary scheduler modal`,
         );
@@ -163,7 +164,7 @@ export const summarySchedularSettingsModalHandler =
         });
       }
       usersettings.timeHour = schedulerSettingsMgr.calculateUserDefaultHour(
-        userInfo.user.tz_offset,
+        userInfo.tz_offset,
         selectedHour,
       );
       usersettings.selectedHour = selectedHour;

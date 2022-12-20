@@ -1,6 +1,7 @@
 import { logger } from '@base/logger';
 import { WebClient } from '@slack/web-api';
 import { ParsedMessagePlaintextOpts } from '../parser';
+import { SlackDataStore } from '../../utils/slack-data-store';
 
 export class UserGroupMentionSection {
   type: 'user_group_mention' = 'user_group_mention';
@@ -17,6 +18,8 @@ export class UserGroupMentionSection {
     client?: WebClient,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     opts?: ParsedMessagePlaintextOpts,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    slackDataStore?: SlackDataStore,
   ): Promise<string> {
     if (this.label) {
       return `@${this.label}`;

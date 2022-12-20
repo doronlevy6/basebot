@@ -13,6 +13,7 @@ import { IReporter } from '@base/metrics';
 import { TriggersFeedBack } from '../slack/components/trigger-feedback';
 import { getOrgSettingsFromContext } from '../orgsettings/middleware';
 import { SchedulerSettingsManager } from '../summary-scheduler/scheduler-manager';
+import { SlackDataStore } from '../utils/slack-data-store';
 
 const MINIMUM_MESSAGES_ON_CHANNEL_JOIN = 10;
 
@@ -28,6 +29,7 @@ export const channelJoinHandler =
     channelSummarizer: ChannelSummarizer,
     onboardingManager: OnboardingManager,
     newUserTriggersManager: NewUserTriggersManager,
+    slackDataStore: SlackDataStore,
   ) =>
   async ({ client, logger, body, context }: SlackEventWrapper<'message'>) => {
     try {
@@ -47,24 +49,11 @@ export const channelJoinHandler =
       const event = body.event as ChannelJoinMessageEvent;
       logger.info(`${event.user} has joined ${event.channel}`);
 
-      const {
-        error: infoError,
-        ok: infoOk,
-        user: userInfo,
-      } = await client.users.info({
-        user: event.user,
-      });
-      if (infoError || !infoOk) {
-        throw new Error(
-          `Failed to fetch user from slack when trying to summarize a channel ${infoError}`,
-        );
-      }
-
-      if (!userInfo) {
-        throw new Error(
-          `Failed to fetch user from slack when trying to summarize a channel, user not found`,
-        );
-      }
+      const userInfo = await slackDataStore.getUserInfoData(
+        event.user,
+        team_id,
+        client,
+      );
 
       const rootMessages = await channelSummarizer.fetchChannelRootMessages(
         client,

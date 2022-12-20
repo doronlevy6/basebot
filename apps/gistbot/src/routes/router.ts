@@ -64,6 +64,7 @@ import {
   summarizeSuggestedChannelAfterMention,
 } from '../summaries/mentioned-in-channel-handler';
 import { mentionedInChannelMessage } from '../slack/mentioned-in-channel.middleware';
+import { SlackDataStore } from '../utils/slack-data-store';
 import { ChatManager } from '../experimental/chat/manager';
 import { ChatModel } from '../experimental/chat/chat.model';
 
@@ -104,6 +105,7 @@ export const registerBoltAppRouter = (
   channelSummarizer: ChannelSummarizer,
   onboardingManager: OnboardingManager,
   summaryStore: SummaryStore,
+  slackDataStore: SlackDataStore,
   newUserTriggersManager: NewUserTriggersManager,
   userFeedbackManager: UserFeedbackManager,
   sessionDataStore: SessionDataStore,
@@ -316,6 +318,7 @@ export const registerBoltAppRouter = (
     summarySchedularSettingsModalHandler(
       schedulerSettingsManager,
       analyticsManager,
+      slackDataStore,
     ),
   );
 
@@ -376,6 +379,7 @@ export const registerBoltAppRouter = (
     channelSummarizer,
     onboardingManager,
     newUserTriggersManager,
+    slackDataStore,
   );
   app.message(subtype('channel_join'), joinHandler);
 

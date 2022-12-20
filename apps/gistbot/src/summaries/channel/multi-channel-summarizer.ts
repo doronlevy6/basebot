@@ -12,6 +12,7 @@ import { ModerationError } from '../errors/moderation-error';
 import { formatMultiChannelSummary } from '../../slack/summary-formatter';
 import { MessagesSummarizer } from '../messages/messages-summarizer';
 import { generateIDAsync } from '../../utils/id-generator.util';
+import { SlackDataStore } from '../../utils/slack-data-store';
 
 export type OutputError = 'channel_too_small' | 'moderated' | 'general_error';
 
@@ -39,6 +40,7 @@ export class MultiChannelSummarizer {
     private messagesSummarizer: MessagesSummarizer,
     private analyticsManager: AnalyticsManager,
     private channelSummarizer: ChannelSummarizer,
+    private slackDataStore: SlackDataStore,
   ) {}
 
   async summarize(
@@ -59,24 +61,11 @@ export class MultiChannelSummarizer {
         channels: props.channels.map((c) => c.channelId),
       });
 
-      const {
-        error: infoError,
-        ok: infoOk,
-        user: userInfo,
-      } = await client.users.info({
-        user: userId,
-      });
-      if (infoError || !infoOk) {
-        throw new Error(
-          `Failed to fetch user from slack when trying to summarize multiple channels ${infoError}`,
-        );
-      }
-
-      if (!userInfo) {
-        throw new Error(
-          `Failed to fetch user from slack when trying to summarize multiple channels, user not found`,
-        );
-      }
+      const userInfo = await this.slackDataStore.getUserInfoData(
+        userId,
+        teamId,
+        client,
+      );
 
       const channels: Summarization[] = await Promise.all(
         props.channels.map(async (c): Promise<Summarization> => {

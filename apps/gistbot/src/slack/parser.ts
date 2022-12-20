@@ -7,6 +7,7 @@ import { TextSection } from './sections/text-section';
 import { UrlLinkSection } from './sections/url-link-section';
 import { UserGroupMentionSection } from './sections/user-group-mention-section';
 import { UserMentionSection } from './sections/user-mention-section';
+import { SlackDataStore } from '../utils/slack-data-store';
 
 interface PlaintextOpts {
   removeCodeblocks: boolean;
@@ -39,9 +40,12 @@ export class ParsedMessage {
     teamId: string,
     client?: WebClient,
     opts?: ParsedMessagePlaintextOpts,
+    slackDataStore?: SlackDataStore,
   ): Promise<string> {
     const enrichedSections = await Promise.all(
-      this.sections.map((current) => current.plainText(teamId, client, opts)),
+      this.sections.map((current) =>
+        current.plainText(teamId, client, opts, slackDataStore),
+      ),
     );
 
     return enrichedSections.reduce((acc, current) => `${acc}${current}`, '');

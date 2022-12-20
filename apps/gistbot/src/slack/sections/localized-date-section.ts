@@ -1,5 +1,6 @@
 import { WebClient } from '@slack/web-api';
 import { ParsedMessagePlaintextOpts } from '../parser';
+import { SlackDataStore } from '../../utils/slack-data-store';
 
 export class LocalizedDateSection {
   type: 'localized_date' = 'localized_date';
@@ -27,6 +28,8 @@ export class LocalizedDateSection {
     client?: WebClient,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     opts?: ParsedMessagePlaintextOpts,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    slackDataStore?: SlackDataStore,
   ): Promise<string> {
     return new Date(this.unix * 1000).toISOString();
   }

@@ -1,16 +1,24 @@
 import { logger } from '@base/logger';
 import { WebClient } from '@slack/web-api';
+import { SlackDataStore } from '../utils/slack-data-store';
 
 export class UserOnboardedNotifier {
   private slackClient: WebClient;
+  private slackDataStore: SlackDataStore;
   private env: string;
   private notificationChannelId: string;
 
-  constructor(env: string, botToken: string, private enabled: boolean) {
+  constructor(
+    env: string,
+    botToken: string,
+    private enabled: boolean,
+    slackDataStore: SlackDataStore,
+  ) {
     this.env = env;
     this.slackClient = new WebClient(botToken);
     this.notificationChannelId =
       process.env.SLACK_NEW_USERS_NOTIFICATION_CHANNEL_ID ?? 'C03S45PEK7Y';
+    this.slackDataStore = slackDataStore;
   }
 
   async notify(
@@ -23,35 +31,17 @@ export class UserOnboardedNotifier {
     }
 
     try {
-      const {
-        error: profileError,
-        ok: profileOk,
-        profile: userProfile,
-      } = await client.users.profile.get({
-        user: userId,
-      });
-      if (profileError || !profileOk) {
-        throw new Error(`Failed to fetch user profile ${profileError}`);
-      }
+      const userProfile = await this.slackDataStore.getUserProfileData(
+        userId,
+        teamId,
+        client,
+      );
 
-      if (!userProfile) {
-        throw new Error(`Failed to fetch user profile profile not found`);
-      }
-
-      const {
-        error: infoError,
-        ok: infoOk,
-        user: userInfo,
-      } = await client.users.info({
-        user: userId,
-      });
-      if (infoError || !infoOk) {
-        throw new Error(`Failed to fetch user profile ${infoError}`);
-      }
-
-      if (!userInfo) {
-        throw new Error(`Failed to fetch user profile profile not found`);
-      }
+      const userInfo = await this.slackDataStore.getUserInfoData(
+        userId,
+        teamId,
+        client,
+      );
 
       const email = userProfile.email;
       const userName = userInfo.name;

@@ -3,18 +3,22 @@ import { WebClient } from '@slack/web-api';
 import { AnalyticsManager } from '@base/gistbot-shared';
 import { FreetextFeedback } from '../slack/components/freetext-feedback';
 import { UserLink } from '../slack/components/user-link';
+import { SlackDataStore } from '../utils/slack-data-store';
 
 export class UserFeedbackManager {
   private slackClient: WebClient;
   private env: string;
+  private slackDataStore: SlackDataStore;
 
   constructor(
     private analyticsManager: AnalyticsManager,
     env: string,
     botToken: string,
+    slackDataStore: SlackDataStore,
   ) {
     this.env = env;
     this.slackClient = new WebClient(botToken);
+    this.slackDataStore = slackDataStore;
   }
 
   async askForFeedback(
@@ -44,7 +48,7 @@ export class UserFeedbackManager {
     feedback: string,
   ): Promise<void> {
     const { email, displayName, userName, tz } =
-      await this.extractUserProfileDetails(client, userId);
+      await this.extractUserProfileDetails(client, teamId, userId);
 
     try {
       await this.slackClient.chat.postMessage({
@@ -109,6 +113,7 @@ export class UserFeedbackManager {
 
   private async extractUserProfileDetails(
     client: WebClient,
+    teamId: string,
     userId: string,
   ): Promise<{
     email: string;
@@ -117,35 +122,17 @@ export class UserFeedbackManager {
     tz: string;
   }> {
     try {
-      const {
-        error: profileError,
-        ok: profileOk,
-        profile: userProfile,
-      } = await client.users.profile.get({
-        user: userId,
-      });
-      if (profileError || !profileOk) {
-        throw new Error(`Failed to fetch user profile ${profileError}`);
-      }
+      const userProfile = await this.slackDataStore.getUserProfileData(
+        userId,
+        teamId,
+        client,
+      );
 
-      if (!userProfile) {
-        throw new Error(`Failed to fetch user profile profile not found`);
-      }
-
-      const {
-        error: infoError,
-        ok: infoOk,
-        user: userInfo,
-      } = await client.users.info({
-        user: userId,
-      });
-      if (infoError || !infoOk) {
-        throw new Error(`Failed to fetch user profile ${infoError}`);
-      }
-
-      if (!userInfo) {
-        throw new Error(`Failed to fetch user profile profile not found`);
-      }
+      const userInfo = await this.slackDataStore.getUserInfoData(
+        userId,
+        teamId,
+        client,
+      );
 
       const email = userProfile.email;
       const userName = userInfo.name;
