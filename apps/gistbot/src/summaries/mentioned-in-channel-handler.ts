@@ -10,14 +10,15 @@ import { IReporter } from '@base/metrics';
 import { getOrgSettingsFromContext } from '../orgsettings/middleware';
 import { getChannelMentionedUsersFromContext } from '../slack/mentioned-in-channel.middleware';
 import { ChannelSummarizer } from './channel/channel-summarizer';
-import { logger } from '@base/logger';
 import {
   MentionedInChannel,
   MentionedInChannelText,
 } from '../slack/components/mentioned-in-channel';
 import { SchedulerSettingsManager } from '../summary-scheduler/scheduler-manager';
+import { logger } from '@base/logger';
 
 const CHANNEL_LENGTH_LIMIT = 10;
+const CHANNEL_TRIGGER_CHARACTER_THRESHOLD = 200;
 
 export interface MentionedInChannelProps {
   channelId: string;
@@ -29,6 +30,7 @@ export const mentionedInChannelHandler =
     analyticsManager: AnalyticsManager,
     metricsReporter: IReporter,
     newUserTriggersManager: NewUserTriggersManager,
+    channelSummarizer: ChannelSummarizer,
   ) =>
   async ({ client, logger, body, context }: SlackEventWrapper<'message'>) => {
     try {
@@ -56,19 +58,31 @@ export const mentionedInChannelHandler =
         return;
       }
 
-      const { messages } = await client.conversations.history({
-        channel: event.channel,
-        latest: event.ts,
-        limit: CHANNEL_LENGTH_LIMIT,
-      });
+      const messages = await channelSummarizer.fetchChannelRootMessages(
+        client,
+        event.channel,
+        context.botId || '',
+        CHANNEL_LENGTH_LIMIT,
+        1,
+      );
 
       if (!messages) {
-        throw new Error(`Failed to fetch replies not found`);
+        throw new Error(`Failed to fetch messages not found`);
       }
 
       if (messages.length < CHANNEL_LENGTH_LIMIT) {
         logger.debug(
-          `channel ${event.channel} has less than ${CHANNEL_LENGTH_LIMIT} messages`,
+          `channel ${event.channel} has less than ${CHANNEL_LENGTH_LIMIT} messages in the last day`,
+        );
+        return;
+      }
+      const characterCount = messages.reduce(
+        (a, b) => a + (b.text?.length || 0),
+        0,
+      );
+      if (characterCount < CHANNEL_TRIGGER_CHARACTER_THRESHOLD) {
+        logger.debug(
+          `user was tagged in a channel with not enough content only ${characterCount} characters, skipping trigger`,
         );
         return;
       }
