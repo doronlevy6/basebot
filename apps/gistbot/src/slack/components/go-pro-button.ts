@@ -4,12 +4,13 @@ import { Routes } from '../../routes/router';
 export const GoProButton = (): Button => {
   return {
     type: 'button',
+    style: 'primary',
     text: {
       type: 'plain_text',
-      text: 'Go Pro',
+      text: 'Try 1 month for FREE',
       emoji: true,
     },
-    url: 'https://thegist.ai/pricing',
+    url: 'https://buy.stripe.com/9AQ5kC2aR3mUaoU149',
     action_id: Routes.CLICKED_TO_OPEN_PRICING,
   };
 };
