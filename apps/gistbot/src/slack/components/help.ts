@@ -1,13 +1,12 @@
 import { KnownBlock } from '@slack/web-api';
 import { OnboardingChannelImage } from './onboarding-channel-image';
 import { OnboardingDigestImage } from './onboarding-digest-image';
-import { OnboardingFinalImage } from './onboarding-final-image';
 import { OnboardingInfoImage } from './onboarding-info-image';
 import { OnboardingIntroImage } from './onboarding-intro-image';
 import { OnboardingThreadImage } from './onboarding-thread-image';
 import { UserLink } from './user-link';
 
-export const Help = (userId: string, myBotUserId: string): KnownBlock[] => {
+export const Help = (userId: string): KnownBlock[] => {
   return [
     {
       type: 'section',
@@ -26,6 +25,5 @@ export const Help = (userId: string, myBotUserId: string): KnownBlock[] => {
     OnboardingDigestImage(),
     OnboardingThreadImage(),
     OnboardingInfoImage(),
-    OnboardingFinalImage(),
   ];
 };

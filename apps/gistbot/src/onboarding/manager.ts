@@ -86,7 +86,7 @@ export class OnboardingManager {
         await client.chat.postMessage({
           channel: userId,
           text: `Hey ${UserLink(userId)} :wave: I'm theGist!`,
-          blocks: Welcome(userId, botUserId || '', onboardingContext),
+          blocks: Welcome(userId),
         });
 
         this.analyticsManager.messageSentToUserDM({

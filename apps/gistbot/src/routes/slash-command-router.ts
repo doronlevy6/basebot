@@ -37,7 +37,6 @@ export const slashCommandRouter = (
     const {
       command: { text },
       respond,
-      context,
       client,
       body: { channel_id, user_id, team_id },
     } = props;
@@ -49,7 +48,7 @@ export const slashCommandRouter = (
         respond,
         client,
         'Hi there :wave:',
-        Help(props.command.user_id, context.botUserId || ''),
+        Help(props.command.user_id),
         channel_id,
         user_id,
         { response_type: 'ephemeral' },

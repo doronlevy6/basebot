@@ -17,7 +17,6 @@ export const botIMRouter = (
     event,
     say,
     body,
-    context,
     logger,
     client,
   }: SlackEventWrapper<'message'>) => {
@@ -163,7 +162,7 @@ export const botIMRouter = (
 
     await say({
       text: 'Hi there :wave:',
-      blocks: Help(event.user, context.botUserId || ''),
+      blocks: Help(event.user),
     });
 
     analyticsManager.messageSentToUserDM({
