@@ -1,6 +1,10 @@
 import { AnalyticsManager } from '@base/gistbot-shared';
 import { Logger, WebClient } from '@slack/web-api';
 import { Message } from '@slack/web-api/dist/response/ChannelsHistoryResponse';
+import { extractMessageText } from '../../slack/message-text';
+import { parseSlackMrkdwn } from '../../slack/parser';
+import { parseModelMessage } from '../../summaries/messages/utils';
+import { getUserOrBotDetails } from '../../summaries/utils';
 import { ChatModel } from './chat.model';
 
 const STOP_WORDS = ['stop', 'reset'];
@@ -13,6 +17,8 @@ interface IProps {
   channelId: string;
   teamId: string;
 }
+
+const ourBotName = 'theGist';
 
 export class ChatManager {
   constructor(
@@ -72,18 +78,36 @@ export class ChatManager {
         return;
       }
 
+      const enrichedMessages = await this.parseAndEnrichMessages(
+        relatedMessages,
+        teamId,
+        client,
+      );
+
       logger.debug(
         `chatGist loaded ${relatedMessages?.length} session messages`,
       );
 
-      const start =
-        'James:\nI am a human\n\nBot:\nI am a bot named chatGist which answers any question and can write code.\n\n';
+      const names: { username: string; text: string; isBot: boolean }[] = [];
+      enrichedMessages.forEach((msg) => (names[msg.username] = msg));
+      const start = Object.values(names)
+        .map((name) => {
+          const isUs = name.username.toLowerCase().includes('gist');
+          if (isUs) {
+            return `${ourBotName}:\nI'm theGist bot, a bot which answers questions and writes code.\n\n`;
+          }
+          if (name.isBot) {
+            return `${name}:\nI'm a bot`;
+          }
 
-      const prompt = relatedMessages?.map((m) => {
-        const username = m.bot_profile ? 'Bot' : 'James';
-        return `${username}:\n${m.text}\n\n`;
+          return `${name}:\nI'm a human`;
+        })
+        .join('\n\n');
+
+      const prompt = enrichedMessages?.map((m) => {
+        return `${m.username}:\n${m.text}\n\n`;
       });
-      const end = 'Bot:\n';
+      const end = `${ourBotName}:\n`;
 
       logger.debug(`Chat prompt:\n${start}${prompt}${end}`);
 
@@ -143,5 +167,38 @@ export class ChatManager {
         })
         .sort((a, b) => Number(a.ts) - Number(b.ts)) || []
     );
+  }
+
+  private async parseAndEnrichMessages(
+    messages: Message[],
+    teamId: string,
+    client: WebClient,
+  ): Promise<{ username: string; text: string; isBot: boolean }[]> {
+    const userOrBotIds = messages.map((m) => {
+      return {
+        is_bot: Boolean(m.bot_id),
+        user_id: m.user ?? m.bot_id ?? '',
+      };
+    });
+
+    const userOrBotDetails = await getUserOrBotDetails(
+      [...new Set(userOrBotIds)],
+      teamId,
+      client,
+    );
+
+    const messageTexts = await Promise.all(
+      messages.map(async (message) =>
+        parseSlackMrkdwn(
+          await extractMessageText(message, false, teamId, client),
+        ).plainText(teamId, client, {}),
+      ),
+    );
+
+    return messageTexts.map((text, i) => ({
+      text,
+      username: userOrBotDetails[i].name,
+      isBot: userOrBotIds[i].is_bot,
+    }));
   }
 }
