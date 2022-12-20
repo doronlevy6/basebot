@@ -10,6 +10,8 @@ import { IReporter } from '@base/metrics';
 import { MultiChannelSummarizer } from './channel/multi-channel-summarizer';
 import { generateIDAsync } from '../utils/id-generator.util';
 import { MultiChannelSummary } from '../slack/components/multi-channel-summary';
+import { isBaseTeamWorkspace } from '../slack/utils';
+import { ChatManager } from '../experimental/chat/manager';
 
 export const mentionHandler =
   (
@@ -19,12 +21,26 @@ export const mentionHandler =
     threadSummarizer: ThreadSummarizer,
     onboardingManager: OnboardingManager,
     multiChannelSummarizer: MultiChannelSummarizer,
+    chatManager: ChatManager,
   ) =>
   async ({ client, logger, body, context }: SlackEventWrapper<'message'>) => {
     try {
       const { team_id } = body;
       const event = body.event as GenericMessageEvent;
       logger.info(`${event.user} mentioned us in ${event.channel}`);
+
+      if (isBaseTeamWorkspace(team_id)) {
+        logger.debug('Using chat for basers');
+        const { channel, user } = event;
+        await chatManager.handleChatMessage({
+          channelId: channel,
+          userId: user,
+          teamId: team_id,
+          client,
+          logger,
+        });
+        return;
+      }
 
       await onboardingManager.onboardUser(
         team_id,

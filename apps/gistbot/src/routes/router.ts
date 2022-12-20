@@ -353,6 +353,7 @@ export const registerBoltAppRouter = (
       threadSummarizer,
       onboardingManager,
       multiChannelSummarizer,
+      chatMessagesManager,
     ),
   );
 
