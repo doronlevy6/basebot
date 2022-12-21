@@ -89,26 +89,26 @@ export class ChatManager {
         `chatGist loaded ${relatedMessages?.length} session messages`,
       );
 
-      const names: { username: string; text: string; isBot: boolean }[] = [];
-      enrichedMessages.forEach((msg) => (names[msg.username] = msg));
-      const start = Object.values(names)
-        .map((name) => {
-          const isUs = name.username.toLowerCase().includes('gist');
+      const users: { username: string; text: string; isBot: boolean }[] = [];
+      enrichedMessages.forEach((msg) => (users[msg.username] = msg));
+      const start = Object.values(users)
+        .map((msg) => {
+          const isUs = msg.username.toLowerCase().includes('gist');
           if (isUs) {
-            return `${ourBotName}:\nI'm theGist bot, a bot which answers questions and writes code.\n\n`;
+            return `${ourBotName}:\nI'm theGist bot, a bot which answers questions and writes code.`;
           }
-          if (name.isBot) {
-            return `${name}:\nI'm a bot`;
+          if (msg.isBot) {
+            return `${msg.username}:\nI'm a bot`;
           }
 
-          return `${name}:\nI'm a human`;
+          return `${msg.username}:\nI'm a human`;
         })
         .join('\n\n');
 
       const prompt = enrichedMessages?.map((m) => {
-        return `${m.username}:\n${m.text}\n\n`;
+        return `\n\n${m.username}:\n${m.text}`;
       });
-      const end = `${ourBotName}:\n`;
+      const end = `\n\n${ourBotName}:\n`;
 
       logger.debug(`Chat prompt:\n${start}${prompt}${end}`);
 
@@ -116,6 +116,8 @@ export class ChatManager {
         `${start}${prompt}${end}`,
         userId,
       );
+
+      logger.debug(`Chat response was: ${res}`);
 
       await client.chat.postMessage({
         channel: channelId,
