@@ -3,9 +3,9 @@ import { Logger, WebClient } from '@slack/web-api';
 import { Message } from '@slack/web-api/dist/response/ChannelsHistoryResponse';
 import { extractMessageText } from '../../slack/message-text';
 import { parseSlackMrkdwn } from '../../slack/parser';
-import { parseModelMessage } from '../../summaries/messages/utils';
 import { getUserOrBotDetails } from '../../summaries/utils';
 import { ChatModel } from './chat.model';
+import { SlackDataStore } from '../../utils/slack-data-store';
 
 const STOP_WORDS = ['stop', 'reset'];
 const MAX_SESSION_DURATION_SEC = 5 * 60;
@@ -24,6 +24,7 @@ export class ChatManager {
   constructor(
     private chatModel: ChatModel,
     private analyticsManager: AnalyticsManager,
+    private slackDataStore: SlackDataStore,
   ) {}
 
   async handleChatMessage(props: IProps) {
@@ -177,10 +178,9 @@ export class ChatManager {
     const userOrBotIds = messages.map((m) => {
       return {
         is_bot: Boolean(m.bot_id),
-        user_id: m.user ?? m.bot_id ?? '',
+        user_id: m.bot_id ? m.bot_id : m.user || '',
       };
     });
-
     const userOrBotDetails = await getUserOrBotDetails(
       [...new Set(userOrBotIds)],
       teamId,
@@ -191,7 +191,7 @@ export class ChatManager {
       messages.map(async (message) =>
         parseSlackMrkdwn(
           await extractMessageText(message, false, teamId, client),
-        ).plainText(teamId, client, {}),
+        ).plainText(teamId, client, {}, this.slackDataStore),
       ),
     );
 

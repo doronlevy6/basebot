@@ -138,6 +138,7 @@ export const registerBoltAppRouter = (
   const chatMessagesManager = new ChatManager(
     new ChatModel(),
     analyticsManager,
+    slackDataStore,
   );
 
   app.view(Routes.ADD_TO_CHANNEL_SUBMIT, onboardingMiddleware, addToChannel);
