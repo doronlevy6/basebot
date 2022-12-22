@@ -116,9 +116,10 @@ export class MessagesSummarizer {
     });
 
     const userOrBotDetails = await getUserOrBotDetails(
-      [...new Set(userOrBotIds)],
+      [...new Map(userOrBotIds.map((item) => [item.user_id, item])).values()],
       teamId,
       client,
+      this.slackDataStore,
     );
 
     const originalReq = consolidateForRequest(

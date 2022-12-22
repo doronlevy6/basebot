@@ -7,6 +7,7 @@ import { logger } from '@base/logger';
 import { DEFAULT_DAYS_BACK } from './channel/channel-summarizer';
 import { RespondFn } from '@slack/bolt';
 import { responder } from '../slack/responder';
+import { SlackDataStore } from '../utils/slack-data-store';
 
 const MAX_REPLIES_TO_FETCH = 200;
 
@@ -370,6 +371,7 @@ export const getUserOrBotDetails = async (
   userOrBotIds: { user_id: string; is_bot: boolean }[],
   teamId: string,
   client: WebClient,
+  slackDataStore: SlackDataStore,
 ): Promise<
   {
     name: string;
@@ -410,28 +412,19 @@ export const getUserOrBotDetails = async (
             };
           });
       }
-
-      return client.users.profile
-        .get({ user: u.user_id })
+      return slackDataStore
+        .getUserProfileData(u.user_id, teamId, client)
         .then((res) => {
-          if (res.error) {
-            throw new Error(`message user error: ${res.error}`);
-          }
-          if (!res.ok || !res.profile) {
-            throw new Error('message user not ok');
-          }
-
           const name =
-            res.profile.display_name ||
-            res.profile.real_name ||
-            res.profile.first_name ||
+            res.display_name ||
+            res.real_name ||
+            res.first_name ||
             'Unknown User';
-
           const capitalizedName = name.charAt(0).toUpperCase() + name.slice(1);
 
           return {
             name: capitalizedName,
-            title: res.profile.title || '',
+            title: res.title || '',
             id: u.user_id,
           };
         })
@@ -440,7 +433,11 @@ export const getUserOrBotDetails = async (
             `failed to get user info for user ${u.user_id} on team ${teamId}: ${reason}`,
           );
 
-          return { name: 'Unknown User', title: '', id: u.user_id };
+          return {
+            name: 'Unknown User',
+            title: '',
+            id: u.user_id,
+          };
         });
     }),
   );

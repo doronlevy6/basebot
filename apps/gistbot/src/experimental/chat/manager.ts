@@ -111,7 +111,6 @@ export class ChatManager {
       const end = `\n\n${ourBotName}:\n`;
 
       logger.debug(`Chat prompt:\n${start}${prompt}${end}`);
-
       const res = await this.chatModel.customModel(
         `${start}${prompt}${end}`,
         userId,
@@ -179,15 +178,26 @@ export class ChatManager {
   ): Promise<{ username: string; text: string; isBot: boolean }[]> {
     const userOrBotIds = messages.map((m) => {
       return {
-        is_bot: Boolean(m.bot_id),
-        user_id: m.bot_id ? m.bot_id : m.user || '',
+        is_bot: !m.user,
+        user_id: m.user ? m.user : m.bot_id || '',
       };
     });
+
     const userOrBotDetails = await getUserOrBotDetails(
-      [...new Set(userOrBotIds)],
+      [...new Map(userOrBotIds.map((item) => [item.user_id, item])).values()],
       teamId,
       client,
+      this.slackDataStore,
     );
+
+    const userBotCombinedData = userOrBotIds.map((userOrBot) => {
+      const details = userOrBotDetails.find((d) => d.id === userOrBot.user_id);
+      return {
+        ...userOrBot,
+        name: details?.name || '',
+        title: details?.title || '',
+      };
+    });
 
     const messageTexts = await Promise.all(
       messages.map(async (message) =>
@@ -196,11 +206,10 @@ export class ChatManager {
         ).plainText(teamId, client, {}, this.slackDataStore),
       ),
     );
-
     return messageTexts.map((text, i) => ({
       text,
-      username: userOrBotDetails[i].name,
-      isBot: userOrBotIds[i].is_bot,
+      username: userBotCombinedData[i].name,
+      isBot: userBotCombinedData[i].is_bot,
     }));
   }
 }
