@@ -302,14 +302,16 @@ export class AnalyticsManager {
   scheduledMultichannelSummaryFunnel({
     slackUserId,
     slackTeamId,
-    channedIds,
+    channelIds,
     scheduledTime,
+    isSentToUser,
     extraParams,
   }: {
     slackUserId: string;
     slackTeamId: string;
-    channedIds: string[];
-    scheduledTime: string;
+    channelIds: string[];
+    isSentToUser: boolean;
+    scheduledTime?: string;
     extraParams?: ExtraParams;
   }) {
     this.sendEventToAnalytics({
@@ -318,7 +320,12 @@ export class AnalyticsManager {
       slackTeamId: slackTeamId,
       internalUserId: this.internalId(slackTeamId, slackUserId),
       timestamp: new Date(),
-      properties: { ...extraParams, channedIds, scheduledTime },
+      properties: {
+        ...extraParams,
+        channelIds,
+        scheduledTime: scheduledTime || '',
+        isSentToUser,
+      },
     });
   }
 

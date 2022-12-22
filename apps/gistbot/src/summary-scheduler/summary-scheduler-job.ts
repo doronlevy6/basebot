@@ -133,72 +133,16 @@ export class SummarySchedulerJob {
         }
       }
 
-      const summaries = await this.multiChannelSummarizer.summarize(
-        'subscription',
-        botId || '',
-        userSettings.slackTeam,
-        userSettings.slackUser,
-        {
-          type: 'multi_channel',
-          channels: limitedChannelSummries.map(({ channelId, channelName }) => {
-            return {
-              channelId: channelId,
-              channelName: channelName as string,
-            };
-          }),
-        },
-        client,
-        1,
-      );
-
-      logger.debug(
-        `found ${summaries?.summaries?.length} channels summaries for user ${userSettings.slackUser} from team ${userSettings.slackTeam}`,
-      );
-
-      const summaryMetrics: Record<OutputError | 'successful', number> = {
-        moderated: 0,
-        channel_too_small: 0,
-        general_error: 0,
-        successful: 0,
-      };
-      summaries.summaries.forEach((summary) => {
-        if (summary.error) {
-          summaryMetrics[summary.error]++;
-          return;
-        }
-        summaryMetrics.successful++;
-      });
-
-      const summariesFormatted =
-        this.multiChannelSummarizer.getMultiChannelSummaryFormatted(summaries);
-
-      const timeToSchedule = new Date();
-      timeToSchedule.setUTCHours(userSettings.timeHour, 0, 0);
-
-      // post scheduled message to slack
-      await this.scheduledMessageSender.sendScheduledMessage(
-        'scheduled_multi_channel_summary',
-        {
-          channel: userSettings.slackUser,
-          text: `Your summaries for ${limitedChannelSummries.length} channels`,
-          blocks: ScheduledMultiChannelSummary(
-            summariesFormatted,
-            Number(featureLimit),
-            nonIncludingChannels,
-            sessionId,
-            userSettings.selectedHour,
-          ),
-          unfurl_links: false,
-          unfurl_media: false,
-        },
-        userSettings.slackUser,
-        userSettings.slackTeam,
-        timeToSchedule,
-      );
-
-      logger.debug(
-        `${summaries.summaries.length} will scheduled to be sent at ${timeToSchedule} for user ${userSettings.slackUser} from team ${userSettings.slackTeam}`,
-      );
+      const { summaryMetrics, timeToSchedule, isSentToUser } =
+        await this.sendScheduledSummaries(
+          client,
+          sessionId,
+          userSettings,
+          limitedChannelSummries,
+          nonIncludingChannels,
+          Number(featureLimit),
+          botId,
+        );
 
       // externd the lock for long time - that won't be processed in next intervals
       await this.schedulerLock.extend(
@@ -210,8 +154,9 @@ export class SummarySchedulerJob {
       this.analyticsManager.scheduledMultichannelSummaryFunnel({
         slackUserId: userSettings.slackUser,
         slackTeamId: userSettings.slackTeam,
-        channedIds: userSettings.channels.map((c) => c.channelId),
-        scheduledTime: timeToSchedule.toString(),
+        channelIds: userSettings.channels.map((c) => c.channelId),
+        scheduledTime: timeToSchedule?.toString(),
+        isSentToUser,
         extraParams: {
           gist_session: sessionId,
           number_of_summarized_channels: limitedChannelSummries.length,
@@ -232,5 +177,98 @@ export class SummarySchedulerJob {
         `error in scheduler summaries for user ${userSettings.slackUser} in team ${userSettings.slackTeam}, error: ${e}`,
       );
     }
+  }
+
+  private async sendScheduledSummaries(
+    client: WebClient,
+    sessionId: string,
+    userSettings: UserSchedulerSettings,
+    channelsToSummarize: { channelId: string; channelName: string }[],
+    nonIncludingChannels: string[],
+    featureLimit: number,
+    botId?: string,
+  ): Promise<{
+    summaryMetrics: Record<OutputError | 'successful', number>;
+    isSentToUser: boolean;
+    timeToSchedule?: Date;
+  }> {
+    const summaries = await this.multiChannelSummarizer.summarize(
+      'subscription',
+      botId || '',
+      userSettings.slackTeam,
+      userSettings.slackUser,
+      {
+        type: 'multi_channel',
+        channels: channelsToSummarize.map(({ channelId, channelName }) => {
+          return {
+            channelId: channelId,
+            channelName: channelName as string,
+          };
+        }),
+      },
+      client,
+      1,
+    );
+
+    logger.debug(
+      `found ${summaries?.summaries?.length} channels summaries for user ${userSettings.slackUser} from team ${userSettings.slackTeam}`,
+    );
+
+    const summaryMetrics: Record<OutputError | 'successful', number> = {
+      moderated: 0,
+      channel_too_small: 0,
+      general_error: 0,
+      successful: 0,
+    };
+    summaries.summaries.forEach((summary) => {
+      if (summary.error) {
+        summaryMetrics[summary.error]++;
+        return;
+      }
+      summaryMetrics.successful++;
+    });
+
+    if (summaryMetrics.successful === 0) {
+      logger.debug(
+        `errors in all summaraies for user ${userSettings.slackUser}, skip sending scheduled diget`,
+      );
+      return { summaryMetrics, isSentToUser: false };
+    }
+
+    const summariesFormatted =
+      this.multiChannelSummarizer.getMultiChannelSummaryFormatted(summaries);
+
+    const timeToSchedule = new Date();
+    timeToSchedule.setUTCHours(userSettings.timeHour, 0, 0);
+
+    // post scheduled message to slack
+    await this.scheduledMessageSender.sendScheduledMessage(
+      'scheduled_multi_channel_summary',
+      {
+        channel: userSettings.slackUser,
+        text: `Your summaries for ${channelsToSummarize.length} channels`,
+        blocks: ScheduledMultiChannelSummary(
+          summariesFormatted,
+          featureLimit,
+          nonIncludingChannels,
+          sessionId,
+          userSettings.selectedHour,
+        ),
+        unfurl_links: false,
+        unfurl_media: false,
+      },
+      userSettings.slackUser,
+      userSettings.slackTeam,
+      timeToSchedule,
+    );
+
+    logger.debug(
+      `${summaries.summaries.length} will scheduled to be sent at ${timeToSchedule} for user ${userSettings.slackUser} from team ${userSettings.slackTeam}`,
+    );
+    return {
+      summaryMetrics,
+      isSentToUser: true,
+      timeToSchedule,
+    };
   }
 }
