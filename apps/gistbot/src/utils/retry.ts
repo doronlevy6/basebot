@@ -1,6 +1,9 @@
+import { logger } from '@base/logger';
+
 interface RetryOpts {
   count: number;
   delayer?: (iteration: number) => Promise<unknown>;
+  id?: string;
 }
 
 export const delay = (ms: number) =>
@@ -13,8 +16,10 @@ export async function retry<T>(
 ): Promise<T> {
   let err: Error | undefined;
 
+  const retryId = opts.id ?? Date.now().toString();
   for (let i = 0; i < opts.count; i++) {
     try {
+      logger.debug(`retry ${retryId} attempt ${i}`);
       const res = await func();
       return res;
     } catch (error) {

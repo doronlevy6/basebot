@@ -97,7 +97,7 @@ export class MultiChannelSummarizer {
                   rootMessages: msgs,
                 };
               },
-              { count: 10 },
+              { count: 10, id: `fetch_slack_messages_${teamId}_${userId}` },
             );
             return result;
           } catch (error) {
@@ -216,6 +216,7 @@ export class MultiChannelSummarizer {
       },
       {
         count: 10,
+        id: `summarize_channel_${teamId}_${userId}`,
         delayer: (iteration) => {
           const max = iteration + 1; // Max possible minutes to wait
           const min = 1; // Min possible minutes to wait
