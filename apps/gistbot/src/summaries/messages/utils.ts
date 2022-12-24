@@ -27,8 +27,13 @@ export const parseModelMessage = async (
   myBotId?: string,
 ): Promise<PickedMessage | undefined> => {
   const messageIsOkay =
-    (await extractMessageText(message, false, teamId, client)) &&
-    filterUnwantedMessages(message, myBotId);
+    (await extractMessageText(
+      message,
+      false,
+      teamId,
+      client,
+      slackDataStore,
+    )) && filterUnwantedMessages(message, myBotId);
 
   if (!messageIsOkay || !message.ts) {
     return;
@@ -37,7 +42,7 @@ export const parseModelMessage = async (
   const reactions = await extractReactions(message);
 
   const messageText = await parseSlackMrkdwn(
-    await extractMessageText(message, false, teamId, client),
+    await extractMessageText(message, false, teamId, client, slackDataStore),
   ).plainText(teamId, client, defaultParseTextOpts, slackDataStore);
 
   return {

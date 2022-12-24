@@ -5,12 +5,14 @@ import {
 } from '@slack/web-api/dist/response/ConversationsRepliesResponse';
 import { SlackMessage } from '../summaries/types';
 import { defaultParseTextOpts, parseSlackMrkdwn } from './parser';
+import { SlackDataStore } from '../utils/slack-data-store';
 
 export async function extractMessageText(
   message: SlackMessage,
   transform: boolean,
   teamId: string,
   client: WebClient,
+  slackDataStore: SlackDataStore,
 ): Promise<string> {
   let text = '';
 
@@ -28,7 +30,7 @@ export async function extractMessageText(
   if (message.blocks?.length) {
     let blocksText = await parseSlackMrkdwn(
       extractTextFromBlocks(message.blocks),
-    ).plainText(teamId, client, defaultParseTextOpts);
+    ).plainText(teamId, client, defaultParseTextOpts, slackDataStore);
     if (transform) {
       blocksText = transformTextToNoLineBreaks(blocksText);
     }
@@ -41,7 +43,7 @@ export async function extractMessageText(
   if (message.attachments?.length) {
     let attachmentsText = await parseSlackMrkdwn(
       extractTextFromAttachments(message.attachments),
-    ).plainText(teamId, client, defaultParseTextOpts);
+    ).plainText(teamId, client, defaultParseTextOpts, slackDataStore);
     if (transform) {
       attachmentsText = transformTextToNoLineBreaks(attachmentsText);
     }
@@ -50,7 +52,6 @@ export async function extractMessageText(
     }
     text = `${text}${attachmentsText}`;
   }
-
   return text.trim();
 }
 

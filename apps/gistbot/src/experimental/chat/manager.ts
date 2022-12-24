@@ -202,7 +202,13 @@ export class ChatManager {
     const messageTexts = await Promise.all(
       messages.map(async (message) =>
         parseSlackMrkdwn(
-          await extractMessageText(message, false, teamId, client),
+          await extractMessageText(
+            message,
+            false,
+            teamId,
+            client,
+            this.slackDataStore,
+          ),
         ).plainText(teamId, client, {}, this.slackDataStore),
       ),
     );

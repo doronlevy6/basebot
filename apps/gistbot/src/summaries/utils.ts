@@ -17,11 +17,12 @@ export const parseThreadForSummary = async (
   teamId: string,
   maxCharacterCountPerThread: number,
   channelName: string,
+  slackDataStore: SlackDataStore,
   myBotId?: string,
 ) => {
   const extractedMessagesTexts = await Promise.all(
     messages.map((m) => {
-      return extractMessageText(m, false, teamId, client);
+      return extractMessageText(m, false, teamId, client, slackDataStore);
     }),
   );
   const messagesWithText = messages
@@ -40,7 +41,7 @@ export const parseThreadForSummary = async (
 
   const extractedTransformed = await Promise.all(
     messagesWithText.map((m) =>
-      extractMessageText(m.message, true, teamId, client),
+      extractMessageText(m.message, true, teamId, client, slackDataStore),
     ),
   );
   const messagesTexts: string[] = (await Promise.all(
