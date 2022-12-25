@@ -253,6 +253,7 @@ export class SummarySchedulerJob {
           nonIncludingChannels,
           sessionId,
           userSettings.selectedHour,
+          userSettings.slackUser,
         ),
         unfurl_links: false,
         unfurl_media: false,

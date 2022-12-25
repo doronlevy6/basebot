@@ -1,6 +1,7 @@
 import { ImageBlock } from '@slack/web-api';
 
-const IMAGE_URL = 'https://assets.thegist.ai/gist/assets/onboarding_chat.jpg';
+const IMAGE_URL =
+  'https://assets.thegist.ai/gist/assets/onboarding_chat_fixed.jpg';
 
 export const OnboardingChatImage = (altText?: string): ImageBlock => {
   return {
