@@ -4,7 +4,7 @@ import { PromoCodeText } from './promo-code-text';
 
 export const GoProSchedulerText = (channelIds: string[], limit: number) => {
   const channels = channelIds.map((c) => `<#${c}> `);
-  return `Our free plan supports up to ${limit} channel summaries. ${channels} were not included in theGist. \nBecome a pro member now with our early bird plan. ${PromoCodeText()}`;
+  return `Our free plan supports up to ${limit} channel summaries. ${channels} were not included in this digest. \nBecome a pro member and get unlimited channels summaries now. ${PromoCodeText()}`;
 };
 
 export const GoProScheduler = (

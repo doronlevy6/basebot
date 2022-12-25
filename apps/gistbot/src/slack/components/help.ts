@@ -1,5 +1,6 @@
 import { KnownBlock } from '@slack/web-api';
 import { OnboardingChannelImage } from './onboarding-channel-image';
+import { OnboardingChatImage } from './onboarding-chat-image';
 import { OnboardingDigestImage } from './onboarding-digest-image';
 import { OnboardingInfoImage } from './onboarding-info-image';
 import { OnboardingIntroImage } from './onboarding-intro-image';
@@ -24,6 +25,7 @@ export const Help = (userId: string): KnownBlock[] => {
     OnboardingChannelImage(),
     OnboardingDigestImage(),
     OnboardingThreadImage(),
+    OnboardingChatImage(),
     OnboardingInfoImage(),
   ];
 };
