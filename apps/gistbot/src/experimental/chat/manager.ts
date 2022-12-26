@@ -6,6 +6,8 @@ import { parseSlackMrkdwn } from '../../slack/parser';
 import { getUserOrBotDetails } from '../../summaries/utils';
 import { ChatModel } from './chat.model';
 import { SlackDataStore } from '../../utils/slack-data-store';
+import { chatModelPrompt } from './prompt';
+import { IChatMessage } from './types';
 
 const STOP_WORDS = ['stop', 'reset'];
 const MAX_SESSION_DURATION_SEC = 5 * 60;
@@ -16,9 +18,8 @@ interface IProps {
   userId: string;
   channelId: string;
   teamId: string;
+  threadTs?: string;
 }
-
-const ourBotName = 'theGist';
 
 export class ChatManager {
   constructor(
@@ -28,13 +29,14 @@ export class ChatManager {
   ) {}
 
   async handleChatMessage(props: IProps) {
-    const { channelId, client, logger, teamId, userId } = props;
+    const { channelId, client, logger, teamId, userId, threadTs } = props;
     try {
       logger.debug(
         `Chat session running ${JSON.stringify({
           teamId,
           userId,
           channelId,
+          threadTs,
         })}}`,
       );
 
@@ -48,22 +50,24 @@ export class ChatManager {
         );
         return;
       }
-
-      const { messages } = await client.conversations.history({
-        channel: channelId,
-      });
+      const messages = await this.fetchMessages(client, channelId, threadTs);
 
       if (!messages || !messages.length) {
         logger.error('Couldnt find messages in chat session');
         await client.chat.postMessage({
           channel: channelId,
           text: "Whoops, something ain't right :cry:",
+          thread_ts: threadTs,
         });
         return;
       }
 
-      let relatedMessages = this.filterByTimeSession(messages as Message[]);
-      relatedMessages = this.filterByStopWords(relatedMessages, logger);
+      const filterMesages = !props.threadTs;
+      let relatedMessages = messages as Message[];
+      if (filterMesages) {
+        relatedMessages = this.filterByTimeSession(messages as Message[]);
+        relatedMessages = this.filterByStopWords(relatedMessages, logger);
+      }
 
       const isEmpty = relatedMessages.length === 0;
       if (isEmpty) {
@@ -89,38 +93,16 @@ export class ChatManager {
         `chatGist loaded ${relatedMessages?.length} session messages`,
       );
 
-      const users: { username: string; text: string; isBot: boolean }[] = [];
-      enrichedMessages.forEach((msg) => (users[msg.username] = msg));
-      const start = Object.values(users)
-        .map((msg) => {
-          const isUs = msg.username.toLowerCase().includes('gist');
-          if (isUs) {
-            return `${ourBotName}:\nI'm theGist bot, a bot which answers questions and writes code.`;
-          }
-          if (msg.isBot) {
-            return `${msg.username}:\nI'm a bot`;
-          }
+      const prompt = chatModelPrompt(enrichedMessages);
 
-          return `${msg.username}:\nI'm a human`;
-        })
-        .join('\n\n');
-
-      const prompt = enrichedMessages?.map((m) => {
-        return `\n\n${m.username}:\n${m.text}`;
-      });
-      const end = `\n\n${ourBotName}:\n`;
-
-      logger.debug(`Chat prompt:\n${start}${prompt}${end}`);
-      const res = await this.chatModel.customModel(
-        `${start}${prompt}${end}`,
-        userId,
-      );
+      const res = await this.chatModel.customModel(prompt, userId);
 
       logger.debug(`Chat response was: ${res}`);
 
       await client.chat.postMessage({
         channel: channelId,
         text: res,
+        thread_ts: threadTs,
       });
 
       this.analyticsManager.chatMessage({
@@ -141,8 +123,28 @@ export class ChatManager {
       await client.chat.postMessage({
         channel: channelId,
         text: "Whoops, something ain't right :cry:",
+        thread_ts: threadTs,
       });
     }
+  }
+
+  private async fetchMessages(
+    client: WebClient,
+    channelId: string,
+    threadTs?: string,
+  ): Promise<Message[]> {
+    if (threadTs) {
+      const res = await client.conversations.replies({
+        ts: threadTs,
+        channel: channelId,
+      });
+      return (res.messages ?? []) as Message[];
+    }
+
+    const res = await client.conversations.history({
+      channel: channelId,
+    });
+    return (res.messages ?? []) as Message[];
   }
 
   private filterByStopWords(messages: Message[], logger: Logger) {
@@ -175,7 +177,7 @@ export class ChatManager {
     messages: Message[],
     teamId: string,
     client: WebClient,
-  ): Promise<{ username: string; text: string; isBot: boolean }[]> {
+  ): Promise<IChatMessage[]> {
     const userOrBotIds = messages.map((m) => {
       return {
         is_bot: !m.user,
@@ -216,6 +218,7 @@ export class ChatManager {
       text,
       username: userBotCombinedData[i].name,
       isBot: userBotCombinedData[i].is_bot,
+      isGistBot: userBotCombinedData[i].name?.toLowerCase().includes('gist'),
     }));
   }
 }

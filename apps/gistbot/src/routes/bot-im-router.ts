@@ -16,6 +16,7 @@ export const botIMRouter = (
 ) => {
   return async (props: SlackEventWrapper<'message'>) => {
     const { event, say, body, logger, client } = props;
+
     if (event.channel_type !== 'im') {
       // Just a normal message. This will be caught by other handlers and doesn't need to be handled here.
       return;
@@ -167,6 +168,7 @@ export const botIMRouter = (
       userId: event.user,
       channelId: event.channel,
       teamId: body.team_id,
+      threadTs: event['thread_ts'],
     });
   };
 };

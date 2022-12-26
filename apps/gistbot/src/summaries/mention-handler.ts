@@ -30,6 +30,7 @@ export const mentionHandler =
         teamId: team_id,
         client,
         logger,
+        threadTs: event.thread_ts,
       });
 
       const onboardingPromise = onboardingManager.onboardUser(
