@@ -56,7 +56,7 @@
   "devDependencies": {
     "@nrwl/cli": "14.1.9",
     "@nrwl/eslint-plugin-nx": "14.1.9",
-    "@nrwl/express": "14.8.6",
+    "@nrwl/express": "15.3.3",
     "@nrwl/jest": "14.1.9",
     "@nrwl/linter": "14.1.9",
     "@nrwl/node": "14.1.9",
