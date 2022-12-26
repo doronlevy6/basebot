@@ -8,7 +8,8 @@ export const ChatIntroBanner = (userId: string): KnownBlock[] => {
   const today = new Date();
   if (
     !(
-      (today.getDate() === 25 && today.getMonth() === 11) ||
+      (today.getDate() === 26 && today.getMonth() === 11) ||
+      (today.getDate() === 27 && today.getMonth() === 11) ||
       (today.getDate() === 4 && today.getMonth() === 0)
     )
   ) {
