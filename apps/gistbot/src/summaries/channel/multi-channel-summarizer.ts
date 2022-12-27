@@ -7,12 +7,13 @@ import {
   MultiChannelSummaryContext,
   SlackMessage,
 } from '../types';
-import { retry, delay } from '../../utils/retry';
+import { delay, retry } from '../../utils/retry';
 import { ModerationError } from '../errors/moderation-error';
 import { formatMultiChannelSummary } from '../../slack/summary-formatter';
 import { MessagesSummarizer } from '../messages/messages-summarizer';
 import { generateIDAsync } from '../../utils/id-generator.util';
 import { SlackDataStore } from '../../utils/slack-data-store';
+import { ChannelSummaryStore } from '../channel-summary-store';
 
 export type OutputError = 'channel_too_small' | 'moderated' | 'general_error';
 
@@ -23,7 +24,7 @@ interface Summarization {
   error?: OutputError;
 }
 
-interface OutputSummary {
+export interface OutputSummary {
   channelId: string;
   channelName: string;
   summary: string;
@@ -41,6 +42,7 @@ export class MultiChannelSummarizer {
     private analyticsManager: AnalyticsManager,
     private channelSummarizer: ChannelSummarizer,
     private slackDataStore: SlackDataStore,
+    private channelSummaryStore: ChannelSummaryStore,
   ) {}
 
   async summarize(
@@ -67,8 +69,29 @@ export class MultiChannelSummarizer {
         client,
       );
 
+      const cachedSummaries = await Promise.all(
+        props.channels.map((p) =>
+          this.channelSummaryStore.get(p.channelId, teamId),
+        ),
+      );
+
+      const cachedSummariesFiltered = cachedSummaries.filter(
+        (element) => element !== null,
+      ) as OutputSummary[];
+
+      const channelsToSummarize = props.channels.filter(
+        (channel) =>
+          !cachedSummariesFiltered
+            .map((cs) => cs.channelId)
+            .includes(channel.channelId),
+      );
+      logger.debug(
+        `cache miss for channel summary at keys: ${channelsToSummarize.map(
+          (c) => c.channelId,
+        )}`,
+      );
       const channels: Summarization[] = await Promise.all(
-        props.channels.map(async (c): Promise<Summarization> => {
+        channelsToSummarize.map(async (c): Promise<Summarization> => {
           try {
             const result = retry(
               async (): Promise<Summarization> => {
@@ -83,6 +106,9 @@ export class MultiChannelSummarizer {
                   );
 
                 if (msgs.length === 0) {
+                  logger.info(
+                    `no messages for channels ${c.channelId}|${c.channelName}`,
+                  );
                   return {
                     channelId: c.channelId,
                     channelName: c.channelName,
@@ -97,7 +123,10 @@ export class MultiChannelSummarizer {
                   rootMessages: msgs,
                 };
               },
-              { count: 10, id: `fetch_slack_messages_${teamId}_${userId}` },
+              {
+                count: 10,
+                id: `fetch_slack_messages_${teamId}_${userId}_${c.channelId}`,
+              },
             );
             return result;
           } catch (error) {
@@ -115,7 +144,7 @@ export class MultiChannelSummarizer {
         }),
       );
 
-      const channelSummaries = await Promise.all(
+      const newChannelSummaries = await Promise.all(
         channels.map((channel) =>
           this.summarizeChannel(
             sessionId,
@@ -127,8 +156,23 @@ export class MultiChannelSummarizer {
           ),
         ),
       );
-
-      return { summaries: channelSummaries };
+      newChannelSummaries.map((summary) => {
+        if (!summary.error) {
+          return this.channelSummaryStore.set(
+            summary,
+            summary.channelId,
+            teamId,
+          );
+        }
+      });
+      const result = [...newChannelSummaries, ...cachedSummariesFiltered];
+      const ordered = props.channels.map((p) => p.channelId);
+      result.sort(
+        (a, b) => ordered.indexOf(a.channelId) - ordered.indexOf(b.channelId),
+      );
+      return {
+        summaries: result,
+      };
     } catch (error) {
       logger.error(
         `error in multi-channel summarizer: ${error} ${error.stack}`,
@@ -240,11 +284,6 @@ export class MultiChannelSummarizer {
         return [object.channelId, undefined];
       }),
     );
-    const formattedMultiChannel = formatMultiChannelSummary(
-      summaries,
-      channelMap,
-    );
-
-    return formattedMultiChannel;
+    return formatMultiChannelSummary(summaries, channelMap);
   }
 }

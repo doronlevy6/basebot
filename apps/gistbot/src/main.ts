@@ -55,6 +55,7 @@ import { GithubBot } from './bots-integrations/bots/github.bot';
 import { ChannelModelTranslator } from './summaries/models/channel-model-translator';
 import { ChannelSummaryModel } from './summaries/models/channel-summary.model';
 import { SlackDataStore } from './utils/slack-data-store';
+import { ChannelSummaryStore } from './summaries/channel-summary-store';
 
 const gracefulShutdown = (server: Server) => (signal: string) => {
   logger.info('starting shutdown, got signal ' + signal);
@@ -147,6 +148,7 @@ const startApp = async () => {
   const onboardingLock = new RedisOnboardingLock(redisConfig, env);
   const summarySchedulerLock = new RedisSchedulerSettingsLock(redisConfig, env);
   const summaryStore = new SummaryStore(redisConfig, env);
+  const channelSummaryStore = new ChannelSummaryStore(redisConfig, env);
   const slackDataStore = new SlackDataStore(redisConfig, env);
   const newUserTriggersLock = new RedisTriggerLock(redisConfig, env);
   const onboardingNudgeLock = new RedisOnboardingNudgeLock(redisConfig, env);
@@ -283,6 +285,7 @@ const startApp = async () => {
     analyticsManager,
     channelSummarizer,
     slackDataStore,
+    channelSummaryStore,
   );
 
   const summarySchedulerMgr = new SchedulerSettingsManager(
