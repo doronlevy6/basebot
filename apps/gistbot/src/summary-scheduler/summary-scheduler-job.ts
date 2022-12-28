@@ -78,6 +78,7 @@ export class SummarySchedulerJob {
       // execute all promises - resolved and rejected, that one rejected promise won't effect to send summaries to other users
       // eslint-disable-next-line @typescript-eslint/no-floating-promises
       Promise.allSettled(usersScheduledNotifications);
+      await delay(1000 * 60);
     }
   }
 
@@ -98,6 +99,9 @@ export class SummarySchedulerJob {
         return;
       }
 
+      logger.debug(
+        `starting scheduled job for user ${userSettings.slackUser} in team ${userSettings.slackTeam}`,
+      );
       const sessionId = await generateIDAsync();
 
       const installation =
@@ -171,7 +175,6 @@ export class SummarySchedulerJob {
         userSettings.slackTeam,
         userSettings.slackUser,
       );
-      await delay(1000 * 60);
     } catch (e) {
       logger.error(
         `error in scheduler summaries for user ${userSettings.slackUser} in team ${userSettings.slackTeam}, error: ${e}`,
