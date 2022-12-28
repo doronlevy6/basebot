@@ -3,6 +3,7 @@ import { SubscriptionTier } from '@base/customer-identifier';
 export enum Feature {
   SUMMARY = 'SUMMARY',
   SCHEDULED_SUMMARIES = 'SCHEDULED_SUMMARIES',
+  CHAT = 'CHAT',
 }
 
 type featureLimit = Record<
@@ -20,5 +21,10 @@ export const FeatureLimits: featureLimit = {
     [SubscriptionTier.FREE]: 2,
     [SubscriptionTier.PRO]: 8,
     [SubscriptionTier.ENTERPRISE]: 8,
+  },
+  [Feature.CHAT]: {
+    [SubscriptionTier.FREE]: 2,
+    [SubscriptionTier.PRO]: 'infinite',
+    [SubscriptionTier.ENTERPRISE]: 'infinite',
   },
 };

@@ -1,13 +1,18 @@
 import { AnalyticsManager } from '@base/gistbot-shared';
 import { Logger, WebClient } from '@slack/web-api';
-import { Message } from '@slack/web-api/dist/response/ChannelsHistoryResponse';
+import { Message } from '@slack/web-api/dist/response/ConversationsHistoryResponse';
 import { extractMessageText } from '../../slack/message-text';
 import { parseSlackMrkdwn } from '../../slack/parser';
-import { getUserOrBotDetails } from '../../summaries/utils';
+import { getUserOrBotDetails, isGistAppId } from '../../summaries/utils';
 import { ChatModel } from './chat.model';
 import { SlackDataStore } from '../../utils/slack-data-store';
 import { chatModelPrompt } from './prompt';
 import { IChatMessage } from './types';
+import { Feature } from '../../feature-rate-limiter/limits';
+import { RateLimitedError } from '../../summaries/errors/rate-limited-error';
+import { FeatureRateLimiter } from '../../feature-rate-limiter/rate-limiter';
+import { responder } from '../../slack/responder';
+import { ChatGoPro, ChatGoProText } from '../../slack/components/chat-go-pro';
 
 const STOP_WORDS = ['stop', 'reset'];
 const MAX_SESSION_DURATION_SEC = 5 * 60;
@@ -26,6 +31,7 @@ export class ChatManager {
     private chatModel: ChatModel,
     private analyticsManager: AnalyticsManager,
     private slackDataStore: SlackDataStore,
+    private featureRateLimiter: FeatureRateLimiter,
   ) {}
 
   async handleChatMessage(props: IProps) {
@@ -63,10 +69,19 @@ export class ChatManager {
       }
 
       const filterMesages = !props.threadTs;
-      let relatedMessages = messages as Message[];
+      let relatedMessages = messages;
       if (filterMesages) {
-        relatedMessages = this.filterByTimeSession(messages as Message[]);
+        relatedMessages = this.filterByTimeSession(messages);
         relatedMessages = this.filterByStopWords(relatedMessages, logger);
+      }
+      if (this.isNewChatSession(relatedMessages)) {
+        const limited = await this.featureRateLimiter.acquire(
+          { teamId: teamId, userId: userId },
+          Feature.CHAT,
+        );
+        if (!limited) {
+          throw new RateLimitedError('rate limited');
+        }
       }
 
       const isEmpty = relatedMessages.length === 0;
@@ -120,6 +135,28 @@ export class ChatManager {
       });
     } catch (err) {
       logger.error(`chatGist handler error: ${err} ${err.stack}`);
+      if (err instanceof RateLimitedError) {
+        logger.info(`User has been rate limited`);
+        await responder(
+          undefined, // Thread ephemeral messages with the respond func don't work correctly so we force undefined in the respond func
+          client,
+          ChatGoProText,
+          ChatGoPro(),
+          props.channelId,
+          userId,
+          {
+            response_type: 'in_channel',
+          },
+        );
+
+        this.analyticsManager.rateLimited({
+          slackTeamId: teamId,
+          slackUserId: userId,
+          channelId,
+          type: 'chat_message',
+        });
+        return;
+      }
       await client.chat.postMessage({
         channel: channelId,
         text: "Whoops, something ain't right :cry:",
@@ -220,5 +257,15 @@ export class ChatManager {
       isBot: userBotCombinedData[i].is_bot,
       isGistBot: userBotCombinedData[i].name?.toLowerCase().includes('gist'),
     }));
+  }
+
+  // if there is no message from our app in this session then it is a new session
+  private isNewChatSession(relatedMessages: Message[]) {
+    return !relatedMessages.some(
+      (r) =>
+        !!r.bot_id &&
+        !!r.bot_profile?.app_id &&
+        isGistAppId(r.bot_profile?.app_id),
+    );
   }
 }

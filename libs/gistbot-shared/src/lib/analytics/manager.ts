@@ -491,4 +491,27 @@ export class AnalyticsManager {
       properties: { ...extraParams, type, channelId },
     });
   }
+
+  rateLimited({
+    type,
+    slackUserId,
+    slackTeamId,
+    channelId,
+    extraParams,
+  }: {
+    type: string;
+    slackUserId: string;
+    slackTeamId: string;
+    channelId: string;
+    extraParams?: ExtraParams;
+  }) {
+    this.sendEventToAnalytics({
+      eventName: `rate_limited`,
+      slackUserId: slackUserId,
+      slackTeamId: slackTeamId,
+      internalUserId: this.internalId(slackTeamId, slackUserId),
+      timestamp: new Date(),
+      properties: { ...extraParams, type, channelId },
+    });
+  }
 }

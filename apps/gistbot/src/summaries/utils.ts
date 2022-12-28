@@ -249,6 +249,7 @@ const filterInternalBotIds = [
   'B043CDNE604',
   'B043ZVCGLC8',
   'B045009QXT9',
+  'B04CPNSA19R',
 ];
 
 export const filterUnwantedMessages = (m: SlackMessage, myBotId?: string) => {
@@ -265,6 +266,10 @@ export const filterUnwantedMessages = (m: SlackMessage, myBotId?: string) => {
   }
 
   return true;
+};
+
+export const isGistAppId = (app_id: string) => {
+  return process.env.SLACK_APP_ID === app_id;
 };
 
 export const summaryInProgressMessage = async (
