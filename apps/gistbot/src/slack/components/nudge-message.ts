@@ -1,51 +1,56 @@
 import { KnownBlock } from '@slack/web-api';
 import { Routes } from '../../routes/router';
+
+const NUDGE_IMG = 'https://assets.thegist.ai/gist/assets/nudge.jpg';
+
 export const NudgeMessage = (): KnownBlock[] => {
   return [
+    {
+      type: 'image',
+      title: {
+        type: 'plain_text',
+        text: 'Complete your digest set up',
+        emoji: true,
+      },
+      image_url: NUDGE_IMG,
+      alt_text: 'your personalized daily digiest is just a tap away',
+    },
     {
       type: 'section',
       text: {
         type: 'mrkdwn',
-        text: NudgeMessageText,
+        text: 'Select channels for your personal daily digest :point_right:',
       },
+      accessory: {
+        type: 'button',
+
+        text: {
+          type: 'plain_text',
+          text: 'Daily Digest Settings',
+        },
+        value: 'scheduler-settings-button',
+        action_id: Routes.OPEN_SCHEDULER_SETTINGS,
+      },
+    },
+    {
+      type: 'divider',
     },
     {
       type: 'actions',
       elements: [
         {
           type: 'button',
-          style: 'primary',
           text: {
             type: 'plain_text',
-            text: 'Daily Digest Settings',
+            text: `Don't ask me again, thanks`,
+            emoji: true,
           },
-          value: 'scheduler-settings-button',
-          action_id: Routes.OPEN_SCHEDULER_SETTINGS,
+          value: 'nudge-canceling-button',
+          action_id: Routes.STOP_NUDGE_MESSAGES,
         },
       ],
-    },
-    {
-      type: 'divider',
-    },
-    {
-      type: 'section',
-      text: {
-        type: 'mrkdwn',
-        text: RemoveNudge,
-      },
-      accessory: {
-        type: 'button',
-        style: 'danger',
-        text: {
-          type: 'plain_text',
-          text: 'Unsubscribe',
-        },
-        value: 'scheduler-settings-button',
-        action_id: Routes.STOP_NUDGE_MESSAGES,
-      },
     },
   ];
 };
 
 export const NudgeMessageText = `Hey there,\n most users use theGist to get a daily digest of their busiest channels in slack, you can set up your daily digest here`;
-export const RemoveNudge = `Click here to stop receiving these messages`;
