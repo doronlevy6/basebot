@@ -1,17 +1,13 @@
 import { ChannelSummaryModelRequest } from './channel-summary.model';
 import { MessagesSummaryRequest } from './messages-summary.model';
 import { ThreadSummaryModelRequest } from './thread-summary.model';
+import { IChatMessage } from '../../experimental/chat/types';
 
 export const MAX_PROMPT_CHARACTER_COUNT = 10000;
 
 export function approximatePromptCharacterCount(
   data: ThreadSummaryModelRequest,
 ): number {
-  const escapeUnicode = (str: string) => {
-    return str.replace(/[\u00A0-\uffff]/gu, function (c) {
-      return '\\u' + ('000' + c.charCodeAt(0).toString(16)).slice(-4);
-    });
-  };
   const messages = escapeUnicode(data.messages.join('\\n\\n'));
   const names = escapeUnicode(data.names.join('\\n\\n'));
   const titles = escapeUnicode(data.titles.join('\\n\\n'));
@@ -29,12 +25,6 @@ export function approximatePromptCharacterCount(
 export function approximatePromptCharacterCountForChannelSummary(
   data: ChannelSummaryModelRequest,
 ): number {
-  const escapeUnicode = (str: string) => {
-    return str.replace(/[\u00A0-\uffff]/gu, function (c) {
-      return '\\u' + ('000' + c.charCodeAt(0).toString(16)).slice(-4);
-    });
-  };
-
   return (
     4 * data.threads.length +
     data.threads.reduce((acc, currentThread) => {
@@ -62,12 +52,6 @@ export function approximatePromptCharacterCountForChannelSummary(
 export function approximatePromptCharacterCountForChannelSummaryModelMessages(
   data: MessagesSummaryRequest,
 ): number {
-  const escapeUnicode = (str: string) => {
-    return str.replace(/[\u00A0-\uffff]/gu, function (c) {
-      return '\\u' + ('000' + c.charCodeAt(0).toString(16)).slice(-4);
-    });
-  };
-
   return (
     4 * data.length +
     data.reduce((acc, currentMessage) => {
@@ -92,3 +76,26 @@ export function approximatePromptCharacterCountForChannelSummaryModelMessages(
     }, 0)
   );
 }
+export function approximatePromptCharacterCountForChatMessages(
+  data: IChatMessage[],
+): number {
+  return (
+    4 * data.length +
+    data.reduce((acc, currentMessage) => {
+      const messageText = escapeUnicode(currentMessage?.text || '');
+      const name = escapeUnicode(currentMessage?.username || '');
+
+      const approximateNewlinesAndColons = 6; // Just based on what we will send?
+
+      const approximatePerMessage =
+        messageText.length + name.length + approximateNewlinesAndColons;
+
+      return acc + approximatePerMessage;
+    }, 0)
+  );
+}
+const escapeUnicode = (str: string) => {
+  return str.replace(/[\u00A0-\uffff]/gu, function (c) {
+    return '\\u' + ('000' + c.charCodeAt(0).toString(16)).slice(-4);
+  });
+};

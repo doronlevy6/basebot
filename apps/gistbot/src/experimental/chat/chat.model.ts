@@ -1,7 +1,6 @@
 import { Configuration, OpenAIApi } from 'openai';
 import { ModerationError } from '../../summaries/errors/moderation-error';
 import { OpenAiModerationModel } from '../../summaries/models/openai-moderation.model';
-
 export class ChatModel {
   private openai: OpenAIApi;
   private moderationModel: OpenAiModerationModel;

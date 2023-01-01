@@ -13,10 +13,12 @@ import { RateLimitedError } from '../../summaries/errors/rate-limited-error';
 import { FeatureRateLimiter } from '../../feature-rate-limiter/rate-limiter';
 import { responder } from '../../slack/responder';
 import { ChatGoPro, ChatGoProText } from '../../slack/components/chat-go-pro';
+import { approximatePromptCharacterCountForChatMessages } from '../../summaries/models/prompt-character-calculator';
+import { AllMessagesPrefilteredError } from '../../summaries/errors/all-messages-filtered-error';
 
 const STOP_WORDS = ['stop', 'reset'];
 const MAX_SESSION_DURATION_SEC = 5 * 60;
-
+const MAX_PROMPT_CHARACTER_COUNT = 11000;
 interface IProps {
   logger: Logger;
   client: WebClient;
@@ -67,14 +69,7 @@ export class ChatManager {
         });
         return;
       }
-
-      const filterMesages = !props.threadTs;
-      let relatedMessages = messages;
-      if (filterMesages) {
-        relatedMessages = this.filterByTimeSession(messages);
-        relatedMessages = this.filterByStopWords(relatedMessages, logger);
-      }
-      if (this.isNewChatSession(relatedMessages)) {
+      if (this.isNewChatSession(messages)) {
         const limited = await this.featureRateLimiter.acquire(
           { teamId: teamId, userId: userId },
           Feature.CHAT,
@@ -82,6 +77,13 @@ export class ChatManager {
         if (!limited) {
           throw new RateLimitedError('rate limited');
         }
+      }
+
+      const filterMesages = !props.threadTs;
+      let relatedMessages = messages;
+      if (filterMesages) {
+        relatedMessages = this.filterByTimeSession(messages);
+        relatedMessages = this.filterByStopWords(relatedMessages, logger);
       }
 
       const isEmpty = relatedMessages.length === 0;
@@ -104,11 +106,36 @@ export class ChatManager {
         client,
       );
 
+      const req = [...enrichedMessages];
+      let cc = approximatePromptCharacterCountForChatMessages(req);
+      while (cc > MAX_PROMPT_CHARACTER_COUNT) {
+        if (props.threadTs && req.length >= 2) {
+          req.splice(1, 1);
+        } else {
+          req.shift();
+        }
+        cc = approximatePromptCharacterCountForChatMessages(req);
+      }
+      if (req.length === 0) {
+        throw new AllMessagesPrefilteredError(
+          `all messages pre-filtered before request, original size ${enrichedMessages.length}`,
+        );
+      }
+
+      const didFilter = req.length < enrichedMessages.length;
+      if (didFilter) {
+        logger.info(
+          `Filtered ${
+            enrichedMessages.length - req.length
+          } messages to avoid hitting the character limit`,
+        );
+      }
+
       logger.debug(
         `chatGist loaded ${relatedMessages?.length} session messages`,
       );
 
-      const prompt = chatModelPrompt(enrichedMessages);
+      const prompt = chatModelPrompt(req);
 
       const res = await this.chatModel.customModel(prompt, userId);
 
@@ -144,9 +171,8 @@ export class ChatManager {
           ChatGoPro(),
           props.channelId,
           userId,
-          {
-            response_type: 'in_channel',
-          },
+          { response_type: 'in_channel' },
+          props.threadTs,
         );
 
         this.analyticsManager.rateLimited({
@@ -261,7 +287,8 @@ export class ChatManager {
 
   // if there is no message from our app in this session then it is a new session
   private isNewChatSession(relatedMessages: Message[]) {
-    return !relatedMessages.some(
+    const filteredMessages = this.filterByTimeSession(relatedMessages);
+    return !filteredMessages.some(
       (r) =>
         !!r.bot_id &&
         !!r.bot_profile?.app_id &&
