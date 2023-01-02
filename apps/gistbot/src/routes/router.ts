@@ -67,6 +67,7 @@ import { mentionedInChannelMessage } from '../slack/mentioned-in-channel.middlew
 import { SlackDataStore } from '../utils/slack-data-store';
 import { ChatManager } from '../experimental/chat/manager';
 import { ChatModel } from '../experimental/chat/chat.model';
+import { UninstallsNotifier } from '../uninstall/notifier';
 
 export enum Routes {
   SUMMARIZE_THREAD = 'summarize-thread',
@@ -114,6 +115,7 @@ export const registerBoltAppRouter = (
   schedulerSettingsManager: SchedulerSettingsManager,
   customerIdentifier: CustomerIdentifier,
   orgSettingsStore: OrgSettingsStore,
+  uninstallNotifier: UninstallsNotifier,
 ) => {
   const onboardingMiddleware = userOnboardingMiddleware(onboardingManager);
   const setOrgSettingsMiddleware = orgSettingsMiddleware(orgSettingsStore);
@@ -396,6 +398,14 @@ export const registerBoltAppRouter = (
         isEnterprise: body.enterprise_id ? true : false,
       },
     });
+    const installation = await installationStore.fetchInstallation({
+      teamId: body.team_id,
+      enterpriseId: body.enterprise_id,
+      isEnterpriseInstall: !!body.enterprise_id,
+    });
+
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
+    uninstallNotifier.notify(body.team_id, installation);
     if (installationStore.deleteInstallation) {
       await installationStore.deleteInstallation({
         teamId: body.team_id,
@@ -403,6 +413,7 @@ export const registerBoltAppRouter = (
         isEnterpriseInstall: body.enterprise_id ? true : false,
       });
     }
+
     analyticsManager.installationFunnel({
       funnelStep: 'successful_uninstall',
       slackTeamId: body.team_id,

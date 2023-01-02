@@ -161,7 +161,6 @@ export class ChatManager {
         },
       });
     } catch (err) {
-      logger.error(`chatGist handler error: ${err} ${err.stack}`);
       if (err instanceof RateLimitedError) {
         logger.info(`User has been rate limited`);
         await responder(
@@ -183,6 +182,7 @@ export class ChatManager {
         });
         return;
       }
+      logger.error(`chatGist handler error: ${err} ${err.stack}`);
       await client.chat.postMessage({
         channel: channelId,
         text: "Whoops, something ain't right :cry:",

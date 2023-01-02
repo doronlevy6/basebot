@@ -56,6 +56,7 @@ import { ChannelModelTranslator } from './summaries/models/channel-model-transla
 import { ChannelSummaryModel } from './summaries/models/channel-summary.model';
 import { SlackDataStore } from './utils/slack-data-store';
 import { ChannelSummaryStore } from './summaries/channel-summary-store';
+import { UninstallsNotifier } from './uninstall/notifier';
 
 const gracefulShutdown = (server: Server) => (signal: string) => {
   logger.info('starting shutdown, got signal ' + signal);
@@ -241,6 +242,12 @@ const startApp = async () => {
     env !== 'local',
     slackDataStore,
   );
+  const uninstallNotifier = new UninstallsNotifier(
+    env,
+    registrationBotToken,
+    env !== 'local',
+    slackDataStore,
+  );
 
   const userFeedbackManager = new UserFeedbackManager(
     analyticsManager,
@@ -372,6 +379,7 @@ const startApp = async () => {
     summarySchedulerMgr,
     customerIdentifier,
     orgSettingsStore,
+    uninstallNotifier,
   );
 
   // Bolt's Receiver implements a start function that returns a generic value,
