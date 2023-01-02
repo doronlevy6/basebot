@@ -18,7 +18,7 @@ export const FeatureLimits: featureLimit = {
     [SubscriptionTier.ENTERPRISE]: 'infinite',
   },
   [Feature.SCHEDULED_SUMMARIES]: {
-    [SubscriptionTier.FREE]: 2,
+    [SubscriptionTier.FREE]: 3,
     [SubscriptionTier.PRO]: 8,
     [SubscriptionTier.ENTERPRISE]: 8,
   },
