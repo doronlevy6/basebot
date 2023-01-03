@@ -1,7 +1,7 @@
 import { logger } from '@base/logger';
 import { WebClient } from '@slack/web-api';
 import { SlackDataStore } from '../utils/slack-data-store';
-import { Installation, InstallationStore } from '@slack/bolt';
+import { Installation } from '@slack/bolt';
 
 export class UninstallsNotifier {
   private slackClient: WebClient;
@@ -49,7 +49,9 @@ export class UninstallsNotifier {
         ],
       });
     } catch (error) {
-      logger.error(`error notifying on uninstall: ${error} ${error.stack}`);
+      logger.error(
+        `error notifying on uninstall on channel ${this.notificationChannelId}, team id: ${teamId}: ${error} ${error.stack}`,
+      );
     }
   }
 }
