@@ -57,7 +57,8 @@ export class SubscriptionManager {
   }
 
   async updateSubscription(subscription: Stripe.Subscription) {
-    const subscriptionActive = subscription.status === 'active';
+    const subscriptionActive =
+      subscription.status === 'active' || subscription.status === 'trialing';
 
     let customerId: string;
     if (typeof subscription.customer === 'string') {
