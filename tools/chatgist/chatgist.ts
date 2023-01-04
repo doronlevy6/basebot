@@ -16,7 +16,7 @@ export async function chatGistNotify() {
   console.log('starting notifier');
   const chatGistDataStore = new ChatGistDataStore();
   const chatGistStore = new ChatGistOutPutStore();
-  fs.createReadStream('./tools/chatgist//users_1.csv')
+  fs.createReadStream('./tools/chatgist/users_1.csv')
     .pipe(parse({ delimiter: ',', from_line: 2 }))
     .on('data', (row) => {
       if (row[0] && (row[0] as string).includes('_')) {

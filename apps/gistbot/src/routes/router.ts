@@ -70,6 +70,7 @@ import { ChatModel } from '../experimental/chat/chat.model';
 import { UninstallsNotifier } from '../uninstall/notifier';
 import { chatActionItemHandler } from '../chat/chat-action-items-handler';
 
+const ARRAY_CHAT_GIST_ACTIONS = [0, 1, 2];
 export enum Routes {
   SUMMARIZE_THREAD = 'summarize-thread',
   ADD_TO_CHANNEL_SUBMIT = 'add-to-channel-submit',
@@ -276,9 +277,11 @@ export const registerBoltAppRouter = (
     Routes.TRIGGER_FEEDBACK,
     handleUserTriggerFeedback(analyticsManager, newUserTriggersManager),
   );
-  app.action(
-    new RegExp(`^${Routes.CHAT_GIST_ONBOARDING_ACTION}-[0-9]`, 'g'),
-    chatActionItemHandler(analyticsManager, metricsReporter, chatModel),
+  ARRAY_CHAT_GIST_ACTIONS.forEach((val) =>
+    app.action(
+      `${Routes.CHAT_GIST_ONBOARDING_ACTION}-${val}`,
+      chatActionItemHandler(analyticsManager, metricsReporter, chatModel),
+    ),
   );
   app.action(
     Routes.STOP_NUDGE_MESSAGES,
