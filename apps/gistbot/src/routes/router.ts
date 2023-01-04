@@ -68,6 +68,7 @@ import { SlackDataStore } from '../utils/slack-data-store';
 import { ChatManager } from '../experimental/chat/manager';
 import { ChatModel } from '../experimental/chat/chat.model';
 import { UninstallsNotifier } from '../uninstall/notifier';
+import { chatActionItemHandler } from '../chat/chat-action-items-handler';
 
 export enum Routes {
   SUMMARIZE_THREAD = 'summarize-thread',
@@ -81,6 +82,7 @@ export enum Routes {
   ADD_TO_CHANNEL_FROM_WELCOME_SUBMIT = 'add-to-channel-from-welcome-submit',
   ADD_TO_CHANNEL_FROM_WELCOME_MESSAGE = 'add-to-channel-from-welcome-message',
   TRIGGER_FEEDBACK = 'trigger-feedback',
+  CHAT_GIST_ONBOARDING_ACTION = 'chat-gist-action-item',
   STOP_NUDGE_MESSAGES = 'stop-nudge-messages',
   SUMMARIZE_THREAD_FROM_THREAD_MENTION = 'summarize-thread-from-thread-mention',
   SUMMARIZE_CHANNEL_FROM_CHANNEL_MENTION = 'summarize-channel-from-channel-mention',
@@ -117,6 +119,7 @@ export const registerBoltAppRouter = (
   orgSettingsStore: OrgSettingsStore,
   uninstallNotifier: UninstallsNotifier,
 ) => {
+  const chatModel = new ChatModel();
   const onboardingMiddleware = userOnboardingMiddleware(onboardingManager);
   const setOrgSettingsMiddleware = orgSettingsMiddleware(orgSettingsStore);
   // The org settings middleware will run globally on every event, and attach org settings
@@ -138,7 +141,7 @@ export const registerBoltAppRouter = (
   const privateChannel = privateChannelHandler(analyticsManager);
 
   const chatMessagesManager = new ChatManager(
-    new ChatModel(),
+    chatModel,
     analyticsManager,
     slackDataStore,
     featureRateLimiter,
@@ -272,6 +275,10 @@ export const registerBoltAppRouter = (
   app.action(
     Routes.TRIGGER_FEEDBACK,
     handleUserTriggerFeedback(analyticsManager, newUserTriggersManager),
+  );
+  app.action(
+    new RegExp(`^${Routes.CHAT_GIST_ONBOARDING_ACTION}-[0-9]`, 'g'),
+    chatActionItemHandler(analyticsManager, metricsReporter, chatModel),
   );
   app.action(
     Routes.STOP_NUDGE_MESSAGES,

@@ -4,6 +4,7 @@ import { WebClient } from '@slack/web-api';
 import { SchedulerSettingsStore } from './scheduler-store';
 import { UserSchedulerOptions, UserSchedulerSettings } from './types';
 import { SlackDataStore } from '../utils/slack-data-store';
+import { calculateUserDefaultHour } from '../utils/time-utils';
 
 export class SchedulerSettingsManager {
   constructor(
@@ -65,7 +66,7 @@ export class SchedulerSettingsManager {
       usersettings.slackUser = userId;
       usersettings.slackTeam = teamId;
       usersettings.enabled = true;
-      usersettings.timeHour = this.calculateUserDefaultHour(
+      usersettings.timeHour = calculateUserDefaultHour(
         userInfo.tz_offset,
         Number(UserSchedulerOptions.MORNING),
       );
@@ -105,18 +106,6 @@ export class SchedulerSettingsManager {
         error: e,
       });
     }
-  }
-
-  calculateUserDefaultHour(offset: number, hour: number): number {
-    const date = new Date();
-    date.setUTCHours(hour, 0, 0);
-    let defaultHour = date.getUTCHours() - Math.floor(offset / 3600);
-    defaultHour = defaultHour % 24;
-    if (defaultHour < 0) {
-      defaultHour = 24 + defaultHour;
-    }
-
-    return defaultHour;
   }
 
   async disableSchedulerSettings(userId: string, teamId: string) {

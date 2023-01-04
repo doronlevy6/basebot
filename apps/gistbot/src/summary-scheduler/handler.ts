@@ -12,6 +12,7 @@ import { SchedulerSettingsManager } from './scheduler-manager';
 import { UserSchedulerOptions, UserSchedulerSettings } from './types';
 import { SlackDataStore } from '../utils/slack-data-store';
 import { SchedulerSettingsDisableModal } from '../slack/components/disable-digest-modal';
+import { calculateUserDefaultHour } from '../utils/time-utils';
 
 export const summarySchedularSettingsButtonHandler =
   (
@@ -163,7 +164,7 @@ export const summarySchedularSettingsModalHandler =
           slackTeamId: usersettings.slackTeam,
         });
       }
-      usersettings.timeHour = schedulerSettingsMgr.calculateUserDefaultHour(
+      usersettings.timeHour = calculateUserDefaultHour(
         userInfo.tz_offset,
         selectedHour,
       );
