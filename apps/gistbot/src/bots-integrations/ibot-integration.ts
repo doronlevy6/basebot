@@ -6,12 +6,13 @@ export abstract class IBotIntegration {
   abstract getName(): string;
 
   match(msg: Message | SlackMessage): boolean {
-    if (!msg.bot_id || !msg.bot_profile?.name) {
+    const botProfileName =
+      'root' in msg ? msg.root?.bot_profile?.name : msg.bot_profile?.name;
+    if (!msg.bot_id || !botProfileName) {
       return false;
     }
-    return (
-      msg.bot_profile?.name?.toLowerCase() === this.getName().toLowerCase()
-    );
+
+    return botProfileName.toLowerCase() === this.getName().toLowerCase();
   }
 
   abstract handleBotMessages(

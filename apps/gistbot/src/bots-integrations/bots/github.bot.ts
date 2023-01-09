@@ -32,6 +32,7 @@ export class GithubBot extends IBotIntegration {
         githubUpdate,
       ),
     );
+
     const userUpdatesMap = new Map<string, GithubStructuredData[]>();
     userPrUpdates.forEach((v) => {
       const userUpdates = userUpdatesMap.get(v.userName);
@@ -60,9 +61,12 @@ export class GithubBot extends IBotIntegration {
   private extractGithubMessagesText(
     message: SlackMessage,
   ): GithubStructuredData[] {
+    const botProfileName =
+      message.bot_profile?.name || message?.root?.bot_profile?.name;
+
     if (
       message.bot_id &&
-      message.bot_profile?.name?.toLowerCase() === 'github' &&
+      botProfileName?.toLowerCase() === 'github' &&
       message.attachments?.length
     ) {
       const data = this.extractDataFromAttachments(message.attachments)?.filter(
@@ -78,6 +82,7 @@ export class GithubBot extends IBotIntegration {
       let user = '';
       let action = '';
       let pr = '';
+
       if (attachment.pretext && attachment.title) {
         const preTextSections = parseSlackMrkdwn(attachment.pretext);
         const parsedTitle = parseSlackMrkdwn(attachment.title);
