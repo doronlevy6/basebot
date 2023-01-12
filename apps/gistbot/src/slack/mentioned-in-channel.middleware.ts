@@ -1,6 +1,7 @@
 import {
   Context,
   GenericMessageEvent,
+  MessageEvent,
   Middleware,
   SlackEventMiddlewareArgs,
 } from '@slack/bolt';
@@ -28,6 +29,11 @@ export function mentionedInChannelMessage(): Middleware<
       return;
     }
 
+    // If the event is any of the subtypes that we want to skip, then we skip the event entirely
+    if (skipMessageSubtypes(event)) {
+      return;
+    }
+
     const text = event.text.trim();
     const parsedMentions = parseSlackMrkdwn(text).sections.filter((s) => {
       return s.type === 'user_mention' && s.userId !== context.botUserId;
@@ -51,4 +57,27 @@ export function mentionedInChannelMessage(): Middleware<
 
     await next();
   };
+}
+
+function skipMessageSubtypes(event: MessageEvent): boolean {
+  if (event.subtype === undefined) {
+    return false;
+  }
+
+  if (event.subtype === 'channel_join' || event.subtype === 'channel_leave') {
+    return true;
+  }
+
+  if (event.subtype === 'message_deleted') {
+    return true;
+  }
+
+  if (
+    event.subtype === 'message_replied' ||
+    event.subtype === 'thread_broadcast'
+  ) {
+    return true;
+  }
+
+  return false;
 }
