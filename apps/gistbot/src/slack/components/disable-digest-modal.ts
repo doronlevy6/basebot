@@ -1,4 +1,4 @@
-import { ModalView, Option } from '@slack/bolt';
+import { ModalView } from '@slack/bolt';
 import { Routes } from '../../routes/router';
 
 export const SchedulerSettingsDisableModal = (): ModalView => {

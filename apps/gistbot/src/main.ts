@@ -143,7 +143,24 @@ const startApp = async () => {
     subscriptionManager,
   );
 
-  const messagesSummaryModel = new MessagesSummaryModel();
+  const enableV3Model = process.env.USE_MODEL_V3 === 'true';
+  const apiGwBaseUrl = process.env.API_GW_BASE_URL;
+  const standardWorkflowArn = process.env.STEP_FUNCTION_ARN;
+  const expressWorkflowArn = process.env.EXPRESS_STEP_FUNCTION_ARN;
+  if (
+    enableV3Model &&
+    (!apiGwBaseUrl || !standardWorkflowArn || !expressWorkflowArn)
+  ) {
+    throw new Error(
+      'configuration for v3 model is missing when v3 model is enabled',
+    );
+  }
+
+  const messagesSummaryModel = new MessagesSummaryModel(
+    apiGwBaseUrl || '', // Shouldn't be undefined if enable is true (which is where it is used)
+    standardWorkflowArn || '', // Shouldn't be undefined if enable is true (which is where it is used)
+    expressWorkflowArn || '', // Shouldn't be undefined if enable is true (which is where it is used)
+  );
   const channelSummaryModel = new ChannelSummaryModel();
 
   const onboardingLock = new RedisOnboardingLock(redisConfig, env);
@@ -164,7 +181,7 @@ const startApp = async () => {
     pgSessionDataStore,
     botsManager,
     slackDataStore,
-    false,
+    enableV3Model,
   );
 
   const threadSummarizer = new ThreadSummarizer(

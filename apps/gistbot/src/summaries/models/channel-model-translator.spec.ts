@@ -615,35 +615,31 @@ describe('ChannelModelTranslator', () => {
     const expected = [
       {
         rootMessageTs: '',
-        subMessagesTs: [],
-        language: 'english',
         title: 'Resetting the stage for Kiani Bamba',
         summary:
           'Kiani Bamba came back on Friday, but did not have a good experience. Itay Dressler wonders if the onboarding events were sent correctly. Lior Nussbaum is going to clear the test databases and try again.',
+        timeSavedSeconds: -1,
       },
       {
         rootMessageTs: '',
-        subMessagesTs: [],
-        language: 'english',
         title: 'Delayed Messages in Slack',
         summary:
           'The Slack API team is discussing an issue with links not being properly disabled when using the scheduled message API. They are considering copying over code from the Slackbot to fix the issue.',
+        timeSavedSeconds: -1,
       },
       {
         rootMessageTs: '',
-        subMessagesTs: [],
-        language: 'english',
         title: '"Onboarding Defaulting to 3 Days"',
         summary:
           'Itay and Coby discuss the onboarding process for the message app. It is decided that if there is not enough content, the user will be notified.',
+        timeSavedSeconds: -1,
       },
       {
         rootMessageTs: '',
-        subMessagesTs: [],
-        language: 'english',
         title: 'Itay and Lior discuss testing and deployment plans.',
         summary:
           'Itay Dressler and Lior Nussbaum discuss deploying to prod in order to help with tests. Lior suggests testing the triggers as well, and Itay agrees. They agree to test the threads on a different environment during onboarding.',
+        timeSavedSeconds: -1,
       },
     ];
     const translator = new ChannelModelTranslator();

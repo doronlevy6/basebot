@@ -17,7 +17,7 @@ interface slackIds {
 export const userOnboardingMiddleware =
   (onboardingManager: OnboardingManager): Middleware<AnyMiddlewareArgs> =>
   async (args) => {
-    const { logger, next, client, context } = args;
+    const { logger, next, client } = args;
     const vals = getUserIdAndTeamId(args);
 
     if (!vals) {
@@ -31,7 +31,6 @@ export const userOnboardingMiddleware =
         vals.userId,
         client,
         'global_middleware',
-        context.botUserId,
       );
     } catch (error) {
       logger.error(

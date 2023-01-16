@@ -12,35 +12,6 @@ export const formatConversationSummaries = async (
   client: WebClient,
   opts: Opts,
 ): Promise<string> => {
-  const summariesByLang = summaries.reduce(
-    (acc, summary) => {
-      if (summary.language === 'english') {
-        acc.english.push(summary);
-        return acc;
-      }
-      acc.others.push(summary);
-      return acc;
-    },
-    {
-      english: [] as ConversationSummary[],
-      others: [] as ConversationSummary[],
-    },
-  );
-
-  const [englishSummaries, nonEnglishSummaries] = await Promise.all([
-    formatEnglishSummaries(channelId, summariesByLang.english, client, opts),
-    formatNonEnglishSummaries(channelId, summariesByLang.others, client, opts),
-  ]);
-
-  return `${englishSummaries}\n\n${nonEnglishSummaries}`.trim();
-};
-
-const formatEnglishSummaries = async (
-  channelId: string,
-  summaries: ConversationSummary[],
-  client: WebClient,
-  opts: Opts,
-): Promise<string> => {
   if (summaries.length === 0) {
     return '';
   }
@@ -57,37 +28,13 @@ const formatEnglishSummaries = async (
     return `${formattedTitle}\n${summary.summary}`;
   });
 
-  return formattedSummaries
+  const formatted = formattedSummaries
     .map((fs) => {
       return `> ${fs.replace(/\n/g, '\n> ')}`;
     })
     .join('\n\n');
-};
 
-const formatNonEnglishSummaries = async (
-  channelId: string,
-  summaries: ConversationSummary[],
-  client: WebClient,
-  opts: Opts,
-): Promise<string> => {
-  if (summaries.length === 0) {
-    return '';
-  }
-
-  const permalinks = await loadPermalinks(channelId, summaries, client, opts);
-
-  const prefix = `We currently only support English messages in our models, so unfortunately, we could not fully summarize the following threads:`;
-  const formattedSummaries = summaries.map((summary, idx) => {
-    const permalink = permalinks[idx];
-    let formattedText = `- This thread was detected as ${summary.language}`;
-    if (permalink) {
-      formattedText = `- <${permalink}|This thread was detected as ${summary.language}>`;
-    }
-
-    return formattedText;
-  });
-
-  return `${prefix}\n${formattedSummaries.join('\n')}`;
+  return `${formatted}`.trim();
 };
 
 const loadPermalinks = async (

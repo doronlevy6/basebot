@@ -55,10 +55,9 @@ export class ChannelModelTranslator {
     return data.summary_by_threads.map((s, idx): ConversationSummary => {
       return {
         rootMessageTs: '',
-        subMessagesTs: [],
-        language: 'english',
         title: data.titles[idx],
         summary: s,
+        timeSavedSeconds: -1,
       };
     });
   }

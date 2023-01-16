@@ -12,7 +12,7 @@ export const mentionHandler =
     onboardingManager: OnboardingManager,
     chatManager: ChatManager,
   ) =>
-  async ({ client, logger, body, context }: SlackEventWrapper<'message'>) => {
+  async ({ client, logger, body }: SlackEventWrapper<'message'>) => {
     try {
       const { team_id } = body;
       const event = body.event as GenericMessageEvent;
@@ -38,7 +38,6 @@ export const mentionHandler =
         event.user,
         client,
         'direct_mention',
-        context.botUserId,
       );
 
       await Promise.all([chatPromise, onboardingPromise]);

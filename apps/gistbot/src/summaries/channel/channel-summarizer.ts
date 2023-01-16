@@ -29,6 +29,8 @@ import { generateIDAsync } from '../../utils/id-generator.util';
 import { NoMessagesError } from '../errors/no-messages-error';
 import { SlackDataStore } from '../../utils/slack-data-store';
 
+// TODO: At some point, we can raise this restriction to something higher since the model is now splitting threads and making separate requests.
+// On tests, we were able to successfully send 200 messages.
 export const MAX_MESSAGES_TO_FETCH = 100;
 
 export const DEFAULT_DAYS_BACK = 1;

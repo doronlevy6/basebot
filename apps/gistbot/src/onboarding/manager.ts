@@ -51,7 +51,6 @@ export class OnboardingManager {
     userId: string,
     client: WebClient,
     onboardingContext: OnBoardingContext,
-    botUserId?: string,
   ): Promise<void> {
     try {
       const onboardedUser = await this.store.wasUserOnboarded(teamId, userId);

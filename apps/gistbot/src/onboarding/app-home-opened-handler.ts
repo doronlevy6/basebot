@@ -56,7 +56,6 @@ export const appHomeOpenedHandler =
         user,
         client,
         'app_home_opened',
-        context.botUserId,
       );
     } catch (err) {
       logger.error(`App home opened onboarding error: ${err} ${err.stack}`);

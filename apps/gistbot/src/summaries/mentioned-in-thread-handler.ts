@@ -215,7 +215,6 @@ export const summarizeSuggestedThreadAfterMention =
         body.user.id,
         client,
         'suggested_thread_summary',
-        context.botUserId,
       );
       schedulerManager
         .saveDefaultUserSchedulerSettings(

@@ -196,7 +196,6 @@ export const summarizeSuggestedChannelAfterMention =
         body.user.id,
         client,
         'suggested_channel_summary',
-        context.botUserId,
       );
       schedulerManager
         .saveDefaultUserSchedulerSettings(

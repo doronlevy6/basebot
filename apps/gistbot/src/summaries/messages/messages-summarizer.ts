@@ -1,9 +1,5 @@
 import { logger } from '@base/logger';
 import { WebClient } from '@slack/web-api';
-import {
-  approximatePromptCharacterCountForChannelSummaryModelMessages,
-  MAX_PROMPT_CHARACTER_COUNT,
-} from '../models/prompt-character-calculator';
 import { SlackMessage } from '../types';
 import { enrichWithReplies, getUserOrBotDetails } from '../utils';
 import {
@@ -139,13 +135,6 @@ export class MessagesSummarizer {
       );
 
       const req = [...originalReq];
-      let cc =
-        approximatePromptCharacterCountForChannelSummaryModelMessages(req);
-      while (cc > MAX_PROMPT_CHARACTER_COUNT) {
-        req.shift();
-        cc = approximatePromptCharacterCountForChannelSummaryModelMessages(req);
-      }
-
       if (req.length === 0) {
         throw new AllMessagesPrefilteredError(
           `all messages pre-filtered before request, original size ${originalReq.length}`,
@@ -161,7 +150,7 @@ export class MessagesSummarizer {
         );
       }
 
-      const summaries = await this.runModel(req, requestingUserId);
+      const summaries = await this.runModel(sessionId, req, requestingUserId);
       if (summaries.length && summaries.length > 0) {
         const formattedSummary = await formatConversationSummaries(
           channelId,
@@ -209,11 +198,16 @@ export class MessagesSummarizer {
   }
 
   private async runModel(
+    sessionId: string,
     req: MessagesSummaryRequest,
     requestingUserId: string,
   ): Promise<ConversationSummary[]> {
     if (this.enableV3) {
-      return await this.messagesSummaryModel.summarize(req, requestingUserId);
+      return await this.messagesSummaryModel.summarize(
+        sessionId,
+        req,
+        requestingUserId,
+      );
     }
 
     const v2Request = this.translator.translateRequestToV2(req);
