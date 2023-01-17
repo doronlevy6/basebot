@@ -7,7 +7,7 @@ export interface OrgSettings extends RawJson {
 }
 
 const defaultSettings: OrgSettings = {
-  newUserTriggersEnabled: true,
+  newUserTriggersEnabled: false,
 };
 
 export interface OrgSettingsStore {
