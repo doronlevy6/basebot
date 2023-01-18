@@ -57,11 +57,17 @@ export class SqsConsumer implements Consumer {
         this.client.receiveMessage(
           {
             AttributeNames: ['SentTimestamp'],
-            MaxNumberOfMessages: 10,
+            // Since long polling is enabled, we force this to be 1.
+            // This will force the long poll to fill with 1 message as fast as possible.
+            // With short polling, it's better to have the number higher, to maximize the
+            //  number of servers sampled for messages (especially in queues with minimal messages).
+            MaxNumberOfMessages: 1,
             MessageAttributeNames: ['All'],
             QueueUrl: queueUrl,
-            VisibilityTimeout: 20,
-            WaitTimeSeconds: 0,
+            // Setting the wait time seconds to 20 initializes long polling,
+            // which allows us to minimize the number of calls to SQS while still
+            // being able to receive messages efficiently.
+            WaitTimeSeconds: 20,
           },
           (error, data) => {
             if (error) {

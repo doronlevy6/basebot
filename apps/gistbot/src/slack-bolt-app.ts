@@ -71,6 +71,8 @@ export function createApp(
       };
     },
     socketMode: false,
-    developerMode: true,
+    // developerMode enables a huge amount of debug logs from within bolt.
+    // Good for debugging, but we can remove it for now.
+    developerMode: false,
   });
 }

@@ -7,6 +7,7 @@ import {
 } from '@slack/bolt';
 import { Consumer, SqsConfig, SqsConsumer } from '@base/pubsub';
 import * as querystring from 'querystring';
+import { delay } from '../utils/retry';
 
 export interface AwsSQSReceiverOptions {
   sqsConfig: SqsConfig;
@@ -107,6 +108,22 @@ export default class AwsSQSReceiver implements Receiver {
       this.getHeaderValue(sqsEvent.headers, 'Content-Type'),
       this.logger,
     );
+
+    // gist_delay check (for detecting forced delay messages)
+    // This will let us force a delay on the message to test scaling policies.
+    if (
+      typeof body !== 'undefined' &&
+      body != null &&
+      typeof body.gist_delay !== 'undefined' &&
+      body.gist_delay != null &&
+      typeof body.gist_delay === 'number'
+    ) {
+      this.logger.info(
+        `Received delay message, delaying for ${body.gist_delay} milliseconds`,
+      );
+      await delay(body.gist_delay);
+      return true;
+    }
 
     // ssl_check (for Slash Commands)
     if (
