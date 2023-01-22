@@ -137,7 +137,7 @@ export class MessagesSummaryModel {
       const nonFlaggedConversations = conversations.filter(
         (_, idx) => !executionOutput.wire.results[idx].MOD_SUMMARY,
       );
-      if (nonFlaggedConversations.length === 0) {
+      if (conversations.length > 0 && nonFlaggedConversations.length === 0) {
         // If 100% of them were filtered by moderation, we throw the moderated error
         throw new ModerationError('moderated');
       }
