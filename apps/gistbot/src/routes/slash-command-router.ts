@@ -73,13 +73,21 @@ export const slashCommandRouter = (
 
     if (text === 'get mails' && isBaseTeamWorkspace(team_id)) {
       await props.ack();
-      const url = new URL(BASE_URL);
-      url.pathname = '/mail/gmail-client';
-      await axios.post(url.toString(), {
-        slackUserId: user_id,
-        slackTeamId: team_id,
-      });
-      return;
+      try {
+        const url = new URL(BASE_URL);
+        url.pathname = '/mail/gmail-client';
+        await axios.post(
+          url.toString(),
+          {
+            slackUserId: user_id,
+            slackTeamId: team_id,
+          },
+          { timeout: 60000 },
+        );
+        return;
+      } catch (e) {
+        logger.error(`get mails handler error: ${e} ${e.stack}`);
+      }
     }
 
     if (
