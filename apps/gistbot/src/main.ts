@@ -57,6 +57,7 @@ import { ChannelSummaryModel } from './summaries/models/channel-summary.model';
 import { SlackDataStore } from './utils/slack-data-store';
 import { ChannelSummaryStore } from './summaries/channel-summary-store';
 import { UninstallsNotifier } from './uninstall/notifier';
+import { EmailMessageSender } from './email-for-slack/email-message-sender/email-message-sender';
 
 const gracefulShutdown = (server: Server) => (signal: string) => {
   logger.info('starting shutdown, got signal ' + signal);
@@ -326,8 +327,19 @@ const startApp = async () => {
     prefix: `{gistbot:queues:${process.env.ENV || 'local'}}`,
   };
 
+  const mailbotQueueCfg = {
+    ...allQueueCfg,
+    prefix: `{mailbot:queues:${process.env.ENV || 'local'}}`,
+  };
+
   const scheduledMessageSender = new ScheduledMessageSender(
     allQueueCfg,
+    pgStore,
+    analyticsManager,
+  );
+
+  const mailbotMessageSender = new EmailMessageSender(
+    mailbotQueueCfg,
     pgStore,
     analyticsManager,
   );
@@ -352,6 +364,7 @@ const startApp = async () => {
     customerIdentifierLock,
     orgSettingsStore,
     scheduledMessageSender,
+    mailbotMessageSender,
     slackDataStore,
   );
 
