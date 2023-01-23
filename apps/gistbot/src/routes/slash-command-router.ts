@@ -15,6 +15,7 @@ import { MultiChannelSummary } from '../slack/components/multi-channel-summary';
 import { parseSlackMrkdwn } from '../slack/parser';
 import { generateIDAsync } from '../utils/id-generator.util';
 import { WebClient } from '@slack/web-api';
+import { ConnectToGmail } from '../slack/components/connect-to-gmail';
 
 export const slashCommandRouter = (
   channelSummarizer: ChannelSummarizer,
@@ -55,6 +56,15 @@ export const slashCommandRouter = (
         user_id,
         { response_type: 'ephemeral' },
       );
+      return;
+    }
+    if (text === 'gmail' && isBaseTeamWorkspace(team_id)) {
+      await props.ack();
+      await client.chat.postMessage({
+        channel: user_id,
+        text: 'Hi there :wave:',
+        blocks: ConnectToGmail(props.command.user_id, props.command.team_id),
+      });
       return;
     }
 
