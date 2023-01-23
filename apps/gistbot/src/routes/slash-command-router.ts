@@ -16,6 +16,9 @@ import { parseSlackMrkdwn } from '../slack/parser';
 import { generateIDAsync } from '../utils/id-generator.util';
 import { WebClient } from '@slack/web-api';
 import { ConnectToGmail } from '../slack/components/connect-to-gmail';
+import axios from 'axios';
+
+const BASE_URL = process.env.MAIL_BOT_SERVICE_API || '';
 
 export const slashCommandRouter = (
   channelSummarizer: ChannelSummarizer,
@@ -64,6 +67,17 @@ export const slashCommandRouter = (
         channel: user_id,
         text: 'Hi there :wave:',
         blocks: ConnectToGmail(props.command.user_id, props.command.team_id),
+      });
+      return;
+    }
+
+    if (text === 'get mails' && isBaseTeamWorkspace(team_id)) {
+      await props.ack();
+      const url = new URL(BASE_URL);
+      url.pathname = '/mail/gmail-client';
+      await axios.post(url.toString(), {
+        slackUserId: user_id,
+        slackTeamId: team_id,
       });
       return;
     }

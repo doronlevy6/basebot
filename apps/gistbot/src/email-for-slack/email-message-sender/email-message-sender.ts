@@ -6,11 +6,7 @@ import {
   IQueueConfig,
   QueueWrapper,
 } from '@base/queues';
-import {
-  ChatPostMessageArguments,
-  KnownBlock,
-  WebClient,
-} from '@slack/web-api';
+import { WebClient } from '@slack/web-api';
 import { AnalyticsManager, PgInstallationStore } from '@base/gistbot-shared';
 import { MessageResponseJob } from '../types';
 
@@ -94,7 +90,8 @@ export class EmailMessageSender {
     await client.chat.postMessage({
       channel: slackUserId,
       text: 'all emails',
-      blocks: textBlocks,
+      //TODO remove slice, and send different messages
+      blocks: textBlocks.slice(0, 20),
     });
 
     logger.debug({ msg: 'send email message completed', job: job.data });
