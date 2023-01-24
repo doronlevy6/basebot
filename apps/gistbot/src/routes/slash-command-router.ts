@@ -83,7 +83,6 @@ export const slashCommandRouter = (
             slackTeamId: team_id,
           },
           {
-            headers: { 'User-Agent': '' },
             timeout: 60000,
           },
         );

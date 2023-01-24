@@ -2,7 +2,7 @@ import { KnownBlock } from '@slack/web-api';
 import { UserLink } from './user-link';
 
 const createGmailUrl = (userId: string, teamId: string) => {
-  const BASE_URL = process.env.MAIL_BOT_SERVICE_API || '';
+  const BASE_URL = process.env.MAIL_BOT_OAUTH_API || '';
   const url = new URL(BASE_URL);
   url.pathname = '/mail/oauth-public';
   const params = new URLSearchParams();
