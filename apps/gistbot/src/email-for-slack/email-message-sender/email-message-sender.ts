@@ -8,14 +8,17 @@ import {
 } from '@base/queues';
 import { WebClient } from '@slack/web-api';
 import { AnalyticsManager, PgInstallationStore } from '@base/gistbot-shared';
-import { MessageResponseJob } from '../types';
+import { JobsTypes, MessageResponse, SlackIdToMailResponse } from '../types';
+import { UserLink } from '../../slack/components/user-link';
 
 const QUEUE_NAME = 'emailMessageSender';
 
 export class EmailMessageSender {
   private queueCfg: IQueueConfig;
-  private messageSenderWorker: Worker<MessageResponseJob>;
-  private messageSenderQueue: QueueWrapper<MessageResponseJob>;
+  private messageSenderWorker: Worker<MessageResponse | SlackIdToMailResponse>;
+  private messageSenderQueue: QueueWrapper<
+    MessageResponse | SlackIdToMailResponse
+  >;
 
   constructor(
     queueCfg: IQueueConfig,
@@ -31,13 +34,11 @@ export class EmailMessageSender {
 
     this.messageSenderQueue = createQueue(QUEUE_NAME, this.queueCfg);
 
-    this.messageSenderWorker = createQueueWorker<MessageResponseJob>(
-      QUEUE_NAME,
-      this.queueCfg,
-      async (job) => {
-        await this.sendMessage(job);
-      },
-    );
+    this.messageSenderWorker = createQueueWorker<
+      MessageResponse | SlackIdToMailResponse
+    >(QUEUE_NAME, this.queueCfg, async (job) => {
+      await this.handleMessage(job);
+    });
 
     for (let i = 0; i < 10; i++) {
       try {
@@ -59,11 +60,22 @@ export class EmailMessageSender {
     await this.messageSenderWorker.close();
   }
 
-  private async sendMessage(job: Job<MessageResponseJob>) {
-    logger.debug({ msg: 'send scheduled message starting', job: job.data });
+  private async handleMessage(
+    job: Job<MessageResponse | SlackIdToMailResponse>,
+  ) {
+    switch (job.name) {
+      case JobsTypes.DIGEST:
+        await this.sendDigest(job.data as MessageResponse);
+        break;
+      case JobsTypes.ONBOARDING:
+        await this.sendOnboarding(job.data as SlackIdToMailResponse);
+    }
+  }
 
-    const { slackUserId, slackTeamId } = job.data.metedata;
+  private async sendDigest(data: MessageResponse) {
+    logger.debug({ msg: 'send scheduled message starting', job: data });
 
+    const { slackUserId, slackTeamId } = data.metedata;
     const installation = await this.installationStore.fetchInstallationByTeamId(
       slackTeamId,
     );
@@ -72,7 +84,7 @@ export class EmailMessageSender {
       throw new Error(`no bot token for team ${slackTeamId}`);
     }
 
-    const textBlocks = job.data.data.flatMap((data) => {
+    const textBlocks = data.data.flatMap((data) => {
       return [
         {
           type: 'section',
@@ -94,6 +106,43 @@ export class EmailMessageSender {
       blocks: textBlocks.slice(0, 20),
     });
 
-    logger.debug({ msg: 'send email message completed', job: job.data });
+    logger.debug({ msg: 'send email message completed' });
+  }
+
+  private async sendOnboarding(data: SlackIdToMailResponse) {
+    logger.debug({
+      msg: 'sendOnboarding for gmail message starting',
+      job: data,
+    });
+
+    const { slackUserId, slackTeamId } = data;
+    const installation = await this.installationStore.fetchInstallationByTeamId(
+      slackTeamId,
+    );
+
+    if (!installation.bot?.token) {
+      throw new Error(`no bot token for team ${slackTeamId}`);
+    }
+
+    const client = new WebClient(installation.bot?.token);
+    await client.chat.postMessage({
+      channel: slackUserId,
+      text: `:wave: Hey ${UserLink(
+        slackUserId,
+      )}, you successfuly logged in to Gistbot for Gmail!`,
+      blocks: [
+        {
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: `:wave: Hey ${UserLink(
+              slackUserId,
+            )}, you successfuly logged in to Gistbot for Gmail!`,
+          },
+        },
+      ],
+    });
+
+    logger.debug({ msg: 'send onboarding for Gist for Gmail completed' });
   }
 }
