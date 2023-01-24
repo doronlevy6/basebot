@@ -74,7 +74,7 @@ export const SchedulerSettingsModal = (
             emoji: true,
           },
           filter: {
-            include: ['public'],
+            include: ['public', 'private'],
             exclude_bot_users: true,
             exclude_external_shared_channels: true,
           },

@@ -13,6 +13,7 @@ import { UserSchedulerOptions, UserSchedulerSettings } from './types';
 import { SlackDataStore } from '../utils/slack-data-store';
 import { SchedulerSettingsDisableModal } from '../slack/components/disable-digest-modal';
 import { calculateUserDefaultHour } from '../utils/time-utils';
+import { ConversationsInfoResponse } from '@slack/web-api';
 
 export const summarySchedularSettingsButtonHandler =
   (
@@ -27,7 +28,6 @@ export const summarySchedularSettingsButtonHandler =
   }: SlackBlockActionWrapper | SlackSlashCommandWrapper) => {
     try {
       await ack();
-
       const teamId = (body as SlashCommand).team_id ?? body.team?.id;
       const userId = (body as SlashCommand).user_id ?? body.user?.id;
       if (!teamId || !userId) {
@@ -112,8 +112,30 @@ export const summarySchedularSettingsModalHandler =
         );
         return;
       }
+      const validChannels = await getValidChannels(selectedChannels, client);
 
-      const joinChannelsPromises = selectedChannels.map((c) => {
+      if (selectedChannels.length > validChannels.length) {
+        const chanelNotJoined = postMessage(
+          client,
+          body,
+          selectedChannels,
+          validChannels,
+        );
+        logger.info(
+          `sending message 'invite bot to private channels ${chanelNotJoined.join(
+            ',',
+          )}' for user ${body.user.id} `,
+        );
+
+        if (!validChannels.length) {
+          logger.info(
+            `we didnt save changes for user ${body.user.id} becouse there are no valid chanells in scheduler settings `,
+          );
+          return;
+        }
+      }
+
+      const joinChannelsPromises = validChannels.map(async (c) => {
         return addToChannel(
           client,
           {
@@ -128,6 +150,7 @@ export const summarySchedularSettingsModalHandler =
       await Promise.all(joinChannelsPromises);
 
       logger.debug(`scheduler modal joined channels for user ${body.user.id}`);
+
       const userInfo = await slackDataStore.getUserInfoData(
         body.user.id,
         body.team.id,
@@ -170,7 +193,7 @@ export const summarySchedularSettingsModalHandler =
       );
       usersettings.selectedHour = selectedHour;
       const channelsInfos = await Promise.all(
-        selectedChannels.map((c) => {
+        validChannels.map((c) => {
           return client.conversations.info({ channel: c });
         }),
       );
@@ -250,6 +273,54 @@ export const summarySchedularSettingsDisableHandler =
       );
     }
   };
+
+export async function getValidChannels(selectedChannels: string[], client) {
+  const selectedChannelsPromiseInfo: Array<Promise<ConversationsInfoResponse>> =
+    selectedChannels.map((c: string) => {
+      return client.conversations.info({ channel: c });
+    });
+
+  const results: Array<PromiseSettledResult<ConversationsInfoResponse>> =
+    await Promise.allSettled(selectedChannelsPromiseInfo);
+
+  const validChannels: string[] = results
+    .filter(
+      (result: PromiseSettledResult<ConversationsInfoResponse>) =>
+        result.status === 'fulfilled',
+    )
+    .map(
+      (result: PromiseFulfilledResult<ConversationsInfoResponse>) =>
+        result.value?.channel?.id ?? '',
+    )
+    .filter((channel) => channel !== '');
+  return validChannels;
+}
+
+export function postMessage(client, body, selectedChannels, validChannels) {
+  const chanelNotJoined: string[] = [];
+  for (const value of selectedChannels) {
+    if (!validChannels.includes(value)) chanelNotJoined.push(`<#${value}> `);
+  }
+  const message = `Hello,${body.user.name}\n\n*${chanelNotJoined.join(',')}*${
+    chanelNotJoined.length === 1
+      ? ' is a private channel.\nThe Daily Digest can show a private channel only if theGist is invited to it. '
+      : ' are private channels.\nThe Daily Digest can show private channels only if theGist is invited to each.'
+  }
+\n
+To add private channels to your Daily Digest:
+1.Use the \`/invite @theGist\` commands in the following channels: ${chanelNotJoined.join(
+    ',',
+  )}.
+2.Tap the Daily Digest Settings button *or* type \`/gist settings\` to open the settings and add the
+private channels again.`;
+  if (chanelNotJoined.length) {
+    client.chat.postMessage({
+      channel: body.user.id,
+      text: message,
+    });
+  }
+  return chanelNotJoined;
+}
 
 export const summarySchedularSettingsDisableOpenModal =
   (analyticsManager: AnalyticsManager) =>
