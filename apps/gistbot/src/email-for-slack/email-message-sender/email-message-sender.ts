@@ -8,8 +8,12 @@ import {
 } from '@base/queues';
 import { WebClient } from '@slack/web-api';
 import { AnalyticsManager, PgInstallationStore } from '@base/gistbot-shared';
+import { chunk } from 'lodash';
 import { JobsTypes, MessageResponse, SlackIdToMailResponse } from '../types';
 import { UserLink } from '../../slack/components/user-link';
+import { extractEmailContent } from './email-content-extractor';
+import { KnownBlock } from '@slack/bolt';
+import { createEmailDigestBlocks } from './email-digest-blocks';
 
 const QUEUE_NAME = 'emailMessageSender';
 
@@ -84,29 +88,27 @@ export class EmailMessageSender {
       throw new Error(`no bot token for team ${slackTeamId}`);
     }
 
-    const textBlocks = data.data.flatMap((data) => {
-      return [
-        {
-          type: 'section',
-          text: {
-            type: 'mrkdwn',
-            text: data.snippet,
-          },
-        },
-        {
-          type: 'divider',
-        },
-      ];
-    });
+    const gmailData = extractEmailContent(data.data);
+    const textBlocks = createEmailDigestBlocks(gmailData);
     const client = new WebClient(installation.bot?.token);
-    await client.chat.postMessage({
-      channel: slackUserId,
-      text: 'all emails',
-      //TODO remove slice, and send different messages
-      blocks: textBlocks.slice(0, 20),
-    });
+    await this.sendDividedMessage(textBlocks, client, slackUserId);
 
     logger.debug({ msg: 'send email message completed' });
+  }
+
+  private async sendDividedMessage(
+    textBlocks: KnownBlock[],
+    client: WebClient,
+    slackUserId: string,
+  ) {
+    const dividedBlocks = chunk(textBlocks, 50);
+    for (const chunkOfBlocks of dividedBlocks) {
+      await client.chat.postMessage({
+        channel: slackUserId,
+        text: 'Your Email Summary ',
+        blocks: chunkOfBlocks,
+      });
+    }
   }
 
   private async sendOnboarding(data: SlackIdToMailResponse) {
