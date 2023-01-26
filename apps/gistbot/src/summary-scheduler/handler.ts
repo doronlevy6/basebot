@@ -211,7 +211,6 @@ export const summarySchedularSettingsModalHandler =
           return;
         }
       }
-
       logger.debug(
         `scheduler modal fetched channels info for user ${body.user.id}`,
       );
@@ -301,18 +300,19 @@ export function postMessage(client, body, selectedChannels, validChannels) {
   for (const value of selectedChannels) {
     if (!validChannels.includes(value)) chanelNotJoined.push(`<#${value}> `);
   }
-  const message = `Hello,${body.user.name}\n\n*${chanelNotJoined.join(',')}*${
-    chanelNotJoined.length === 1
-      ? ' is a private channel.\nThe Daily Digest can show a private channel only if theGist is invited to it. '
-      : ' are private channels.\nThe Daily Digest can show private channels only if theGist is invited to each.'
+  let message = '';
+  if (chanelNotJoined.length === 1) {
+    message = `Hello, ${body.user.name}\n\n*${chanelNotJoined}* is a private channel.\nThe Daily Digest can show a private channel only if theGist is invited to it.
+     \n\nTo add a private channel to your Daily Digest:\n1. Use the \`/invite @theGist\` command in ${chanelNotJoined}.
+     \n2. Tap the Daily Digest Settings button *or* type \`/gist settings\` to open the settings and add the private channel again.`;
+  } else {
+    message = `Hello, ${body.user.name}\n\n*${chanelNotJoined.join(
+      ' & ',
+    )}* are private channels.\nThe Daily Digest can show private channels only if theGist is invited to each.\n\nTo add private channels to your Daily Digest:\n1. Use the \`/invite @theGist\` command in the following channels: ${chanelNotJoined.join(
+      ' & ',
+    )}.
+     \n2. Tap the Daily Digest Settings button *or* type \`/gist settings\` to open the settings and add the private channels again.`;
   }
-\n
-To add private channels to your Daily Digest:
-1.Use the \`/invite @theGist\` commands in the following channels: ${chanelNotJoined.join(
-    ',',
-  )}.
-2.Tap the Daily Digest Settings button *or* type \`/gist settings\` to open the settings and add the
-private channels again.`;
   if (chanelNotJoined.length) {
     client.chat.postMessage({
       channel: body.user.id,
