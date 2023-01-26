@@ -38,7 +38,7 @@ export const ConnectToGmail = (
           type: 'button',
           text: {
             type: 'plain_text',
-            text: 'Connect with Gmail',
+            text: 'Sign in with Gmail',
             emoji: true,
           },
           style: 'primary',
