@@ -1,7 +1,7 @@
 import { KnownBlock } from '@slack/bolt';
 
 export const createEmailDigestBlocks = (
-  gmailData: { snippet: string; subject: string; from: string }[],
+  gmailData: { snippet: string; subject: string; from: string; id: string }[],
 ) => {
   const textBlocks: KnownBlock[] = gmailData.flatMap((data) => {
     return [
@@ -22,8 +22,8 @@ export const createEmailDigestBlocks = (
               text: 'Reply',
               emoji: true,
             },
-            value: 'click_me_123',
-            action_id: 'actionId-0',
+            value: `${data.id}|${data.from}`,
+            action_id: 'mail-reply-action',
           },
           {
             type: 'button',

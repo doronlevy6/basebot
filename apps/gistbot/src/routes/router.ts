@@ -69,6 +69,7 @@ import { ChatManager } from '../experimental/chat/manager';
 import { ChatModel } from '../experimental/chat/chat.model';
 import { UninstallsNotifier } from '../uninstall/notifier';
 import { chatActionItemHandler } from '../chat/chat-action-items-handler';
+import { emailReplyHandler } from '../email-for-slack/email-reply-handler';
 
 const ARRAY_CHAT_GIST_ACTIONS = [0, 1, 2];
 export enum Routes {
@@ -93,6 +94,7 @@ export enum Routes {
   SUMMARIZE_CHANNEL_MORE_TIME = 'summarize-channel-more-time',
   CLICKED_TO_OPEN_PRICING = 'click-to-open-pricing',
   GISTLY_MODAL = 'open-gistly-modal',
+  MAIL_REPLY = 'mail-reply-action',
   GISTLY_MODAL_SUBMIT = 'gistly-modal-submit',
   OPEN_SCHEDULER_SETTINGS = 'open-scheduler-settings',
   SCHEDULER_SETTINGS_MODAL_SUBMIT = 'scheduler-settings-modal-submit',
@@ -172,6 +174,8 @@ export const registerBoltAppRouter = (
       multiChannelSummarizer,
     ),
   );
+  app.action(Routes.MAIL_REPLY, emailReplyHandler());
+
   app.action(
     Routes.THREAD_SUMMARY_FEEDBACK,
     onboardingMiddleware,

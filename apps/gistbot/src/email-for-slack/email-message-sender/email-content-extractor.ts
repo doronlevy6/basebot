@@ -12,6 +12,7 @@ export const extractEmailContent = (data: gmail_v1.Schema$Message[]) => {
       from: from?.value || '',
       subject: subject?.value || '',
       snippet: mail.snippet || '',
+      id: mail.id || '',
     };
   });
   return results;
