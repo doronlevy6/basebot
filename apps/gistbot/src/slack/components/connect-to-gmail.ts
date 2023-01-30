@@ -4,7 +4,7 @@ import { UserLink } from './user-link';
 const createGmailUrl = (userId: string, teamId: string) => {
   const BASE_URL = process.env.MAIL_BOT_OAUTH_API || '';
   const url = new URL(BASE_URL);
-  url.pathname = '/mail/oauth-public';
+  url.pathname = url.pathname + 'mail/oauth-public';
   const params = new URLSearchParams();
   params.set('user', userId);
   params.set('team', teamId);
@@ -38,7 +38,7 @@ export const ConnectToGmail = (
           type: 'button',
           text: {
             type: 'plain_text',
-            text: 'Sign in with Gmail',
+            text: 'Connect Gmail',
             emoji: true,
           },
           style: 'primary',
