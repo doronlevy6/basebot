@@ -3,7 +3,7 @@ import { OnboardingManager } from '../onboarding/manager';
 import { RedisTriggerLock } from './trigger-lock';
 import { PgTriggerLock } from './trigger-lock-persistent';
 
-const MAX_TRIGGER_THRESHOLD = 6;
+const MAX_TRIGGER_THRESHOLD = 1;
 
 export class NewUserTriggersManager {
   constructor(
