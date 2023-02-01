@@ -35,15 +35,21 @@ export class SubscriptionManager {
         );
       }
 
+      // TODO: Return the leeway eventually when we have time to investigate values from Stripe.
+      // Right now we use the `current_period_end`, which unfortunately continues to update in Stripe
+      // even when the subscription is no longer active. We need to find which value shows the end of the
+      // last time they paid (probably somewhere in invoicing).
+      // For now, we comment this out so that people don't get infinite time without paying.
+
       // Provide one day of leeway, just in case something happens and we haven't billed them
       // or we haven't gotten the invoice yet or we haven't updated from the source of truth yet.
-      info.subscriptionEndsAt.setDate(info.subscriptionEndsAt.getDate() + 1);
-      const now = new Date();
-      if (now.getTime() > info.subscriptionEndsAt.getTime()) {
-        // The subscription has ended because now is greater than the subscription period end.
-        // This means the user is now on the free tier.
-        return SubscriptionTier.FREE;
-      }
+      // info.subscriptionEndsAt.setDate(info.subscriptionEndsAt.getDate() + 1);
+      // const now = new Date();
+      // if (now.getTime() > info.subscriptionEndsAt.getTime()) {
+      // The subscription has ended because now is greater than the subscription period end.
+      // This means the user is now on the free tier.
+      //   return SubscriptionTier.FREE;
+      // }
       return info.subscriptionTier || SubscriptionTier.FREE;
     }
 
