@@ -62,13 +62,11 @@ export class MultiChannelSummarizer {
         team: teamId,
         channels: props.channels.map((c) => c.channelId),
       });
-
       const userInfo = await this.slackDataStore.getUserInfoData(
         userId,
         teamId,
         client,
       );
-
       const cachedSummaries = await Promise.all(
         props.channels.map((p) =>
           this.channelSummaryStore.get(p.channelId, teamId),
@@ -93,7 +91,7 @@ export class MultiChannelSummarizer {
       const channels: Summarization[] = await Promise.all(
         channelsToSummarize.map(async (c): Promise<Summarization> => {
           try {
-            const result = retry(
+            const result = await retry(
               async (): Promise<Summarization> => {
                 const msgs =
                   await this.channelSummarizer.fetchChannelRootMessages(
