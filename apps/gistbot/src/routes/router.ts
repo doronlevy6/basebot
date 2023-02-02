@@ -69,7 +69,12 @@ import { ChatManager } from '../experimental/chat/manager';
 import { ChatModel } from '../experimental/chat/chat.model';
 import { UninstallsNotifier } from '../uninstall/notifier';
 import { chatActionItemHandler } from '../chat/chat-action-items-handler';
-import { emailReplyHandler } from '../email-for-slack/email-reply-handler';
+import {
+  emailReplyHandler,
+  emailReplySubmitHandler,
+  markAsReadHandler,
+  saveDraft,
+} from '../email-for-slack/handler';
 
 const ARRAY_CHAT_GIST_ACTIONS = [0, 1, 2];
 export enum Routes {
@@ -95,6 +100,9 @@ export enum Routes {
   CLICKED_TO_OPEN_PRICING = 'click-to-open-pricing',
   GISTLY_MODAL = 'open-gistly-modal',
   MAIL_REPLY = 'mail-reply-action',
+  MAIL_REPLY_SUBMIT = 'mail-reply-submit',
+  MAIL_MARK_AS_READ = 'mark-as-read',
+  MAIL_SAVE_DRAFT = 'save_draft',
   GISTLY_MODAL_SUBMIT = 'gistly-modal-submit',
   OPEN_SCHEDULER_SETTINGS = 'open-scheduler-settings',
   SCHEDULER_SETTINGS_MODAL_SUBMIT = 'scheduler-settings-modal-submit',
@@ -175,6 +183,12 @@ export const registerBoltAppRouter = (
     ),
   );
   app.action(Routes.MAIL_REPLY, emailReplyHandler());
+
+  app.action(Routes.MAIL_MARK_AS_READ, markAsReadHandler());
+
+  app.action(Routes.MAIL_SAVE_DRAFT, saveDraft());
+
+  app.view(Routes.MAIL_REPLY_SUBMIT, emailReplySubmitHandler());
 
   app.action(
     Routes.THREAD_SUMMARY_FEEDBACK,
@@ -464,4 +478,10 @@ export const registerBoltAppRouter = (
   app.event('message', async ({ event, logger }) => {
     logger.info(event);
   });
+
+  app.action(Routes.MAIL_MARK_AS_READ, markAsReadHandler());
+
+  app.action(Routes.MAIL_SAVE_DRAFT, saveDraft());
+
+  app.view(Routes.MAIL_REPLY_SUBMIT, emailReplySubmitHandler());
 };

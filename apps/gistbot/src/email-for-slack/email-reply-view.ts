@@ -59,6 +59,7 @@ export const ReplyMailView: (props: IProps) => ModalView = ({
       },
       {
         type: 'input',
+        block_id: 'reply',
         element: {
           type: 'static_select',
           initial_option: repliesBlocks[0],

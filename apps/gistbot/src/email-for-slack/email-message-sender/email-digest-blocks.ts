@@ -1,4 +1,5 @@
 import { KnownBlock } from '@slack/bolt';
+import { Routes } from '../../routes/router';
 
 export const createEmailDigestBlocks = (
   gmailData: { snippet: string; subject: string; from: string; id: string }[],
@@ -23,7 +24,7 @@ export const createEmailDigestBlocks = (
               emoji: true,
             },
             value: `${data.id}|${data.from}`,
-            action_id: 'mail-reply-action',
+            action_id: Routes.MAIL_REPLY,
           },
           {
             type: 'button',
@@ -32,8 +33,8 @@ export const createEmailDigestBlocks = (
               text: 'Mark as read',
               emoji: true,
             },
-            value: 'click_me_123',
-            action_id: 'actionId-1',
+            value: data.id,
+            action_id: Routes.MAIL_MARK_AS_READ,
           },
         ],
       },
