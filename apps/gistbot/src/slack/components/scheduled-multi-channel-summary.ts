@@ -2,11 +2,14 @@ import { KnownBlock } from '@slack/bolt';
 import { UserSchedulerOptions } from '../../summary-scheduler/types';
 import { ChatIntroBanner } from './chat-intro-banner';
 import { GoProScheduler } from './go-pro-scheduler';
+import { GoExProScheduler } from './go-ex-pro-scheduler';
 import { MultiChannelSummary } from './multi-channel-summary';
+import { SubscriptionTier } from '@base/customer-identifier';
 
 export const ScheduledMultiChannelSummary = (
   formattedSummaries: string[],
   limit: number,
+  tier: string,
   nonIncludedChannedIds: string[],
   sessionId: string,
   selectedTime: number,
@@ -17,6 +20,11 @@ export const ScheduledMultiChannelSummary = (
       ? 'morning'
       : 'afternoon';
   const title = `*Good ${timeStr}, here is your daily digest:*\n`;
+  const goProBtn =
+    tier === SubscriptionTier.PRO
+      ? GoExProScheduler(limit, nonIncludedChannedIds)
+      : GoProScheduler(limit, nonIncludedChannedIds);
+
   return [
     {
       type: 'section',
@@ -29,7 +37,7 @@ export const ScheduledMultiChannelSummary = (
     {
       type: 'divider',
     },
-    ...GoProScheduler(limit, nonIncludedChannedIds),
+    ...goProBtn,
     {
       type: 'divider',
     },

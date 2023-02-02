@@ -21,6 +21,7 @@ import {
 import { ScheduledMessageSender } from '../slack/scheduled-messages/manager';
 import { delay } from '../utils/retry';
 import { OnboardingManager } from '../onboarding/manager';
+import { SubscriptionTier } from '@base/customer-identifier';
 
 export class SummarySchedulerJob {
   private readonly tempWeekDays = '0,1,2,3,4,5';
@@ -45,7 +46,6 @@ export class SummarySchedulerJob {
       },
     );
   }
-
   async handleScheduler() {
     let offset = 0;
     // eslint-disable-next-line no-constant-condition
@@ -64,7 +64,6 @@ export class SummarySchedulerJob {
         );
         break;
       }
-
       logger.debug(
         `found ${usersSettings.length} users settings in time interval`,
       );
@@ -120,10 +119,11 @@ export class SummarySchedulerJob {
       let limitedChannelSummries = userSettings.channels;
       let nonIncludingChannels: string[] = [];
       let featureLimit: number | 'infinite' = 0;
+      let tier = SubscriptionTier.FREE;
       if (
         userSettings.channels.length > FeatureLimits.SCHEDULED_SUMMARIES.FREE
       ) {
-        const tier = await this.subscriptionManager.userTier(
+        tier = await this.subscriptionManager.userTier(
           userSettings.slackTeam,
           userSettings.slackUser,
         );
@@ -142,6 +142,7 @@ export class SummarySchedulerJob {
           client,
           sessionId,
           userSettings,
+          tier,
           limitedChannelSummries,
           nonIncludingChannels,
           Number(featureLimit),
@@ -186,6 +187,7 @@ export class SummarySchedulerJob {
     client: WebClient,
     sessionId: string,
     userSettings: UserSchedulerSettings,
+    tier: string,
     channelsToSummarize: { channelId: string; channelName: string }[],
     nonIncludingChannels: string[],
     featureLimit: number,
@@ -253,6 +255,7 @@ export class SummarySchedulerJob {
         blocks: ScheduledMultiChannelSummary(
           summariesFormatted,
           featureLimit,
+          tier,
           nonIncludingChannels,
           sessionId,
           userSettings.selectedHour,
