@@ -61,7 +61,7 @@ export const slashCommandRouter = (
       );
       return;
     }
-    if (text === 'gmail' && isBaseTeamWorkspace(team_id)) {
+    if (text === 'gmail') {
       await props.ack();
       await client.chat.postMessage({
         channel: user_id,
@@ -71,7 +71,7 @@ export const slashCommandRouter = (
       return;
     }
 
-    if (text === 'get mails' && isBaseTeamWorkspace(team_id)) {
+    if (text === 'get mails') {
       await props.ack();
       const url = new URL(BASE_URL);
       url.pathname = '/mail/gmail-client';
