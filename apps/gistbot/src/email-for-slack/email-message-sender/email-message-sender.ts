@@ -9,9 +9,8 @@ import {
 import { WebClient } from '@slack/web-api';
 import { AnalyticsManager, PgInstallationStore } from '@base/gistbot-shared';
 import { chunk } from 'lodash';
-import { JobsTypes, MessageResponse, SlackIdToMailResponse } from '../types';
+import { GmailDigest, JobsTypes, SlackIdToMailResponse } from '../types';
 import { UserLink } from '../../slack/components/user-link';
-import { extractEmailContent } from './email-content-extractor';
 import { KnownBlock } from '@slack/bolt';
 import { createEmailDigestBlocks } from './email-digest-blocks';
 
@@ -19,10 +18,8 @@ const QUEUE_NAME = 'emailMessageSender';
 
 export class EmailMessageSender {
   private queueCfg: IQueueConfig;
-  private messageSenderWorker: Worker<MessageResponse | SlackIdToMailResponse>;
-  private messageSenderQueue: QueueWrapper<
-    MessageResponse | SlackIdToMailResponse
-  >;
+  private messageSenderWorker: Worker<GmailDigest | SlackIdToMailResponse>;
+  private messageSenderQueue: QueueWrapper<GmailDigest | SlackIdToMailResponse>;
 
   constructor(
     queueCfg: IQueueConfig,
@@ -39,7 +36,7 @@ export class EmailMessageSender {
     this.messageSenderQueue = createQueue(QUEUE_NAME, this.queueCfg);
 
     this.messageSenderWorker = createQueueWorker<
-      MessageResponse | SlackIdToMailResponse
+      GmailDigest | SlackIdToMailResponse
     >(QUEUE_NAME, this.queueCfg, async (job) => {
       await this.handleMessage(job);
     });
@@ -64,19 +61,18 @@ export class EmailMessageSender {
     await this.messageSenderWorker.close();
   }
 
-  private async handleMessage(
-    job: Job<MessageResponse | SlackIdToMailResponse>,
-  ) {
+  private async handleMessage(job: Job<GmailDigest | SlackIdToMailResponse>) {
     switch (job.name) {
       case JobsTypes.DIGEST:
-        await this.sendDigest(job.data as MessageResponse);
+        await this.sendDigest(job.data as GmailDigest);
+        ``;
         break;
       case JobsTypes.ONBOARDING:
         await this.sendOnboarding(job.data as SlackIdToMailResponse);
     }
   }
 
-  private async sendDigest(data: MessageResponse) {
+  private async sendDigest(data: GmailDigest) {
     logger.debug({ msg: 'send scheduled message starting', job: data });
 
     const { slackUserId, slackTeamId } = data.metedata;
@@ -88,8 +84,7 @@ export class EmailMessageSender {
       throw new Error(`no bot token for team ${slackTeamId}`);
     }
 
-    const gmailData = extractEmailContent(data.data);
-    const textBlocks = createEmailDigestBlocks(gmailData);
+    const textBlocks = createEmailDigestBlocks(data.sections);
     const client = new WebClient(installation.bot?.token);
     await this.sendDividedMessage(textBlocks, client, slackUserId);
 

@@ -1,16 +1,39 @@
 import { KnownBlock } from '@slack/bolt';
 import { Routes } from '../../routes/router';
+import { DigestMessage, GmailDigestSection } from '../types';
 
-export const createEmailDigestBlocks = (
-  gmailData: { snippet: string; subject: string; from: string; id: string }[],
-) => {
-  const textBlocks: KnownBlock[] = gmailData.flatMap((data) => {
+const createEmailDigestSections = (
+  sections: GmailDigestSection[],
+): KnownBlock[] => {
+  return sections.flatMap((section) => {
+    return [
+      createEmailDigestHeader(section.title),
+      ...createEmailDigestMessage(section.messages),
+      {
+        type: 'divider',
+      },
+    ];
+  });
+};
+
+const createEmailDigestHeader = (title: string): KnownBlock => {
+  return {
+    type: 'header',
+    text: {
+      type: 'plain_text',
+      text: `${title}`.toUpperCase(),
+    },
+  };
+};
+
+const createEmailDigestMessage = (messages: DigestMessage[]): KnownBlock[] => {
+  return messages.flatMap((message) => {
     return [
       {
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: `*${data.subject}*\n\n${data.snippet}`,
+          text: `*${message.title}*\n\n${message.body}`,
         },
       },
       {
@@ -23,7 +46,7 @@ export const createEmailDigestBlocks = (
               text: 'Reply',
               emoji: true,
             },
-            value: `${data.id}|${data.from}`,
+            value: `${message.id}|${message.from}`,
             action_id: Routes.MAIL_REPLY,
           },
           {
@@ -33,13 +56,16 @@ export const createEmailDigestBlocks = (
               text: 'Mark as read',
               emoji: true,
             },
-            value: data.id,
+            value: message.id,
             action_id: Routes.MAIL_MARK_AS_READ,
           },
         ],
       },
     ];
   });
+};
+
+export const createEmailDigestBlocks = (sections: GmailDigestSection[]) => {
   const opener: KnownBlock[] = [
     {
       type: 'header',
@@ -59,6 +85,11 @@ export const createEmailDigestBlocks = (
       type: 'divider',
     },
   ];
-  textBlocks.unshift(...opener);
-  return textBlocks;
+
+  const blocks: KnownBlock[] = [
+    ...opener,
+    ...createEmailDigestSections(sections),
+  ];
+
+  return blocks;
 };
