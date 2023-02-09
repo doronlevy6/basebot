@@ -72,6 +72,7 @@ import { chatActionItemHandler } from '../chat/chat-action-items-handler';
 import {
   emailReplyHandler,
   emailReplySubmitHandler,
+  markAllAsReadHandler,
   markAsReadHandler,
   saveDraft,
 } from '../email-for-slack/handler';
@@ -102,7 +103,9 @@ export enum Routes {
   MAIL_REPLY = 'mail-reply-action',
   MAIL_REPLY_SUBMIT = 'mail-reply-submit',
   MAIL_MARK_AS_READ = 'mark-as-read',
+  MAIL_MARK_ALL_AS_READ = 'mark-all-as-read',
   MAIL_SAVE_DRAFT = 'save_draft',
+  MAIL_RSVP = 'rsvp',
   GISTLY_MODAL_SUBMIT = 'gistly-modal-submit',
   OPEN_SCHEDULER_SETTINGS = 'open-scheduler-settings',
   SCHEDULER_SETTINGS_MODAL_SUBMIT = 'scheduler-settings-modal-submit',
@@ -185,6 +188,8 @@ export const registerBoltAppRouter = (
   app.action(Routes.MAIL_REPLY, emailReplyHandler());
 
   app.action(Routes.MAIL_MARK_AS_READ, markAsReadHandler());
+
+  app.action(Routes.MAIL_MARK_ALL_AS_READ, markAllAsReadHandler());
 
   app.action(Routes.MAIL_SAVE_DRAFT, saveDraft());
 

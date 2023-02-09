@@ -6,6 +6,7 @@ import axios from 'axios';
 const MAIL_BOT_SERVICE_API = process.env.MAIL_BOT_SERVICE_API || '';
 const REPLY_PATH = '/mail/gmail-client/sendReply';
 const MARK_AS_READ_PATH = '/mail/gmail-client/markAsRead';
+const MARK_ALL_AS_READ_PATH = '/mail/bulk-actions/mark-as-read';
 const CREATE_DRAFT_PATH = '/mail/gmail-client/createDraft';
 
 export const emailReplyHandler =
@@ -46,7 +47,7 @@ export const emailReplySubmitHandler = () => async (params: ViewAction) => {
     logger.debug(`reply submit handler for user ${body.user.id}`);
     if (!body.team?.id) {
       logger.error(
-        `team id not exist for user ${body.user.id} in scheduler settings modal`,
+        `team id not exist for user ${body.user.id} in emailReplySubmitHandler`,
       );
       return;
     }
@@ -86,14 +87,16 @@ export const markAsReadHandler =
       logger.debug(`mark as read handler for user ${body.user.id}`);
       if (!body.team?.id) {
         logger.error(
-          `team id not exist for user ${body.user.id} in scheduler settings modal`,
+          `team id not exist for user ${body.user.id} in markAsReadHandler`,
         );
         return;
       }
 
       const action = body.actions[0];
       if (action.type !== 'button') {
-        throw new Error('email reply handler received non-button action');
+        throw new Error(
+          `email markAsReadHandler received non-button action for user ${body.user.id}`,
+        );
       }
 
       const mailId = action.value;
@@ -117,6 +120,50 @@ export const markAsReadHandler =
     }
   };
 
+export const markAllAsReadHandler =
+  () =>
+  async ({ ack, logger, body }: SlackBlockActionWrapper) => {
+    await ack();
+    try {
+      logger.debug(`mark all as read handler for user ${body.user.id}`);
+      if (!body.team?.id) {
+        // TODO
+        logger.error(
+          `team id not exist for user ${body.user.id} in markAllAsReadHandler`,
+        );
+        return;
+      }
+
+      const action = body.actions[0];
+      if (action.type !== 'button') {
+        throw new Error(
+          `markAllAsReadHandler received non-button action for user ${body.user.id}`,
+        );
+      }
+
+      const mailId = action.value;
+      const url = new URL(MAIL_BOT_SERVICE_API);
+      url.pathname = MARK_ALL_AS_READ_PATH;
+
+      await axios.post(
+        url.toString(),
+        {
+          slackUserId: body.user.id,
+          slackTeamId: body.team.id,
+          groupId: mailId,
+        },
+        {
+          timeout: 60000,
+        },
+      );
+    } catch (e) {
+      logger.error(
+        `error in markAllAsReadHandler for user ${body.user.id}, ${e}`,
+      );
+      throw e;
+    }
+  };
+
 export const saveDraft =
   () =>
   async ({ ack, logger, body }: SlackBlockActionWrapper) => {
@@ -124,15 +171,15 @@ export const saveDraft =
     try {
       logger.debug(`save draft handler for user ${body.user.id}`);
       if (!body.team?.id) {
-        logger.error(
-          `team id not exist for user ${body.user.id} in scheduler settings modal`,
-        );
+        logger.error(`team id not exist for user ${body.user.id} in saveDraft`);
         return;
       }
 
       const action = body.actions[0];
       if (action.type !== 'button') {
-        throw new Error('email reply handler received non-button action');
+        throw new Error(
+          `email saveDraft handler received non-button action for user  ${body.user.id}`,
+        );
       }
 
       const message =
