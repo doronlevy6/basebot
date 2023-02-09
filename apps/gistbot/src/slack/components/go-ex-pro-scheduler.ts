@@ -14,6 +14,9 @@ export const GoExProScheduler = (
   }
   return [
     {
+      type: 'divider',
+    },
+    {
       type: 'context',
       elements: [
         {

@@ -34,13 +34,9 @@ export const ScheduledMultiChannelSummary = (
       },
     },
     ...MultiChannelSummary(formattedSummaries, sessionId),
-    {
-      type: 'divider',
-    },
+
     ...goProBtn,
-    {
-      type: 'divider',
-    },
+
     ...ChatIntroBanner(userId),
   ];
 };

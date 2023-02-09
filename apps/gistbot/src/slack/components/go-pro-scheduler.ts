@@ -16,6 +16,9 @@ export const GoProScheduler = (
   }
   return [
     {
+      type: 'divider',
+    },
+    {
       type: 'context',
       elements: [
         {
