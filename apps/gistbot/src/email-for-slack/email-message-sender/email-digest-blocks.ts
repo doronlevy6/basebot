@@ -50,7 +50,7 @@ const rsvpAction = (message: DigestMessage): Button => {
       emoji: true,
     },
     value: message.id,
-    action_id: Routes.MAIL_MARK_ALL_AS_READ,
+    action_id: Routes.MAIL_RSVP,
   };
 };
 
