@@ -46,6 +46,7 @@ services:
       - 3002:3000
       - 9230:9229
 
+
   treasury:
     build:
       dockerfile: ./build/Dockerfile.local
@@ -68,6 +69,33 @@ services:
     ports:
       - 3003:3000
       - 9233:9229
+
+
+  mailbot:
+    build:
+      dockerfile: ../mail-bot/build/images/Dockerfile.local
+      context: ../mail-bot
+    volumes:
+      - ../mail-bot/src:/app/src
+      - ../mail-bot/configs:/app/configs
+      - ../mail-bot/secrets:/app/secrets
+    command: npm run start:debug
+    depends_on:
+      - postgres
+      - redis
+      - sqs
+    environment:
+      NODE_ENV: local
+      NODE_OVERRIDE_ENV: local
+      PORT: 3000
+      AWS_ACCESS_KEY_ID: xxx
+      AWS_SECRET_ACCESS_KEY: xxx
+      OAUTH_REDIRECT_BASE_URL: "https://${USER?Missing User Value}-tunnel.baselabs.dev/mail/oauth-public"
+      MAIL_BOT_OAUTH_API: "https://${USER?Missing User Value}-tunnel.baselabs.dev"
+      MAIL_BOT_SERVICE_API: "https://${USER?Missing User Value}-tunnel.baselabs.dev"
+    ports:
+      - 3004:3000
+      - 9234:9229
 
 # Databases
   postgres:

@@ -73,6 +73,21 @@ export const slashCommandRouter = (
 
     if (text === 'get mails') {
       await props.ack();
+      await responder(
+        respond,
+        client,
+        'Fetching your emails',
+        [
+          {
+            type: 'section',
+            text: { type: 'mrkdwn', text: 'Fetching your emails...' },
+          },
+        ],
+        channel_id,
+        user_id,
+        { response_type: 'in_channel' },
+      );
+
       const url = new URL(BASE_URL);
       url.pathname = '/mail/gmail-client';
       try {
@@ -91,6 +106,7 @@ export const slashCommandRouter = (
         logger.error(
           `get mails handler error:${url.toString()} ${e} ${e.stack}`,
         );
+        return;
       }
     }
 
