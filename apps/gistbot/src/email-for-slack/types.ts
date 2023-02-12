@@ -31,6 +31,7 @@ export class DigestMessage {
   id: string;
   actions: DigestAction[];
   title: string;
+  timeStamp?: string;
   body: string;
   from: string;
   link?: string;

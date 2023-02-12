@@ -80,12 +80,16 @@ const createEmailDigestHeader = (title: string): KnownBlock => {
 
 const createEmailDigestMessage = (messages: DigestMessage[]): KnownBlock[] => {
   return messages.flatMap((message) => {
+    // If there is a timestamp, add it at the end of title.
+    const messageTitle = message.timeStamp
+      ? `*${message.title}* (${message.timeStamp}) \n\n${message.body}`
+      : `*${message.title}*\n\n${message.body}`;
     const blocks: KnownBlock[] = [];
     const bodySection: KnownBlock = {
       type: 'section',
       text: {
         type: 'mrkdwn',
-        text: `*${message.title}*\n\n${message.body}`,
+        text: messageTitle,
       },
     };
     blocks.push(bodySection);
