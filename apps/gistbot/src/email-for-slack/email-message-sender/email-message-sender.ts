@@ -102,6 +102,8 @@ export class EmailMessageSender {
         channel: slackUserId,
         text: 'Your Email Summary ',
         blocks: chunkOfBlocks,
+        unfurl_links: false,
+        unfurl_media: false,
       });
     }
   }
