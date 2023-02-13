@@ -53,8 +53,8 @@ export const emailReplySubmitHandler = () => async (params: ViewAction) => {
     }
 
     const { id, from } = JSON.parse(body.view.private_metadata);
-    const message =
-      view.state.values['reply']['static_select-action'].selected_option?.value;
+    const message = view.state.values['reply']['reply-text']?.value;
+
     const url = new URL(MAIL_BOT_SERVICE_API);
     url.pathname = REPLY_PATH;
 

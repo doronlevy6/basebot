@@ -6,17 +6,6 @@ interface IProps {
   address?: string;
 }
 
-const replies = ['Great!', 'Sounds good, lets Sync about that later'];
-const repliesBlocks = replies.map((reply) => {
-  return {
-    text: {
-      type: 'plain_text',
-      text: reply,
-      emoji: true,
-    },
-    value: reply,
-  };
-});
 export const ReplyMailView: (props: IProps) => ModalView = ({
   metadata,
   submitCallback,
@@ -61,15 +50,16 @@ export const ReplyMailView: (props: IProps) => ModalView = ({
         type: 'input',
         block_id: 'reply',
         element: {
-          type: 'static_select',
-          initial_option: repliesBlocks[0],
+          type: 'plain_text_input',
+          multiline: true,
+          min_length: 1,
           placeholder: {
             type: 'plain_text',
             text: 'Select a reply',
             emoji: true,
           },
-          options: repliesBlocks,
-          action_id: 'static_select-action',
+
+          action_id: 'reply-text',
         },
         label: {
           type: 'plain_text',
