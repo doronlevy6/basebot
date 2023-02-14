@@ -36,6 +36,7 @@ export class DigestMessage {
   from: string;
   link?: string;
   relatedMails?: GmailMessage[];
+  readMoreBody?: string;
 }
 
 export class GmailMessage {
@@ -53,6 +54,7 @@ export enum DigestAction {
   Reply = 'reply',
   MarkAllAsRead = 'markAllAsRead',
   RSVP = 'rsvp',
+  ReadMore = 'readMore',
 }
 
 export class Classification {

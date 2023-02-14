@@ -1,6 +1,7 @@
 import { Button, KnownBlock } from '@slack/bolt';
 import { Routes } from '../../routes/router';
 import { DigestAction, DigestMessage, GmailDigestSection } from '../types';
+import { logger } from '@base/logger';
 
 const replyAction = (message: DigestMessage): Button => {
   return {
@@ -119,11 +120,48 @@ export const createDigestActions = (message: DigestMessage): Button[] => {
           return replyAction(message);
         case DigestAction.RSVP:
           return rsvpAction(message);
+        case DigestAction.ReadMore:
+          return readMoreAction(message);
       }
     })
     .filter((button) => {
       return button !== undefined;
     });
+};
+
+export const readMoreAction = (message: DigestMessage): Button => {
+  let title = 'Read More';
+
+  const relatedMails = message.relatedMails;
+  if (relatedMails) {
+    const classifications = relatedMails[0].classifications;
+    if (classifications) {
+      const type = classifications[0].type;
+      const titleWithCapital = type.charAt(0).toUpperCase() + type.slice(1);
+      title = titleWithCapital + ' - Read More';
+    } else {
+      logger.error('error in readMoreAction - classifications is undefined');
+    }
+  } else {
+    logger.error('error in readMoreAction - relatedMails is undefined');
+  }
+
+  const buttonValueMaxLength = 2000;
+  const titleAndBody = (title + '|' + message.readMoreBody).slice(
+    0,
+    buttonValueMaxLength,
+  );
+
+  return {
+    type: 'button',
+    text: {
+      type: 'plain_text',
+      text: 'Read more',
+      emoji: true,
+    },
+    value: titleAndBody,
+    action_id: Routes.MAIL_READ_MORE,
+  };
 };
 
 export const createEmailDigestBlocks = (sections: GmailDigestSection[]) => {

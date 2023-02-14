@@ -75,6 +75,7 @@ import {
   markAllAsReadHandler,
   markAsReadHandler,
   saveDraft,
+  emailReadMoreHandler,
 } from '../email-for-slack/handler';
 
 const ARRAY_CHAT_GIST_ACTIONS = [0, 1, 2];
@@ -106,6 +107,7 @@ export enum Routes {
   MAIL_MARK_ALL_AS_READ = 'mark-all-as-read',
   MAIL_SAVE_DRAFT = 'save_draft',
   MAIL_RSVP = 'rsvp',
+  MAIL_READ_MORE = 'mail-read-more',
   GISTLY_MODAL_SUBMIT = 'gistly-modal-submit',
   OPEN_SCHEDULER_SETTINGS = 'open-scheduler-settings',
   SCHEDULER_SETTINGS_MODAL_SUBMIT = 'scheduler-settings-modal-submit',
@@ -186,6 +188,8 @@ export const registerBoltAppRouter = (
     ),
   );
   app.action(Routes.MAIL_REPLY, emailReplyHandler());
+
+  app.action(Routes.MAIL_READ_MORE, emailReadMoreHandler());
 
   app.action(Routes.MAIL_MARK_AS_READ, markAsReadHandler());
 
