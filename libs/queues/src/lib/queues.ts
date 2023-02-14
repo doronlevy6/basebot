@@ -1,5 +1,5 @@
 import { logger } from '@base/logger';
-import { Worker, Queue, QueueScheduler, Processor } from 'bullmq';
+import { Worker, Queue, Processor } from 'bullmq';
 import { createRedis } from './redisConfig';
 import { IQueueConfig, QueueWrapper } from './types';
 
@@ -21,12 +21,7 @@ export function createQueue(
     },
   });
 
-  const queueScheduler = new QueueScheduler(queueName, {
-    prefix: cfg.prefix,
-    connection: connection,
-  });
-
-  return { queue: queue, scheduler: queueScheduler };
+  return { queue: queue };
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -48,7 +43,7 @@ export function createQueueWorker<T = any>(
 
   worker.on('failed', (job, error) => {
     logger.error(
-      `failed job ${job.id} with error ${error.message}, ${error.stack}`,
+      `failed job ${job?.id} with error ${error.message}, ${error.stack}`,
     );
   });
 

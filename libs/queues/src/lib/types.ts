@@ -1,4 +1,4 @@
-import { Queue, QueueScheduler } from 'bullmq';
+import { Queue } from 'bullmq';
 
 export interface IQueueConfig {
   prefix: string;
@@ -11,5 +11,4 @@ export interface IQueueConfig {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface QueueWrapper<T = any> {
   queue: Queue<T>;
-  scheduler: QueueScheduler;
 }

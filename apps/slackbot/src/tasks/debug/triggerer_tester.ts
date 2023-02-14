@@ -31,9 +31,7 @@ export class TriggerTester {
 
   async close() {
     await this.taskStatusQueue.queue.close();
-    await this.taskStatusQueue.scheduler.close();
     await this.nudegQueue.queue.close();
-    await this.nudegQueue.scheduler.close();
   }
 
   async addTaskToQueue(user: User, task: Task, firstTimeAsking: boolean) {

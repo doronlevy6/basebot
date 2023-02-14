@@ -61,7 +61,6 @@ export class ScheduledMessageSender {
 
   async close() {
     await this.messageSenderQueue.queue.close();
-    await this.messageSenderQueue.scheduler.close();
     await this.messageSenderWorker.close();
   }
 

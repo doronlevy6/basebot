@@ -38,7 +38,6 @@ export class ImportController {
 
   async close() {
     await this.queueWrapper.queue.close();
-    await this.queueWrapper.scheduler.close();
     await this.worker.close();
     await this.refreshWorker.close();
   }

@@ -18,7 +18,6 @@ class Analytics {
 
   async close() {
     await this.analyticsQueue.queue.close();
-    await this.analyticsQueue.scheduler.close();
   }
 
   private async sendEventToBase(data: IAnalyticsEvent) {
