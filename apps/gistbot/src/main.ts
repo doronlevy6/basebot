@@ -342,6 +342,7 @@ const startApp = async () => {
     mailbotQueueCfg,
     pgStore,
     analyticsManager,
+    slackDataStore,
   );
 
   const summarySchedulerJob = new SummarySchedulerJob(

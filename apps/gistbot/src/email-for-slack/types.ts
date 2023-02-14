@@ -1,4 +1,4 @@
-import { gmail_v1 } from 'googleapis';
+export const MAIL_BOT_SERVICE_API = process.env.MAIL_BOT_SERVICE_API || '';
 
 export enum JobsTypes {
   DIGEST = 'digest',

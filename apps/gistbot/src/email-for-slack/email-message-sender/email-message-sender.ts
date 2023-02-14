@@ -13,6 +13,8 @@ import { GmailDigest, JobsTypes, SlackIdToMailResponse } from '../types';
 import { UserLink } from '../../slack/components/user-link';
 import { KnownBlock } from '@slack/bolt';
 import { createEmailDigestBlocks } from './email-digest-blocks';
+import { saveDefaultEmailDigestSettings } from '../email-digest-settings/email-digest-settings';
+import { SlackDataStore } from '../../utils/slack-data-store';
 
 const QUEUE_NAME = 'emailMessageSender';
 
@@ -25,6 +27,7 @@ export class EmailMessageSender {
     queueCfg: IQueueConfig,
     private installationStore: PgInstallationStore,
     private analyticsManager: AnalyticsManager,
+    private slackDataStore: SlackDataStore,
   ) {
     this.queueCfg = queueCfg;
   }
@@ -68,27 +71,33 @@ export class EmailMessageSender {
         ``;
         break;
       case JobsTypes.ONBOARDING:
-        await this.sendOnboarding(job.data as SlackIdToMailResponse);
+        await this.handleOnboarding(job.data as SlackIdToMailResponse);
     }
   }
 
   private async sendDigest(data: GmailDigest) {
     logger.debug({ msg: 'send scheduled message starting', job: data });
+    const { slackUserId, slackTeamId, userId } = data.metedata;
+    try {
+      const installation =
+        await this.installationStore.fetchInstallationByTeamId(slackTeamId);
 
-    const { slackUserId, slackTeamId } = data.metedata;
-    const installation = await this.installationStore.fetchInstallationByTeamId(
-      slackTeamId,
-    );
+      if (!installation.bot?.token) {
+        throw new Error(`no bot token for team ${slackTeamId}`);
+      }
 
-    if (!installation.bot?.token) {
-      throw new Error(`no bot token for team ${slackTeamId}`);
+      const textBlocks = createEmailDigestBlocks(data.sections);
+      const client = new WebClient(installation.bot?.token);
+      await this.sendDividedMessage(textBlocks, client, slackUserId);
+
+      logger.debug({
+        msg: `send email digest message completed for user email: ${userId}, slackUserId: ${slackUserId}`,
+      });
+    } catch (e) {
+      logger.error(
+        `error in sending email digest for user email: ${userId}, slackUserId: ${slackUserId}, ${e}`,
+      );
     }
-
-    const textBlocks = createEmailDigestBlocks(data.sections);
-    const client = new WebClient(installation.bot?.token);
-    await this.sendDividedMessage(textBlocks, client, slackUserId);
-
-    logger.debug({ msg: 'send email message completed' });
   }
 
   private async sendDividedMessage(
@@ -108,40 +117,52 @@ export class EmailMessageSender {
     }
   }
 
-  private async sendOnboarding(data: SlackIdToMailResponse) {
+  private async handleOnboarding(data: SlackIdToMailResponse) {
     logger.debug({
       msg: 'sendOnboarding for gmail message starting',
       job: data,
     });
 
-    const { slackUserId, slackTeamId } = data;
-    const installation = await this.installationStore.fetchInstallationByTeamId(
-      slackTeamId,
-    );
+    const { slackUserId, slackTeamId, email } = data;
+    try {
+      const installation =
+        await this.installationStore.fetchInstallationByTeamId(slackTeamId);
 
-    if (!installation.bot?.token) {
-      throw new Error(`no bot token for team ${slackTeamId}`);
-    }
+      if (!installation.bot?.token) {
+        throw new Error(`no bot token for team ${slackTeamId}`);
+      }
 
-    const client = new WebClient(installation.bot?.token);
-    await client.chat.postMessage({
-      channel: slackUserId,
-      text: `:wave: Hey ${UserLink(
+      const client = new WebClient(installation.bot?.token);
+      await saveDefaultEmailDigestSettings(
         slackUserId,
-      )}, you successfuly logged in to Gistbot for Gmail!`,
-      blocks: [
-        {
-          type: 'section',
-          text: {
-            type: 'mrkdwn',
-            text: `:wave: Hey ${UserLink(
-              slackUserId,
-            )}, you successfuly logged in to Gistbot for Gmail!`,
+        slackTeamId,
+        email,
+        client,
+        this.slackDataStore,
+      );
+      await client.chat.postMessage({
+        channel: slackUserId,
+        text: `:wave: Hey ${UserLink(
+          slackUserId,
+        )}, you successfuly logged in to Gistbot for Gmail!`,
+        blocks: [
+          {
+            type: 'section',
+            text: {
+              type: 'mrkdwn',
+              text: `:wave: Hey ${UserLink(
+                slackUserId,
+              )}, you successfuly logged in to Gistbot for Gmail!`,
+            },
           },
-        },
-      ],
-    });
+        ],
+      });
 
-    logger.debug({ msg: 'send onboarding for Gist for Gmail completed' });
+      logger.debug({ msg: 'send onboarding for Gist for Gmail completed' });
+    } catch (e) {
+      logger.error(
+        `error in handleOnboarding for user email: ${email}, slackUserId: ${slackUserId}, ${e}`,
+      );
+    }
   }
 }

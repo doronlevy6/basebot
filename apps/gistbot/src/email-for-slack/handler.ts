@@ -2,8 +2,8 @@ import { SlackBlockActionWrapper, ViewAction } from '../slack/types';
 import { ReplyMailView } from './email-reply-view';
 import { Routes } from '../routes/router';
 import axios from 'axios';
+import { MAIL_BOT_SERVICE_API } from './types';
 
-const MAIL_BOT_SERVICE_API = process.env.MAIL_BOT_SERVICE_API || '';
 const REPLY_PATH = '/mail/gmail-client/sendReply';
 const MARK_AS_READ_PATH = '/mail/gmail-client/markAsRead';
 const MARK_ALL_AS_READ_PATH = '/mail/bulk-actions/mark-as-read';
@@ -127,7 +127,6 @@ export const markAllAsReadHandler =
     try {
       logger.debug(`mark all as read handler for user ${body.user.id}`);
       if (!body.team?.id) {
-        // TODO
         logger.error(
           `team id not exist for user ${body.user.id} in markAllAsReadHandler`,
         );

@@ -85,7 +85,7 @@ export const slashCommandRouter = (
         ],
         channel_id,
         user_id,
-        { response_type: 'in_channel' },
+        { response_type: 'ephemeral' },
       );
 
       const url = new URL(BASE_URL);
