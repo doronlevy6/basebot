@@ -35,7 +35,6 @@ export class SummarySchedulerJob {
     private scheduledMessageSender: ScheduledMessageSender,
     private onboardingManager: OnboardingManager,
   ) {}
-
   start() {
     cron.schedule(
       `0 */${JOB_MINUTES_INTERVAL} * * * ${this.tempWeekDays}`,
@@ -168,6 +167,7 @@ export class SummarySchedulerJob {
           number_of_successful_summaries: summaryMetrics.successful,
           number_of_moderated_summaries: summaryMetrics.moderated,
           number_of_too_small_summaries: summaryMetrics.channel_too_small,
+          number_of_insuficent_messages: summaryMetrics.no_msg_error,
           number_of_error_summaries: summaryMetrics.general_error,
         },
       });
@@ -224,6 +224,7 @@ export class SummarySchedulerJob {
       channel_too_small: 0,
       general_error: 0,
       successful: 0,
+      no_msg_error: 0,
     };
     summaries.summaries.forEach((summary) => {
       if (summary.error) {

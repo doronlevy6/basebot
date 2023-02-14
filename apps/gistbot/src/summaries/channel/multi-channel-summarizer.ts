@@ -9,13 +9,18 @@ import {
 } from '../types';
 import { delay, retry } from '../../utils/retry';
 import { ModerationError } from '../errors/moderation-error';
+import { NoMessagesError } from '../errors/no-messages-error';
 import { formatMultiChannelSummary } from '../../slack/summary-formatter';
 import { MessagesSummarizer } from '../messages/messages-summarizer';
 import { generateIDAsync } from '../../utils/id-generator.util';
 import { SlackDataStore } from '../../utils/slack-data-store';
 import { ChannelSummaryStore } from '../channel-summary-store';
 
-export type OutputError = 'channel_too_small' | 'moderated' | 'general_error';
+export type OutputError =
+  | 'channel_too_small'
+  | 'moderated'
+  | 'general_error'
+  | 'no_msg_error';
 
 interface Summarization {
   channelId: string;
@@ -224,7 +229,14 @@ export class MultiChannelSummarizer {
           error: 'moderated',
         };
       }
-
+      if (error instanceof NoMessagesError) {
+        return {
+          channelId: channel.channelId,
+          channelName: channel.channelName,
+          summary: '',
+          error: 'no_msg_error',
+        };
+      }
       return {
         channelId: channel.channelId,
         channelName: channel.channelName,

@@ -95,7 +95,7 @@ export class ChannelSummarizer {
           },
         });
 
-        const text = `This channel does not have any messages in the last ${daysBack} day${
+        const text = `There weren't any meaningful conversations in the last ${daysBack} day${
           daysBack > 1 ? 's' : ''
         }, so we cannot currently create a summary.`;
         const blocks: KnownBlock[] = [
@@ -285,8 +285,9 @@ export class ChannelSummarizer {
         );
 
       if (error instanceof NoMessagesError) {
-        const text =
-          "Unfortunately we couldn't process a summarization on these messages at the moment, but we are adding more and more capabilities and languages every day. If you'd like to request something specific feel free to reach out to us at support@thegist.ai";
+        const text = `There weren't any meaningful conversations in the last ${daysBack} day${
+          daysBack > 1 ? 's' : ''
+        }, so we cannot currently create a summary.`;
         await responder(
           respond,
           client,
