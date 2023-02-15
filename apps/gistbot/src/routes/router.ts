@@ -183,7 +183,6 @@ export const registerBoltAppRouter = (
       analyticsManager,
       featureRateLimiter,
       schedulerSettingsManager,
-      chatMessagesManager,
       multiChannelSummarizer,
     ),
   );
