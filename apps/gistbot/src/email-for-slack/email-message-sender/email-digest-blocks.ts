@@ -118,15 +118,13 @@ export const createDigestActions = (message: DigestMessage): Button[] => {
           return markAllAsReadAction(message);
         case DigestAction.Reply:
           return replyAction(message);
-        case DigestAction.RSVP:
-          return rsvpAction(message);
         case DigestAction.ReadMore:
           return readMoreAction(message);
       }
     })
     .filter((button) => {
       return button !== undefined;
-    });
+    }) as Button[];
 };
 
 export const readMoreAction = (message: DigestMessage): Button => {
