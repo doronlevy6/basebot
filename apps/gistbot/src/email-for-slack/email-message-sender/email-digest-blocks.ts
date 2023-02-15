@@ -74,7 +74,7 @@ const createEmailDigestHeader = (title: string): KnownBlock => {
     type: 'header',
     text: {
       type: 'plain_text',
-      text: `${title}`.toUpperCase(),
+      text: `${title}`,
     },
   };
 };
