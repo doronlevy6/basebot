@@ -4,6 +4,8 @@ import { Routes } from '../routes/router';
 import axios from 'axios';
 import { MAIL_BOT_SERVICE_API } from './types';
 import { ReadMoreView } from './email-read-more-view';
+import { BlockAction, BlockElementAction, ButtonAction } from '@slack/bolt';
+import { Block, Logger, WebClient } from '@slack/web-api';
 
 const REPLY_PATH = '/mail/gmail-client/sendReply';
 const MARK_AS_READ_PATH = '/mail/gmail-client/markAsRead';
@@ -122,8 +124,15 @@ export const emailReplySubmitHandler = () => async (params: ViewAction) => {
 
 export const markAsReadHandler =
   () =>
-  async ({ ack, logger, body }: SlackBlockActionWrapper) => {
+  async ({ ack, logger, body, client }: SlackBlockActionWrapper) => {
     await ack();
+    const action = body.actions[0];
+    if (action.type !== 'button') {
+      throw new Error(
+        `email markAsReadHandler received non-button action for user ${body.user.id}`,
+      );
+    }
+
     try {
       logger.debug(`mark as read handler for user ${body.user.id}`);
       if (!body.team?.id) {
@@ -133,18 +142,12 @@ export const markAsReadHandler =
         return;
       }
 
-      const action = body.actions[0];
-      if (action.type !== 'button') {
-        throw new Error(
-          `email markAsReadHandler received non-button action for user ${body.user.id}`,
-        );
-      }
-
+      await updateMarkAsReadButton(body, action, logger, client, true);
       const mailId = action.value;
       const url = new URL(MAIL_BOT_SERVICE_API);
       url.pathname = MARK_AS_READ_PATH;
 
-      await axios.post(
+      const response = await axios.post(
         url.toString(),
         {
           slackUserId: body.user.id,
@@ -155,16 +158,92 @@ export const markAsReadHandler =
           timeout: 60000,
         },
       );
+
+      if (response.status !== 200 && response.status !== 201) {
+        logger.error(
+          `email markAsReadHandler wasn't able to mark as read for user ${body.user.id} with response ${response.status}`,
+        );
+        await updateMarkAsReadButton(body, action, logger, client, false);
+      }
     } catch (e) {
+      await updateMarkAsReadButton(body, action, logger, client, false);
       logger.error(`error in markAsReadHandler for user ${body.user.id}, ${e}`);
       throw e;
     }
   };
 
+async function updateMarkAsReadButton(
+  body: BlockAction<BlockElementAction>,
+  action: ButtonAction,
+  logger: Logger,
+  client: WebClient,
+  success: boolean,
+) {
+  const buttonText = success ? 'Read ✅' : 'Failed :(';
+  const updatedBlocks = body.message?.blocks;
+  let didFindButton = false;
+  updatedBlocks.forEach((block) => {
+    if (block.elements) {
+      block.elements.forEach((element) => {
+        if (
+          element.type === 'button' &&
+          element.value == action.value &&
+          element.action_id == action.action_id
+        ) {
+          element.text.text = buttonText;
+          didFindButton = true;
+        }
+      });
+    }
+  });
+
+  if (!didFindButton) {
+    logger.error(
+      `email markAsReadHandler couldn't find button to update for user ${body.user.id}`,
+    );
+  }
+
+  await updateBlocks(body, client, updatedBlocks, logger);
+}
+
+async function updateBlocks(
+  body: BlockAction<BlockElementAction>,
+  client: WebClient,
+  updatedBlocks: Block[],
+  logger: Logger,
+) {
+  const message_ts = body.message?.ts;
+  const channel_id = body.channel?.id;
+  if (message_ts && channel_id) {
+    const response = await client.chat.update({
+      channel: channel_id,
+      ts: message_ts,
+      blocks: updatedBlocks,
+      attachments: [],
+    });
+    if (!response.ok) {
+      logger.error(
+        `error in markAsReadHandler, couldn't update blocks. Error: ${response.error}`,
+      );
+    }
+  } else {
+    logger.error(
+      `error in markAsReadHandler, couldn't get message or channel ids for user ${body.user.id}`,
+    );
+  }
+}
+
 export const markAllAsReadHandler =
   () =>
-  async ({ ack, logger, body }: SlackBlockActionWrapper) => {
+  async ({ ack, logger, body, client }: SlackBlockActionWrapper) => {
     await ack();
+    const action = body.actions[0];
+    if (action.type !== 'button') {
+      throw new Error(
+        `markAllAsReadHandler received non-button action for user ${body.user.id}`,
+      );
+    }
+
     try {
       logger.debug(`mark all as read handler for user ${body.user.id}`);
       if (!body.team?.id) {
@@ -174,18 +253,12 @@ export const markAllAsReadHandler =
         return;
       }
 
-      const action = body.actions[0];
-      if (action.type !== 'button') {
-        throw new Error(
-          `markAllAsReadHandler received non-button action for user ${body.user.id}`,
-        );
-      }
-
+      await updateMarkAsReadButton(body, action, logger, client, true);
       const mailId = action.value;
       const url = new URL(MAIL_BOT_SERVICE_API);
       url.pathname = MARK_ALL_AS_READ_PATH;
 
-      await axios.post(
+      const response = await axios.post(
         url.toString(),
         {
           slackUserId: body.user.id,
@@ -196,7 +269,14 @@ export const markAllAsReadHandler =
           timeout: 60000,
         },
       );
+      if (response.status !== 200 && response.status !== 201) {
+        logger.error(
+          `email markAllAsReadHandler wasn't able to mark as read for user ${body.user.id} with response ${response.status}`,
+        );
+        await updateMarkAsReadButton(body, action, logger, client, false);
+      }
     } catch (e) {
+      await updateMarkAsReadButton(body, action, logger, client, false);
       logger.error(
         `error in markAllAsReadHandler for user ${body.user.id}, ${e}`,
       );
