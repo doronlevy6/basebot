@@ -9,7 +9,9 @@ export const getMailsCommand = async ({
   client,
   respond,
   body: { user_id, channel_id, team_id },
+  ack,
 }: SlackSlashCommandWrapper) => {
+  await ack();
   await responder(
     respond,
     client,

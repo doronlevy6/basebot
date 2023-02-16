@@ -5,7 +5,9 @@ export const connectGmailCommand = async ({
   client,
   command,
   body: { user_id },
+  ack,
 }: SlackSlashCommandWrapper) => {
+  await ack();
   await client.chat.postMessage({
     channel: user_id,
     text: 'Hi there :wave:',

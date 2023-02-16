@@ -23,12 +23,15 @@ import {
 export const showEmailDigestSettingsModal =
   (analyticsManager: AnalyticsManager) =>
   async ({
+    ack,
     logger,
     body,
     client,
   }: SlackBlockActionWrapper | SlackSlashCommandWrapper) => {
     try {
       logger.debug(`Showing email digest modal ${body}`);
+
+      await ack();
       const teamId = (body as SlashCommand).team_id ?? body.team?.id;
       const userId = (body as SlashCommand).user_id ?? body.user?.id;
       if (!teamId || !userId) {

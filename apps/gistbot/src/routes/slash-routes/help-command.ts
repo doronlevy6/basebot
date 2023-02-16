@@ -7,7 +7,9 @@ export const helpCommand = async ({
   client,
   command,
   body: { channel_id, user_id },
+  ack,
 }: SlackSlashCommandWrapper) => {
+  await ack();
   await responder(
     respond,
     client,

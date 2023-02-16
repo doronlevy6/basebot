@@ -9,9 +9,11 @@ export const multiChannelSummaryCommand = async (
     client,
     command: { text },
     body: { team_id, user_id, channel_id },
+    ack,
   }: SlackSlashCommandWrapper,
   multiChannelSummarizer: MultiChannelSummarizer,
 ) => {
+  await ack();
   const parsedMrkdwn = parseSlackMrkdwn(text || '');
   parsedMrkdwn.sections.shift();
   if (parsedMrkdwn.sections.find((v) => v.type === 'channel_link')) {
