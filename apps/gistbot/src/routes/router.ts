@@ -514,11 +514,6 @@ export const registerBoltAppRouter = (
     }
   });
 
-  // This is a general message event handler to log all received messages
-  app.event('message', async ({ event, logger }) => {
-    logger.info(event);
-  });
-
   app.action(Routes.MAIL_MARK_AS_READ, markAsReadHandler());
 
   app.action(Routes.MAIL_SAVE_DRAFT, saveDraft());

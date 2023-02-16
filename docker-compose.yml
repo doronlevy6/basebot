@@ -15,7 +15,7 @@ services:
       - redis
       - sqs
     environment:
-      NODE_OVERRIDE_ENV: local
+      NODE_OVERRIDE_ENV: local${LOCAL_ENV}
       PORT: 3000
       AWS_ACCESS_KEY_ID: xxx
       AWS_SECRET_ACCESS_KEY: xxx
@@ -38,7 +38,7 @@ services:
       - redis
       - sqs
     environment:
-      NODE_OVERRIDE_ENV: local
+      NODE_OVERRIDE_ENV: local${LOCAL_ENV}
       PORT: 3000
       AWS_ACCESS_KEY_ID: xxx
       AWS_SECRET_ACCESS_KEY: xxx
@@ -62,7 +62,7 @@ services:
       - redis
       - sqs
     environment:
-      NODE_OVERRIDE_ENV: local
+      NODE_OVERRIDE_ENV: local${LOCAL_ENV}
       PORT: 3000
       AWS_ACCESS_KEY_ID: xxx
       AWS_SECRET_ACCESS_KEY: xxx
@@ -90,12 +90,24 @@ services:
       PORT: 3000
       AWS_ACCESS_KEY_ID: xxx
       AWS_SECRET_ACCESS_KEY: xxx
-      OAUTH_REDIRECT_BASE_URL: "https://${USER?Missing User Value}-tunnel.baselabs.dev/mail/oauth-public"
-      MAIL_BOT_OAUTH_API: "https://${USER?Missing User Value}-tunnel.baselabs.dev"
-      MAIL_BOT_SERVICE_API: "https://${USER?Missing User Value}-tunnel.baselabs.dev"
+      OAUTH_REDIRECT_BASE_URL: https://gistbot-mailbot${LOCAL_ENV}.ngrok.io/mail/oauth-public
+
     ports:
       - 3004:3000
       - 9234:9229
+
+  bull-board:
+    image: probablynot/bull-board-docker:5f09cbf7e76fa6f684a4f3aeb4b23cb6fa80a7cd
+    volumes:
+      - ./build:/configs
+    environment:
+      CONFIG_FILE: /configs/bullboardConfig.json
+    depends_on:
+      - mail-bot
+      - redis
+    restart: on-failure
+    ports:
+      - 3005:3000
 
 # Databases
   postgres:

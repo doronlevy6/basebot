@@ -1,0 +1,25 @@
+{
+  "redisConfig": {
+    "cluster": false,
+    "host": "redis",
+    "port": 6379
+  },
+  "queues": [
+    {
+      "prefix": "{mailbot:queues:local}",
+      "name": "digest"
+    },
+    {
+      "prefix": "{mailbot:queues:local}",
+      "name": "emailMessageSender"
+    },
+    {
+      "prefix": "{mailbot:queues:staging}",
+      "name": "digest"
+    },
+    {
+      "prefix": "{mailbot:queues:staging}",
+      "name": "emailMessageSender"
+    }
+  ]
+}
