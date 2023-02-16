@@ -143,7 +143,7 @@ export class EmailMessageSender {
         channel: slackUserId,
         text: `:wave: Hey ${UserLink(
           slackUserId,
-        )}, you successfuly logged in to Gistbot for Gmail!`,
+        )}, you successfuly logged in to Gistbot for Gmail!\nType \`/gist get mails\` to get your first digest.`,
         blocks: [
           {
             type: 'section',
