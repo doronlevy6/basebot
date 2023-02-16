@@ -1,5 +1,9 @@
 import { SlackBlockActionWrapper, ViewAction } from '../slack/types';
-import { ReplyMailView } from './email-reply-view';
+import {
+  replyBlockId,
+  replayElementActionID,
+  ReplyMailView,
+} from './email-reply-view';
 import { Routes } from '../routes/router';
 import axios from 'axios';
 import { MAIL_BOT_SERVICE_API } from './types';
@@ -301,10 +305,8 @@ export const saveDraft =
           `email saveDraft handler received non-button action for user  ${body.user.id}`,
         );
       }
-
       const message =
-        body.view?.state.values['reply']['static_select-action'].selected_option
-          ?.value;
+        body.view?.state.values[replyBlockId][replayElementActionID]?.value;
       const { id, from } = JSON.parse(body.view?.private_metadata || '');
 
       const url = new URL(MAIL_BOT_SERVICE_API);
