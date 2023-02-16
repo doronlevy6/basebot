@@ -45,18 +45,21 @@ export const slashCommandRouter = (
     logger.info(
       `Running command ${text} for user ${user_id} on team ${team_id}}`,
     );
-    await ack();
+
     if (text === 'help') {
+      await ack();
       await helpCommand(props);
       return;
     }
 
     if (text === 'gmail') {
+      await ack();
       await connectGmailCommand(props);
       return;
     }
 
     if (text === 'get mails') {
+      await ack();
       await getMailsCommand(props);
       return;
     }
@@ -65,21 +68,25 @@ export const slashCommandRouter = (
       text === 'allow more' &&
       (isBaseTeamWorkspace(team_id) || isItayOnLenny(user_id, team_id))
     ) {
+      await ack();
       await increaseLimitsCommand(props, featureRateLimiter);
       return;
     }
 
     if (text.startsWith('multi')) {
+      await ack();
       await multiChannelSummaryCommand(props, multiChannelSummarizer);
       return;
     }
 
     if (text === 'settings') {
+      await ack();
       await summarySchedulerSettings(props);
       return;
     }
 
     if (text === 'gmail-settings') {
+      await ack();
       await showEmailSettings(props);
       return;
     }
