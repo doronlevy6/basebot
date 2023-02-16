@@ -92,11 +92,34 @@ export class EmailMessageSender {
       logger.debug({
         msg: `send email digest message completed for user email: ${userId}, slackUserId: ${slackUserId}`,
       });
+
+      this.sendDigestAnalytics(data);
     } catch (e) {
       logger.error(
         `error in sending email digest for user email: ${userId}, slackUserId: ${slackUserId}, ${e}`,
       );
     }
+  }
+
+  private sendDigestAnalytics(data: GmailDigest) {
+    const { slackUserId, slackTeamId, userId } = data.metedata;
+    const sectionStats = data.sections
+      .map((s) => ({
+        name: s.title,
+        count: s.messages.length,
+      }))
+      .reduceRight((acc, curr) => {
+        acc[curr.name] = curr.count;
+        return acc;
+      }, {} as Record<string, number>);
+    this.analyticsManager.gmailDigestSent({
+      slackUserId,
+      slackTeamId,
+      extraParams: {
+        email: userId,
+        ...sectionStats,
+      },
+    });
   }
 
   private async sendDividedMessage(
@@ -139,22 +162,30 @@ export class EmailMessageSender {
         client,
         this.slackDataStore,
       );
+      const text = `:wave: Hey ${UserLink(
+        slackUserId,
+      )}, you successfuly logged in to Gistbot for Gmail!\nType \`/gist get mails\` to get your first digest.`;
       await client.chat.postMessage({
         channel: slackUserId,
-        text: `:wave: Hey ${UserLink(
-          slackUserId,
-        )}, you successfuly logged in to Gistbot for Gmail!\nType \`/gist get mails\` to get your first digest.`,
+        text,
         blocks: [
           {
             type: 'section',
             text: {
               type: 'mrkdwn',
-              text: `:wave: Hey ${UserLink(
-                slackUserId,
-              )}, you successfuly logged in to Gistbot for Gmail!`,
+              text,
             },
           },
         ],
+      });
+
+      this.analyticsManager.gmailOnboardingFunnel({
+        funnelStep: 'completed',
+        slackUserId,
+        slackTeamId,
+        extraParams: {
+          email,
+        },
       });
 
       logger.debug({ msg: 'send onboarding for Gist for Gmail completed' });

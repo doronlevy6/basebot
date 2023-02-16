@@ -51,7 +51,7 @@ export const slashCommandRouter = (
     }
 
     if (text === 'gmail') {
-      await connectGmailCommand(props);
+      await connectGmailCommand(props, analyticsManager);
       return;
     }
 

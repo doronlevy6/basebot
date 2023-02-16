@@ -553,4 +553,48 @@ export class AnalyticsManager {
       properties: { ...extraParams, type, channelId },
     });
   }
+
+  /**
+   * GMAIL Events
+   */
+
+  gmailOnboardingFunnel({
+    funnelStep,
+    slackUserId,
+    slackTeamId,
+    extraParams,
+  }: {
+    funnelStep: string;
+    slackUserId: string;
+    slackTeamId: string;
+    extraParams?: ExtraParams;
+  }) {
+    this.sendEventToAnalytics({
+      eventName: `gmail_onboarding_${funnelStep}`,
+      slackUserId: slackUserId,
+      slackTeamId: slackTeamId,
+      internalUserId: this.internalId(slackTeamId, slackUserId),
+      timestamp: new Date(),
+      properties: { ...extraParams },
+    });
+  }
+
+  gmailDigestSent({
+    slackUserId,
+    slackTeamId,
+    extraParams,
+  }: {
+    slackUserId: string;
+    slackTeamId: string;
+    extraParams?: ExtraParams;
+  }) {
+    this.sendEventToAnalytics({
+      eventName: `gmail_digest_sent`,
+      slackUserId: slackUserId,
+      slackTeamId: slackTeamId,
+      internalUserId: this.internalId(slackTeamId, slackUserId),
+      timestamp: new Date(),
+      properties: { ...extraParams },
+    });
+  }
 }
