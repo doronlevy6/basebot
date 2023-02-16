@@ -13,7 +13,7 @@ import { GmailDigest, JobsTypes, SlackIdToMailResponse } from '../types';
 import { UserLink } from '../../slack/components/user-link';
 import { KnownBlock } from '@slack/bolt';
 import { createEmailDigestBlocks } from './email-digest-blocks';
-import { saveDefaultEmailDigestSettings } from '../email-digest-settings/email-digest-settings';
+import { saveDefaultEmailDigestSettings } from '../email-digest-settings/email-digest-settings-client';
 import { SlackDataStore } from '../../utils/slack-data-store';
 
 const QUEUE_NAME = 'emailMessageSender';

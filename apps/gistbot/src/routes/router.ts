@@ -1,53 +1,72 @@
-import { App, directMention, InstallationStore, subtype } from '@slack/bolt';
+import { CustomerIdentifier } from '@base/customer-identifier';
 import { AnalyticsManager } from '@base/gistbot-shared';
-import { appHomeOpenedHandler } from '../onboarding/app-home-opened-handler';
-import { OnboardingManager } from '../onboarding/manager';
-import { addToChannelHandler } from '../slack/add-to-channel';
-import {
-  addToChannelsFromWelcomeMessageHandler,
-  addToChannelFromWelcomeModal,
-  addToChannelFromWelcomeModalHandler,
-} from '../slack/add-to-channel-from-welcome';
-import { privateChannelHandler } from '../slack/private-channel';
-import { mentionedInThreadMessage } from '../slack/mentioned-in-thread.middleware';
-import {
-  channelJoinHandler,
-  summarizeSuggestedChannelAfterJoin,
-} from '../summaries/channel-join-handler';
-import { channelSummaryFeedbackHandler } from '../summaries/channel/channel-summary-feedback';
-import { channelSummaryPostHandler } from '../summaries/channel/channel-summary-post';
-import { ChannelSummarizer } from '../summaries/channel/channel-summarizer';
-import { mentionHandler } from '../summaries/mention-handler';
-import { SummaryStore } from '../summaries/summary-store';
-import { threadSummarizationHandler } from '../summaries/thread-handler';
-import { threadSummaryFeedbackHandler } from '../summaries/thread/thread-summary-feedback';
-import { threadSummaryPostHandler } from '../summaries/thread/thread-summary-post';
-import { ThreadSummarizer } from '../summaries/thread/thread-summarizer';
-import { slashCommandRouter } from './slash-command-router';
-import {
-  mentionedInThreadHandler,
-  summarizeSuggestedThreadAfterMention,
-} from '../summaries/mentioned-in-thread-handler';
-import { NewUserTriggersManager } from '../new-user-triggers/manager';
-import { userOnboardingMiddleware } from '../onboarding/global-middleware';
-import { UserFeedbackManager } from '../user-feedback/manager';
-import {
-  handleStopNudge,
-  handleUserFeedbackSubmit,
-  handleUserTriggerFeedback,
-  openFeedbackModalHandler,
-} from '../user-feedback/handler';
-import { channelSummaryMoreTimeHandler } from '../summaries/channel-summary-more-time';
-import { SessionDataStore } from '../summaries/session-data/session-data-store';
 import { IReporter } from '@base/metrics';
-import { SlackBlockActionWrapper } from '../slack/types';
-import { FeatureRateLimiter } from '../feature-rate-limiter/rate-limiter';
+import { App, directMention, InstallationStore, subtype } from '@slack/bolt';
+import { chatActionItemHandler } from '../chat/chat-action-items-handler';
+import {
+  emailSettingsBrokenLinkSubmitted,
+  showEmailDigestBrokenLinksModal,
+} from '../email-for-slack/email-digest-settings/email-digest-broken-link-modal-handler';
+import {
+  saveEmailDigestSettingsHandler,
+  showEmailDigestSettingsModal,
+} from '../email-for-slack/email-digest-settings/email-digest-settings-modal-handler';
+import {
+  emailReadMoreHandler,
+  emailReplyHandler,
+  emailReplySubmitHandler,
+  markAllAsReadHandler,
+  markAsReadHandler,
+  saveDraft,
+} from '../email-for-slack/handler';
+import { ChatModel } from '../experimental/chat/chat.model';
+import { ChatManager } from '../experimental/chat/manager';
+import { GistlyModel } from '../experimental/gistly/gistly.model';
 import {
   handleGistlyModalSubmit,
   openGistlyModal,
 } from '../experimental/gistly/handler';
-import { GistlyModel } from '../experimental/gistly/gistly.model';
+import { FeatureRateLimiter } from '../feature-rate-limiter/rate-limiter';
+import { NewUserTriggersManager } from '../new-user-triggers/manager';
+import { appHomeOpenedHandler } from '../onboarding/app-home-opened-handler';
+import { userOnboardingMiddleware } from '../onboarding/global-middleware';
+import { OnboardingManager } from '../onboarding/manager';
+import { orgSettingsMiddleware } from '../orgsettings/middleware';
+import { OrgSettingsStore } from '../orgsettings/store';
+import { addToChannelHandler } from '../slack/add-to-channel';
+import {
+  addToChannelFromWelcomeModal,
+  addToChannelFromWelcomeModalHandler,
+  addToChannelsFromWelcomeMessageHandler,
+} from '../slack/add-to-channel-from-welcome';
+import { mentionedInChannelMessage } from '../slack/mentioned-in-channel.middleware';
+import { mentionedInThreadMessage } from '../slack/mentioned-in-thread.middleware';
+import { privateChannelHandler } from '../slack/private-channel';
+import { SlackBlockActionWrapper } from '../slack/types';
+import {
+  channelJoinHandler,
+  summarizeSuggestedChannelAfterJoin,
+} from '../summaries/channel-join-handler';
+import { channelSummaryMoreTimeHandler } from '../summaries/channel-summary-more-time';
+import { ChannelSummarizer } from '../summaries/channel/channel-summarizer';
+import { channelSummaryFeedbackHandler } from '../summaries/channel/channel-summary-feedback';
+import { channelSummaryPostHandler } from '../summaries/channel/channel-summary-post';
 import { MultiChannelSummarizer } from '../summaries/channel/multi-channel-summarizer';
+import { mentionHandler } from '../summaries/mention-handler';
+import {
+  mentionedInChannelHandler,
+  summarizeSuggestedChannelAfterMention,
+} from '../summaries/mentioned-in-channel-handler';
+import {
+  mentionedInThreadHandler,
+  summarizeSuggestedThreadAfterMention,
+} from '../summaries/mentioned-in-thread-handler';
+import { SessionDataStore } from '../summaries/session-data/session-data-store';
+import { SummaryStore } from '../summaries/summary-store';
+import { threadSummarizationHandler } from '../summaries/thread-handler';
+import { ThreadSummarizer } from '../summaries/thread/thread-summarizer';
+import { threadSummaryFeedbackHandler } from '../summaries/thread/thread-summary-feedback';
+import { threadSummaryPostHandler } from '../summaries/thread/thread-summary-post';
 import {
   summarySchedularSettingsButtonHandler,
   summarySchedularSettingsDisableHandler,
@@ -55,28 +74,17 @@ import {
   summarySchedularSettingsModalHandler,
 } from '../summary-scheduler/handler';
 import { SchedulerSettingsManager } from '../summary-scheduler/scheduler-manager';
-import { botIMRouter } from './bot-im-router';
-import { CustomerIdentifier } from '@base/customer-identifier';
-import { OrgSettingsStore } from '../orgsettings/store';
-import { orgSettingsMiddleware } from '../orgsettings/middleware';
-import {
-  mentionedInChannelHandler,
-  summarizeSuggestedChannelAfterMention,
-} from '../summaries/mentioned-in-channel-handler';
-import { mentionedInChannelMessage } from '../slack/mentioned-in-channel.middleware';
-import { SlackDataStore } from '../utils/slack-data-store';
-import { ChatManager } from '../experimental/chat/manager';
-import { ChatModel } from '../experimental/chat/chat.model';
 import { UninstallsNotifier } from '../uninstall/notifier';
-import { chatActionItemHandler } from '../chat/chat-action-items-handler';
 import {
-  emailReplyHandler,
-  emailReplySubmitHandler,
-  markAllAsReadHandler,
-  markAsReadHandler,
-  saveDraft,
-  emailReadMoreHandler,
-} from '../email-for-slack/handler';
+  handleStopNudge,
+  handleUserFeedbackSubmit,
+  handleUserTriggerFeedback,
+  openFeedbackModalHandler,
+} from '../user-feedback/handler';
+import { UserFeedbackManager } from '../user-feedback/manager';
+import { SlackDataStore } from '../utils/slack-data-store';
+import { botIMRouter } from './bot-im-router';
+import { slashCommandRouter } from './slash-command-router';
 
 const ARRAY_CHAT_GIST_ACTIONS = [0, 1, 2];
 export enum Routes {
@@ -113,6 +121,10 @@ export enum Routes {
   SCHEDULER_SETTINGS_MODAL_SUBMIT = 'scheduler-settings-modal-submit',
   SCHEDULER_SETTINGS_DISABLE = 'scheduler-settings-disabled',
   SCHEDULER_SETTINGS_DISABLE_OPEN_MODAL = 'scheduler-settings-open-modal',
+  EMAIL_SETTINGS_MODAL_SUBMIT = 'email-settings-modal-submit',
+  EMAIL_SETTINGS_OPEN_MODAL = 'email-settings-open-modal',
+  EMAIL_LINK_BROKEN_OPEN_MODAL = 'email-link-broken-open-modal',
+  EMAIL_LINK_BROKEN_MODAL_SUBMIT = 'email-link-broken-modal-submit',
 }
 
 export const registerBoltAppRouter = (
@@ -374,6 +386,26 @@ export const registerBoltAppRouter = (
       schedulerSettingsManager,
       analyticsManager,
     ),
+  );
+
+  app.view(
+    Routes.EMAIL_SETTINGS_MODAL_SUBMIT,
+    saveEmailDigestSettingsHandler(analyticsManager, slackDataStore),
+  );
+
+  app.action(
+    Routes.EMAIL_SETTINGS_OPEN_MODAL,
+    showEmailDigestSettingsModal(analyticsManager),
+  );
+
+  app.view(
+    Routes.EMAIL_LINK_BROKEN_MODAL_SUBMIT,
+    emailSettingsBrokenLinkSubmitted(analyticsManager),
+  );
+
+  app.action(
+    Routes.EMAIL_LINK_BROKEN_OPEN_MODAL,
+    showEmailDigestBrokenLinksModal(analyticsManager),
   );
 
   app.message(
