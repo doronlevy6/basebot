@@ -1,3 +1,4 @@
+import { AnalyticsManager } from '@base/gistbot-shared';
 import axios from 'axios';
 import { SlackBlockActionWrapper } from '../../slack/types';
 import { replayElementActionID, replyBlockId } from '../email-reply-view';
@@ -6,9 +7,12 @@ import { MAIL_BOT_SERVICE_API } from '../types';
 const CREATE_DRAFT_PATH = '/mail/gmail-client/createDraft';
 
 export const saveDraft =
-  () =>
+  (analyticsManager: AnalyticsManager) =>
   async ({ ack, logger, body }: SlackBlockActionWrapper) => {
     await ack();
+
+    let threadId = '';
+    let isError = false;
     try {
       logger.debug(`save draft handler for user ${body.user.id}`);
       if (!body.team?.id) {
@@ -25,7 +29,7 @@ export const saveDraft =
       const message =
         body.view?.state.values[replyBlockId][replayElementActionID]?.value;
       const { id, from } = JSON.parse(body.view?.private_metadata || '');
-
+      threadId = id;
       const url = new URL(MAIL_BOT_SERVICE_API);
       url.pathname = CREATE_DRAFT_PATH;
 
@@ -36,14 +40,25 @@ export const saveDraft =
           slackTeamId: body.team.id,
           to: from,
           message,
-          threadId: id,
+          threadId,
         },
         {
           timeout: 60000,
         },
       );
     } catch (e) {
+      isError = true;
       logger.error(`error in saveDraft for user ${body.user.id}, ${e}`);
       throw e;
+    } finally {
+      analyticsManager.gmailUserAction({
+        slackUserId: body.user.id,
+        slackTeamId: body.team?.id || '',
+        action: 'save_draft',
+        extraParams: {
+          isError,
+          threadId,
+        },
+      });
     }
   };

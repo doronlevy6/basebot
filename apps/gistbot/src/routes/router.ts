@@ -208,17 +208,20 @@ export const registerBoltAppRouter = (
 
   app.action(Routes.MAIL_READ_MORE, emailReadMoreHandler());
 
-  app.action(Routes.MAIL_MARK_AS_READ, markAsReadHandler());
+  app.action(Routes.MAIL_MARK_AS_READ, markAsReadHandler(analyticsManager));
 
-  app.action(Routes.MAIL_MARK_ALL_AS_READ, markAllAsReadHandler());
+  app.action(
+    Routes.MAIL_MARK_ALL_AS_READ,
+    markAllAsReadHandler(analyticsManager),
+  );
 
-  app.action(Routes.ARCHIVE_ALL, archiveAllHandler());
+  app.action(Routes.ARCHIVE_ALL, archiveAllHandler(analyticsManager));
 
-  app.action(Routes.ARCHIVE, archiveHandler());
+  app.action(Routes.ARCHIVE, archiveHandler(analyticsManager));
 
-  app.action(Routes.MAIL_SAVE_DRAFT, saveDraft());
+  app.action(Routes.MAIL_SAVE_DRAFT, saveDraft(analyticsManager));
 
-  app.view(Routes.MAIL_REPLY_SUBMIT, emailReplySubmitHandler());
+  app.view(Routes.MAIL_REPLY_SUBMIT, emailReplySubmitHandler(analyticsManager));
 
   app.action(
     Routes.THREAD_SUMMARY_FEEDBACK,
@@ -524,9 +527,9 @@ export const registerBoltAppRouter = (
     }
   });
 
-  app.action(Routes.MAIL_MARK_AS_READ, markAsReadHandler());
+  app.action(Routes.MAIL_MARK_AS_READ, markAsReadHandler(analyticsManager));
 
-  app.action(Routes.MAIL_SAVE_DRAFT, saveDraft());
+  app.action(Routes.MAIL_SAVE_DRAFT, saveDraft(analyticsManager));
 
-  app.view(Routes.MAIL_REPLY_SUBMIT, emailReplySubmitHandler());
+  app.view(Routes.MAIL_REPLY_SUBMIT, emailReplySubmitHandler(analyticsManager));
 };

@@ -1,3 +1,4 @@
+import { AnalyticsManager } from '@base/gistbot-shared';
 import axios from 'axios';
 import { SlackBlockActionWrapper } from '../../slack/types';
 import { MAIL_BOT_SERVICE_API } from '../types';
@@ -8,7 +9,7 @@ const FAIL_TEXT = 'Failed :(';
 const SUCCESS_TEXT = 'Archived ✅';
 
 export const archiveAllHandler =
-  () =>
+  (analyticsManager: AnalyticsManager) =>
   async ({ ack, logger, body, client }: SlackBlockActionWrapper) => {
     await ack();
     const action = body.actions[0];
@@ -18,6 +19,8 @@ export const archiveAllHandler =
       );
     }
 
+    let isError = false;
+    const mailId = action.value;
     try {
       logger.debug(`archive all handler for user ${body.user.id}`);
       if (!body.team?.id) {
@@ -28,7 +31,6 @@ export const archiveAllHandler =
       }
 
       await updateButtonText(body, action, logger, client, SUCCESS_TEXT);
-      const mailId = action.value;
       const url = new URL(MAIL_BOT_SERVICE_API);
       url.pathname = ARCHIVE_ALL_PATH;
 
@@ -44,14 +46,26 @@ export const archiveAllHandler =
         },
       );
       if (response.status !== 200 && response.status !== 201) {
+        isError = true;
         logger.error(
           `email archiveAllHandler wasn't able to mark as read for user ${body.user.id} with response ${response.status}`,
         );
         await updateButtonText(body, action, logger, client, FAIL_TEXT);
       }
     } catch (e) {
+      isError = true;
       await updateButtonText(body, action, logger, client, FAIL_TEXT);
       logger.error(`error in archiveAllHandler for user ${body.user.id}, ${e}`);
       throw e;
+    } finally {
+      analyticsManager.gmailUserAction({
+        slackUserId: body.user.id,
+        slackTeamId: body.team?.id || '',
+        action: 'archive_all',
+        extraParams: {
+          groupId: mailId,
+          isError,
+        },
+      });
     }
   };
