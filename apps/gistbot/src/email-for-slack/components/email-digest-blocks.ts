@@ -2,6 +2,7 @@ import { Button, KnownBlock } from '@slack/bolt';
 import { Routes } from '../../routes/router';
 import { DigestAction, DigestMessage, GmailDigestSection } from '../types';
 import { logger } from '@base/logger';
+import { InboxZero } from './inbox-zero';
 
 const replyAction = (message: DigestMessage): Button => {
   return {
@@ -213,10 +214,10 @@ export const createEmailDigestBlocks = (sections: GmailDigestSection[]) => {
     },
   ];
 
-  const blocks: KnownBlock[] = [
-    ...opener,
-    ...createEmailDigestSections(sections),
-  ];
+  const sectionBlocks = sections.length
+    ? createEmailDigestSections(sections)
+    : InboxZero();
+  const blocks: KnownBlock[] = [...opener, ...sectionBlocks];
 
   return blocks;
 };

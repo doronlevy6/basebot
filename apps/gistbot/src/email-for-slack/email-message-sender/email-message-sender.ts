@@ -12,9 +12,9 @@ import { chunk } from 'lodash';
 import { GmailDigest, JobsTypes, SlackIdToMailResponse } from '../types';
 import { UserLink } from '../../slack/components/user-link';
 import { KnownBlock } from '@slack/bolt';
-import { createEmailDigestBlocks } from './email-digest-blocks';
 import { saveDefaultEmailDigestSettings } from '../email-digest-settings/email-digest-settings-client';
 import { SlackDataStore } from '../../utils/slack-data-store';
+import { createEmailDigestBlocks } from '../components/email-digest-blocks';
 
 const QUEUE_NAME = 'emailMessageSender';
 
@@ -85,8 +85,8 @@ export class EmailMessageSender {
         throw new Error(`no bot token for team ${slackTeamId}`);
       }
 
-      const textBlocks = createEmailDigestBlocks(data.sections);
       const client = new WebClient(installation.bot?.token);
+      const textBlocks = createEmailDigestBlocks(data.sections);
       await this.sendDividedMessage(textBlocks, client, slackUserId);
 
       logger.debug({
