@@ -55,6 +55,8 @@ export enum DigestAction {
   MarkAllAsRead = 'markAllAsRead',
   RSVP = 'rsvp',
   ReadMore = 'readMore',
+  Archive = 'archive',
+  ArchiveAll = 'archiveAll',
 }
 
 export class Classification {

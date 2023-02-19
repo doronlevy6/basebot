@@ -42,6 +42,32 @@ const markAllAsReadAction = (message: DigestMessage): Button => {
   };
 };
 
+const archiveAllAction = (message: DigestMessage): Button => {
+  return {
+    type: 'button',
+    text: {
+      type: 'plain_text',
+      text: 'Archive all',
+      emoji: true,
+    },
+    value: message.id,
+    action_id: Routes.ARCHIVE_ALL,
+  };
+};
+
+const archiveAction = (message: DigestMessage): Button => {
+  return {
+    type: 'button',
+    text: {
+      type: 'plain_text',
+      text: 'Archive',
+      emoji: true,
+    },
+    value: message.id,
+    action_id: Routes.ARCHIVE,
+  };
+};
+
 const rsvpAction = (message: DigestMessage): Button => {
   return {
     type: 'button',
@@ -120,6 +146,10 @@ export const createDigestActions = (message: DigestMessage): Button[] => {
           return replyAction(message);
         case DigestAction.ReadMore:
           return readMoreAction(message);
+        case DigestAction.ArchiveAll:
+          return archiveAllAction(message);
+        case DigestAction.Archive:
+          return archiveAction(message);
       }
     })
     .filter((button) => {

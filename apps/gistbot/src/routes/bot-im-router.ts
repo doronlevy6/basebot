@@ -37,7 +37,11 @@ export const botIMRouter = (
     }
 
     if (!('user' in event) || !event.user) {
-      logger.warn({ msg: `im without user`, event: event });
+      logger.warn({
+        msg: `im without user`,
+        event: event.channel,
+        type: event.channel_type,
+      });
       return;
     }
 

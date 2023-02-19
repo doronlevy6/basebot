@@ -3,6 +3,17 @@ import { AnalyticsManager } from '@base/gistbot-shared';
 import { IReporter } from '@base/metrics';
 import { App, directMention, InstallationStore, subtype } from '@slack/bolt';
 import { chatActionItemHandler } from '../chat/chat-action-items-handler';
+import { archiveHandler } from '../email-for-slack/action-handlers/archive';
+import { archiveAllHandler } from '../email-for-slack/action-handlers/archive-all';
+
+import {
+  emailReplyHandler,
+  emailReplySubmitHandler,
+} from '../email-for-slack/action-handlers/email-reply';
+import { markAllAsReadHandler } from '../email-for-slack/action-handlers/mark-all-as-read';
+import { markAsReadHandler } from '../email-for-slack/action-handlers/mark-as-read';
+import { emailReadMoreHandler } from '../email-for-slack/action-handlers/read-more';
+import { saveDraft } from '../email-for-slack/action-handlers/save-draft';
 import {
   emailSettingsBrokenLinkSubmitted,
   showEmailDigestBrokenLinksModal,
@@ -11,14 +22,7 @@ import {
   saveEmailDigestSettingsHandler,
   showEmailDigestSettingsModal,
 } from '../email-for-slack/email-digest-settings/email-digest-settings-modal-handler';
-import {
-  emailReadMoreHandler,
-  emailReplyHandler,
-  emailReplySubmitHandler,
-  markAllAsReadHandler,
-  markAsReadHandler,
-  saveDraft,
-} from '../email-for-slack/handler';
+
 import { ChatModel } from '../experimental/chat/chat.model';
 import { ChatManager } from '../experimental/chat/manager';
 import { GistlyModel } from '../experimental/gistly/gistly.model';
@@ -113,6 +117,8 @@ export enum Routes {
   MAIL_REPLY_SUBMIT = 'mail-reply-submit',
   MAIL_MARK_AS_READ = 'mark-as-read',
   MAIL_MARK_ALL_AS_READ = 'mark-all-as-read',
+  ARCHIVE_ALL = 'archive-all',
+  ARCHIVE = 'archive',
   MAIL_SAVE_DRAFT = 'save_draft',
   MAIL_RSVP = 'rsvp',
   MAIL_READ_MORE = 'mail-read-more',
@@ -205,6 +211,10 @@ export const registerBoltAppRouter = (
   app.action(Routes.MAIL_MARK_AS_READ, markAsReadHandler());
 
   app.action(Routes.MAIL_MARK_ALL_AS_READ, markAllAsReadHandler());
+
+  app.action(Routes.ARCHIVE_ALL, archiveAllHandler());
+
+  app.action(Routes.ARCHIVE, archiveHandler());
 
   app.action(Routes.MAIL_SAVE_DRAFT, saveDraft());
 
