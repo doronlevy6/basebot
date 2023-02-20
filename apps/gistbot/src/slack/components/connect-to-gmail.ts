@@ -1,7 +1,7 @@
 import { KnownBlock } from '@slack/web-api';
 import { UserLink } from './user-link';
 
-const createGmailUrl = (userId: string, teamId: string) => {
+export const createGmailAuthUrl = (userId: string, teamId: string) => {
   const BASE_URL = process.env.MAIL_BOT_OAUTH_API || '';
   const url = new URL(BASE_URL);
   url.pathname = url.pathname + 'mail/oauth-public';
@@ -42,7 +42,7 @@ export const ConnectToGmail = (
             emoji: true,
           },
           style: 'primary',
-          url: createGmailUrl(userId, teamId),
+          url: createGmailAuthUrl(userId, teamId),
           value: 'click_me_123',
         },
       ],

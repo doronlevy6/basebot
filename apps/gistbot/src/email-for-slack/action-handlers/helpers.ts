@@ -1,5 +1,14 @@
 import { BlockAction, BlockElementAction, ButtonAction } from '@slack/bolt';
-import { Block, Logger, WebClient } from '@slack/web-api';
+import {
+  ActionsBlock,
+  Block,
+  Button,
+  HomeView,
+  Logger,
+  WebClient,
+} from '@slack/web-api';
+import { IHomeViewMetadata } from '../types';
+import { EmailHomeView } from '../views/email-home-view';
 
 export async function updateButtonText(
   body: BlockAction<BlockElementAction>,
@@ -8,21 +17,35 @@ export async function updateButtonText(
   client: WebClient,
   text: string,
 ) {
-  const updatedBlocks = body.message?.blocks;
+  if (!body.view || body.view.type !== 'home') {
+    logger.error(
+      `email updateButtonText couldn't find view to update for user ${body.user.id}`,
+    );
+    return;
+  }
+
+  const view = body.view as unknown as HomeView;
+  const updatedBlocks = [...view.blocks];
   let didFindButton = false;
   updatedBlocks.forEach((block) => {
-    if (block.elements) {
-      block.elements.forEach((element) => {
-        if (
-          element.type === 'button' &&
-          element.value == action.value &&
-          element.action_id == action.action_id
-        ) {
-          element.text.text = text;
-          didFindButton = true;
-        }
-      });
+    if (block.type !== 'actions') {
+      return;
     }
+    const actionsBlock = block as ActionsBlock;
+    actionsBlock.elements.forEach((element) => {
+      if (element.type !== 'button') {
+        return;
+      }
+
+      const buttonAction = element as Button;
+      if (
+        buttonAction.value == action.value &&
+        buttonAction.action_id == action.action_id
+      ) {
+        buttonAction.text.text = text;
+        didFindButton = true;
+      }
+    });
   });
 
   if (!didFindButton) {
@@ -40,24 +63,20 @@ async function updateBlocks(
   updatedBlocks: Block[],
   logger: Logger,
 ) {
-  const message_ts = body.message?.ts;
-  const channel_id = body.channel?.id;
-  if (message_ts && channel_id) {
-    const response = await client.chat.update({
-      text: body.message?.text,
-      channel: channel_id,
-      ts: message_ts,
-      blocks: updatedBlocks,
-      attachments: [],
-    });
-    if (!response.ok) {
-      logger.error(
-        `error in markAsReadHandler, couldn't update blocks. Error: ${response.error}`,
-      );
-    }
-  } else {
+  const response = await client.views.update({
+    user_id: body.user.id,
+    view: {
+      ...EmailHomeView(
+        updatedBlocks,
+        JSON.parse(body.view?.private_metadata ?? '{}') as IHomeViewMetadata,
+      ),
+    },
+    view_id: body.view?.id,
+  });
+
+  if (!response.ok) {
     logger.error(
-      `error in markAsReadHandler, couldn't get message or channel ids for user ${body.user.id}`,
+      `error in updateBlocks, couldn't update blocks. Error: ${response.error}`,
     );
   }
 }

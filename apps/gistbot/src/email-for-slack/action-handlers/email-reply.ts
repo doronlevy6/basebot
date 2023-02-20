@@ -2,7 +2,7 @@ import { AnalyticsManager } from '@base/gistbot-shared';
 import axios from 'axios';
 import { Routes } from '../../routes/router';
 import { SlackBlockActionWrapper, ViewAction } from '../../slack/types';
-import { ReplyMailView } from '../email-reply-view';
+import { ReplyMailView } from '../views/email-reply-view';
 import { MAIL_BOT_SERVICE_API } from '../types';
 
 const REPLY_PATH = '/mail/gmail-client/sendReply';

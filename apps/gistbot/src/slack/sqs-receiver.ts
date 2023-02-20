@@ -93,8 +93,6 @@ export default class AwsSQSReceiver implements Receiver {
   }
 
   public async consume(sqsEvent: Record<string, unknown>): Promise<boolean> {
-    this.logger.debug(`Raw event: ${JSON.stringify(sqsEvent, null, 2)}`);
-
     if (!this.validateSqsEvent(sqsEvent)) {
       this.logger.error({ msg: `invalid sqs event`, event: sqsEvent });
       return true; // true because we want to ack since it's invalid, no use retrying

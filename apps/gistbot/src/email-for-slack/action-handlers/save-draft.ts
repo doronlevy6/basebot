@@ -1,7 +1,7 @@
 import { AnalyticsManager } from '@base/gistbot-shared';
 import axios from 'axios';
 import { SlackBlockActionWrapper } from '../../slack/types';
-import { replayElementActionID, replyBlockId } from '../email-reply-view';
+import { replayElementActionID, replyBlockId } from '../views/email-reply-view';
 import { MAIL_BOT_SERVICE_API } from '../types';
 
 const CREATE_DRAFT_PATH = '/mail/gmail-client/createDraft';

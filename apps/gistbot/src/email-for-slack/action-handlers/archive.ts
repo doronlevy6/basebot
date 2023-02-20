@@ -22,14 +22,12 @@ export const archiveHandler =
     let isError = false;
     const mailId = action.value;
     try {
-      logger.debug(`mark as read handler for user ${body.user.id}`);
       if (!body.team?.id) {
         logger.error(
           `team id not exist for user ${body.user.id} in archiveHandler`,
         );
         return;
       }
-
       await updateButtonText(body, action, logger, client, SUCCESS_TEXT);
       const url = new URL(MAIL_BOT_SERVICE_API);
       url.pathname = ARCHIVE_PATH;
@@ -55,8 +53,8 @@ export const archiveHandler =
       }
     } catch (e) {
       isError = true;
-      await updateButtonText(body, action, logger, client, FAIL_TEXT);
       logger.error(`error in archiveHandler for user ${body.user.id}, ${e}`);
+      await updateButtonText(body, action, logger, client, FAIL_TEXT);
       throw e;
     } finally {
       analyticsManager.gmailUserAction({

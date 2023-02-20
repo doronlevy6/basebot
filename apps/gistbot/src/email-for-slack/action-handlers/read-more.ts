@@ -1,5 +1,5 @@
 import { SlackBlockActionWrapper } from '../../slack/types';
-import { ReadMoreView } from '../email-read-more-view';
+import { ReadMoreView } from '../views/email-read-more-view';
 
 export const emailReadMoreHandler =
   () =>

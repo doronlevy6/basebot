@@ -13,6 +13,7 @@ import {
 import { markAllAsReadHandler } from '../email-for-slack/action-handlers/mark-all-as-read';
 import { markAsReadHandler } from '../email-for-slack/action-handlers/mark-as-read';
 import { emailReadMoreHandler } from '../email-for-slack/action-handlers/read-more';
+import { refreshGmail } from '../email-for-slack/action-handlers/refresh-gmail';
 import { saveDraft } from '../email-for-slack/action-handlers/save-draft';
 import {
   emailSettingsBrokenLinkSubmitted,
@@ -120,6 +121,7 @@ export enum Routes {
   ARCHIVE_ALL = 'archive-all',
   ARCHIVE = 'archive',
   MAIL_SAVE_DRAFT = 'save_draft',
+  REFRESH_GMAIL = 'refresh-gmail',
   MAIL_RSVP = 'rsvp',
   MAIL_READ_MORE = 'mail-read-more',
   GISTLY_MODAL_SUBMIT = 'gistly-modal-submit',
@@ -220,6 +222,8 @@ export const registerBoltAppRouter = (
   app.action(Routes.ARCHIVE, archiveHandler(analyticsManager));
 
   app.action(Routes.MAIL_SAVE_DRAFT, saveDraft(analyticsManager));
+
+  app.action(Routes.REFRESH_GMAIL, refreshGmail());
 
   app.view(Routes.MAIL_REPLY_SUBMIT, emailReplySubmitHandler(analyticsManager));
 

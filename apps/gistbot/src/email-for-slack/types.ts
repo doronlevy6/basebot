@@ -75,3 +75,9 @@ export enum EmailCategory {
   Social = 'social',
   Other = 'other',
 }
+
+export interface IHomeViewMetadata {
+  userId: string;
+  teamId: string;
+  updatedAt: number;
+}

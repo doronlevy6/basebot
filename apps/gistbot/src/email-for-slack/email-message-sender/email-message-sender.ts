@@ -1,5 +1,5 @@
+import { AnalyticsManager, PgInstallationStore } from '@base/gistbot-shared';
 import { logger } from '@base/logger';
-import { Job, Worker } from 'bullmq';
 import {
   createQueue,
   createQueueWorker,
@@ -7,14 +7,13 @@ import {
   QueueWrapper,
 } from '@base/queues';
 import { WebClient } from '@slack/web-api';
-import { AnalyticsManager, PgInstallationStore } from '@base/gistbot-shared';
-import { chunk } from 'lodash';
-import { GmailDigest, JobsTypes, SlackIdToMailResponse } from '../types';
+import { Job, Worker } from 'bullmq';
 import { UserLink } from '../../slack/components/user-link';
-import { KnownBlock } from '@slack/bolt';
-import { saveDefaultEmailDigestSettings } from '../email-digest-settings/email-digest-settings-client';
 import { SlackDataStore } from '../../utils/slack-data-store';
 import { createEmailDigestBlocks } from '../components/email-digest-blocks';
+import { saveDefaultEmailDigestSettings } from '../email-digest-settings/email-digest-settings-client';
+import { GmailDigest, JobsTypes, SlackIdToMailResponse } from '../types';
+import { EmailHomeView } from '../views/email-home-view';
 
 const QUEUE_NAME = 'emailMessageSender';
 
@@ -87,7 +86,14 @@ export class EmailMessageSender {
 
       const client = new WebClient(installation.bot?.token);
       const textBlocks = createEmailDigestBlocks(data.sections);
-      await this.sendDividedMessage(textBlocks, client, slackUserId);
+      await client.views.publish({
+        user_id: slackUserId,
+        view: EmailHomeView(textBlocks, {
+          teamId: slackTeamId,
+          userId: slackUserId,
+          updatedAt: Date.now(),
+        }),
+      });
 
       logger.debug({
         msg: `send email digest message completed for user email: ${userId}, slackUserId: ${slackUserId}`,
@@ -96,7 +102,7 @@ export class EmailMessageSender {
       this.sendDigestAnalytics(data);
     } catch (e) {
       logger.error(
-        `error in sending email digest for user email: ${userId}, slackUserId: ${slackUserId}, ${e}`,
+        `error in sending email digest for user email: ${userId}, slackUserId: ${slackUserId}, ${e} ${e.stack}`,
       );
     }
   }
@@ -120,23 +126,6 @@ export class EmailMessageSender {
         ...sectionStats,
       },
     });
-  }
-
-  private async sendDividedMessage(
-    textBlocks: KnownBlock[],
-    client: WebClient,
-    slackUserId: string,
-  ) {
-    const dividedBlocks = chunk(textBlocks, 50);
-    for (const chunkOfBlocks of dividedBlocks) {
-      await client.chat.postMessage({
-        channel: slackUserId,
-        text: 'Your Email Summary ',
-        blocks: chunkOfBlocks,
-        unfurl_links: false,
-        unfurl_media: false,
-      });
-    }
   }
 
   private async handleOnboarding(data: SlackIdToMailResponse) {
