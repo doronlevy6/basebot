@@ -90,7 +90,7 @@ services:
       PORT: 3000
       AWS_ACCESS_KEY_ID: xxx
       AWS_SECRET_ACCESS_KEY: xxx
-      OAUTH_REDIRECT_BASE_URL: https://gistbot-mailbot${LOCAL_ENV}.ngrok.io/mail/oauth-public
+      OAUTH_REDIRECT_BASE_URL: https://gistbot-mailbot${LOCAL_ENV}.baselabs.dev/mail/oauth-public
 
     ports:
       - 3004:3000
@@ -103,7 +103,7 @@ services:
     environment:
       CONFIG_FILE: /configs/bullboardConfig.json
     depends_on:
-      - mail-bot
+      - mailbot
       - redis
     restart: on-failure
     ports:
