@@ -12,6 +12,7 @@ export const ChatGoPro = (): KnownBlock[] => {
         type: 'mrkdwn',
         text: ChatGoProText,
       },
+      block_id: 'limit_message',
       accessory: GoProButton(),
     },
     {

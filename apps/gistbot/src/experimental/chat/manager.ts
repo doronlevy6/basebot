@@ -136,7 +136,6 @@ export class ChatManager {
       );
 
       const prompt = chatModelPrompt(req);
-
       const res = await this.chatModel.customModel(prompt, userId);
 
       logger.debug(`Chat response `);
@@ -288,11 +287,20 @@ export class ChatManager {
   // if there is no message from our app in this session then it is a new session
   private isNewChatSession(relatedMessages: Message[]) {
     const filteredMessages = this.filterByTimeSession(relatedMessages);
-    return !filteredMessages.some(
-      (r) =>
+    return !filteredMessages.some((r) => {
+      let isLimitMsg = false;
+
+      if (r.blocks && r.blocks[0]?.block_id) {
+        isLimitMsg = Boolean(
+          r.blocks.length > 0 && r.blocks[0].block_id === 'limit_message',
+        );
+      }
+      return (
         !!r.bot_id &&
         !!r.bot_profile?.app_id &&
-        isGistAppId(r.bot_profile?.app_id),
-    );
+        isGistAppId(r.bot_profile?.app_id ?? '') &&
+        !isLimitMsg
+      );
+    });
   }
 }
