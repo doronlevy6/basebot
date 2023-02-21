@@ -21,7 +21,7 @@ import {
 } from './types';
 
 export const showEmailDigestSettingsModal =
-  (analyticsManager: AnalyticsManager) =>
+  (analyticsManager: AnalyticsManager, showInsideModal?: boolean) =>
   async ({
     ack,
     logger,
@@ -70,10 +70,17 @@ export const showEmailDigestSettingsModal =
             : EmailSchedulerOptions.EVENING;
       }
 
-      await client.views.open({
-        trigger_id: body.trigger_id,
-        view: EmailSettingsModal(enabled, selectedHour),
-      });
+      if (showInsideModal) {
+        await client.views.push({
+          trigger_id: body.trigger_id,
+          view: EmailSettingsModal(enabled, selectedHour),
+        });
+      } else {
+        await client.views.open({
+          trigger_id: body.trigger_id,
+          view: EmailSettingsModal(enabled, selectedHour),
+        });
+      }
 
       analyticsManager.buttonClicked({
         type: 'email-digest-settings-button',

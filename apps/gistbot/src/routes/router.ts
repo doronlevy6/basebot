@@ -2,6 +2,11 @@ import { CustomerIdentifier } from '@base/customer-identifier';
 import { AnalyticsManager } from '@base/gistbot-shared';
 import { IReporter } from '@base/metrics';
 import { App, directMention, InstallationStore, subtype } from '@slack/bolt';
+import {
+  allSettingsButtonHandler,
+  openGmailSettingsFromAllSettings,
+  openSlackSettingsFromAllSettings,
+} from '../all-settings/handler';
 import { chatActionItemHandler } from '../chat/chat-action-items-handler';
 import { archiveHandler } from '../email-for-slack/action-handlers/archive';
 import { archiveAllHandler } from '../email-for-slack/action-handlers/archive-all';
@@ -126,6 +131,9 @@ export enum Routes {
   MAIL_READ_MORE = 'mail-read-more',
   GISTLY_MODAL_SUBMIT = 'gistly-modal-submit',
   OPEN_SCHEDULER_SETTINGS = 'open-scheduler-settings',
+  OPEN_ALL_SETTINGS_MODAL = 'open-all-settings-modal',
+  OPEN_EMAIL_SETTINGS_MODAL_FROM_ALL = 'open-email-settings-modal-from-all',
+  OPEN_SLACK_SETTINGS_MODAL_FROM_ALL = 'open-slack-settings-modal-from-all',
   SCHEDULER_SETTINGS_MODAL_SUBMIT = 'scheduler-settings-modal-submit',
   SCHEDULER_SETTINGS_DISABLE = 'scheduler-settings-disabled',
   SCHEDULER_SETTINGS_DISABLE_OPEN_MODAL = 'scheduler-settings-open-modal',
@@ -383,6 +391,8 @@ export const registerBoltAppRouter = (
     ),
   );
 
+  app.action(Routes.OPEN_ALL_SETTINGS_MODAL, allSettingsButtonHandler());
+
   app.view(
     Routes.SCHEDULER_SETTINGS_MODAL_SUBMIT,
     summarySchedularSettingsModalHandler(
@@ -413,6 +423,19 @@ export const registerBoltAppRouter = (
   app.action(
     Routes.EMAIL_SETTINGS_OPEN_MODAL,
     showEmailDigestSettingsModal(analyticsManager),
+  );
+
+  app.action(
+    Routes.OPEN_EMAIL_SETTINGS_MODAL_FROM_ALL,
+    openGmailSettingsFromAllSettings(analyticsManager),
+  );
+
+  app.action(
+    Routes.OPEN_SLACK_SETTINGS_MODAL_FROM_ALL,
+    openSlackSettingsFromAllSettings(
+      analyticsManager,
+      schedulerSettingsManager,
+    ),
   );
 
   app.view(

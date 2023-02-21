@@ -1,4 +1,5 @@
 import { AnalyticsManager } from '@base/gistbot-shared';
+import { allSettingsButtonHandler } from '../all-settings/handler';
 import { showEmailDigestSettingsModal } from '../email-for-slack/email-digest-settings/email-digest-settings-modal-handler';
 import { FeatureRateLimiter } from '../feature-rate-limiter/rate-limiter';
 import { SlackSlashCommandWrapper } from '../slack/types';
@@ -33,6 +34,7 @@ export const slashCommandRouter = (
   );
 
   const showEmailSettings = showEmailDigestSettingsModal(analyticsManager);
+  const showAllSettings = allSettingsButtonHandler();
 
   return async (props: SlackSlashCommandWrapper) => {
     const {
@@ -80,6 +82,11 @@ export const slashCommandRouter = (
 
     if (text === 'gmail-settings') {
       await showEmailSettings(props);
+      return;
+    }
+
+    if (text === 'all-settings') {
+      await showAllSettings(props);
       return;
     }
 

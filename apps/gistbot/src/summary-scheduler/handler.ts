@@ -19,6 +19,7 @@ export const summarySchedularSettingsButtonHandler =
   (
     schedulerSettingsMgr: SchedulerSettingsManager,
     analyticsManager: AnalyticsManager,
+    showInsideModal?: boolean,
   ) =>
   async ({
     ack,
@@ -66,10 +67,17 @@ export const summarySchedularSettingsButtonHandler =
         channels = userSettings.channels.map((c) => c.channelId);
       }
 
-      await client.views.open({
-        trigger_id: body.trigger_id,
-        view: SchedulerSettingsModal(enabled, selectedHour, channels),
-      });
+      if (showInsideModal) {
+        await client.views.push({
+          trigger_id: body.trigger_id,
+          view: SchedulerSettingsModal(enabled, selectedHour, channels),
+        });
+      } else {
+        await client.views.open({
+          trigger_id: body.trigger_id,
+          view: SchedulerSettingsModal(enabled, selectedHour, channels),
+        });
+      }
 
       analyticsManager.buttonClicked({
         type: 'scheduler-settings-button',
