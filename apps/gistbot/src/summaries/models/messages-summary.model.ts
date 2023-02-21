@@ -127,8 +127,6 @@ export class MessagesSummaryModel {
 
       logger.info({
         msg: 'Messages Summary Model returned with response',
-        request: data,
-        modelResults: executionOutput.wire.results,
       });
 
       const conversations = this.convertModelResponseToSummaries(

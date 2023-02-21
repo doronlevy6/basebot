@@ -45,7 +45,7 @@ export class AnalyticsManager {
   }
 
   private sendEventToAnalytics(data: Event) {
-    logger.info({ msg: 'send event to analytics', job: data });
+    logger.info({ msg: 'send event to analytics' });
     this.client.track({
       event: data.eventName,
       userId: data.internalUserId,

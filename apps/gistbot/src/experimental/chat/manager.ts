@@ -139,7 +139,7 @@ export class ChatManager {
 
       const res = await this.chatModel.customModel(prompt, userId);
 
-      logger.debug(`Chat response was: ${res}`);
+      logger.debug(`Chat response `);
 
       await client.chat.postMessage({
         channel: channelId,

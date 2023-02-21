@@ -57,8 +57,6 @@ export class OpenAiModerationModel {
       logger.info({
         msg: 'Moderation Model returned with response',
         status,
-        data,
-        request: requestBody,
       });
 
       if (status >= 300) {
