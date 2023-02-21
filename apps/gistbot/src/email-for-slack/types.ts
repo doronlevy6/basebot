@@ -25,6 +25,9 @@ export class GmailDigest {
 export class GmailDigestSection {
   title: string;
   messages: DigestMessage[];
+  category: EmailCategory;
+  id?: string;
+  actions?: DigestAction[];
 }
 
 export class DigestMessage {

@@ -30,7 +30,7 @@ const markAsReadAction = (message: DigestMessage): Button => {
   };
 };
 
-const markAllAsReadAction = (message: DigestMessage): Button => {
+const markAllAsReadAction = (id: string): Button => {
   return {
     type: 'button',
     text: {
@@ -38,12 +38,12 @@ const markAllAsReadAction = (message: DigestMessage): Button => {
       text: 'Mark all as read',
       emoji: true,
     },
-    value: message.id,
+    value: id,
     action_id: Routes.MAIL_MARK_ALL_AS_READ,
   };
 };
 
-const archiveAllAction = (message: DigestMessage): Button => {
+const archiveAllAction = (id: string): Button => {
   return {
     type: 'button',
     text: {
@@ -51,7 +51,7 @@ const archiveAllAction = (message: DigestMessage): Button => {
       text: 'Archive all',
       emoji: true,
     },
-    value: message.id,
+    value: id,
     action_id: Routes.ARCHIVE_ALL,
   };
 };
@@ -87,7 +87,7 @@ const createEmailDigestSections = (
 ): KnownBlock[] => {
   return sections.flatMap((section) => {
     return [
-      createEmailDigestHeader(section.title),
+      ...createEmailDigestHeader(section),
       ...createEmailDigestMessage(section.messages),
       {
         type: 'divider',
@@ -96,14 +96,26 @@ const createEmailDigestSections = (
   });
 };
 
-const createEmailDigestHeader = (title: string): KnownBlock => {
-  return {
+const createEmailDigestHeader = (section: GmailDigestSection): KnownBlock[] => {
+  const blocks: KnownBlock[] = [];
+  blocks.push({
     type: 'header',
     text: {
       type: 'plain_text',
-      text: `${title}`,
+      text: `${section.title}`,
     },
-  };
+  });
+
+  const actions = createDigestSectionActions(section);
+  if (actions.length) {
+    const actionBlock: KnownBlock = {
+      type: 'actions',
+      elements: actions,
+    };
+    blocks.push(actionBlock);
+  }
+
+  return blocks;
 };
 
 const createEmailDigestMessage = (messages: DigestMessage[]): KnownBlock[] => {
@@ -142,15 +154,35 @@ export const createDigestActions = (message: DigestMessage): Button[] => {
         case DigestAction.MarkAsRead:
           return markAsReadAction(message);
         case DigestAction.MarkAllAsRead:
-          return markAllAsReadAction(message);
+          return markAllAsReadAction(message.id);
         case DigestAction.Reply:
           return replyAction(message);
         case DigestAction.ReadMore:
           return readMoreAction(message);
         case DigestAction.ArchiveAll:
-          return archiveAllAction(message);
+          return archiveAllAction(message.id);
         case DigestAction.Archive:
           return archiveAction(message);
+      }
+    })
+    .filter((button) => {
+      return button !== undefined;
+    }) as Button[];
+};
+
+export const createDigestSectionActions = (
+  section: GmailDigestSection,
+): Button[] => {
+  if (!section.id) {
+    return [];
+  }
+  return section.actions
+    ?.flatMap((action) => {
+      switch (action) {
+        case DigestAction.MarkAllAsRead:
+          return markAllAsReadAction(section.id as string);
+        case DigestAction.ArchiveAll:
+          return archiveAllAction(section.id as string);
       }
     })
     .filter((button) => {
