@@ -290,11 +290,10 @@ export class ChatManager {
     return !filteredMessages.some((r) => {
       let isLimitMsg = false;
 
-      if (r.blocks && r.blocks[0]?.block_id) {
-        isLimitMsg = Boolean(
-          r.blocks.length > 0 && r.blocks[0].block_id === 'limit_message',
-        );
-      }
+      isLimitMsg = Boolean(
+        r?.blocks && r.blocks[0].block_id === 'limit_message',
+      );
+
       return (
         !!r.bot_id &&
         !!r.bot_profile?.app_id &&
