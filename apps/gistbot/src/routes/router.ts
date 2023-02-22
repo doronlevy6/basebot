@@ -38,6 +38,7 @@ import {
   openGistlyModal,
 } from '../experimental/gistly/handler';
 import { FeatureRateLimiter } from '../feature-rate-limiter/rate-limiter';
+import { HomeDataStore } from '../home/home-data-store';
 import { NewUserTriggersManager } from '../new-user-triggers/manager';
 import { appHomeOpenedHandler } from '../onboarding/app-home-opened-handler';
 import { userOnboardingMiddleware } from '../onboarding/global-middleware';
@@ -164,6 +165,7 @@ export const registerBoltAppRouter = (
   orgSettingsStore: OrgSettingsStore,
   uninstallNotifier: UninstallsNotifier,
   eventEmitter: EventEmitter,
+  homeDataStore: HomeDataStore,
 ) => {
   const chatModel = new ChatModel();
   const onboardingMiddleware = userOnboardingMiddleware(onboardingManager);
@@ -218,7 +220,7 @@ export const registerBoltAppRouter = (
   );
   app.action(Routes.MAIL_REPLY, emailReplyHandler());
 
-  app.action(Routes.MAIL_READ_MORE, emailReadMoreHandler());
+  app.action(Routes.MAIL_READ_MORE, emailReadMoreHandler(homeDataStore));
 
   app.action(Routes.MAIL_MARK_AS_READ, markAsReadHandler(analyticsManager));
 

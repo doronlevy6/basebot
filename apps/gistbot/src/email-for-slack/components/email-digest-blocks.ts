@@ -220,7 +220,7 @@ export const readMoreAction = (message: DigestMessage): Button => {
       text: 'Read more',
       emoji: true,
     },
-    value: titleAndBody,
+    value: message.id,
     action_id: Routes.MAIL_READ_MORE,
   };
 };

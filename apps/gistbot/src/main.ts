@@ -427,6 +427,7 @@ const startApp = async () => {
     orgSettingsStore,
     uninstallNotifier,
     eventsEmitter,
+    homeDataStore,
   );
 
   // Bolt's Receiver implements a start function that returns a generic value,
