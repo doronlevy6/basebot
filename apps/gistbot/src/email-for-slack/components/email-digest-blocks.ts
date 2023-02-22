@@ -226,30 +226,5 @@ export const readMoreAction = (message: DigestMessage): Button => {
 };
 
 export const createEmailDigestBlocks = (sections: GmailDigestSection[]) => {
-  const opener: KnownBlock[] = [
-    {
-      type: 'header',
-      text: {
-        type: 'plain_text',
-        text: 'Your Email Summary ',
-      },
-    },
-    {
-      type: 'section',
-      text: {
-        type: 'mrkdwn',
-        text: new Date().toDateString(),
-      },
-    },
-    {
-      type: 'divider',
-    },
-  ];
-
-  const sectionBlocks = sections.length
-    ? createEmailDigestSections(sections)
-    : InboxZero();
-  const blocks: KnownBlock[] = [...opener, ...sectionBlocks];
-
-  return blocks;
+  return sections.length ? createEmailDigestSections(sections) : InboxZero();
 };
