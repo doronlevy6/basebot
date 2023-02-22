@@ -63,10 +63,6 @@ export class HomeDataStore extends PgUtil {
         slack_user_id: slackUserId,
         email_connected: connected,
       })
-      .where({
-        slack_team_id: slackTeamId,
-        slack_user_id: slackUserId,
-      })
       .onConflict(['slack_team_id', 'slack_user_id'])
       .merge();
   }
