@@ -1,11 +1,15 @@
 import { AnalyticsManager } from '@base/gistbot-shared';
-import axios from 'axios';
-import { MAIL_BOT_SERVICE_API } from '../email-for-slack/types';
+import { EventEmitter } from 'events';
+import { UPDATE_HOME_EVENT_NAME } from '../home/types';
 import { SlackEventWrapper } from '../slack/types';
 import { OnboardingManager } from './manager';
 
 export const appHomeOpenedHandler =
-  (onboardingManager: OnboardingManager, analyticsManager: AnalyticsManager) =>
+  (
+    onboardingManager: OnboardingManager,
+    analyticsManager: AnalyticsManager,
+    eventsEmitter: EventEmitter,
+  ) =>
   async (appOpenedEvent: SlackEventWrapper<'app_home_opened'>) => {
     const { event, body, logger } = appOpenedEvent;
     const { team_id } = body;
@@ -19,10 +23,12 @@ export const appHomeOpenedHandler =
         slackUserId: user,
       });
 
-      await Promise.all([
-        sendOnboardingIfNeeded(onboardingManager, appOpenedEvent),
-        publishHome(team_id, user),
-      ]);
+      eventsEmitter.emit(UPDATE_HOME_EVENT_NAME, {
+        slackUserId: user,
+        slackTeamId: team_id,
+      });
+
+      await sendOnboardingIfNeeded(onboardingManager, appOpenedEvent);
     } catch (err) {
       logger.error(`App home opened onboarding error: ${err} ${err.stack}`);
     }
@@ -71,16 +77,4 @@ export const sendOnboardingIfNeeded = async (
     client,
     'app_home_opened',
   );
-};
-
-export const publishHome = async (teamId: string, userId: string) => {
-  // TODO: in the future only publish the home if the user has not already seen it via the data store.
-  const REFRESH_PATH = '/mail/gmail-client';
-  const url = new URL(MAIL_BOT_SERVICE_API);
-  url.pathname = REFRESH_PATH;
-
-  await axios.post(url.toString(), {
-    slackUserId: userId,
-    slackTeamId: teamId,
-  });
 };

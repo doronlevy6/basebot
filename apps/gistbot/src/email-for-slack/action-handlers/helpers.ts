@@ -7,8 +7,6 @@ import {
   Logger,
   WebClient,
 } from '@slack/web-api';
-import { IHomeViewMetadata } from '../types';
-import { EmailHomeView } from '../views/email-home-view';
 
 export async function updateButtonText(
   body: BlockAction<BlockElementAction>,
@@ -63,20 +61,31 @@ async function updateBlocks(
   updatedBlocks: Block[],
   logger: Logger,
 ) {
-  const response = await client.views.update({
-    user_id: body.user.id,
-    view: {
-      ...EmailHomeView(
-        updatedBlocks,
-        JSON.parse(body.view?.private_metadata ?? '{}') as IHomeViewMetadata,
-      ),
-    },
-    view_id: body.view?.id,
-  });
+  try {
+    if (!body.view || body.view.type !== 'home') {
+      logger.error(
+        `email updateBlocks couldn't find view to update for user ${body.user.id}`,
+      );
+      return;
+    }
 
-  if (!response.ok) {
-    logger.error(
-      `error in updateBlocks, couldn't update blocks. Error: ${response.error}`,
-    );
+    const response = await client.views.update({
+      user_id: body.user.id,
+      view: {
+        type: 'home',
+        blocks: updatedBlocks,
+        private_metadata: body.view.private_metadata,
+      },
+      view_id: body.view?.id,
+    });
+
+    logger.debug(`Updated home blocks for ${body.user.id}`);
+    if (!response.ok) {
+      logger.error(
+        `error in updateBlocks, couldn't update blocks. Error: ${response.error}`,
+      );
+    }
+  } catch (e) {
+    logger.error(`error in updateBlocks, couldn't update blocks. Error: ${e}`);
   }
 }

@@ -12,14 +12,6 @@
     {
       "prefix": "{mailbot:queues:local}",
       "name": "emailMessageSender"
-    },
-    {
-      "prefix": "{mailbot:queues:staging}",
-      "name": "digest"
-    },
-    {
-      "prefix": "{mailbot:queues:staging}",
-      "name": "emailMessageSender"
     }
   ]
 }

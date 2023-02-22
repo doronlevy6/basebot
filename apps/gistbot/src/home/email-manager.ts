@@ -1,72 +1,40 @@
 import { AnalyticsManager, PgInstallationStore } from '@base/gistbot-shared';
 import { logger } from '@base/logger';
-import {
-  createQueue,
-  createQueueWorker,
-  IQueueConfig,
-  QueueWrapper,
-} from '@base/queues';
+import { IQueueConfig } from '@base/queues';
+import { BullMQUtil } from '@base/utils';
 import { WebClient } from '@slack/web-api';
-import { Job, Worker } from 'bullmq';
-import { UserLink } from '../../slack/components/user-link';
-import { SlackDataStore } from '../../utils/slack-data-store';
-import { createEmailDigestBlocks } from '../components/email-digest-blocks';
-import { saveDefaultEmailDigestSettings } from '../email-digest-settings/email-digest-settings-client';
-import { GmailDigest, JobsTypes, SlackIdToMailResponse } from '../types';
-import { EmailHomeView } from '../views/email-home-view';
+import { Job } from 'bullmq';
+import { saveDefaultEmailDigestSettings } from '../email-for-slack/email-digest-settings/email-digest-settings-client';
+import {
+  GmailDigest,
+  JobsTypes,
+  SlackIdToMailResponse,
+} from '../email-for-slack/types';
+import { UserLink } from '../slack/components/user-link';
+import { SlackDataStore } from '../utils/slack-data-store';
+import { HomeDataStore } from './home-data-store';
+import EventEmitter = require('events');
+import { UPDATE_HOME_EVENT_NAME } from './types';
 
 const QUEUE_NAME = 'emailMessageSender';
+type JobData = GmailDigest | SlackIdToMailResponse;
 
-export class EmailMessageSender {
-  private queueCfg: IQueueConfig;
-  private messageSenderWorker: Worker<GmailDigest | SlackIdToMailResponse>;
-  private messageSenderQueue: QueueWrapper<GmailDigest | SlackIdToMailResponse>;
-
+export class EmailDigestManager extends BullMQUtil<JobData> {
   constructor(
     queueCfg: IQueueConfig,
     private installationStore: PgInstallationStore,
     private analyticsManager: AnalyticsManager,
     private slackDataStore: SlackDataStore,
+    private homeDataStore: HomeDataStore,
+    private eventsEmitter: EventEmitter,
   ) {
-    this.queueCfg = queueCfg;
+    super(QUEUE_NAME, queueCfg);
   }
 
-  async isReady(): Promise<boolean> {
-    const delay = (ms: number) =>
-      new Promise((resolve) => setTimeout(resolve, ms));
-
-    this.messageSenderQueue = createQueue(QUEUE_NAME, this.queueCfg);
-
-    this.messageSenderWorker = createQueueWorker<
-      GmailDigest | SlackIdToMailResponse
-    >(QUEUE_NAME, this.queueCfg, async (job) => {
-      await this.handleMessage(job);
-    });
-
-    for (let i = 0; i < 10; i++) {
-      try {
-        await (await this.messageSenderWorker.client).ping();
-        await this.messageSenderQueue.queue.getWorkers();
-        return true;
-      } catch (error) {
-        logger.error(`error pinging the queues: ${error}`);
-      }
-      await delay(1000 * i); // Wait for (number of seconds * loop number) so that we try a few times before giving up
-    }
-
-    return false;
-  }
-
-  async close() {
-    await this.messageSenderQueue.queue.close();
-    await this.messageSenderWorker.close();
-  }
-
-  private async handleMessage(job: Job<GmailDigest | SlackIdToMailResponse>) {
+  async handleMessage(job: Job<JobData>) {
     switch (job.name) {
       case JobsTypes.DIGEST:
         await this.sendDigest(job.data as GmailDigest);
-        ``;
         break;
       case JobsTypes.ONBOARDING:
         await this.handleOnboarding(job.data as SlackIdToMailResponse);
@@ -74,26 +42,16 @@ export class EmailMessageSender {
   }
 
   private async sendDigest(data: GmailDigest) {
-    logger.debug({ msg: 'send scheduled message starting', job: data });
     const { slackUserId, slackTeamId, userId } = data.metedata;
     try {
-      const installation =
-        await this.installationStore.fetchInstallationByTeamId(slackTeamId);
+      logger.debug('handleDigestUpdated');
 
-      if (!installation.bot?.token) {
-        throw new Error(`no bot token for team ${slackTeamId}`);
-      }
+      await this.homeDataStore.updateEmailDigest(
+        { slackTeamId, slackUserId },
+        data,
+      );
 
-      const client = new WebClient(installation.bot?.token);
-      const textBlocks = createEmailDigestBlocks(data.sections);
-      await client.views.publish({
-        user_id: slackUserId,
-        view: EmailHomeView(textBlocks, {
-          teamId: slackTeamId,
-          userId: slackUserId,
-          updatedAt: Date.now(),
-        }),
-      });
+      this.eventsEmitter.emit(UPDATE_HOME_EVENT_NAME, { ...data.metedata });
 
       logger.debug({
         msg: `send email digest message completed for user email: ${userId}, slackUserId: ${slackUserId}`,
@@ -129,8 +87,8 @@ export class EmailMessageSender {
   }
 
   private async handleOnboarding(data: SlackIdToMailResponse) {
-    logger.debug({
-      msg: 'sendOnboarding for gmail message starting',
+    logger.info({
+      msg: 'handleOnboarding for gmail message starting',
       job: data,
     });
 
@@ -153,7 +111,8 @@ export class EmailMessageSender {
       );
       const text = `:wave: Hey ${UserLink(
         slackUserId,
-      )}, you successfuly logged in to Gistbot for Gmail!\nType \`/gist get mails\` to get your first digest.`;
+      )}, you successfuly logged in to Gistbot for Gmail!`;
+
       await client.chat.postMessage({
         channel: slackUserId,
         text,
@@ -167,6 +126,13 @@ export class EmailMessageSender {
           },
         ],
       });
+
+      await this.homeDataStore.updateGmailConnectionStatus(
+        { slackUserId, slackTeamId },
+        true,
+      );
+
+      this.eventsEmitter.emit(UPDATE_HOME_EVENT_NAME, { ...data });
 
       this.analyticsManager.gmailOnboardingFunnel({
         funnelStep: 'completed',

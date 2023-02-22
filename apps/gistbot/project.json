@@ -10,7 +10,6 @@
         "outputPath": "dist/apps/gistbot",
         "main": "apps/gistbot/src/main.ts",
         "tsConfig": "apps/gistbot/tsconfig.app.json",
-        "assets": ["apps/gistbot/src/assets"],
         "generatePackageJson": true
       },
       "configurations": {

@@ -6,35 +6,6 @@ import { loadEnvs } from '@base/env';
 import { environment } from './environments/environment';
 loadEnvs(environment, ['configs', 'secrets']);
 
-import { BoltWrapper, logger } from '@base/logger';
-import { PrometheusReporter, slackBoltMetricsMiddleware } from '@base/metrics';
-import { Server } from 'http';
-import { PgInstallationStore, AnalyticsManager } from '@base/gistbot-shared';
-import { createApp } from './slack-bolt-app';
-import { registerBoltAppRouter } from './routes/router';
-import { PgOnboardingStore } from './onboarding/onboardingStore';
-import { ChannelSummarizer } from './summaries/channel/channel-summarizer';
-import { ThreadSummarizer } from './summaries/thread/thread-summarizer';
-import { UserOnboardedNotifier } from './onboarding/notifier';
-import { RedisOnboardingLock } from './onboarding/onboarding-lock';
-import { readyChecker, RedisConfig } from '@base/utils';
-import { SummaryStore } from './summaries/summary-store';
-import { OnboardingManager } from './onboarding/manager';
-import { NewUserTriggersManager } from './new-user-triggers/manager';
-import { RedisTriggerLock } from './new-user-triggers/trigger-lock';
-import { PgTriggerLock } from './new-user-triggers/trigger-lock-persistent';
-import { UserFeedbackManager } from './user-feedback/manager';
-import { OnboardingNudgeJob } from './onboarding/onboarding-nudge-job';
-import { RedisOnboardingNudgeLock } from './onboarding/onboarding-nudge-lock';
-import { PgSessionDataStore } from './summaries/session-data/session-data-store';
-import { RedisRateLimiter } from './feature-rate-limiter/rate-limiter-store';
-import { FeatureRateLimiter } from './feature-rate-limiter/rate-limiter';
-import { InternalSessionFetcher } from './summaries/session-data/internal-fetcher';
-import { MultiChannelSummarizer } from './summaries/channel/multi-channel-summarizer';
-import { SummarySchedulerJob } from './summary-scheduler/summary-scheduler-job';
-import { PgSchedulerSettingsStore } from './summary-scheduler/scheduler-store';
-import { RedisSchedulerSettingsLock } from './summary-scheduler/scheduler-settings-lock';
-import { SchedulerSettingsManager } from './summary-scheduler/scheduler-manager';
 import {
   CustomerIdentifier,
   PgCustomerStore,
@@ -42,22 +13,54 @@ import {
   SubscriptionManager,
 } from '@base/customer-identifier';
 import { EmailSender } from '@base/emailer';
-import { PgOrgSettingsStore } from './orgsettings/store';
-import { ScheduledMessageSender } from './slack/scheduled-messages/manager';
-import AwsSQSReceiver from './slack/sqs-receiver';
+import { AnalyticsManager, PgInstallationStore } from '@base/gistbot-shared';
+import { BoltWrapper, logger } from '@base/logger';
+import { PrometheusReporter, slackBoltMetricsMiddleware } from '@base/metrics';
 import { SqsConsumer } from '@base/pubsub';
-import { createServer } from './server';
+import { readyChecker, RedisConfig } from '@base/utils';
 import { App } from '@slack/bolt';
-import { MessagesSummaryModel } from './summaries/models/messages-summary.model';
-import { MessagesSummarizer } from './summaries/messages/messages-summarizer';
+import { EventEmitter } from 'events';
+import { Server } from 'http';
 import { BotsManager } from './bots-integrations/bots-manager';
 import { GithubBot } from './bots-integrations/bots/github.bot';
+import { FeatureRateLimiter } from './feature-rate-limiter/rate-limiter';
+import { RedisRateLimiter } from './feature-rate-limiter/rate-limiter-store';
+import { AppHomeManager } from './home/app-home-manager';
+import { EmailDigestManager } from './home/email-manager';
+import { HomeDataStore } from './home/home-data-store';
+import { NewUserTriggersManager } from './new-user-triggers/manager';
+import { RedisTriggerLock } from './new-user-triggers/trigger-lock';
+import { PgTriggerLock } from './new-user-triggers/trigger-lock-persistent';
+import { OnboardingManager } from './onboarding/manager';
+import { UserOnboardedNotifier } from './onboarding/notifier';
+import { RedisOnboardingLock } from './onboarding/onboarding-lock';
+import { OnboardingNudgeJob } from './onboarding/onboarding-nudge-job';
+import { RedisOnboardingNudgeLock } from './onboarding/onboarding-nudge-lock';
+import { PgOnboardingStore } from './onboarding/onboardingStore';
+import { PgOrgSettingsStore } from './orgsettings/store';
+import { registerBoltAppRouter } from './routes/router';
+import { createServer } from './server';
+import { createApp } from './slack-bolt-app';
+import { ScheduledMessageSender } from './slack/scheduled-messages/manager';
+import AwsSQSReceiver from './slack/sqs-receiver';
+import { ChannelSummaryStore } from './summaries/channel-summary-store';
+import { ChannelSummarizer } from './summaries/channel/channel-summarizer';
+import { MultiChannelSummarizer } from './summaries/channel/multi-channel-summarizer';
+import { MessagesSummarizer } from './summaries/messages/messages-summarizer';
 import { ChannelModelTranslator } from './summaries/models/channel-model-translator';
 import { ChannelSummaryModel } from './summaries/models/channel-summary.model';
-import { SlackDataStore } from './utils/slack-data-store';
-import { ChannelSummaryStore } from './summaries/channel-summary-store';
+import { MessagesSummaryModel } from './summaries/models/messages-summary.model';
+import { InternalSessionFetcher } from './summaries/session-data/internal-fetcher';
+import { PgSessionDataStore } from './summaries/session-data/session-data-store';
+import { SummaryStore } from './summaries/summary-store';
+import { ThreadSummarizer } from './summaries/thread/thread-summarizer';
+import { SchedulerSettingsManager } from './summary-scheduler/scheduler-manager';
+import { RedisSchedulerSettingsLock } from './summary-scheduler/scheduler-settings-lock';
+import { PgSchedulerSettingsStore } from './summary-scheduler/scheduler-store';
+import { SummarySchedulerJob } from './summary-scheduler/summary-scheduler-job';
 import { UninstallsNotifier } from './uninstall/notifier';
-import { EmailMessageSender } from './email-for-slack/email-message-sender/email-message-sender';
+import { UserFeedbackManager } from './user-feedback/manager';
+import { SlackDataStore } from './utils/slack-data-store';
 
 const gracefulShutdown = (server: Server) => (signal: string) => {
   logger.info('starting shutdown, got signal ' + signal);
@@ -338,11 +341,15 @@ const startApp = async () => {
     analyticsManager,
   );
 
-  const mailbotMessageSender = new EmailMessageSender(
+  const homeDataStore = new HomeDataStore(pgConfig);
+  const eventsEmitter = new EventEmitter();
+  const emailDigestManager = new EmailDigestManager(
     mailbotQueueCfg,
     pgStore,
     analyticsManager,
     slackDataStore,
+    homeDataStore,
+    eventsEmitter,
   );
 
   const summarySchedulerJob = new SummarySchedulerJob(
@@ -365,8 +372,9 @@ const startApp = async () => {
     customerIdentifierLock,
     orgSettingsStore,
     scheduledMessageSender,
-    mailbotMessageSender,
+    emailDigestManager,
     slackDataStore,
+    homeDataStore,
   );
 
   const sqsRegion = process.env.SQS_REGION;
@@ -392,6 +400,13 @@ const startApp = async () => {
   const slackApp = createApp(sqsReceiver, pgStore);
   slackApp.use(slackBoltMetricsMiddleware(metricsReporter));
 
+  new AppHomeManager(
+    pgStore,
+    pgSchedulerSettingsStore,
+    homeDataStore,
+    eventsEmitter,
+  );
+
   registerBoltAppRouter(
     slackApp,
     pgStore,
@@ -411,6 +426,7 @@ const startApp = async () => {
     customerIdentifier,
     orgSettingsStore,
     uninstallNotifier,
+    eventsEmitter,
   );
 
   // Bolt's Receiver implements a start function that returns a generic value,

@@ -36,7 +36,11 @@ To run the second env use `ngrok:gistbot2` and `start:local2`. You w
 
 ### Bullboard
 
-We use Bull as one of the queues. To view it's messages you can access the bullboard at http://localhost:3005/from your browser.
+We use Bull as one of the queues. To view it's messages you can access the bullboard at http://localhost:3005/ from your browser.
+
+### Postres (PgUtil)
+
+In this project we use knex as the sql lib. When adding a new DB or migrating the DB, it's your job to create the tables and migrate stuff. On others projects we used TypeORM, in this project we don't. Make sure the DB is updated before merging your code!
 
 ## Troubleshooting
 

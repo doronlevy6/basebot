@@ -43,7 +43,6 @@ export const ConnectToGmail = (
           },
           style: 'primary',
           url: createGmailAuthUrl(userId, teamId),
-          value: 'click_me_123',
         },
       ],
     },

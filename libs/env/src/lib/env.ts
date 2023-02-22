@@ -27,17 +27,5 @@ export const loadEnvs = (initialEnv: IInitialEnv, envTypes: string[]) => {
     console.info({ msg: 'Successfully loaded env ' + envPath });
   }
 
-  const envPath = path.resolve(initialEnv.cwd, 'versions.env');
-  console.info({ msg: 'Loading env ' + envPath });
-  const result = dotenv.config({
-    path: envPath,
-  });
-  console.info({ msg: 'Successfully loaded env ' + envPath });
-  if (result.error) {
-    console.log({
-      msg: 'error reading versions from environment: ' + result.error,
-    });
-  }
-
   process.env['SERVICE_NAME'] = initialEnv.serviceName;
 };

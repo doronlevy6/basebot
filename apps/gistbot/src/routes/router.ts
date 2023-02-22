@@ -2,6 +2,7 @@ import { CustomerIdentifier } from '@base/customer-identifier';
 import { AnalyticsManager } from '@base/gistbot-shared';
 import { IReporter } from '@base/metrics';
 import { App, directMention, InstallationStore, subtype } from '@slack/bolt';
+import { EventEmitter } from 'events';
 import {
   allSettingsButtonHandler,
   openGmailSettingsFromAllSettings,
@@ -162,6 +163,7 @@ export const registerBoltAppRouter = (
   customerIdentifier: CustomerIdentifier,
   orgSettingsStore: OrgSettingsStore,
   uninstallNotifier: UninstallsNotifier,
+  eventEmitter: EventEmitter,
 ) => {
   const chatModel = new ChatModel();
   const onboardingMiddleware = userOnboardingMiddleware(onboardingManager);
@@ -534,7 +536,7 @@ export const registerBoltAppRouter = (
 
   app.event(
     'app_home_opened',
-    appHomeOpenedHandler(onboardingManager, analyticsManager),
+    appHomeOpenedHandler(onboardingManager, analyticsManager, eventEmitter),
   );
 
   // This is the global action handler, which will match all unmatched actions
