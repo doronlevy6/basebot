@@ -1,0 +1,39 @@
+version: "2"
+authtoken: $NGROK_TOKEN
+region: us
+tunnels:
+  slacker:
+    proto: http
+    addr: 3000
+    subdomain: gistbot
+  mailbot:
+    proto: http
+    addr: 3004
+    hostname: gistbot-mailbot.baselabs.dev
+
+  slacker-2:
+    proto: http
+    addr: 3000
+    subdomain: gistbot-2
+  mailbot-2:
+    proto: http
+    addr: 3004
+    hostname: gistbot-mailbot-2.baselabs.dev
+
+  slacker-3:
+    proto: http
+    addr: 3000
+    subdomain: gistbot-3
+  mailbot-3:
+    proto: http
+    addr: 3004
+    hostname: gistbot-mailbot-3.baselabs.dev
+
+  slacker-4:
+    proto: http
+    addr: 3000
+    subdomain: gistbot-4
+  mailbot-4:
+    proto: http
+    addr: 3004
+    hostname: gistbot-mailbot-4.baselabs.dev
