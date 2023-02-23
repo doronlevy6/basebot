@@ -7,6 +7,7 @@ import { Job } from 'bullmq';
 import { saveDefaultEmailDigestSettings } from '../email-for-slack/email-digest-settings/email-digest-settings-client';
 import {
   GmailDigest,
+  GmailDigestSection,
   JobsTypes,
   SlackIdToMailResponse,
 } from '../email-for-slack/types';
@@ -14,7 +15,11 @@ import { UserLink } from '../slack/components/user-link';
 import { SlackDataStore } from '../utils/slack-data-store';
 import { HomeDataStore } from './home-data-store';
 import EventEmitter = require('events');
-import { UPDATE_HOME_EVENT_NAME } from './types';
+import {
+  OnMessageClearedEvent,
+  ON_MESSAGE_CLEARED_EVENT_NAME,
+  UPDATE_HOME_EVENT_NAME,
+} from './types';
 
 const QUEUE_NAME = 'emailMessageSender';
 type JobData = GmailDigest | SlackIdToMailResponse;
@@ -29,6 +34,9 @@ export class EmailDigestManager extends BullMQUtil<JobData> {
     private eventsEmitter: EventEmitter,
   ) {
     super(QUEUE_NAME, queueCfg);
+    this.eventsEmitter.on(ON_MESSAGE_CLEARED_EVENT_NAME, (data) => {
+      this.onMessageClearedNotification(data).catch(logger.error);
+    });
   }
 
   async handleMessage(job: Job<JobData>) {
@@ -149,5 +157,94 @@ export class EmailDigestManager extends BullMQUtil<JobData> {
         `error in handleOnboarding for user email: ${email}, slackUserId: ${slackUserId}, ${e}`,
       );
     }
+  }
+
+  private async onMessageClearedNotification({
+    id,
+    slackUserId,
+    slackTeamId,
+  }: OnMessageClearedEvent) {
+    try {
+      const data = await this.homeDataStore.fetch({
+        slackUserId,
+        slackTeamId,
+      });
+
+      logger.info(`will clear email for ${slackUserId} in ${slackTeamId}...`);
+
+      const digest = data?.gmailDigest?.digest;
+      if (!digest) {
+        logger.warn(
+          `no gmail digest was found for ${slackUserId} in ${slackTeamId}...`,
+        );
+        return;
+      }
+
+      logger.debug(
+        `will update gmail digest for ${slackUserId} in ${slackTeamId}...`,
+      );
+
+      const { digest: updatedDigest, foundMatch } = this.filteredDigest(
+        digest,
+        id,
+      );
+
+      if (!foundMatch) {
+        logger.warn(
+          `no match was found for ${id} ${slackUserId} in ${slackTeamId}...`,
+        );
+        return;
+      }
+
+      await this.homeDataStore.updateEmailDigest(
+        { slackTeamId, slackUserId },
+        updatedDigest,
+      );
+
+      logger.debug(
+        `gmail digest was updated for ${slackUserId} in ${slackTeamId}...`,
+      );
+
+      this.eventsEmitter.emit(UPDATE_HOME_EVENT_NAME, {
+        slackUserId,
+        slackTeamId,
+      });
+    } catch (e) {
+      logger.error(`error clearing message: ${e}`);
+    }
+  }
+
+  private filteredDigest(digest: GmailDigest, id: string) {
+    const { sections } = digest;
+    let foundMatch = false;
+    const newSections: GmailDigestSection[] = [];
+    for (const section of sections) {
+      if (section.id === id) {
+        foundMatch = true;
+        logger.debug(`filteredDigest detection matched section for ${id}`);
+        continue;
+      }
+
+      const newMessages = section.messages.filter((m) => {
+        if (m.id === id) {
+          foundMatch = true;
+          logger.debug(`filteredDigest detection matched message for ${id}`);
+          return false;
+        }
+        return true;
+      });
+
+      if (newMessages.length === 0) {
+        logger.debug(`filteredDigest detection matched section for ${id}`);
+        continue;
+      }
+
+      newSections.push({
+        ...section,
+        messages: newMessages,
+      });
+    }
+
+    return { foundMatch, digest: { ...digest, sections: newSections } };
   }
 }

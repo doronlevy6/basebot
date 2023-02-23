@@ -1,5 +1,10 @@
 import { AnalyticsManager } from '@base/gistbot-shared';
 import axios from 'axios';
+import EventEmitter = require('events');
+import {
+  OnMessageClearedEvent,
+  ON_MESSAGE_CLEARED_EVENT_NAME,
+} from '../../home/types';
 import { SlackBlockActionWrapper } from '../../slack/types';
 import { MAIL_BOT_SERVICE_API } from '../types';
 import { updateButtonText } from './helpers';
@@ -9,7 +14,7 @@ const SUCCESS_TEXT = 'Archived ✅';
 const FAIL_TEXT = 'Failed :(';
 
 export const archiveHandler =
-  (analyticsManager: AnalyticsManager) =>
+  (analyticsManager: AnalyticsManager, eventEmitter: EventEmitter) =>
   async ({ ack, logger, body, client }: SlackBlockActionWrapper) => {
     await ack();
     const action = body.actions[0];
@@ -50,7 +55,14 @@ export const archiveHandler =
           `email archiveHandler wasn't able to mark as read for user ${body.user.id} with response ${response.status}`,
         );
         await updateButtonText(body, action, logger, client, FAIL_TEXT);
+        return;
       }
+
+      eventEmitter.emit(ON_MESSAGE_CLEARED_EVENT_NAME, {
+        id: mailId,
+        slackUserId: body.user.id,
+        slackTeamId: body.team.id,
+      } as OnMessageClearedEvent);
     } catch (e) {
       isError = true;
       logger.error(`error in archiveHandler for user ${body.user.id}, ${e}`);

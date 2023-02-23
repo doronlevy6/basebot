@@ -222,16 +222,22 @@ export const registerBoltAppRouter = (
 
   app.action(Routes.MAIL_READ_MORE, emailReadMoreHandler(homeDataStore));
 
-  app.action(Routes.MAIL_MARK_AS_READ, markAsReadHandler(analyticsManager));
+  app.action(
+    Routes.MAIL_MARK_AS_READ,
+    markAsReadHandler(analyticsManager, eventEmitter),
+  );
 
   app.action(
     Routes.MAIL_MARK_ALL_AS_READ,
-    markAllAsReadHandler(analyticsManager),
+    markAllAsReadHandler(analyticsManager, eventEmitter),
   );
 
-  app.action(Routes.ARCHIVE_ALL, archiveAllHandler(analyticsManager));
+  app.action(
+    Routes.ARCHIVE_ALL,
+    archiveAllHandler(analyticsManager, eventEmitter),
+  );
 
-  app.action(Routes.ARCHIVE, archiveHandler(analyticsManager));
+  app.action(Routes.ARCHIVE, archiveHandler(analyticsManager, eventEmitter));
 
   app.action(Routes.MAIL_SAVE_DRAFT, saveDraft(analyticsManager));
 
@@ -557,10 +563,4 @@ export const registerBoltAppRouter = (
       // Do nothing on error, since the error is going to be the "ack multiple times error" and we don't care here
     }
   });
-
-  app.action(Routes.MAIL_MARK_AS_READ, markAsReadHandler(analyticsManager));
-
-  app.action(Routes.MAIL_SAVE_DRAFT, saveDraft(analyticsManager));
-
-  app.view(Routes.MAIL_REPLY_SUBMIT, emailReplySubmitHandler(analyticsManager));
 };
