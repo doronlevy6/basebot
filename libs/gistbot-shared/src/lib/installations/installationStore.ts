@@ -7,6 +7,7 @@ import {
 import { PgUtil, PgConfig } from '@base/utils';
 import { logger } from '@base/logger';
 
+import { installNotify } from './new-org-join-notifyer';
 export class PgInstallationStore extends PgUtil implements InstallationStore {
   private metricsReporter: IReporter;
 
@@ -61,7 +62,11 @@ export class PgInstallationStore extends PgUtil implements InstallationStore {
         enterprise: 'true',
       });
     }
+
     if (installation.team !== undefined) {
+      //  eslint-disable-next-line @typescript-eslint/no-floating-promises
+      installNotify(installation);
+
       await this.db('gistbot_slack_installations')
         .insert({
           slack_id: installation.team.id,
