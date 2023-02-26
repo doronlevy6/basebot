@@ -37,3 +37,21 @@ tunnels:
     proto: http
     addr: 3004
     hostname: gistbot-mailbot-4.baselabs.dev
+
+  slacker-5:
+    proto: http
+    addr: 3000
+    subdomain: gistbot-5
+  mailbot-5:
+    proto: http
+    addr: 3004
+    hostname: gistbot-mailbot-5.baselabs.dev
+
+  slacker-6:
+    proto: http
+    addr: 3000
+    subdomain: gistbot-6
+  mailbot-6:
+    proto: http
+    addr: 3004
+    hostname: gistbot-mailbot-6.baselabs.dev
