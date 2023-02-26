@@ -8,7 +8,7 @@ export const GoToSlackDigestBlocks = (teamId: string): KnownBlock[] => [
     type: 'section',
     text: {
       type: 'mrkdwn',
-      text: '*Slack Digest *\nYour Daily Digset is waiting for you in messages',
+      text: ':slack:  *Slack Digest *\nYour Daily Digset is waiting for you in messages',
     },
     accessory: {
       type: 'button',

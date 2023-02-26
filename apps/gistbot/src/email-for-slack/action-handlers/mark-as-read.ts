@@ -7,15 +7,16 @@ import {
 } from '../../home/types';
 import { SlackBlockActionWrapper } from '../../slack/types';
 import { MAIL_BOT_SERVICE_API } from '../types';
-import { updateButtonText } from './helpers';
+import { GmailSubscriptionsManager } from '../gmail-subscription-manager/gmail-subscription-manager';
 
 const MARK_AS_READ_PATH = '/mail/gmail-client/markAsRead';
 
-const FAIL_TEXT = 'Failed :(';
-const SUCCESS_TEXT = 'Read ✅';
-
 export const markAsReadHandler =
-  (analyticsManager: AnalyticsManager, eventsEmitter: EventEmitter) =>
+  (
+    analyticsManager: AnalyticsManager,
+    eventsEmitter: EventEmitter,
+    gmailSubscriptionsManager: GmailSubscriptionsManager,
+  ) =>
   async ({ ack, logger, body, client }: SlackBlockActionWrapper) => {
     await ack();
     const action = body.actions[0];
@@ -24,7 +25,20 @@ export const markAsReadHandler =
         `email markAsReadHandler received non-button action for user ${body.user.id}`,
       );
     }
-
+    if (!body.user.id || !body.team?.id) {
+      throw new Error(
+        `email mark as read handler received no user id or team id`,
+      );
+    }
+    const allowedAction = await gmailSubscriptionsManager.showPaywallIfNeeded(
+      body.user.id,
+      body.team?.id,
+      'mark_as_read',
+      { logger, body, client },
+    );
+    if (!allowedAction) {
+      return;
+    }
     let isError = false;
     const mailId = action.value;
     try {
@@ -36,7 +50,6 @@ export const markAsReadHandler =
         return;
       }
 
-      await updateButtonText(body, action, logger, client, SUCCESS_TEXT);
       const url = new URL(MAIL_BOT_SERVICE_API);
       url.pathname = MARK_AS_READ_PATH;
 
@@ -56,7 +69,7 @@ export const markAsReadHandler =
         logger.error(
           `email markAsReadHandler wasn't able to mark as read for user ${body.user.id} with response ${response.status}`,
         );
-        await updateButtonText(body, action, logger, client, FAIL_TEXT);
+        // TODO: Show error modal
         return;
       }
 
@@ -67,7 +80,7 @@ export const markAsReadHandler =
       } as OnMessageClearedEvent);
     } catch (e) {
       isError = true;
-      await updateButtonText(body, action, logger, client, FAIL_TEXT);
+      // TODO: Show error modal
       logger.error(`error in markAsReadHandler for user ${body.user.id}, ${e}`);
       throw e;
     } finally {

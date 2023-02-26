@@ -3,6 +3,8 @@ import { SlackBlockActionWrapper } from '../../slack/types';
 import { DigestMessage } from '../types';
 import { ReadMoreView } from '../views/email-read-more-view';
 
+const maxModalCharCount = 3000;
+
 export const emailReadMoreHandler =
   (homeStore: HomeDataStore) =>
   async ({ ack, logger, body, client }: SlackBlockActionWrapper) => {
@@ -50,7 +52,10 @@ export const emailReadMoreHandler =
         );
         return;
       }
-
+      message.readMoreBody = message.readMoreBody.substring(
+        0,
+        maxModalCharCount,
+      );
       await client.views.open({
         trigger_id: body.trigger_id,
         view: ReadMoreView({

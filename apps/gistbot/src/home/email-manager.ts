@@ -137,7 +137,7 @@ export class EmailDigestManager extends BullMQUtil<JobData> {
 
       await this.homeDataStore.updateGmailConnectionStatus(
         { slackUserId, slackTeamId },
-        true,
+        new Date(),
       );
 
       this.eventsEmitter.emit(UPDATE_HOME_EVENT_NAME, { ...data });

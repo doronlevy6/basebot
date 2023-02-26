@@ -1,6 +1,7 @@
 import { KnownBlock } from '@slack/web-api';
 import { Routes } from '../../../routes/router';
 import { SlackDate } from '../../../slack/components/date';
+import { OnboardingHeaderGoProBlocks } from '../onboarding/onboarding-header-go-pro';
 
 export const EmailHeaderBlocks = (
   email: string,

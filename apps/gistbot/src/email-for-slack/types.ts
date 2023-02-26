@@ -70,14 +70,27 @@ export class Classification {
 }
 
 export enum EmailCategory {
-  Apps = 'apps',
-  Calendar = 'calendar',
-  Newsletters = 'newsletters',
-  Personal = 'personal',
-  Promotions = 'promotions',
-  Social = 'social',
-  Other = 'other',
+  Priority = 'Priority',
+  Apps = 'Apps',
+  Calendar = 'Calendar',
+  Newsletters = 'Newsletters',
+  Personal = 'Personal',
+  Promotions = 'Promotions',
+  Social = 'Social',
+  DocSigning = 'Document-signing',
+  Groups = 'Groups',
 }
+
+export const EmailCategoryToEmoji: Map<EmailCategory, string> = new Map([
+  [EmailCategory.Priority, ':sparkles:'],
+  [EmailCategory.Apps, ':iphone:'],
+  [EmailCategory.Calendar, ':calendar:'],
+  [EmailCategory.Newsletters, ':newspaper:'],
+  [EmailCategory.Promotions, ':moneybag:'],
+  [EmailCategory.Social, ':bowling:'],
+  [EmailCategory.DocSigning, ':page_facing_up:'],
+  [EmailCategory.Groups, ':people_holding_hands:'],
+]);
 
 export interface IHomeViewMetadata {
   userId: string;

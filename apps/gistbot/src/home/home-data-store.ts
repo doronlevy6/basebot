@@ -14,7 +14,7 @@ export type HomeData = Omit<IHomeState, 'slackOnboarded'>;
 interface ITableData {
   slack_team_id: string;
   slack_user_id: string;
-  email_connected: boolean;
+  email_connected: Date;
   email_digest: string;
   email_digest_last_updated: Date;
 }
@@ -24,7 +24,7 @@ export class HomeDataStore extends PgUtil {
     await this.db.raw(`CREATE TABLE IF NOT EXISTS ${TABLE_NAME} (
         slack_team_id varchar(36) NOT NULL,
         slack_user_id varchar(36) NOT NULL,
-        email_connected boolean default false,
+        email_connected timestamp default null,
         email_digest jsonb,
         email_digest_last_updated timestamp,
         PRIMARY KEY ("slack_team_id", "slack_user_id")
@@ -49,11 +49,11 @@ export class HomeDataStore extends PgUtil {
 
   async updateGmailConnectionStatus(
     { slackTeamId, slackUserId }: IPrimaryKey,
-    connected: boolean,
+    connectedSince: Date,
   ): Promise<void> {
     console.debug(
       'updateGmailConnectionStatus',
-      connected,
+      connectedSince,
       slackTeamId,
       slackUserId,
     );
@@ -61,10 +61,10 @@ export class HomeDataStore extends PgUtil {
       .insert({
         slack_team_id: slackTeamId,
         slack_user_id: slackUserId,
-        email_connected: connected,
+        email_connected: connectedSince,
       })
       .onConflict(['slack_team_id', 'slack_user_id'])
-      .merge();
+      .merge(['slack_team_id', 'slack_user_id']);
   }
 
   async fetch({

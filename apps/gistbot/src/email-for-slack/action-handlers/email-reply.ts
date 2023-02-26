@@ -4,11 +4,12 @@ import { Routes } from '../../routes/router';
 import { SlackBlockActionWrapper, ViewAction } from '../../slack/types';
 import { ReplyMailView } from '../views/email-reply-view';
 import { MAIL_BOT_SERVICE_API } from '../types';
+import { GmailSubscriptionsManager } from '../gmail-subscription-manager/gmail-subscription-manager';
 
 const REPLY_PATH = '/mail/gmail-client/sendReply';
 
 export const emailReplyHandler =
-  () =>
+  (gmailSubscriptionsManager: GmailSubscriptionsManager) =>
   async ({ ack, logger, body, client }: SlackBlockActionWrapper) => {
     try {
       await ack();
@@ -17,7 +18,18 @@ export const emailReplyHandler =
       if (action.type !== 'button') {
         throw new Error('email reply handler received non-button action');
       }
-
+      if (!body.user.id || !body.team?.id) {
+        throw new Error(`email reply handler received no user id or team id`);
+      }
+      const allowedAction = await gmailSubscriptionsManager.showPaywallIfNeeded(
+        body.user.id,
+        body.team?.id,
+        'reply',
+        { logger, body, client },
+      );
+      if (!allowedAction) {
+        return;
+      }
       const value = action.value;
       const valuesArray = value.split('|');
 

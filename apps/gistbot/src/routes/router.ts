@@ -21,6 +21,7 @@ import { markAsReadHandler } from '../email-for-slack/action-handlers/mark-as-re
 import { emailReadMoreHandler } from '../email-for-slack/action-handlers/read-more';
 import { refreshGmail } from '../email-for-slack/action-handlers/refresh-gmail';
 import { saveDraft } from '../email-for-slack/action-handlers/save-draft';
+import { sectionActionsHandler } from '../email-for-slack/action-handlers/section-actions';
 import {
   emailSettingsBrokenLinkSubmitted,
   showEmailDigestBrokenLinksModal,
@@ -97,6 +98,7 @@ import { UserFeedbackManager } from '../user-feedback/manager';
 import { SlackDataStore } from '../utils/slack-data-store';
 import { botIMRouter } from './bot-im-router';
 import { slashCommandRouter } from './slash-command-router';
+import { GmailSubscriptionsManager } from '../email-for-slack/gmail-subscription-manager/gmail-subscription-manager';
 
 const ARRAY_CHAT_GIST_ACTIONS = [0, 1, 2];
 export enum Routes {
@@ -143,6 +145,7 @@ export enum Routes {
   EMAIL_SETTINGS_OPEN_MODAL = 'email-settings-open-modal',
   EMAIL_LINK_BROKEN_OPEN_MODAL = 'email-link-broken-open-modal',
   EMAIL_LINK_BROKEN_MODAL_SUBMIT = 'email-link-broken-modal-submit',
+  EMAIL_SECTION_ACTION = 'email-section-action',
 }
 
 export const registerBoltAppRouter = (
@@ -155,6 +158,7 @@ export const registerBoltAppRouter = (
   onboardingManager: OnboardingManager,
   summaryStore: SummaryStore,
   slackDataStore: SlackDataStore,
+  gmailSubscriptionsManager: GmailSubscriptionsManager,
   newUserTriggersManager: NewUserTriggersManager,
   userFeedbackManager: UserFeedbackManager,
   sessionDataStore: SessionDataStore,
@@ -218,32 +222,55 @@ export const registerBoltAppRouter = (
       multiChannelSummarizer,
     ),
   );
-  app.action(Routes.MAIL_REPLY, emailReplyHandler());
+  app.action(Routes.MAIL_REPLY, emailReplyHandler(gmailSubscriptionsManager));
 
   app.action(Routes.MAIL_READ_MORE, emailReadMoreHandler(homeDataStore));
 
   app.action(
     Routes.MAIL_MARK_AS_READ,
-    markAsReadHandler(analyticsManager, eventEmitter),
+    markAsReadHandler(
+      analyticsManager,
+      eventEmitter,
+      gmailSubscriptionsManager,
+    ),
   );
 
   app.action(
     Routes.MAIL_MARK_ALL_AS_READ,
-    markAllAsReadHandler(analyticsManager, eventEmitter),
+    markAllAsReadHandler(
+      analyticsManager,
+      eventEmitter,
+      gmailSubscriptionsManager,
+    ),
   );
 
   app.action(
     Routes.ARCHIVE_ALL,
-    archiveAllHandler(analyticsManager, eventEmitter),
+    archiveAllHandler(
+      analyticsManager,
+      eventEmitter,
+      gmailSubscriptionsManager,
+    ),
   );
 
-  app.action(Routes.ARCHIVE, archiveHandler(analyticsManager, eventEmitter));
+  app.action(
+    Routes.ARCHIVE,
+    archiveHandler(analyticsManager, eventEmitter, gmailSubscriptionsManager),
+  );
 
-  app.action(Routes.MAIL_SAVE_DRAFT, saveDraft(analyticsManager));
+  app.action(
+    Routes.MAIL_SAVE_DRAFT,
+    saveDraft(analyticsManager, gmailSubscriptionsManager),
+  );
 
   app.action(Routes.REFRESH_GMAIL, refreshGmail());
 
   app.view(Routes.MAIL_REPLY_SUBMIT, emailReplySubmitHandler(analyticsManager));
+
+  app.action(
+    Routes.EMAIL_SECTION_ACTION,
+    sectionActionsHandler(analyticsManager, eventEmitter),
+  );
 
   app.action(
     Routes.THREAD_SUMMARY_FEEDBACK,

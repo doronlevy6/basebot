@@ -1,4 +1,5 @@
 import { AnalyticsManager } from '@base/gistbot-shared';
+import { ButtonAction } from '@slack/bolt';
 import axios from 'axios';
 import EventEmitter = require('events');
 import {
@@ -7,74 +8,53 @@ import {
 } from '../../home/types';
 import { SlackBlockActionWrapper } from '../../slack/types';
 import { MAIL_BOT_SERVICE_API } from '../types';
-import { updateButtonText } from './helpers';
+import { GmailSubscriptionsManager } from '../gmail-subscription-manager/gmail-subscription-manager';
 
 const MARK_ALL_AS_READ_PATH = '/mail/bulk-actions/mark-as-read';
-const FAIL_TEXT = 'Failed :(';
-const SUCCESS_TEXT = 'Read ✅';
 
 export const markAllAsReadHandler =
-  (analyticsManager: AnalyticsManager, eventsEmitter: EventEmitter) =>
-  async ({ ack, logger, body, client }: SlackBlockActionWrapper) => {
-    await ack();
-    const action = body.actions[0];
+  (
+    analyticsManager: AnalyticsManager,
+    eventsEmitter: EventEmitter,
+    gmailSubscriptionsManager: GmailSubscriptionsManager,
+  ) =>
+  async (props: SlackBlockActionWrapper) => {
+    await props.ack();
+    const action = props.body.actions[0] as ButtonAction;
     if (action.type !== 'button') {
       throw new Error(
-        `markAllAsReadHandler received non-button action for user ${body.user.id}`,
+        `markAllAsReadHandler received non-button action for user ${props.body.user.id}`,
       );
     }
-
+    if (!props.body.user.id || !props.body.team?.id) {
+      throw new Error(
+        `email mark all as read handler received no user id or team id`,
+      );
+    }
+    const allowedAction = await gmailSubscriptionsManager.showPaywallIfNeeded(
+      props.body.user.id,
+      props.body.team?.id,
+      'mark_all_as_read',
+      { logger: props.logger, body: props.body, client: props.client },
+    );
+    if (!allowedAction) {
+      return;
+    }
     let isError = false;
     const mailId = action.value;
     try {
-      logger.debug(`mark all as read handler for user ${body.user.id}`);
-      if (!body.team?.id) {
-        logger.error(
-          `team id not exist for user ${body.user.id} in markAllAsReadHandler`,
-        );
-        return;
-      }
-
-      await updateButtonText(body, action, logger, client, SUCCESS_TEXT);
-      const url = new URL(MAIL_BOT_SERVICE_API);
-      url.pathname = MARK_ALL_AS_READ_PATH;
-
-      const response = await axios.post(
-        url.toString(),
-        {
-          slackUserId: body.user.id,
-          slackTeamId: body.team.id,
-          groupId: mailId,
-        },
-        {
-          timeout: 60000,
-        },
-      );
-      if (response.status !== 200 && response.status !== 201) {
-        isError = true;
-        logger.error(
-          `email markAllAsReadHandler wasn't able to mark as read for user ${body.user.id} with response ${response.status}`,
-        );
-        await updateButtonText(body, action, logger, client, FAIL_TEXT);
-        return;
-      }
-
-      eventsEmitter.emit(ON_MESSAGE_CLEARED_EVENT_NAME, {
-        id: mailId,
-        slackUserId: body.user.id,
-        slackTeamId: body.team.id,
-      } as OnMessageClearedEvent);
+      isError = await markAllAsRead(props, eventsEmitter, mailId);
     } catch (e) {
       isError = true;
-      await updateButtonText(body, action, logger, client, FAIL_TEXT);
-      logger.error(
-        `error in markAllAsReadHandler for user ${body.user.id}, ${e}`,
+      props.logger.error(
+        `error in markAllAsReadHandler for user ${props.body.user.id}, ${e}`,
       );
+      // TODO: Show error modal
       throw e;
     } finally {
       analyticsManager.gmailUserAction({
-        slackUserId: body.user.id,
-        slackTeamId: body.team?.id || '',
+        slackUserId: props.body.user.id,
+        slackTeamId: props.body.team?.id || '',
         action: 'mark_all_as_read',
         extraParams: {
           isError,
@@ -83,3 +63,50 @@ export const markAllAsReadHandler =
       });
     }
   };
+
+export const markAllAsRead = async (
+  { logger, body }: SlackBlockActionWrapper,
+  eventsEmitter: EventEmitter,
+  mailId: string,
+) => {
+  let isError = false;
+  logger.debug(`mark all as read handler for user ${body.user.id}`);
+  if (!body.team?.id) {
+    isError = true;
+    logger.error(
+      `team id not exist for user ${body.user.id} in markAllAsReadHandler`,
+    );
+    return isError;
+  }
+
+  const url = new URL(MAIL_BOT_SERVICE_API);
+  url.pathname = MARK_ALL_AS_READ_PATH;
+
+  const response = await axios.post(
+    url.toString(),
+    {
+      slackUserId: body.user.id,
+      slackTeamId: body.team.id,
+      groupId: mailId,
+    },
+    {
+      timeout: 60000,
+    },
+  );
+  if (response.status !== 200 && response.status !== 201) {
+    isError = true;
+    logger.error(
+      `email markAllAsReadHandler wasn't able to mark as read for user ${body.user.id} with response ${response.status}`,
+    );
+
+    return isError;
+  }
+
+  eventsEmitter.emit(ON_MESSAGE_CLEARED_EVENT_NAME, {
+    id: mailId,
+    slackUserId: body.user.id,
+    slackTeamId: body.team.id,
+  } as OnMessageClearedEvent);
+
+  return isError;
+};

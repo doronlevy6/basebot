@@ -6,6 +6,7 @@ import { HomeDataStore } from './home-data-store';
 import { IHomeState, UPDATE_HOME_EVENT_NAME } from './types';
 import { AppHomeView, IHomeMetadata } from './views/app-home-view';
 import EventEmitter = require('events');
+import { GmailSubscriptionsManager } from '../email-for-slack/gmail-subscription-manager/gmail-subscription-manager';
 
 export class AppHomeManager {
   constructor(
@@ -13,6 +14,7 @@ export class AppHomeManager {
     private digestSchedulerStore: PgSchedulerSettingsStore,
     private homeDataStore: HomeDataStore,
     private eventsEmitter: EventEmitter,
+    private gmailSubscriptionsManager: GmailSubscriptionsManager,
   ) {
     this.eventsEmitter.on(
       UPDATE_HOME_EVENT_NAME,
@@ -22,9 +24,13 @@ export class AppHomeManager {
   async updateHome(metadata: IHomeMetadata) {
     try {
       const { slackTeamId, slackUserId } = metadata;
-
       const state = await this.fetchState(metadata);
-      const blocks = AppHomeView(metadata, state);
+      const daysLeftFreeTrial =
+        await this.gmailSubscriptionsManager.freeTrialDaysLeft(
+          slackUserId,
+          slackTeamId,
+        );
+      const blocks = AppHomeView(metadata, state, daysLeftFreeTrial);
       const client = await this.createClient(slackTeamId);
       await client.views.publish({
         user_id: slackUserId,
@@ -58,7 +64,7 @@ export class AppHomeManager {
       logger.debug(
         `no state was found for ${slackUserId} in ${slackTeamId}...`,
       );
-      return { slackOnboarded, gmailConnected: false };
+      return { slackOnboarded };
     }
 
     return { ...state, slackOnboarded };
