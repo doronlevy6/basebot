@@ -21,6 +21,7 @@ import { markAsReadHandler } from '../email-for-slack/action-handlers/mark-as-re
 import { emailReadMoreHandler } from '../email-for-slack/action-handlers/read-more';
 import { refreshGmail } from '../email-for-slack/action-handlers/refresh-gmail';
 import { saveDraft } from '../email-for-slack/action-handlers/save-draft';
+import { sectionActionsHandler } from '../email-for-slack/action-handlers/section-actions';
 import {
   emailSettingsBrokenLinkSubmitted,
   showEmailDigestBrokenLinksModal,
@@ -143,6 +144,7 @@ export enum Routes {
   EMAIL_SETTINGS_OPEN_MODAL = 'email-settings-open-modal',
   EMAIL_LINK_BROKEN_OPEN_MODAL = 'email-link-broken-open-modal',
   EMAIL_LINK_BROKEN_MODAL_SUBMIT = 'email-link-broken-modal-submit',
+  EMAIL_SECTION_ACTION = 'email-section-action',
 }
 
 export const registerBoltAppRouter = (
@@ -244,6 +246,11 @@ export const registerBoltAppRouter = (
   app.action(Routes.REFRESH_GMAIL, refreshGmail());
 
   app.view(Routes.MAIL_REPLY_SUBMIT, emailReplySubmitHandler(analyticsManager));
+
+  app.action(
+    Routes.EMAIL_SECTION_ACTION,
+    sectionActionsHandler(analyticsManager, eventEmitter),
+  );
 
   app.action(
     Routes.THREAD_SUMMARY_FEEDBACK,

@@ -1,6 +1,11 @@
-import { Button, KnownBlock } from '@slack/bolt';
+import { Button, KnownBlock, Option } from '@slack/bolt';
 import { Routes } from '../../routes/router';
-import { DigestAction, DigestMessage, GmailDigestSection } from '../types';
+import {
+  DigestAction,
+  DigestMessage,
+  EmailCategoryToEmoji,
+  GmailDigestSection,
+} from '../types';
 import { logger } from '@base/logger';
 import { InboxZero } from './inbox-zero';
 
@@ -43,6 +48,17 @@ const markAllAsReadAction = (id: string): Button => {
   };
 };
 
+const markAllAsReadOption = (id: string): Option => {
+  return {
+    text: {
+      type: 'plain_text',
+      text: 'Mark all as read',
+      emoji: true,
+    },
+    value: JSON.stringify({ id, actionType: DigestAction.MarkAllAsRead }),
+  };
+};
+
 const archiveAllAction = (id: string): Button => {
   return {
     type: 'button',
@@ -53,6 +69,17 @@ const archiveAllAction = (id: string): Button => {
     },
     value: id,
     action_id: Routes.ARCHIVE_ALL,
+  };
+};
+
+const archiveAlloption = (id: string): Option => {
+  return {
+    text: {
+      type: 'plain_text',
+      text: 'Archive all',
+      emoji: true,
+    },
+    value: JSON.stringify({ id, actionType: DigestAction.ArchiveAll }),
   };
 };
 
@@ -87,7 +114,7 @@ const createEmailDigestSections = (
 ): KnownBlock[] => {
   return sections.flatMap((section) => {
     return [
-      ...createEmailDigestHeader(section),
+      createEmailDigestHeader(section),
       ...createEmailDigestMessage(section.messages),
       {
         type: 'divider',
@@ -96,26 +123,26 @@ const createEmailDigestSections = (
   });
 };
 
-const createEmailDigestHeader = (section: GmailDigestSection): KnownBlock[] => {
-  const blocks: KnownBlock[] = [];
-  blocks.push({
-    type: 'header',
+const createEmailDigestHeader = (section: GmailDigestSection): KnownBlock => {
+  const sectionHeader: KnownBlock = {
+    type: 'section',
     text: {
-      type: 'plain_text',
-      text: `${section.title}`,
+      type: 'mrkdwn',
+      text: `${
+        EmailCategoryToEmoji.get(section.category) || ':e-mail:'
+      }  *${section.title.toUpperCase()}*`,
     },
-  });
+  };
 
-  const actions = createDigestSectionActions(section);
-  if (actions.length) {
-    const actionBlock: KnownBlock = {
-      type: 'actions',
-      elements: actions,
+  const options = createDigestSectionActions(section);
+  if (options?.length) {
+    sectionHeader.accessory = {
+      type: 'overflow',
+      action_id: Routes.EMAIL_SECTION_ACTION,
+      options,
     };
-    blocks.push(actionBlock);
   }
-
-  return blocks;
+  return sectionHeader;
 };
 
 const createEmailDigestMessage = (messages: DigestMessage[]): KnownBlock[] => {
@@ -172,22 +199,19 @@ export const createDigestActions = (message: DigestMessage): Button[] => {
 
 export const createDigestSectionActions = (
   section: GmailDigestSection,
-): Button[] => {
-  if (!section.id) {
-    return [];
-  }
+): Option[] => {
   return section.actions
     ?.flatMap((action) => {
       switch (action) {
         case DigestAction.MarkAllAsRead:
-          return markAllAsReadAction(section.id as string);
+          return markAllAsReadOption(section.id as string);
         case DigestAction.ArchiveAll:
-          return archiveAllAction(section.id as string);
+          return archiveAlloption(section.id as string);
       }
     })
-    .filter((button) => {
-      return button !== undefined;
-    }) as Button[];
+    .filter((option) => {
+      return option !== undefined;
+    }) as Option[];
 };
 
 export const readMoreAction = (message: DigestMessage): Button => {
