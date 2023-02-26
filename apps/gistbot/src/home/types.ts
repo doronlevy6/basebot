@@ -1,7 +1,7 @@
 import { GmailDigest, SlackIdToMailResponse } from '../email-for-slack/types';
 
 export interface IHomeState {
-  gmailConnected: boolean;
+  gmailConnected?: Date;
   slackOnboarded: boolean;
   gmailDigest?: {
     digest: GmailDigest;

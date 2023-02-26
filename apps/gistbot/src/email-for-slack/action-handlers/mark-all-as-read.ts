@@ -8,11 +8,16 @@ import {
 } from '../../home/types';
 import { SlackBlockActionWrapper } from '../../slack/types';
 import { MAIL_BOT_SERVICE_API } from '../types';
+import { GmailSubscriptionsManager } from '../gmail-subscription-manager/gmail-subscription-manager';
 
 const MARK_ALL_AS_READ_PATH = '/mail/bulk-actions/mark-as-read';
 
 export const markAllAsReadHandler =
-  (analyticsManager: AnalyticsManager, eventsEmitter: EventEmitter) =>
+  (
+    analyticsManager: AnalyticsManager,
+    eventsEmitter: EventEmitter,
+    gmailSubscriptionsManager: GmailSubscriptionsManager,
+  ) =>
   async (props: SlackBlockActionWrapper) => {
     await props.ack();
     const action = props.body.actions[0] as ButtonAction;
@@ -21,7 +26,20 @@ export const markAllAsReadHandler =
         `markAllAsReadHandler received non-button action for user ${props.body.user.id}`,
       );
     }
-
+    if (!props.body.user.id || !props.body.team?.id) {
+      throw new Error(
+        `email mark all as read handler received no user id or team id`,
+      );
+    }
+    const allowedAction = await gmailSubscriptionsManager.showPaywallIfNeeded(
+      props.body.user.id,
+      props.body.team?.id,
+      'mark_all_as_read',
+      { logger: props.logger, body: props.body, client: props.client },
+    );
+    if (!allowedAction) {
+      return;
+    }
     let isError = false;
     const mailId = action.value;
     try {

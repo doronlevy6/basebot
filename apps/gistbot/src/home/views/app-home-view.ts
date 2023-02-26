@@ -10,6 +10,9 @@ import { OnboardToGmailBlocks } from './onboarding/onboard-gmail';
 import { OnboardToSlackBlocks } from './onboarding/onboard-slack';
 import { OnboardingHeaderBlocks } from './onboarding/onboarding-header';
 import { GoToSlackDigestBlocks } from './slack/go-to-slack-digest';
+import { OnboardingHeaderGoProBlocks } from './onboarding/onboarding-header-go-pro';
+import { Feature, FeatureLimits } from '../../feature-rate-limiter/limits';
+import { SubscriptionTier } from '@base/customer-identifier';
 
 export interface IHomeMetadata {
   slackUserId: string;
@@ -21,6 +24,7 @@ const divider: KnownBlock = { type: 'divider' };
 export const AppHomeView = (
   metadata: IHomeMetadata,
   state: IHomeState,
+  daysLeftFreeTrial?: number,
 ): Block[] => {
   const { slackUserId, slackTeamId } = metadata;
   const { gmailConnected, slackOnboarded, gmailDigest } = state;
@@ -68,5 +72,10 @@ export const AppHomeView = (
     gmailBlocks = OnboardToGmailBlocks(slackUserId, slackTeamId);
   }
 
-  return [...slackBlocks, divider, ...gmailBlocks];
+  return [
+    ...OnboardingHeaderGoProBlocks(daysLeftFreeTrial),
+    ...slackBlocks,
+    divider,
+    ...gmailBlocks,
+  ];
 };

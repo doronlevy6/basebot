@@ -3,12 +3,16 @@ import axios from 'axios';
 import { SlackBlockActionWrapper } from '../../slack/types';
 import { replayElementActionID, replyBlockId } from '../views/email-reply-view';
 import { MAIL_BOT_SERVICE_API } from '../types';
+import { GmailSubscriptionsManager } from '../gmail-subscription-manager/gmail-subscription-manager';
 
 const CREATE_DRAFT_PATH = '/mail/gmail-client/createDraft';
 
 export const saveDraft =
-  (analyticsManager: AnalyticsManager) =>
-  async ({ ack, logger, body }: SlackBlockActionWrapper) => {
+  (
+    analyticsManager: AnalyticsManager,
+    gmailSubscriptionsManager: GmailSubscriptionsManager,
+  ) =>
+  async ({ ack, logger, body, client }: SlackBlockActionWrapper) => {
     await ack();
 
     let threadId = '';
@@ -19,7 +23,20 @@ export const saveDraft =
         logger.error(`team id not exist for user ${body.user.id} in saveDraft`);
         return;
       }
-
+      if (!body.user.id || !body.team?.id) {
+        throw new Error(
+          `email save draft handler received no user id or team id`,
+        );
+      }
+      const allowedAction = await gmailSubscriptionsManager.showPaywallIfNeeded(
+        body.user.id,
+        body.team?.id,
+        'save_draft',
+        { logger, body, client },
+      );
+      if (!allowedAction) {
+        return;
+      }
       const action = body.actions[0];
       if (action.type !== 'button') {
         throw new Error(

@@ -619,6 +619,27 @@ export class AnalyticsManager {
     });
   }
 
+  gmailUserActionBlockedByPaywall({
+    action,
+    slackUserId,
+    slackTeamId,
+    extraParams,
+  }: {
+    action: string;
+    slackUserId: string;
+    slackTeamId: string;
+    extraParams?: ExtraParams;
+  }) {
+    this.sendEventToAnalytics({
+      eventName: `gmail_action_paywall_blocked`,
+      slackUserId: slackUserId,
+      slackTeamId: slackTeamId,
+      internalUserId: this.internalId(slackTeamId, slackUserId),
+      timestamp: new Date(),
+      properties: { ...extraParams, actionName: action },
+    });
+  }
+
   gmailSectionAction({
     action,
     slackUserId,

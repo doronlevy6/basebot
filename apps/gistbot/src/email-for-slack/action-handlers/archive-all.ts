@@ -7,11 +7,16 @@ import {
 import { SlackBlockActionWrapper } from '../../slack/types';
 import { MAIL_BOT_SERVICE_API } from '../types';
 import EventEmitter = require('events');
+import { GmailSubscriptionsManager } from '../gmail-subscription-manager/gmail-subscription-manager';
 
 const ARCHIVE_ALL_PATH = '/mail/bulk-actions/archive';
 
 export const archiveAllHandler =
-  (analyticsManager: AnalyticsManager, eventEmitter: EventEmitter) =>
+  (
+    analyticsManager: AnalyticsManager,
+    eventEmitter: EventEmitter,
+    gmailSubscriptionsManager: GmailSubscriptionsManager,
+  ) =>
   async (props: SlackBlockActionWrapper) => {
     await props.ack();
     const action = props.body.actions[0];
@@ -20,7 +25,20 @@ export const archiveAllHandler =
         `archiveAllHandler received non-button action for user ${props.body.user.id}`,
       );
     }
-
+    if (!props.body.user.id || !props.body.team?.id) {
+      throw new Error(
+        `email archive all handler received no user id or team id`,
+      );
+    }
+    const allowedAction = await gmailSubscriptionsManager.showPaywallIfNeeded(
+      props.body.user.id,
+      props.body.team?.id,
+      'archive_all',
+      { logger: props.logger, body: props.body, client: props.client },
+    );
+    if (!allowedAction) {
+      return;
+    }
     let isError = false;
     const mailId = action.value;
     try {

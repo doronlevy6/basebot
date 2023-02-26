@@ -4,6 +4,7 @@ export enum Feature {
   SUMMARY = 'SUMMARY',
   SCHEDULED_SUMMARIES = 'SCHEDULED_SUMMARIES',
   CHAT = 'CHAT',
+  GMAIL = 'GMAIL',
 }
 
 type featureLimit = Record<
@@ -24,6 +25,11 @@ export const FeatureLimits: featureLimit = {
   },
   [Feature.CHAT]: {
     [SubscriptionTier.FREE]: 2,
+    [SubscriptionTier.PRO]: 'infinite',
+    [SubscriptionTier.ENTERPRISE]: 'infinite',
+  },
+  [Feature.GMAIL]: {
+    [SubscriptionTier.FREE]: 30,
     [SubscriptionTier.PRO]: 'infinite',
     [SubscriptionTier.ENTERPRISE]: 'infinite',
   },
