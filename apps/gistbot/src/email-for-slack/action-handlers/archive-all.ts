@@ -1,21 +1,18 @@
 import { AnalyticsManager } from '@base/gistbot-shared';
 import axios from 'axios';
-import EventEmitter = require('events');
 import {
   OnMessageClearedEvent,
   ON_MESSAGE_CLEARED_EVENT_NAME,
 } from '../../home/types';
 import { SlackBlockActionWrapper } from '../../slack/types';
 import { MAIL_BOT_SERVICE_API } from '../types';
-import { updateButtonText } from './helpers';
+import EventEmitter = require('events');
 
 const ARCHIVE_ALL_PATH = '/mail/bulk-actions/archive';
-const FAIL_TEXT = 'Failed :(';
-const SUCCESS_TEXT = 'Archived ✅';
 
 export const archiveAllHandler =
   (analyticsManager: AnalyticsManager, eventEmitter: EventEmitter) =>
-  async ({ ack, logger, body, client }: SlackBlockActionWrapper) => {
+  async ({ ack, logger, body }: SlackBlockActionWrapper) => {
     await ack();
     const action = body.actions[0];
     if (action.type !== 'button') {
@@ -35,7 +32,6 @@ export const archiveAllHandler =
         return;
       }
 
-      await updateButtonText(body, action, logger, client, SUCCESS_TEXT);
       const url = new URL(MAIL_BOT_SERVICE_API);
       url.pathname = ARCHIVE_ALL_PATH;
 
@@ -55,7 +51,7 @@ export const archiveAllHandler =
         logger.error(
           `email archiveAllHandler wasn't able to mark as read for user ${body.user.id} with response ${response.status}`,
         );
-        await updateButtonText(body, action, logger, client, FAIL_TEXT);
+        // TODO: Show error modal
         return;
       }
 
@@ -66,7 +62,7 @@ export const archiveAllHandler =
       } as OnMessageClearedEvent);
     } catch (e) {
       isError = true;
-      await updateButtonText(body, action, logger, client, FAIL_TEXT);
+      // TODO: Show error modal
       logger.error(`error in archiveAllHandler for user ${body.user.id}, ${e}`);
       throw e;
     } finally {

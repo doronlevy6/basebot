@@ -7,16 +7,12 @@ import {
 } from '../../home/types';
 import { SlackBlockActionWrapper } from '../../slack/types';
 import { MAIL_BOT_SERVICE_API } from '../types';
-import { updateButtonText } from './helpers';
 
 const MARK_AS_READ_PATH = '/mail/gmail-client/markAsRead';
 
-const FAIL_TEXT = 'Failed :(';
-const SUCCESS_TEXT = 'Read ✅';
-
 export const markAsReadHandler =
   (analyticsManager: AnalyticsManager, eventsEmitter: EventEmitter) =>
-  async ({ ack, logger, body, client }: SlackBlockActionWrapper) => {
+  async ({ ack, logger, body }: SlackBlockActionWrapper) => {
     await ack();
     const action = body.actions[0];
     if (action.type !== 'button') {
@@ -36,7 +32,6 @@ export const markAsReadHandler =
         return;
       }
 
-      await updateButtonText(body, action, logger, client, SUCCESS_TEXT);
       const url = new URL(MAIL_BOT_SERVICE_API);
       url.pathname = MARK_AS_READ_PATH;
 
@@ -56,7 +51,7 @@ export const markAsReadHandler =
         logger.error(
           `email markAsReadHandler wasn't able to mark as read for user ${body.user.id} with response ${response.status}`,
         );
-        await updateButtonText(body, action, logger, client, FAIL_TEXT);
+        // TODO: Show error modal
         return;
       }
 
@@ -67,7 +62,7 @@ export const markAsReadHandler =
       } as OnMessageClearedEvent);
     } catch (e) {
       isError = true;
-      await updateButtonText(body, action, logger, client, FAIL_TEXT);
+      // TODO: Show error modal
       logger.error(`error in markAsReadHandler for user ${body.user.id}, ${e}`);
       throw e;
     } finally {

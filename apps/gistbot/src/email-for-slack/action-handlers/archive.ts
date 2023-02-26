@@ -7,15 +7,12 @@ import {
 } from '../../home/types';
 import { SlackBlockActionWrapper } from '../../slack/types';
 import { MAIL_BOT_SERVICE_API } from '../types';
-import { updateButtonText } from './helpers';
 
 const ARCHIVE_PATH = '/mail/gmail-client/archive';
-const SUCCESS_TEXT = 'Archived ✅';
-const FAIL_TEXT = 'Failed :(';
 
 export const archiveHandler =
   (analyticsManager: AnalyticsManager, eventEmitter: EventEmitter) =>
-  async ({ ack, logger, body, client }: SlackBlockActionWrapper) => {
+  async ({ ack, logger, body }: SlackBlockActionWrapper) => {
     await ack();
     const action = body.actions[0];
     if (action.type !== 'button') {
@@ -33,10 +30,9 @@ export const archiveHandler =
         );
         return;
       }
-      await updateButtonText(body, action, logger, client, SUCCESS_TEXT);
+
       const url = new URL(MAIL_BOT_SERVICE_API);
       url.pathname = ARCHIVE_PATH;
-
       const response = await axios.post(
         url.toString(),
         {
@@ -54,7 +50,7 @@ export const archiveHandler =
         logger.error(
           `email archiveHandler wasn't able to mark as read for user ${body.user.id} with response ${response.status}`,
         );
-        await updateButtonText(body, action, logger, client, FAIL_TEXT);
+        // TODO: Show error modal
         return;
       }
 
@@ -66,7 +62,7 @@ export const archiveHandler =
     } catch (e) {
       isError = true;
       logger.error(`error in archiveHandler for user ${body.user.id}, ${e}`);
-      await updateButtonText(body, action, logger, client, FAIL_TEXT);
+      // TODO: Show error modal
       throw e;
     } finally {
       analyticsManager.gmailUserAction({
