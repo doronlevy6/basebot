@@ -3,7 +3,7 @@ import { ConversationSummary } from '../models/messages-summary.model';
 import { formatConversationSummaries } from './formatter';
 
 describe('formatConversationSummaries', () => {
-  it('should format the summaries correctly (no permalinks, mix english and others)', async () => {
+  it.only('should format the summaries correctly (no permalinks, mix english and others)', async () => {
     const summaries: ConversationSummary[] = [
       {
         rootMessageTs: '1668337919233329',
@@ -40,7 +40,7 @@ describe('formatConversationSummaries', () => {
       '> Kiani Bamba came back on Friday, but did not have a good experience. Itay Dressler wonders if the onboarding events were sent correctly. Lior Nussbaum is going to clear the test databases and try again.\n\n' +
       '> *Delayed Messages in Slack*\n' +
       '> The Slack API team is discussing an issue with links not being properly disabled when using the scheduled message API. They are considering copying over code from the Slackbot to fix the issue.\n\n' +
-      '> *"Onboarding Defaulting to 3 Days"*\n' +
+      '> *Onboarding Defaulting to 3 Days*\n' +
       '> Itay and Coby discuss the onboarding process for the message app. It is decided that if there is not enough content, the user will be notified.\n\n' +
       '> *Itay and Lior discuss testing and deployment plans.*\n' +
       '> Itay Dressler and Lior Nussbaum discuss deploying to prod in order to help with tests. Lior suggests testing the triggers as well, and Itay agrees. They agree to test the threads on a different environment during onboarding.';

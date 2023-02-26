@@ -20,9 +20,12 @@ export const formatConversationSummaries = async (
 
   const formattedSummaries = summaries.map((summary, idx) => {
     const permalink = permalinks[idx];
-    let formattedTitle = `*${summary.title}*`;
+    const cleanTitle = summary.title.replace(/^[`'"']+|[`'"']+$/g, '');
+
+    let formattedTitle = `*${cleanTitle}*`;
+
     if (permalink) {
-      formattedTitle = `*<${permalink}|${summary.title}>*`;
+      formattedTitle = `*<${permalink}|${cleanTitle}>*`;
     }
 
     return `${formattedTitle}\n${summary.summary}`;
