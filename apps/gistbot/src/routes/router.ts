@@ -263,7 +263,7 @@ export const registerBoltAppRouter = (
     saveDraft(analyticsManager, gmailSubscriptionsManager),
   );
 
-  app.action(Routes.REFRESH_GMAIL, refreshGmail());
+  app.action(Routes.REFRESH_GMAIL, refreshGmail(eventEmitter));
 
   app.view(Routes.MAIL_REPLY_SUBMIT, emailReplySubmitHandler(analyticsManager));
 

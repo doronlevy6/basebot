@@ -64,7 +64,10 @@ export class AppHomeManager {
       logger.debug(
         `no state was found for ${slackUserId} in ${slackTeamId}...`,
       );
-      return { slackOnboarded };
+      return {
+        slackOnboarded,
+        gmailRefreshMetadata: { refreshing: false },
+      };
     }
 
     return { ...state, slackOnboarded };

@@ -18,6 +18,8 @@ import EventEmitter = require('events');
 import {
   OnMessageClearedEvent,
   ON_MESSAGE_CLEARED_EVENT_NAME,
+  UpdateEmailRefreshMetadataEvent,
+  UPDATE_EMAIL_REFRESH_METADATA_EVENT_NAME,
   UPDATE_HOME_EVENT_NAME,
 } from './types';
 
@@ -37,6 +39,10 @@ export class EmailDigestManager extends BullMQUtil<JobData> {
     this.eventsEmitter.on(ON_MESSAGE_CLEARED_EVENT_NAME, (data) => {
       this.onMessageClearedNotification(data).catch(logger.error);
     });
+
+    this.eventsEmitter.on(UPDATE_EMAIL_REFRESH_METADATA_EVENT_NAME, (data) => {
+      this.updateEmailRefreshMetadata(data).catch(logger.error);
+    });
   }
 
   async handleMessage(job: Job<JobData>) {
@@ -46,6 +52,14 @@ export class EmailDigestManager extends BullMQUtil<JobData> {
         break;
       case JobsTypes.ONBOARDING:
         await this.handleOnboarding(job.data as SlackIdToMailResponse);
+        break;
+      case JobsTypes.REFRESH_UPDATE:
+        await this.updateEmailRefreshMetadata(
+          job.data as UpdateEmailRefreshMetadataEvent,
+        );
+        break;
+      default:
+        logger.warn(`unknown job type: ${job.name}`);
     }
   }
 
@@ -246,5 +260,37 @@ export class EmailDigestManager extends BullMQUtil<JobData> {
     }
 
     return { foundMatch, digest: { ...digest, sections: newSections } };
+  }
+
+  private async updateEmailRefreshMetadata({
+    metadata,
+    slackUserId,
+    slackTeamId,
+  }: UpdateEmailRefreshMetadataEvent) {
+    try {
+      logger.debug(
+        `Will refresh metadata for ${slackUserId} in ${slackTeamId}. ${JSON.stringify(
+          metadata,
+        )}`,
+      );
+
+      await this.homeDataStore.updateEmailRefreshMetadata(
+        { slackTeamId, slackUserId },
+        metadata,
+      );
+
+      logger.debug(
+        `Update refresh metadata for ${slackUserId} in ${slackTeamId}. ${JSON.stringify(
+          metadata,
+        )}`,
+      );
+
+      this.eventsEmitter.emit(UPDATE_HOME_EVENT_NAME, {
+        slackUserId,
+        slackTeamId,
+      });
+    } catch (e) {
+      logger.error(`error updating refresh metadata message: ${e}`);
+    }
   }
 }

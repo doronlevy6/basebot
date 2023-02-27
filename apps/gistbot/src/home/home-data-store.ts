@@ -1,7 +1,7 @@
 import { logger } from '@base/logger';
 import { PgUtil } from '@base/utils';
 import { GmailDigest } from '../email-for-slack/types';
-import { IHomeState } from './types';
+import { IEmailRefreshMetadata, IHomeState } from './types';
 
 const TABLE_NAME = `gistbot_home_data_store`;
 interface IPrimaryKey {
@@ -17,6 +17,7 @@ interface ITableData {
   email_connected: Date;
   email_digest: string;
   email_digest_last_updated: Date;
+  email_digest_refresh_metadata: string;
 }
 
 export class HomeDataStore extends PgUtil {
@@ -27,14 +28,19 @@ export class HomeDataStore extends PgUtil {
         email_connected timestamp default null,
         email_digest jsonb,
         email_digest_last_updated timestamp,
+        email_digest_refresh_metadata jsonb,
         PRIMARY KEY ("slack_team_id", "slack_user_id")
       );
+
+      Alter table ${TABLE_NAME}
+      Add column IF NOT EXISTS email_digest_refresh_metadata jsonb
     `);
   }
 
   async updateEmailDigest(
     { slackTeamId, slackUserId }: IPrimaryKey,
     digest: object,
+    email_digest_refresh_metadata?: '{}',
   ): Promise<void> {
     await this.db<ITableData>(TABLE_NAME)
       .insert({
@@ -42,6 +48,21 @@ export class HomeDataStore extends PgUtil {
         slack_user_id: slackUserId,
         email_digest: JSON.stringify(digest),
         email_digest_last_updated: new Date(),
+        email_digest_refresh_metadata,
+      })
+      .onConflict(['slack_team_id', 'slack_user_id'])
+      .merge();
+  }
+
+  async updateEmailRefreshMetadata(
+    { slackTeamId, slackUserId }: IPrimaryKey,
+    refreshMetadata: IEmailRefreshMetadata,
+  ): Promise<void> {
+    await this.db<ITableData>(TABLE_NAME)
+      .insert({
+        slack_team_id: slackTeamId,
+        slack_user_id: slackUserId,
+        email_digest_refresh_metadata: JSON.stringify(refreshMetadata),
       })
       .onConflict(['slack_team_id', 'slack_user_id'])
       .merge();
@@ -82,10 +103,20 @@ export class HomeDataStore extends PgUtil {
       return;
     }
 
-    const { email_connected, email_digest, email_digest_last_updated } = res[0];
+    const {
+      email_connected,
+      email_digest,
+      email_digest_last_updated,
+      email_digest_refresh_metadata,
+    } = res[0];
+
+    const gmailRefreshMetadata =
+      email_digest_refresh_metadata as unknown as IEmailRefreshMetadata;
+
     if (!email_digest) {
       return {
         gmailConnected: email_connected,
+        gmailRefreshMetadata,
       };
     }
 
@@ -95,6 +126,7 @@ export class HomeDataStore extends PgUtil {
         digest: email_digest as unknown as GmailDigest,
         lastUpdated: new Date(email_digest_last_updated).getTime(),
       },
+      gmailRefreshMetadata,
     };
   }
 }

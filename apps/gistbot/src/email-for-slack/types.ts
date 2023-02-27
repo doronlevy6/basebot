@@ -3,6 +3,7 @@ export const MAIL_BOT_SERVICE_API = process.env.MAIL_BOT_SERVICE_API || '';
 export enum JobsTypes {
   DIGEST = 'digest',
   ONBOARDING = 'onboarding',
+  REFRESH_UPDATE = 'refresh_update',
 }
 
 export class UserMetadata {

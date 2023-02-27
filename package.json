@@ -21,6 +21,8 @@
     "start:local2:build": "npm run start:local2 -- --build",
     "start:local3:build": "npm run start:local3 -- --build",
     "start:local4:build": "npm run start:local4 -- --build",
+    "start:local5:build": "npm run start:local5 -- --build",
+    "start:local6:build": "npm run start:local6 -- --build",
     "clean:local": "docker compose down",
     "ngrok": "ngrok start --config ./configs/ngrok.yml --authtoken $NGROK_TOKEN slacker mailbot",
     "ngrok2": "ngrok start --config ./configs/ngrok.yml --authtoken $NGROK_TOKEN slacker-2 mailbot-2",
