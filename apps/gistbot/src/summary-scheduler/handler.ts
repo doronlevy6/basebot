@@ -14,6 +14,8 @@ import { SlackDataStore } from '../utils/slack-data-store';
 import { SchedulerSettingsDisableModal } from '../slack/components/disable-digest-modal';
 import { calculateUserDefaultHour } from '../utils/time-utils';
 import { ConversationsInfoResponse } from '@slack/web-api';
+import EventEmitter = require('events');
+import { UPDATE_HOME_EVENT_NAME } from '../home/types';
 
 export const summarySchedularSettingsButtonHandler =
   (
@@ -94,6 +96,7 @@ export const summarySchedularSettingsModalHandler =
     schedulerSettingsMgr: SchedulerSettingsManager,
     analyticsManager: AnalyticsManager,
     slackDataStore: SlackDataStore,
+    eventEmitter: EventEmitter,
   ) =>
   async (params: ViewAction) => {
     const { ack, body, client, view } = params;
@@ -236,6 +239,11 @@ export const summarySchedularSettingsModalHandler =
       logger.debug(
         `successfully saved user ${body.user.id} settings from scheduler settings modal`,
       );
+
+      eventEmitter.emit(UPDATE_HOME_EVENT_NAME, {
+        slackUserId: usersettings.slackUser,
+        slackTeamId: usersettings.slackTeam,
+      });
 
       analyticsManager.buttonClicked({
         type: 'scheduler-settings-modal-submit',

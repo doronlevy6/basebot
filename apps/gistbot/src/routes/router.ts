@@ -436,6 +436,7 @@ export const registerBoltAppRouter = (
       schedulerSettingsManager,
       analyticsManager,
       slackDataStore,
+      eventEmitter,
     ),
   );
 

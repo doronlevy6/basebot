@@ -9,7 +9,7 @@ export const OnboardToSlackBlocks = (): KnownBlock[] => [
     type: 'section',
     text: {
       type: 'mrkdwn',
-      text: '*Slack Digest*\nGet a personalized summary of Slack channels that matter to you',
+      text: ':slack:  *Slack Digest*\nGet a personalized summary of Slack channels that matter to you',
     },
   },
   {
