@@ -20,6 +20,8 @@ import {
   EmailSchedulerOptions,
 } from './types';
 
+const DEFAULT_SELECTED_HOUR = Number(EmailSchedulerOptions.MORNING);
+
 export const showEmailDigestSettingsModal =
   (analyticsManager: AnalyticsManager, showInsideModal?: boolean) =>
   async ({
@@ -55,30 +57,22 @@ export const showEmailDigestSettingsModal =
         | EmailSchedulerOptions.ON
         | EmailSchedulerOptions.OFF
         | undefined;
-      let selectedHour:
-        | EmailSchedulerOptions.MORNING
-        | EmailSchedulerOptions.EVENING
-        | undefined;
 
       if (userSettings) {
         enabled = userSettings?.enabled
           ? EmailSchedulerOptions.ON
           : EmailSchedulerOptions.OFF;
-        selectedHour =
-          userSettings.selectedHour === Number(EmailSchedulerOptions.MORNING)
-            ? EmailSchedulerOptions.MORNING
-            : EmailSchedulerOptions.EVENING;
       }
 
       if (showInsideModal) {
         await client.views.push({
           trigger_id: body.trigger_id,
-          view: EmailSettingsModal(enabled, selectedHour),
+          view: EmailSettingsModal(enabled),
         });
       } else {
         await client.views.open({
           trigger_id: body.trigger_id,
-          view: EmailSettingsModal(enabled, selectedHour),
+          view: EmailSettingsModal(enabled),
         });
       }
 
@@ -128,11 +122,7 @@ export const saveEmailDigestSettingsHandler =
         `email scheduler modal fetched user info and timezone for user ${body.user.id}`,
       );
 
-      const selectedHour =
-        view.state.values['radio-buttons-time'].value.selected_option?.value ===
-        EmailSchedulerOptions.MORNING
-          ? Number(EmailSchedulerOptions.MORNING)
-          : Number(EmailSchedulerOptions.EVENING);
+      const selectedHour = DEFAULT_SELECTED_HOUR;
 
       const usersettings = new EmailDigestUsersSettingsEntity();
       usersettings.enabled =

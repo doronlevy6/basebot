@@ -18,25 +18,8 @@ const offOption: Option = {
   value: EmailSchedulerOptions.OFF,
 };
 
-const morningOption: Option = {
-  text: {
-    type: 'plain_text',
-    text: `9:00 AM, I want yesterday's recap.`,
-  },
-  value: EmailSchedulerOptions.MORNING,
-};
-
-const eveningOption: Option = {
-  text: {
-    type: 'plain_text',
-    text: `5:00 PM, I want today's emails.`,
-  },
-  value: EmailSchedulerOptions.EVENING,
-};
-
 export const EmailSettingsModal = (
   enabled?: EmailSchedulerOptions.ON | EmailSchedulerOptions.OFF,
-  hour?: EmailSchedulerOptions.MORNING | EmailSchedulerOptions.EVENING,
 ): ModalView => {
   return {
     type: 'modal',
@@ -79,27 +62,6 @@ export const EmailSettingsModal = (
           text: '\n\n',
           type: 'mrkdwn',
         },
-      },
-      {
-        type: 'input',
-        block_id: 'radio-buttons-time',
-        label: {
-          type: 'plain_text',
-          text: 'When would you like to receive the summary?',
-          emoji: true,
-        },
-        element: {
-          type: 'radio_buttons',
-          options: [morningOption, eveningOption],
-          initial_option:
-            hour === EmailSchedulerOptions.EVENING
-              ? eveningOption
-              : morningOption,
-          action_id: 'value',
-        },
-      },
-      {
-        type: 'divider',
       },
       {
         type: 'section',
