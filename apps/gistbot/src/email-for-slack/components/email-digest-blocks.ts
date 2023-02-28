@@ -114,7 +114,7 @@ const createEmailDigestSections = (
 ): KnownBlock[] => {
   return sections.flatMap((section) => {
     return [
-      createEmailDigestHeader(section),
+      ...createEmailDigestHeader(section),
       ...createEmailDigestMessage(section.messages),
       {
         type: 'divider',
@@ -123,26 +123,34 @@ const createEmailDigestSections = (
   });
 };
 
-const createEmailDigestHeader = (section: GmailDigestSection): KnownBlock => {
+const createEmailDigestHeader = (section: GmailDigestSection): KnownBlock[] => {
   const sectionHeader: KnownBlock = {
+    type: 'header',
+    text: {
+      type: 'plain_text',
+      text: `${
+        EmailCategoryToEmoji.get(section.category) || ':e-mail:'
+      }  ${section.title.toUpperCase()}`,
+    },
+  };
+
+  const sectionAction: KnownBlock = {
     type: 'section',
     text: {
       type: 'mrkdwn',
-      text: `${
-        EmailCategoryToEmoji.get(section.category) || ':e-mail:'
-      }  *${section.title.toUpperCase()}*`,
+      text: ' ',
     },
   };
 
   const options = createDigestSectionActions(section);
   if (options?.length) {
-    sectionHeader.accessory = {
+    sectionAction.accessory = {
       type: 'overflow',
       action_id: Routes.EMAIL_SECTION_ACTION,
       options,
     };
   }
-  return sectionHeader;
+  return [sectionHeader, sectionAction];
 };
 
 const createEmailDigestMessage = (messages: DigestMessage[]): KnownBlock[] => {
