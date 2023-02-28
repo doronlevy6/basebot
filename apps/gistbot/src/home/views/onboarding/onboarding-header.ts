@@ -3,6 +3,11 @@ import { UserLink } from '../../../slack/components/user-link';
 
 export const OnboardingHeaderBlocks = (userId: string): KnownBlock[] => [
   {
+    type: 'image',
+    image_url: 'https://assets.thegist.ai/gist/assets/get_the_gist.jpeg',
+    alt_text: 'inspiration',
+  },
+  {
     type: 'header',
     text: {
       type: 'plain_text',

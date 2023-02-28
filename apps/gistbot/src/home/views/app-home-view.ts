@@ -11,6 +11,7 @@ import { OnboardToSlackBlocks } from './onboarding/onboard-slack';
 import { OnboardingHeaderBlocks } from './onboarding/onboarding-header';
 import { OnboardingHeaderGoProBlocks } from './onboarding/onboarding-header-go-pro';
 import { GoToSlackDigestBlocks } from './slack/go-to-slack-digest';
+import { OnboardToGmailNotConnectedBlocks } from './onboarding/onboard-gmail-not-connected';
 
 export interface IHomeMetadata {
   slackUserId: string;
@@ -72,9 +73,8 @@ export const AppHomeView = (
       gmailBlocks = CreateEmailDigestBlocks();
     }
   } else {
-    gmailBlocks = OnboardToGmailBlocks(slackUserId, slackTeamId);
+    gmailBlocks = OnboardToGmailNotConnectedBlocks(slackUserId, slackTeamId);
   }
-
   return [
     ...OnboardingHeaderGoProBlocks(daysLeftFreeTrial),
     ...slackBlocks,

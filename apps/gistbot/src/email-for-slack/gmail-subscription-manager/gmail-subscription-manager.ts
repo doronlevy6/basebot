@@ -31,7 +31,7 @@ export class GmailSubscriptionsManager {
     });
     const connectionDate = userHomeData?.gmailConnected;
     if (!connectionDate) {
-      return -1;
+      return undefined;
     }
     const expiryDate = connectionDate.setDate(
       connectionDate.getDate() + trialDaysAmount,
@@ -52,7 +52,7 @@ export class GmailSubscriptionsManager {
         slackTeamId,
         FeatureLimits.GMAIL.FREE as number,
       );
-      return daysLeft >= 0;
+      return !!daysLeft && daysLeft >= 0;
     }
     return true;
   };
