@@ -1,6 +1,6 @@
 import { AnalyticsManager } from '@base/gistbot-shared';
 import { EventEmitter } from 'events';
-import { UPDATE_HOME_EVENT_NAME } from '../home/types';
+import { UPDATE_HOME_USER_REFRESH } from '../home/types';
 import { SlackEventWrapper } from '../slack/types';
 import { OnboardingManager } from './manager';
 
@@ -11,23 +11,22 @@ export const appHomeOpenedHandler =
     eventsEmitter: EventEmitter,
   ) =>
   async (appOpenedEvent: SlackEventWrapper<'app_home_opened'>) => {
-    const { event, body, logger } = appOpenedEvent;
+    const { event, body, logger, payload } = appOpenedEvent;
     const { team_id } = body;
     const { user } = event;
 
     try {
       logger.info(`user ${user} opened the bot DMs`);
-
       analyticsManager.appHomeOpened({
         slackTeamId: team_id,
         slackUserId: user,
       });
-
-      eventsEmitter.emit(UPDATE_HOME_EVENT_NAME, {
-        slackUserId: user,
-        slackTeamId: team_id,
-      });
-
+      if (payload.tab === 'home') {
+        eventsEmitter.emit(UPDATE_HOME_USER_REFRESH, {
+          slackUserId: user,
+          slackTeamId: team_id,
+        });
+      }
       await sendOnboardingIfNeeded(onboardingManager, appOpenedEvent);
     } catch (err) {
       logger.error(`App home opened onboarding error: ${err} ${err.stack}`);

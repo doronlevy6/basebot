@@ -19,7 +19,7 @@ import {
 import { markAllAsReadHandler } from '../email-for-slack/action-handlers/mark-all-as-read';
 import { markAsReadHandler } from '../email-for-slack/action-handlers/mark-as-read';
 import { emailReadMoreHandler } from '../email-for-slack/action-handlers/read-more';
-import { refreshGmail } from '../email-for-slack/action-handlers/refresh-gmail';
+import { refreshActionHandler } from '../email-for-slack/action-handlers/refresh-gmail';
 import { saveDraft } from '../email-for-slack/action-handlers/save-draft';
 import { sectionActionsHandler } from '../email-for-slack/action-handlers/section-actions';
 import {
@@ -101,6 +101,7 @@ import { slashCommandRouter } from './slash-command-router';
 import { GmailSubscriptionsManager } from '../email-for-slack/gmail-subscription-manager/gmail-subscription-manager';
 
 const ARRAY_CHAT_GIST_ACTIONS = [0, 1, 2];
+
 export enum Routes {
   SUMMARIZE_THREAD = 'summarize-thread',
   ADD_TO_CHANNEL_SUBMIT = 'add-to-channel-submit',
@@ -263,7 +264,7 @@ export const registerBoltAppRouter = (
     saveDraft(analyticsManager, gmailSubscriptionsManager),
   );
 
-  app.action(Routes.REFRESH_GMAIL, refreshGmail(eventEmitter));
+  app.action(Routes.REFRESH_GMAIL, refreshActionHandler(eventEmitter));
 
   app.view(Routes.MAIL_REPLY_SUBMIT, emailReplySubmitHandler(analyticsManager));
 

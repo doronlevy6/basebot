@@ -5,8 +5,8 @@ import { PgSchedulerSettingsStore } from '../summary-scheduler/scheduler-store';
 import { HomeDataStore } from './home-data-store';
 import { IHomeState, UPDATE_HOME_EVENT_NAME } from './types';
 import { AppHomeView, IHomeMetadata } from './views/app-home-view';
-import EventEmitter = require('events');
 import { GmailSubscriptionsManager } from '../email-for-slack/gmail-subscription-manager/gmail-subscription-manager';
+import EventEmitter = require('events');
 
 export class AppHomeManager {
   constructor(
@@ -21,6 +21,7 @@ export class AppHomeManager {
       this.onHomeUpdateNotification,
     );
   }
+
   async updateHome(metadata: IHomeMetadata) {
     try {
       const { slackTeamId, slackUserId } = metadata;
@@ -56,7 +57,6 @@ export class AppHomeManager {
       this.digestSchedulerStore.fetchUserSettings(slackUserId, slackTeamId),
       this.homeDataStore.fetch({ slackUserId, slackTeamId }),
     ]);
-
     const slackOnboarded = Boolean(
       slackDigestSettings && slackDigestSettings.channels?.length > 0,
     );

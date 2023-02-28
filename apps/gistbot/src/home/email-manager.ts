@@ -14,17 +14,20 @@ import {
 import { UserLink } from '../slack/components/user-link';
 import { SlackDataStore } from '../utils/slack-data-store';
 import { HomeDataStore } from './home-data-store';
-import EventEmitter = require('events');
 import {
-  OnMessageClearedEvent,
   ON_MESSAGE_CLEARED_EVENT_NAME,
-  UpdateEmailRefreshMetadataEvent,
+  OnMessageClearedEvent,
   UPDATE_EMAIL_REFRESH_METADATA_EVENT_NAME,
   UPDATE_HOME_EVENT_NAME,
+  UPDATE_HOME_USER_REFRESH,
+  UpdateEmailRefreshMetadataEvent,
 } from './types';
+import { sendRefreshRequestToMailbot } from '../email-for-slack/action-handlers/refresh-gmail';
+import EventEmitter = require('events');
 
 const QUEUE_NAME = 'emailMessageSender';
 type JobData = GmailDigest | SlackIdToMailResponse;
+const HOME_REFRESH_THRESHOLD_MINUTES = 15;
 
 export class EmailDigestManager extends BullMQUtil<JobData> {
   constructor(
@@ -42,6 +45,10 @@ export class EmailDigestManager extends BullMQUtil<JobData> {
 
     this.eventsEmitter.on(UPDATE_EMAIL_REFRESH_METADATA_EVENT_NAME, (data) => {
       this.updateEmailRefreshMetadata(data).catch(logger.error);
+    });
+
+    this.eventsEmitter.on(UPDATE_HOME_USER_REFRESH, (data) => {
+      this.updateHomeUserRefresh(data).catch(logger.error);
     });
   }
 
@@ -293,4 +300,71 @@ export class EmailDigestManager extends BullMQUtil<JobData> {
       logger.error(`error updating refresh metadata message: ${e}`);
     }
   }
+
+  private async updateHomeUserRefresh({
+    metadata,
+    slackUserId,
+    slackTeamId,
+    email,
+  }: UpdateEmailRefreshMetadataEvent) {
+    try {
+      logger.debug(
+        `Will refresh metadata for ${slackUserId} in ${slackTeamId}. ${JSON.stringify(
+          metadata,
+        )}`,
+      );
+      const state = await this.homeDataStore.fetch({
+        slackUserId,
+        slackTeamId,
+      });
+      const refreshTriggered = this.refreshStateIfNeeded(
+        slackTeamId,
+        slackUserId,
+        state?.gmailDigest?.lastUpdated,
+      );
+      if (!refreshTriggered) {
+        return;
+      }
+
+      await this.updateEmailRefreshMetadata({
+        slackTeamId,
+        slackUserId,
+        email,
+        metadata: {
+          refreshing: true,
+        },
+      });
+    } catch (e) {
+      logger.error(`error updating refresh metadata message: ${e}`);
+    }
+  }
+
+  private refreshStateIfNeeded = (
+    slackTeamId: string,
+    slackUserId: string,
+    lastUpdated?: number,
+  ): boolean => {
+    if (lastUpdated) {
+      const lastUpdatedWithBuffer =
+        lastUpdated + HOME_REFRESH_THRESHOLD_MINUTES * 1000 * 60;
+
+      const passedThreshold = lastUpdatedWithBuffer < new Date().getTime();
+
+      if (passedThreshold) {
+        logger.info(
+          `passed threshold of ${HOME_REFRESH_THRESHOLD_MINUTES} minutes, refreshing now`,
+        );
+        sendRefreshRequestToMailbot(
+          slackUserId,
+          slackTeamId,
+          this.eventsEmitter,
+        ).catch((err) => logger.error(`error refreshing mails: ${err}`));
+        return true;
+      }
+      logger.info(
+        `did not passed threshold of ${HOME_REFRESH_THRESHOLD_MINUTES} minutes, skipping`,
+      );
+    }
+    return false;
+  };
 }

@@ -19,6 +19,7 @@ export const UPDATE_HOME_EVENT_NAME = 'updateHome';
 export const ON_MESSAGE_CLEARED_EVENT_NAME = 'onMessageCleared';
 export type OnMessageClearedEvent = SlackIdToMailResponse & { id: string };
 export const UPDATE_EMAIL_REFRESH_METADATA_EVENT_NAME = 'updateRefreshMetadata';
+export const UPDATE_HOME_USER_REFRESH = 'userRefresh';
 export type UpdateEmailRefreshMetadataEvent = SlackIdToMailResponse & {
   metadata: IEmailRefreshMetadata;
 };
