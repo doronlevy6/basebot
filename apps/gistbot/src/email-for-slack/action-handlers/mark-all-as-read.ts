@@ -79,9 +79,15 @@ export const markAllAsRead = async (
     return isError;
   }
 
+  // We assume the archive worked in order to be faster ux in 99% of the cases
+  eventsEmitter.emit(ON_MESSAGE_CLEARED_EVENT_NAME, {
+    id: mailId,
+    slackUserId: body.user.id,
+    slackTeamId: body.team.id,
+  } as OnMessageClearedEvent);
+
   const url = new URL(MAIL_BOT_SERVICE_API);
   url.pathname = MARK_ALL_AS_READ_PATH;
-
   const response = await axios.post(
     url.toString(),
     {
@@ -99,14 +105,9 @@ export const markAllAsRead = async (
       `email markAllAsReadHandler wasn't able to mark as read for user ${body.user.id} with response ${response.status}`,
     );
 
+    // TODO: Show error modal and call refresh as we deleted the message and may be out of sync.
     return isError;
   }
-
-  eventsEmitter.emit(ON_MESSAGE_CLEARED_EVENT_NAME, {
-    id: mailId,
-    slackUserId: body.user.id,
-    slackTeamId: body.team.id,
-  } as OnMessageClearedEvent);
 
   return isError;
 };

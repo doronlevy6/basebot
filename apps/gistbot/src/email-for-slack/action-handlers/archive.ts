@@ -47,6 +47,13 @@ export const archiveHandler =
         return;
       }
 
+      // We assume the archive worked in order to be faster ux in 99% of the cases
+      eventEmitter.emit(ON_MESSAGE_CLEARED_EVENT_NAME, {
+        id: mailId,
+        slackUserId: body.user.id,
+        slackTeamId: body.team.id,
+      } as OnMessageClearedEvent);
+
       const url = new URL(MAIL_BOT_SERVICE_API);
       url.pathname = ARCHIVE_PATH;
       const response = await axios.post(
@@ -66,15 +73,9 @@ export const archiveHandler =
         logger.error(
           `email archiveHandler wasn't able to mark as read for user ${body.user.id} with response ${response.status}`,
         );
-        // TODO: Show error modal
+        // TODO: Show error modal and call refresh as we deleted the message and may be out of sync.
         return;
       }
-
-      eventEmitter.emit(ON_MESSAGE_CLEARED_EVENT_NAME, {
-        id: mailId,
-        slackUserId: body.user.id,
-        slackTeamId: body.team.id,
-      } as OnMessageClearedEvent);
     } catch (e) {
       isError = true;
       logger.error(`error in archiveHandler for user ${body.user.id}, ${e}`);

@@ -1,6 +1,6 @@
 import { AnalyticsManager } from '@base/gistbot-shared';
 import axios from 'axios';
-import EventEmitter = require('events');
+import { EventEmitter } from 'events';
 import {
   OnMessageClearedEvent,
   ON_MESSAGE_CLEARED_EVENT_NAME,
@@ -50,9 +50,15 @@ export const markAsReadHandler =
         return;
       }
 
+      // We assume the archive worked in order to be faster ux in 99% of the cases
+      eventsEmitter.emit(ON_MESSAGE_CLEARED_EVENT_NAME, {
+        id: mailId,
+        slackUserId: body.user.id,
+        slackTeamId: body.team.id,
+      } as OnMessageClearedEvent);
+
       const url = new URL(MAIL_BOT_SERVICE_API);
       url.pathname = MARK_AS_READ_PATH;
-
       const response = await axios.post(
         url.toString(),
         {
@@ -69,15 +75,9 @@ export const markAsReadHandler =
         logger.error(
           `email markAsReadHandler wasn't able to mark as read for user ${body.user.id} with response ${response.status}`,
         );
-        // TODO: Show error modal
+        // TODO: Show error modal and call refresh as we deleted the message and may be out of sync.
         return;
       }
-
-      eventsEmitter.emit(ON_MESSAGE_CLEARED_EVENT_NAME, {
-        id: mailId,
-        slackUserId: body.user.id,
-        slackTeamId: body.team.id,
-      } as OnMessageClearedEvent);
     } catch (e) {
       isError = true;
       // TODO: Show error modal
