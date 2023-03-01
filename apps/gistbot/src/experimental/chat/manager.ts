@@ -1,7 +1,6 @@
 import { AnalyticsManager } from '@base/gistbot-shared';
 import { Logger, WebClient } from '@slack/web-api';
 import { Message } from '@slack/web-api/dist/response/ConversationsHistoryResponse';
-import { ChatCompletionRequestMessageRoleEnum } from 'openai';
 import { Feature } from '../../feature-rate-limiter/limits';
 import { FeatureRateLimiter } from '../../feature-rate-limiter/rate-limiter';
 import { ChatGoPro, ChatGoProText } from '../../slack/components/chat-go-pro';
@@ -18,7 +17,7 @@ import { chatModelPrompt } from './prompt';
 import { IChatMessage } from './types';
 
 const STOP_WORDS = ['stop', 'reset'];
-const MAX_SESSION_DURATION_SEC = 5 * 60;
+const MAX_SESSION_DURATION_SEC = 12 * 60 * 60; // 12 hours
 const MAX_PROMPT_CHARACTER_COUNT = 11000;
 interface IProps {
   logger: Logger;
@@ -287,8 +286,7 @@ export class ChatManager {
 
   // if there is no message from our app in this session then it is a new session
   private isNewChatSession(relatedMessages: Message[]) {
-    const filteredMessages = this.filterByTimeSession(relatedMessages);
-    return !filteredMessages.some((r) => {
+    return !relatedMessages.some((r) => {
       let isLimitMsg = false;
 
       isLimitMsg = Boolean(
