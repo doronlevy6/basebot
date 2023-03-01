@@ -1,4 +1,4 @@
-import { Configuration, OpenAIApi } from 'openai';
+import { Configuration, OpenAIApi, CreateChatCompletionRequest } from 'openai';
 import { ModerationError } from '../../summaries/errors/moderation-error';
 import { OpenAiModerationModel } from '../../summaries/models/openai-moderation.model';
 export class ChatModel {
@@ -13,25 +13,27 @@ export class ChatModel {
     this.moderationModel = new OpenAiModerationModel();
   }
 
-  async customModel(text: string, userId: string) {
-    return this.callApi(text, userId);
+  async customModel(
+    messages: CreateChatCompletionRequest['messages'],
+    userId: string,
+  ) {
+    return this.callApi(messages, userId);
   }
 
-  private async callApi(prompt: string, userId: string, temperature = 1) {
-    const response = await this.openai.createCompletion({
-      model: 'text-davinci-003',
-      prompt,
-      temperature,
-      max_tokens: 1000,
-      top_p: 1,
-      frequency_penalty: 0,
-      presence_penalty: 0,
-      stop: '\n\n\n',
+  private async callApi(
+    messages: CreateChatCompletionRequest['messages'],
+    userId: string,
+    temperature = 1,
+  ) {
+    const response = await this.openai.createChatCompletion({
+      model: 'gpt-3.5-turbo',
+      messages,
       user: userId,
+      temperature,
     });
 
     const { data } = response;
-    const generatedText = data.choices[0].text ?? '';
+    const generatedText = data.choices[0].message?.content ?? '';
 
     const { flagged } = await this.moderationModel.moderate({
       input: generatedText,

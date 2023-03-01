@@ -1,20 +1,21 @@
 import { AnalyticsManager } from '@base/gistbot-shared';
 import { Logger, WebClient } from '@slack/web-api';
 import { Message } from '@slack/web-api/dist/response/ConversationsHistoryResponse';
+import { ChatCompletionRequestMessageRoleEnum } from 'openai';
+import { Feature } from '../../feature-rate-limiter/limits';
+import { FeatureRateLimiter } from '../../feature-rate-limiter/rate-limiter';
+import { ChatGoPro, ChatGoProText } from '../../slack/components/chat-go-pro';
 import { extractMessageText } from '../../slack/message-text';
 import { parseSlackMrkdwn } from '../../slack/parser';
+import { responder } from '../../slack/responder';
+import { AllMessagesPrefilteredError } from '../../summaries/errors/all-messages-filtered-error';
+import { RateLimitedError } from '../../summaries/errors/rate-limited-error';
+import { approximatePromptCharacterCountForChatMessages } from '../../summaries/models/prompt-character-calculator';
 import { getUserOrBotDetails, isGistAppId } from '../../summaries/utils';
-import { ChatModel } from './chat.model';
 import { SlackDataStore } from '../../utils/slack-data-store';
+import { ChatModel } from './chat.model';
 import { chatModelPrompt } from './prompt';
 import { IChatMessage } from './types';
-import { Feature } from '../../feature-rate-limiter/limits';
-import { RateLimitedError } from '../../summaries/errors/rate-limited-error';
-import { FeatureRateLimiter } from '../../feature-rate-limiter/rate-limiter';
-import { responder } from '../../slack/responder';
-import { ChatGoPro, ChatGoProText } from '../../slack/components/chat-go-pro';
-import { approximatePromptCharacterCountForChatMessages } from '../../summaries/models/prompt-character-calculator';
-import { AllMessagesPrefilteredError } from '../../summaries/errors/all-messages-filtered-error';
 
 const STOP_WORDS = ['stop', 'reset'];
 const MAX_SESSION_DURATION_SEC = 5 * 60;
@@ -135,8 +136,8 @@ export class ChatManager {
         `chatGist loaded ${relatedMessages?.length} session messages`,
       );
 
-      const prompt = chatModelPrompt(req);
-      const res = await this.chatModel.customModel(prompt, userId);
+      const promt = chatModelPrompt(req);
+      const res = await this.chatModel.customModel(promt, userId);
 
       logger.debug(`Chat response `);
 
