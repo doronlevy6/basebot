@@ -96,7 +96,7 @@ const archiveAction = (message: DigestMessage): Button => {
   };
 };
 
-const rsvpAction = (message: DigestMessage): Button => {
+/*const rsvpAction = (message: DigestMessage): Button => {
   return {
     type: 'button',
     text: {
@@ -108,6 +108,7 @@ const rsvpAction = (message: DigestMessage): Button => {
     action_id: Routes.MAIL_RSVP,
   };
 };
+*/
 
 const createEmailDigestSections = (
   sections: GmailDigestSection[],
@@ -160,6 +161,7 @@ const createEmailDigestMessage = (messages: DigestMessage[]): KnownBlock[] => {
       ? `*${message.title}* (${message.timeStamp}) \n\n${message.body}`
       : `*${message.title}*\n\n${message.body}`;
     const blocks: KnownBlock[] = [];
+
     const bodySection: KnownBlock = {
       type: 'section',
       text: {
@@ -223,33 +225,28 @@ export const createDigestSectionActions = (
 };
 
 export const readMoreAction = (message: DigestMessage): Button => {
-  let title = 'Read More';
-
   const relatedMails = message.relatedMails;
   if (relatedMails) {
     const classifications = relatedMails[0].classifications;
     if (classifications) {
       const type = classifications[0].type;
       const titleWithCapital = type.charAt(0).toUpperCase() + type.slice(1);
-      title = titleWithCapital + ' - Read More';
     } else {
       logger.error('error in readMoreAction - classifications is undefined');
     }
   } else {
     logger.error('error in readMoreAction - relatedMails is undefined');
   }
-
-  const buttonValueMaxLength = 2000;
-  const titleAndBody = (title + '|' + message.readMoreBody).slice(
-    0,
-    buttonValueMaxLength,
-  );
+  const textButton =
+    message.attachments?.length || 0 > 0
+      ? 'Read more :paperclip:'
+      : 'Read more';
 
   return {
     type: 'button',
     text: {
       type: 'plain_text',
-      text: 'Read more',
+      text: textButton,
       emoji: true,
     },
     value: message.id,

@@ -56,11 +56,16 @@ export const emailReadMoreHandler =
         0,
         maxModalCharCount,
       );
+      const title =
+        message.attachments?.length || 0 > 0
+          ? 'Read more :paperclip:'
+          : 'Read more';
       await client.views.open({
         trigger_id: body.trigger_id,
         view: ReadMoreView({
-          title: 'Read more',
+          title: title,
           body: message.readMoreBody,
+          attachments: message.attachments,
         }),
       });
     } catch (e) {

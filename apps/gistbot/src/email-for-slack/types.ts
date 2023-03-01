@@ -41,8 +41,14 @@ export class DigestMessage {
   link?: string;
   relatedMails?: GmailMessage[];
   readMoreBody?: string;
+  attachments?: DigestMailAttachments[];
 }
 
+export class DigestMailAttachments {
+  type: 'pdf' | 'image' | 'other' | 'zip' | 'calendar';
+  filename: string;
+  link: string;
+}
 export class GmailMessage {
   id: string;
   subject: string;
