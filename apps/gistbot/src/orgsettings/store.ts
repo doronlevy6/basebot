@@ -7,7 +7,8 @@ export interface OrgSettings extends RawJson {
 }
 
 const defaultSettings: OrgSettings = {
-  newUserTriggersEnabled: true,
+  newUserTriggersEnabled:
+    process.env.GISTBOT_NEW_USER_TRIGGERS_ENABLED === 'true',
 };
 
 export interface OrgSettingsStore {
