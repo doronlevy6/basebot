@@ -138,23 +138,6 @@ export class EmailDigestManager extends BullMQUtil<JobData> {
         client,
         this.slackDataStore,
       );
-      const text = `:wave: Hey ${UserLink(
-        slackUserId,
-      )}, you successfuly logged in to Gistbot for Gmail!`;
-
-      await client.chat.postMessage({
-        channel: slackUserId,
-        text,
-        blocks: [
-          {
-            type: 'section',
-            text: {
-              type: 'mrkdwn',
-              text,
-            },
-          },
-        ],
-      });
 
       await this.homeDataStore.updateGmailConnectionStatus(
         { slackUserId, slackTeamId },
