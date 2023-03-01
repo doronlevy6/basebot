@@ -18,6 +18,9 @@ export interface PickedMessage
   is_bot: boolean;
 }
 
+let userID: string;
+let isBot: boolean;
+
 export const parseModelMessage = async (
   message: SlackMessage | Message,
   client: WebClient,
@@ -45,17 +48,24 @@ export const parseModelMessage = async (
     await extractMessageText(message, false, teamId, client, slackDataStore),
   ).plainText(teamId, client, defaultParseTextOpts, slackDataStore);
 
+  // if true this is a user
+  if (message.user && !message['app_id']) {
+    userID = message.user || message.bot_id || 'U0UNKNOWN';
+    isBot = false;
+  } else {
+    userID = message.bot_id || message.user || 'U0UNKNOWN';
+    isBot = Boolean(message.bot_id);
+  }
   return {
     ts: message.ts,
     thread_ts: message.thread_ts || message.ts,
     channel_id: channelId,
-    user_id: message.bot_id || message.user || 'U0UNKNOWN',
+    user_id: userID,
     reactions: reactions,
     text: messageText,
-    is_bot: Boolean(message.bot_id),
+    is_bot: isBot,
   };
 };
-
 const extractReactions = async (
   message: SlackMessage | Message,
 ): Promise<ModelMessageReaction[]> => {
