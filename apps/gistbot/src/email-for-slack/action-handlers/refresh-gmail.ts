@@ -60,7 +60,7 @@ export const refreshActionHandler =
       );
     } catch (e) {
       logger.error(
-        `team id not exist for user ${body.user.id} in refreshGmail`,
+        `Failed refreshing for ${body.user.id} in refreshGmail ${e}`,
       );
       throw e;
     }

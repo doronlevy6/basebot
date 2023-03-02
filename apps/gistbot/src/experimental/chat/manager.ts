@@ -82,8 +82,8 @@ export class ChatManager {
       const filterMesages = !props.threadTs;
       let relatedMessages = messages;
       if (filterMesages) {
-        relatedMessages = this.filterByTimeSession(messages);
         relatedMessages = this.filterByStopWords(relatedMessages, logger);
+        relatedMessages = relatedMessages.reverse();
       }
 
       const isEmpty = relatedMessages.length === 0;
@@ -135,10 +135,10 @@ export class ChatManager {
         `chatGist loaded ${relatedMessages?.length} session messages`,
       );
 
-      const promt = chatModelPrompt(req);
-      const res = await this.chatModel.customModel(promt, userId);
+      const prompt = chatModelPrompt(req);
+      const res = await this.chatModel.customModel(prompt, userId);
 
-      logger.debug(`Chat response `);
+      logger.debug(`Chat response`);
 
       await client.chat.postMessage({
         channel: channelId,
