@@ -1,5 +1,6 @@
 import { KnownBlock } from '@slack/web-api';
 import { STRIPE_URL } from '../../../slack/components/go-pro-button';
+import { Routes } from '../../../routes/router';
 
 export const OnboardingHeaderGoProBlocks = (
   timeLeft?: number,
@@ -17,6 +18,16 @@ export const OnboardingHeaderGoProBlocks = (
       text: {
         type: 'mrkdwn',
         text: text,
+      },
+      accessory: {
+        type: 'button',
+        text: {
+          type: 'plain_text',
+          text: 'Settings',
+          emoji: true,
+        },
+        value: 'settings',
+        action_id: Routes.OPEN_ALL_SETTINGS_MODAL,
       },
     },
   ];
