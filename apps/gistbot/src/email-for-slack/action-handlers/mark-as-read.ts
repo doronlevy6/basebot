@@ -2,8 +2,9 @@ import { AnalyticsManager } from '@base/gistbot-shared';
 import axios from 'axios';
 import { EventEmitter } from 'events';
 import {
-  OnMessageClearedEvent,
+  DISPLAY_ERROR_MODAL_EVENT_NAME,
   ON_MESSAGE_CLEARED_EVENT_NAME,
+  OnMessageClearedEvent,
 } from '../../home/types';
 import { SlackBlockActionWrapper } from '../../slack/types';
 import { MAIL_BOT_SERVICE_API } from '../types';
@@ -20,34 +21,32 @@ export const markAsReadHandler =
   async ({ ack, logger, body, client }: SlackBlockActionWrapper) => {
     await ack();
     const action = body.actions[0];
-    if (action.type !== 'button') {
-      throw new Error(
-        `email markAsReadHandler received non-button action for user ${body.user.id}`,
-      );
-    }
-    if (!body.user.id || !body.team?.id) {
-      throw new Error(
-        `email mark as read handler received no user id or team id`,
-      );
-    }
-    const allowedAction = await gmailSubscriptionsManager.showPaywallIfNeeded(
-      body.user.id,
-      body.team?.id,
-      'mark_as_read',
-      { logger, body, client },
-    );
-    if (!allowedAction) {
-      return;
-    }
-    let isError = false;
-    const mailId = action.value;
     try {
+      if (action.type !== 'button') {
+        throw new Error(
+          `email markAsReadHandler received non-button action for user ${body.user.id}`,
+        );
+      }
+      if (!body.user.id || !body.team?.id) {
+        throw new Error(
+          `email mark as read handler received no user id or team id`,
+        );
+      }
+      const allowedAction = await gmailSubscriptionsManager.showPaywallIfNeeded(
+        body.user.id,
+        body.team?.id,
+        'mark_as_read',
+        { logger, body, client },
+      );
+      if (!allowedAction) {
+        return;
+      }
+      const mailId = action.value;
       logger.debug(`mark as read handler for user ${body.user.id}`);
       if (!body.team?.id) {
-        logger.error(
+        throw new Error(
           `team id not exist for user ${body.user.id} in markAsReadHandler`,
         );
-        return;
       }
 
       // We assume the archive worked in order to be faster ux in 99% of the cases
@@ -72,26 +71,26 @@ export const markAsReadHandler =
       );
 
       if (response.status !== 200 && response.status !== 201) {
-        logger.error(
+        throw new Error(
           `email markAsReadHandler wasn't able to mark as read for user ${body.user.id} with response ${response.status}`,
         );
-        // TODO: Show error modal and call refresh as we deleted the message and may be out of sync.
-        return;
       }
-    } catch (e) {
-      isError = true;
-      // TODO: Show error modal
-      logger.error(`error in markAsReadHandler for user ${body.user.id}, ${e}`);
-      throw e;
-    } finally {
       analyticsManager.gmailUserAction({
         slackUserId: body.user.id,
         slackTeamId: body.team?.id || '',
         action: 'mark_as_read',
         extraParams: {
-          isError,
           mailId,
         },
       });
+    } catch (e) {
+      logger.error(`error in markAsReadHandler for user ${body.user.id}`, e);
+      eventsEmitter.emit(DISPLAY_ERROR_MODAL_EVENT_NAME, {
+        triggerId: body.trigger_id,
+        slackUserId: body.user.id,
+        slackTeamId: body.team?.id || '',
+        action: 'mark_as_read',
+      });
+      throw e;
     }
   };

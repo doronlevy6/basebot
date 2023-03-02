@@ -4,6 +4,8 @@ import { SlackBlockActionWrapper } from '../../slack/types';
 import { replayElementActionID, replyBlockId } from '../views/email-reply-view';
 import { MAIL_BOT_SERVICE_API } from '../types';
 import { GmailSubscriptionsManager } from '../gmail-subscription-manager/gmail-subscription-manager';
+import { DISPLAY_ERROR_MODAL_EVENT_NAME } from '../../home/types';
+import { EventEmitter } from 'events';
 
 const CREATE_DRAFT_PATH = '/mail/gmail-client/createDraft';
 
@@ -11,17 +13,17 @@ export const saveDraft =
   (
     analyticsManager: AnalyticsManager,
     gmailSubscriptionsManager: GmailSubscriptionsManager,
+    eventsEmitter: EventEmitter,
   ) =>
   async ({ ack, logger, body, client }: SlackBlockActionWrapper) => {
     await ack();
-
     let threadId = '';
-    let isError = false;
     try {
       logger.debug(`save draft handler for user ${body.user.id}`);
       if (!body.team?.id) {
-        logger.error(`team id not exist for user ${body.user.id} in saveDraft`);
-        return;
+        throw new Error(
+          `team id not exist for user ${body.user.id} in saveDraft`,
+        );
       }
       if (!body.user.id || !body.team?.id) {
         throw new Error(
@@ -63,19 +65,22 @@ export const saveDraft =
           timeout: 60000,
         },
       );
-    } catch (e) {
-      isError = true;
-      logger.error(`error in saveDraft for user ${body.user.id}, ${e}`);
-      throw e;
-    } finally {
       analyticsManager.gmailUserAction({
         slackUserId: body.user.id,
         slackTeamId: body.team?.id || '',
         action: 'save_draft',
         extraParams: {
-          isError,
           threadId,
         },
       });
+    } catch (e) {
+      logger.error(`error in saveDraft for user ${body.user.id}`, e);
+      eventsEmitter.emit(DISPLAY_ERROR_MODAL_EVENT_NAME, {
+        triggerId: body.trigger_id,
+        slackUserId: body.user.id,
+        slackTeamId: body.team?.id || '',
+        action: 'save_draft',
+      });
+      throw e;
     }
   };

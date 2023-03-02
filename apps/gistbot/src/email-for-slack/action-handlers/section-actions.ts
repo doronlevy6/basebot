@@ -4,19 +4,24 @@ import { SlackBlockActionWrapper } from '../../slack/types';
 import { DigestAction } from '../types';
 import { archiveAll } from './archive-all';
 import { markAllAsRead } from './mark-all-as-read';
+import { DISPLAY_ERROR_MODAL_EVENT_NAME } from '../../home/types';
+import { IMailErrorMetaData } from '../views/email-error-view';
+
+export type SectionActionProps = Pick<
+  SlackBlockActionWrapper,
+  'logger' | 'body'
+>;
 
 export const sectionActionsHandler =
   (analyticsManager: AnalyticsManager, eventsEmitter: EventEmitter) =>
-  async (props: SlackBlockActionWrapper) => {
-    await props.ack();
-    const action = props.body.actions[0];
+  async ({ ack, body, logger }: SlackBlockActionWrapper) => {
+    await ack();
+    const action = body.actions[0];
     if (action.type !== 'overflow') {
       throw new Error(
-        `archiveAllHandler received non-button action for user ${props.body.user.id}`,
+        `archiveAllHandler received non-button action for user ${body.user.id}`,
       );
     }
-
-    let isError = false;
     let actionName = '';
     let sectionId = '';
     try {
@@ -25,28 +30,31 @@ export const sectionActionsHandler =
       sectionId = id;
       switch (actionType) {
         case DigestAction.MarkAllAsRead:
-          isError = await markAllAsRead(props, eventsEmitter, id);
+          await markAllAsRead({ logger, body }, eventsEmitter, id);
           break;
         case DigestAction.ArchiveAll:
-          isError = await archiveAll(props, eventsEmitter, id);
+          await archiveAll({ logger, body }, eventsEmitter, id);
           break;
       }
-    } catch (e) {
-      isError = true;
-      props.logger.error(
-        `error in sectionActionsHandler for user ${props.body.user.id}, ${e}`,
-      );
-      // TODO: Show error modal
-      throw e;
-    } finally {
       analyticsManager.gmailSectionAction({
-        slackUserId: props.body.user.id,
-        slackTeamId: props.body.team?.id || '',
+        slackUserId: body.user.id,
+        slackTeamId: body.team?.id || '',
         action: actionName,
         extraParams: {
-          isError,
           sectionId,
         },
       });
+    } catch (e) {
+      logger.error(
+        `error in sectionActionsHandler for user ${body.user.id}`,
+        e,
+      );
+      eventsEmitter.emit(DISPLAY_ERROR_MODAL_EVENT_NAME, {
+        triggerId: body.trigger_id,
+        slackUserId: body.user.id,
+        slackTeamId: body.team?.id || '',
+        action: actionName,
+      } as IMailErrorMetaData);
+      throw e;
     }
   };

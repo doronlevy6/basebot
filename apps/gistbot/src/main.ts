@@ -62,6 +62,7 @@ import { UninstallsNotifier } from './uninstall/notifier';
 import { UserFeedbackManager } from './user-feedback/manager';
 import { SlackDataStore } from './utils/slack-data-store';
 import { GmailSubscriptionsManager } from './email-for-slack/gmail-subscription-manager/gmail-subscription-manager';
+import { ErrorsManager } from './home/errors-manager';
 
 const gracefulShutdown = (server: Server) => (signal: string) => {
   logger.info('starting shutdown, got signal ' + signal);
@@ -413,6 +414,7 @@ const startApp = async () => {
     eventsEmitter,
     gmailSubscriptionsManager,
   );
+  new ErrorsManager(pgStore, eventsEmitter, analyticsManager);
 
   registerBoltAppRouter(
     slackApp,

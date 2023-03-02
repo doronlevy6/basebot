@@ -3,7 +3,7 @@ import {
   UPDATE_EMAIL_REFRESH_METADATA_EVENT_NAME,
   UpdateEmailRefreshMetadataEvent,
 } from '../../home/types';
-import { SlackBlockActionWrapper } from '../../slack/types';
+import { SlackBlockActionWrapper, ViewAction } from '../../slack/types';
 import { MAIL_BOT_SERVICE_API } from '../types';
 import EventEmitter = require('events');
 
@@ -44,6 +44,31 @@ export const sendRefreshRequestToMailbot = async (
 export const refreshActionHandler =
   (eventEmitter: EventEmitter) =>
   async ({ ack, logger, body }: SlackBlockActionWrapper) => {
+    await ack();
+    try {
+      logger.debug(`refreshing gmail for ${body.user.id}`);
+      if (!body.team?.id) {
+        logger.error(
+          `team id not exist for user ${body.user.id} in refreshGmail`,
+        );
+        return;
+      }
+      await sendRefreshRequestToMailbot(
+        body.user.id,
+        body.team.id,
+        eventEmitter,
+      );
+    } catch (e) {
+      logger.error(
+        `team id not exist for user ${body.user.id} in refreshGmail`,
+      );
+      throw e;
+    }
+  };
+
+export const refreshFromModalHandler =
+  (eventEmitter: EventEmitter) =>
+  async ({ ack, logger, body }: ViewAction) => {
     await ack();
     try {
       logger.debug(`refreshing gmail for ${body.user.id}`);

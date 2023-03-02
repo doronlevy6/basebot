@@ -1,13 +1,16 @@
 import { AnalyticsManager } from '@base/gistbot-shared';
 import axios from 'axios';
 import {
-  OnMessageClearedEvent,
+  DISPLAY_ERROR_MODAL_EVENT_NAME,
   ON_MESSAGE_CLEARED_EVENT_NAME,
+  OnMessageClearedEvent,
 } from '../../home/types';
 import { SlackBlockActionWrapper } from '../../slack/types';
 import { MAIL_BOT_SERVICE_API } from '../types';
-import EventEmitter = require('events');
 import { GmailSubscriptionsManager } from '../gmail-subscription-manager/gmail-subscription-manager';
+import { IMailErrorMetaData } from '../views/email-error-view';
+import { SectionActionProps } from './section-actions';
+import EventEmitter = require('events');
 
 const ARCHIVE_ALL_PATH = '/mail/bulk-actions/archive';
 
@@ -17,67 +20,62 @@ export const archiveAllHandler =
     eventEmitter: EventEmitter,
     gmailSubscriptionsManager: GmailSubscriptionsManager,
   ) =>
-  async (props: SlackBlockActionWrapper) => {
-    await props.ack();
-    const action = props.body.actions[0];
-    if (action.type !== 'button') {
-      throw new Error(
-        `archiveAllHandler received non-button action for user ${props.body.user.id}`,
-      );
-    }
-    if (!props.body.user.id || !props.body.team?.id) {
-      throw new Error(
-        `email archive all handler received no user id or team id`,
-      );
-    }
-    const allowedAction = await gmailSubscriptionsManager.showPaywallIfNeeded(
-      props.body.user.id,
-      props.body.team?.id,
-      'archive_all',
-      { logger: props.logger, body: props.body, client: props.client },
-    );
-    if (!allowedAction) {
-      return;
-    }
-    let isError = false;
-    const mailId = action.value;
+  async ({ ack, body, logger, client }: SlackBlockActionWrapper) => {
+    await ack();
     try {
-      isError = await archiveAll(props, eventEmitter, mailId);
-    } catch (e) {
-      isError = true;
-      // TODO: Show error modal
-      props.logger.error(
-        `error in archiveAllHandler for user ${props.body.user.id}, ${e}`,
+      const action = body.actions[0];
+      if (action.type !== 'button') {
+        throw new Error(
+          `archiveAllHandler received non-button action for user ${body.user.id}`,
+        );
+      }
+      if (!body.user.id || !body.team?.id) {
+        throw new Error(
+          `email archive all handler received no user id or team id`,
+        );
+      }
+      const mailId = action.value;
+      const allowedAction = await gmailSubscriptionsManager.showPaywallIfNeeded(
+        body.user.id,
+        body.team?.id,
+        'archive_all',
+        { logger: logger, body: body, client: client },
       );
-      throw e;
-    } finally {
+      if (!allowedAction) {
+        return;
+      }
+      await archiveAll({ logger, body }, eventEmitter, mailId);
       analyticsManager.gmailUserAction({
-        slackUserId: props.body.user.id,
-        slackTeamId: props.body.team?.id || '',
+        slackUserId: body.user.id,
+        slackTeamId: body.team?.id || '',
         action: 'archive_all',
         extraParams: {
           groupId: mailId,
-          isError,
         },
       });
+    } catch (e) {
+      logger.error(`error in archiveAllHandler for user ${body.user.id}`, e);
+      eventEmitter.emit(DISPLAY_ERROR_MODAL_EVENT_NAME, {
+        triggerId: body.trigger_id,
+        slackUserId: body.user.id,
+        slackTeamId: body.team?.id || '',
+        action: 'archive_all',
+      } as IMailErrorMetaData);
+      throw e;
     }
   };
 
 export const archiveAll = async (
-  { logger, body }: SlackBlockActionWrapper,
+  { logger, body }: SectionActionProps,
   eventEmitter: EventEmitter,
   mailId: string,
 ) => {
-  let isError = false;
   logger.debug(`archive all handler for user ${body.user.id}`);
   if (!body.team?.id) {
-    isError = true;
-    logger.error(
+    throw new Error(
       `team id not exist for user ${body.user.id} in archiveAllHandler`,
     );
-    return isError;
   }
-
   // We assume the archive worked in order to be faster ux in 99% of the cases
   eventEmitter.emit(ON_MESSAGE_CLEARED_EVENT_NAME, {
     id: mailId,
@@ -99,13 +97,8 @@ export const archiveAll = async (
     },
   );
   if (response.status !== 200 && response.status !== 201) {
-    isError = true;
-    logger.error(
+    throw new Error(
       `email archiveAllHandler wasn't able to mark as read for user ${body.user.id} with response ${response.status}`,
     );
-    // TODO: Show error modal and call refresh as we deleted the message and may be out of sync.
-    return isError;
   }
-
-  return isError;
 };

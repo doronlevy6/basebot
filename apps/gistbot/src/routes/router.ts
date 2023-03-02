@@ -19,7 +19,10 @@ import {
 import { markAllAsReadHandler } from '../email-for-slack/action-handlers/mark-all-as-read';
 import { markAsReadHandler } from '../email-for-slack/action-handlers/mark-as-read';
 import { emailReadMoreHandler } from '../email-for-slack/action-handlers/read-more';
-import { refreshActionHandler } from '../email-for-slack/action-handlers/refresh-gmail';
+import {
+  refreshActionHandler,
+  refreshFromModalHandler,
+} from '../email-for-slack/action-handlers/refresh-gmail';
 import { saveDraft } from '../email-for-slack/action-handlers/save-draft';
 import { sectionActionsHandler } from '../email-for-slack/action-handlers/section-actions';
 import {
@@ -132,6 +135,7 @@ export enum Routes {
   ARCHIVE = 'archive',
   MAIL_SAVE_DRAFT = 'save_draft',
   REFRESH_GMAIL = 'refresh-gmail',
+  REFRESH_GMAIL_FROM_VIEW = 'refresh-gmail-from-modal',
   MAIL_RSVP = 'rsvp',
   MAIL_READ_MORE = 'mail-read-more',
   GISTLY_MODAL_SUBMIT = 'gistly-modal-submit',
@@ -261,12 +265,20 @@ export const registerBoltAppRouter = (
 
   app.action(
     Routes.MAIL_SAVE_DRAFT,
-    saveDraft(analyticsManager, gmailSubscriptionsManager),
+    saveDraft(analyticsManager, gmailSubscriptionsManager, eventEmitter),
   );
 
   app.action(Routes.REFRESH_GMAIL, refreshActionHandler(eventEmitter));
 
-  app.view(Routes.MAIL_REPLY_SUBMIT, emailReplySubmitHandler(analyticsManager));
+  app.view(
+    Routes.REFRESH_GMAIL_FROM_VIEW,
+    refreshFromModalHandler(eventEmitter),
+  );
+
+  app.view(
+    Routes.MAIL_REPLY_SUBMIT,
+    emailReplySubmitHandler(analyticsManager, eventEmitter),
+  );
 
   app.action(
     Routes.EMAIL_SECTION_ACTION,

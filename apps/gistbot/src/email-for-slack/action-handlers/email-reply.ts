@@ -5,6 +5,10 @@ import { SlackBlockActionWrapper, ViewAction } from '../../slack/types';
 import { ReplyMailView } from '../views/email-reply-view';
 import { MAIL_BOT_SERVICE_API } from '../types';
 import { GmailSubscriptionsManager } from '../gmail-subscription-manager/gmail-subscription-manager';
+import { DISPLAY_ERROR_MODAL_EVENT_NAME } from '../../home/types';
+import { IMailErrorMetaData } from '../views/email-error-view';
+import { ViewSubmitAction } from '@slack/bolt';
+import { EventEmitter } from 'events';
 
 const REPLY_PATH = '/mail/gmail-client/sendReply';
 
@@ -51,12 +55,11 @@ export const emailReplyHandler =
   };
 
 export const emailReplySubmitHandler =
-  (analyticsManager: AnalyticsManager) => async (params: ViewAction) => {
+  (analyticsManager: AnalyticsManager, eventsEmitter: EventEmitter) =>
+  async (params: ViewAction) => {
     const { ack, body, view, logger } = params;
-
-    let threadId = '';
-    let isError = false;
     try {
+      let threadId = '';
       await ack();
       logger.debug(`reply submit handler for user ${body.user.id}`);
       if (!body.team?.id) {
@@ -65,13 +68,11 @@ export const emailReplySubmitHandler =
         );
         return;
       }
-
       const { id, from } = JSON.parse(body.view.private_metadata);
       const message = view.state.values['reply']['reply-text']?.value;
       threadId = id;
       const url = new URL(MAIL_BOT_SERVICE_API);
       url.pathname = REPLY_PATH;
-
       await axios.post(
         url.toString(),
         {
@@ -85,21 +86,25 @@ export const emailReplySubmitHandler =
           timeout: 60000,
         },
       );
-    } catch (e) {
-      isError = true;
-      logger.error(
-        `error in emailReplySubmitHandler for user ${body.user.id}, ${e}`,
-      );
-      throw e;
-    } finally {
       analyticsManager.gmailUserAction({
         slackUserId: body.user.id,
         slackTeamId: body.team?.id || '',
         action: 'reply',
         extraParams: {
           threadId,
-          isError,
         },
       });
+    } catch (e) {
+      logger.error(
+        `error in emailReplySubmitHandler for user ${body.user.id}`,
+        e,
+      );
+      eventsEmitter.emit(DISPLAY_ERROR_MODAL_EVENT_NAME, {
+        triggerId: (body as ViewSubmitAction).trigger_id,
+        slackUserId: body.user.id,
+        slackTeamId: body.team?.id || '',
+        action: 'reply',
+      } as IMailErrorMetaData);
+      throw e;
     }
   };

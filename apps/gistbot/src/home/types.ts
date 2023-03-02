@@ -16,6 +16,7 @@ export interface IHomeState {
 }
 
 export const UPDATE_HOME_EVENT_NAME = 'updateHome';
+export const DISPLAY_ERROR_MODAL_EVENT_NAME = 'errorModal';
 export const ON_MESSAGE_CLEARED_EVENT_NAME = 'onMessageCleared';
 export type OnMessageClearedEvent = SlackIdToMailResponse & { id: string };
 export const UPDATE_EMAIL_REFRESH_METADATA_EVENT_NAME = 'updateRefreshMetadata';
