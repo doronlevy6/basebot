@@ -102,7 +102,7 @@ export class MessagesSummarizer {
           ),
         ),
       )
-    ).filter((m) => m) as PickedMessage[]; // Filter should remove any undefineds but the typescript isn't picking that up so we force the cast...
+    ).filter((m) => m && m.text) as PickedMessage[]; // Filter should remove any undefineds but the typescript isn't picking that up so we force the cast...
 
     const userOrBotIds = pickedModelMessages.map((pm) => {
       return {
