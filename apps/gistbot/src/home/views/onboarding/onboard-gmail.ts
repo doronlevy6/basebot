@@ -9,7 +9,7 @@ export const OnboardToGmailBlocks = (
     type: 'section',
     text: {
       type: 'mrkdwn',
-      text: '*Gmail Digest*\nClear your inbox in seconds with an actionable categorized summary of your Gmail.',
+      text: ':mailbox:  *Gmail Digest*\nClear your inbox in seconds with an actionable categorized summary of your Gmail.',
     },
   },
   {
