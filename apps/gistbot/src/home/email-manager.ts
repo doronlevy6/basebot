@@ -11,7 +11,6 @@ import {
   JobsTypes,
   SlackIdToMailResponse,
 } from '../email-for-slack/types';
-import { UserLink } from '../slack/components/user-link';
 import { SlackDataStore } from '../utils/slack-data-store';
 import { HomeDataStore } from './home-data-store';
 import {

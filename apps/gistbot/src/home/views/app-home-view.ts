@@ -13,6 +13,8 @@ import { OnboardingHeaderGoProBlocks } from './onboarding/onboarding-header-go-p
 import { GoToSlackDigestBlocks } from './slack/go-to-slack-digest';
 import { OnboardToGmailNotConnectedBlocks } from './onboarding/onboard-gmail-not-connected';
 
+const MAX_BLOCKS_COUNT = 100;
+const DIVIDER_BLOCK_LENGTH = 1;
 export interface IHomeMetadata {
   slackUserId: string;
   slackTeamId: string;
@@ -62,11 +64,18 @@ export const AppHomeView = (
       if (isInboxEmpty) {
         gmailBlocks = [...header, divider, ...InboxZeroBlocks()];
       } else {
+        const footerBlocks = EmailFooterBlocks();
+        const remainingBlocksForMessages =
+          MAX_BLOCKS_COUNT -
+          (3 * DIVIDER_BLOCK_LENGTH + header.length + footerBlocks.length); //footer and headr size + 3 dividers
         gmailBlocks = [
           ...header,
           divider,
-          ...createEmailDigestBlocks(digest.sections),
-          ...EmailFooterBlocks(),
+          ...createEmailDigestBlocks(
+            digest.sections,
+            remainingBlocksForMessages,
+          ),
+          ...footerBlocks,
         ];
       }
     } else {

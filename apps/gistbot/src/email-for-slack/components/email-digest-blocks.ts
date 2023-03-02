@@ -112,16 +112,62 @@ const archiveAction = (message: DigestMessage): Button => {
 
 const createEmailDigestSections = (
   sections: GmailDigestSection[],
+  limitBlocksSize: number,
 ): KnownBlock[] => {
-  return sections.flatMap((section) => {
-    return [
-      ...createEmailDigestHeader(section),
-      ...createEmailDigestMessage(section.messages),
-      {
+  const footerBlocksLength = 2;
+  const dividerBlockLength = 1;
+  let blocksLength = 0;
+  const result: KnownBlock[] = [];
+  let totalBlocksLength = 0;
+  for (const section of sections) {
+    const emailDigestHeader = createEmailDigestHeader(section);
+    const mailDigestMessages = createEmailDigestMessage(section.messages);
+    // Calculate the length of the blocks to be added
+    const addedBlocksLength =
+      emailDigestHeader.length + mailDigestMessages.length + 1; // Add 1 for the divider block
+    totalBlocksLength = totalBlocksLength + addedBlocksLength;
+    // Check if adding the blocks will exceed the limit
+    if (blocksLength + addedBlocksLength > limitBlocksSize) {
+      // Calculate the remaining space in the blocks
+      const remainingSpace = limitBlocksSize - blocksLength - 1; // Subtract 1 for the divider block
+      // If there is not enough space for even one mailDigestMessage, skip this section and continue with the next one
+      if (
+        remainingSpace <
+        emailDigestHeader.length + footerBlocksLength + dividerBlockLength
+      ) {
+        logger.info(
+          `Skipping section ${section.category} due to over blocks limit`,
+        );
+        continue;
+      }
+      const toSlice =
+        (remainingSpace - emailDigestHeader.length - 1) % 2 === 0
+          ? remainingSpace - emailDigestHeader.length - 1
+          : remainingSpace - emailDigestHeader.length - 2;
+      // Slice the mailDigestMessages to fit within the remaining space the mod 2 required cause each section is 2 blocks actions and message
+      const slicedMailDigestMessages = mailDigestMessages.slice(0, toSlice);
+
+      // Add the blocks to the result array
+      result.push(...emailDigestHeader, ...slicedMailDigestMessages, {
         type: 'divider',
-      },
-    ];
-  });
+      });
+      blocksLength = limitBlocksSize;
+    } else {
+      // Add the blocks to the result array
+      result.push(...emailDigestHeader, ...mailDigestMessages, {
+        type: 'divider',
+      });
+      blocksLength += addedBlocksLength;
+    }
+  }
+  const dropBlocksCount = totalBlocksLength - blocksLength;
+  if (dropBlocksCount > 0) {
+    logger.info(`during creation email disgets sections ${dropBlocksCount}`);
+  } else {
+    logger.info(`during creation email disgets sections added ${blocksLength}`);
+  }
+
+  return result;
 };
 
 const createEmailDigestHeader = (section: GmailDigestSection): KnownBlock[] => {
@@ -230,7 +276,6 @@ export const readMoreAction = (message: DigestMessage): Button => {
     const classifications = relatedMails[0].classifications;
     if (classifications) {
       const type = classifications[0].type;
-      const titleWithCapital = type.charAt(0).toUpperCase() + type.slice(1);
     } else {
       logger.error('error in readMoreAction - classifications is undefined');
     }
@@ -254,6 +299,11 @@ export const readMoreAction = (message: DigestMessage): Button => {
   };
 };
 
-export const createEmailDigestBlocks = (sections: GmailDigestSection[]) => {
-  return sections.length ? createEmailDigestSections(sections) : InboxZero();
+export const createEmailDigestBlocks = (
+  sections: GmailDigestSection[],
+  limitBlocksSize: number,
+) => {
+  return sections.length
+    ? createEmailDigestSections(sections, limitBlocksSize)
+    : InboxZero();
 };
