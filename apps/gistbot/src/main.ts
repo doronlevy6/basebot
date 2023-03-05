@@ -34,8 +34,6 @@ import { PgTriggerLock } from './new-user-triggers/trigger-lock-persistent';
 import { OnboardingManager } from './onboarding/manager';
 import { UserOnboardedNotifier } from './onboarding/notifier';
 import { RedisOnboardingLock } from './onboarding/onboarding-lock';
-import { OnboardingNudgeJob } from './onboarding/onboarding-nudge-job';
-import { RedisOnboardingNudgeLock } from './onboarding/onboarding-nudge-lock';
 import { PgOnboardingStore } from './onboarding/onboardingStore';
 import { PgOrgSettingsStore } from './orgsettings/store';
 import { registerBoltAppRouter } from './routes/router';
@@ -175,7 +173,6 @@ const startApp = async () => {
   const channelSummaryStore = new ChannelSummaryStore(redisConfig, env);
   const slackDataStore = new SlackDataStore(redisConfig, env);
   const newUserTriggersLock = new RedisTriggerLock(redisConfig, env);
-  const onboardingNudgeLock = new RedisOnboardingNudgeLock(redisConfig, env);
   const analyticsManager = new AnalyticsManager();
   const botsManager = new BotsManager(new GithubBot());
   const channelModelTranslator = new ChannelModelTranslator();
@@ -289,10 +286,10 @@ const startApp = async () => {
     emailSender,
     pgStore,
   );
-  const onboardingNudgeJob = new OnboardingNudgeJob(
-    onboardingManager,
-    onboardingNudgeLock,
-  );
+  // const onboardingNudgeJob = new OnboardingNudgeJob(
+  //   onboardingManager,
+  //   onboardingNudgeLock,
+  // );
 
   const newUserTriggersManager = new NewUserTriggersManager(
     onboardingManager,
@@ -453,7 +450,7 @@ const startApp = async () => {
   });
   server.on('error', console.error);
 
-  onboardingNudgeJob.start();
+  // onboardingNudgeJob.start();
   summarySchedulerJob.start();
 
   const shutdownHandler = gracefulShutdown(server);

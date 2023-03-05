@@ -2,11 +2,9 @@ import { logger } from '@base/logger';
 import { WebClient } from '@slack/web-api';
 import {
   AnalyticsManager,
-  PgInstallationStore,
   identifyTriggeringUser,
+  PgInstallationStore,
 } from '@base/gistbot-shared';
-import { UserLink } from '../slack/components/user-link';
-import { Welcome } from '../slack/components/welcome';
 import { UserOnboardedNotifier } from './notifier';
 import { OnboardingLock } from './onboarding-lock';
 import { OnboardingStore } from './onboardingStore';
@@ -84,20 +82,7 @@ export class OnboardingManager {
         logger.debug(
           `user ${userId} has not yet been onboarded, onboarding now`,
         );
-        await client.chat.postMessage({
-          channel: userId,
-          text: `Hey ${UserLink(userId)} :wave: I'm theGist!`,
-          blocks: Welcome(userId),
-        });
 
-        this.analyticsManager.messageSentToUserDM({
-          type: 'onboarding_message',
-          slackTeamId: teamId,
-          slackUserId: userId,
-          properties: {
-            onboardingContext: onboardingContext,
-          },
-        });
         await this.onboardUserViaMail(teamId, userId, client);
         // Don't await so that we don't force anything to wait just for the notification.
         // This handles error handling internally and will never cause an exception, so we
