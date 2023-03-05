@@ -8,7 +8,7 @@ loadEnvs(
     env: env,
     cwd: process.cwd(),
   },
-  ['configs', 'secrets'],
+  ['configs'],
 );
 
 let webhookUrl: string;

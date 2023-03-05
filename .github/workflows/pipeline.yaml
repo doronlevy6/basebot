@@ -211,9 +211,6 @@ jobs:
           aws-region: us-east-1
           role-to-assume: arn:aws:iam::221762091942:role/GitHubRoleBasebot
           role-session-name: BasebotCICD
-      - name: Download Secrets from S3
-        if: github.ref == 'refs/heads/main'
-        run: npm run secrets:read
       - name: Login to Amazon ECR
         if: github.ref == 'refs/heads/main'
         id: ecr-login

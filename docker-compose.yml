@@ -1,4 +1,8 @@
 version: "3.8"
+secrets:
+  aws_creds:
+    file: ~/.aws
+
 services:
   slacker:
     build:
@@ -8,8 +12,6 @@ services:
       - ./apps:/app/apps
       - ./libs:/app/libs
       - ./configs:/app/configs
-      - ./secrets:/app/secrets
-    command: npm run start slacker
     depends_on:
       - postgres
       - redis
@@ -17,8 +19,10 @@ services:
     environment:
       NODE_OVERRIDE_ENV: local${LOCAL_ENV}
       PORT: 3000
-      AWS_ACCESS_KEY_ID: xxx
-      AWS_SECRET_ACCESS_KEY: xxx
+    secrets:
+      - source: aws_creds
+        target: /root/.aws
+    command: [  "./chamber", "exec", "basebot/local${LOCAL_ENV}", "--", "npm", "run", "start", "slacker" ]
     ports:
       - 3000:3000
       - 9229:9229
@@ -31,8 +35,6 @@ services:
       - ./apps:/app/apps
       - ./libs:/app/libs
       - ./configs:/app/configs
-      - ./secrets:/app/secrets
-    command: npm run start gistbot
     depends_on:
       - postgres
       - redis
@@ -40,8 +42,10 @@ services:
     environment:
       NODE_OVERRIDE_ENV: local${LOCAL_ENV}
       PORT: 3000
-      AWS_ACCESS_KEY_ID: xxx
-      AWS_SECRET_ACCESS_KEY: xxx
+    secrets:
+      - source: aws_creds
+        target: /root/.aws
+    command: [  "./chamber", "exec", "basebot/local${LOCAL_ENV}", "--", "npm", "run", "start", "gistbot" ]
     ports:
       - 3002:3000
       - 9230:9229
@@ -55,8 +59,6 @@ services:
       - ./apps:/app/apps
       - ./libs:/app/libs
       - ./configs:/app/configs
-      - ./secrets:/app/secrets
-    command: npm run start treasury
     depends_on:
       - postgres
       - redis
@@ -64,8 +66,10 @@ services:
     environment:
       NODE_OVERRIDE_ENV: local${LOCAL_ENV}
       PORT: 3000
-      AWS_ACCESS_KEY_ID: xxx
-      AWS_SECRET_ACCESS_KEY: xxx
+    secrets:
+      - source: aws_creds
+        target: /root/.aws
+    command: [  "./chamber", "exec", "basebot/local${LOCAL_ENV}", "--", "npm", "run", "start", "treasury" ]
     ports:
       - 3003:3000
       - 9233:9229
@@ -78,8 +82,6 @@ services:
     volumes:
       - ../mail-bot/src:/app/src
       - ../mail-bot/configs:/app/configs
-      - ../mail-bot/secrets:/app/secrets
-    command: npm run start:debug
     depends_on:
       - postgres
       - redis
@@ -88,10 +90,11 @@ services:
       NODE_ENV: local
       NODE_OVERRIDE_ENV: local
       PORT: 3000
-      AWS_ACCESS_KEY_ID: xxx
-      AWS_SECRET_ACCESS_KEY: xxx
       OAUTH_REDIRECT_BASE_URL: https://gistbot-mailbot${LOCAL_ENV}.baselabs.dev/mail/oauth-public
-
+    secrets:
+      - source: aws_creds
+        target: /root/.aws
+    command: [  "./chamber", "exec", "mail-bot/local", "--", "npm", "run", "start:debug" ]
     ports:
       - 3004:3000
       - 9234:9229

@@ -6,7 +6,7 @@ loadEnvs(
     env: 'production',
     cwd: process.cwd(),
   },
-  ['configs', 'secrets'],
+  ['configs'],
 );
 
 const apiKey = process.env.BASE_API_KEY;

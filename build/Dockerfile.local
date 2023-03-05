@@ -1,6 +1,11 @@
+# include chamber Docker
+FROM segment/chamber:2 AS chamber
+
 FROM node:16
 
 WORKDIR /app
+
+COPY --from=chamber /chamber /app/chamber
 
 COPY package*.json ./
 RUN npm install

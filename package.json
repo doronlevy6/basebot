@@ -8,8 +8,6 @@
     "test": "nx run-many --target=test --all",
     "format": "prettier --write .",
     "lint": "nx run-many --target=lint --all --fix",
-    "secrets:read": "aws s3 sync s3://base-service-secrets/secrets/basebot secrets",
-    "secrets:write": "aws s3 sync secrets s3://base-service-secrets/secrets/basebot",
     "docker:login": "aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 221762091942.dkr.ecr.us-east-1.amazonaws.com",
     "start:local": "npm run docker:login && docker compose up",
     "start:local2": "npm run docker:login && LOCAL_ENV=-2 docker compose up",

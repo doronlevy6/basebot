@@ -4,7 +4,7 @@ import 'tslib';
 // Before anything else runs, first we must load the environment that we are running
 import { loadEnvs } from '@base/env';
 import { environment } from './environments/environment';
-loadEnvs(environment, ['configs', 'secrets']);
+loadEnvs(environment, ['configs']);
 
 import {
   CustomerIdentifier,

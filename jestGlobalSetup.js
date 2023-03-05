@@ -10,7 +10,7 @@ module.exports = async () => {
   };
 
   try {
-    loadEnvs(initialEnv, ['configs', 'secrets']);
+    loadEnvs(initialEnv, ['configs']);
   } catch (error) {
     console.log({
       msg: 'error reading versions from environment: ' + error,
