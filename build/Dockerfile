@@ -1,7 +1,7 @@
+ARG DEPS_HASH_VERSION
+
 # include chamber Docker
 FROM segment/chamber:2 AS chamber
-
-ARG DEPS_HASH_VERSION
 
 FROM 221762091942.dkr.ecr.us-east-1.amazonaws.com/custom-basebot-base:${DEPS_HASH_VERSION} AS build-env
 WORKDIR /app
