@@ -36,14 +36,6 @@ export const ReplyMailView: (props: IProps) => ModalView = ({
       {
         type: 'section',
         text: {
-          type: 'plain_text',
-          text: 'To connect theGist to your gmail account please click on the button below',
-          emoji: true,
-        },
-      },
-      {
-        type: 'section',
-        text: {
           type: 'mrkdwn',
           text: `*Reply to:* ${address}`,
         },
