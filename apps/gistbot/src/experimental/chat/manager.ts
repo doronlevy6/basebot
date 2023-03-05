@@ -83,7 +83,6 @@ export class ChatManager {
       let relatedMessages = messages;
       if (filterMesages) {
         relatedMessages = this.filterByStopWords(relatedMessages, logger);
-        relatedMessages = relatedMessages.reverse();
       }
 
       const isEmpty = relatedMessages.length === 0;
@@ -135,7 +134,13 @@ export class ChatManager {
         `chatGist loaded ${relatedMessages?.length} session messages`,
       );
 
-      const prompt = chatModelPrompt(req);
+      let newestBottom = req;
+      if (!threadTs) {
+        newestBottom = req.reverse();
+      }
+
+      const prompt = chatModelPrompt(newestBottom);
+
       const res = await this.chatModel.customModel(prompt, userId);
 
       logger.debug(`Chat response`);
@@ -200,6 +205,7 @@ export class ChatManager {
         ts: threadTs,
         channel: channelId,
       });
+
       return (res.messages ?? []) as Message[];
     }
 
@@ -210,18 +216,19 @@ export class ChatManager {
   }
 
   private filterByStopWords(messages: Message[], logger: Logger) {
-    let stopIndex = -1;
-    messages?.forEach((m, i) => {
-      if (STOP_WORDS.includes(m.text?.toLowerCase() || '')) {
-        stopIndex = i;
+    let recentStopIndex = -1;
+    for (let i = 0; i < messages.length; i++) {
+      if (STOP_WORDS.some((stopWord) => stopWord === messages[i].text)) {
+        recentStopIndex = i;
+        break;
       }
-    });
-
-    if (stopIndex !== -1) {
-      logger.debug('Stop word found for chatGist');
     }
 
-    return messages.filter((m, i) => stopIndex === undefined || i > stopIndex);
+    if (recentStopIndex === -1) {
+      return messages;
+    }
+
+    return messages.filter((_, i) => i < recentStopIndex);
   }
 
   private filterByTimeSession(messages: Message[]) {
