@@ -114,9 +114,9 @@ const createEmailDigestSections = (
   sections: GmailDigestSection[],
   limitBlocksSize: number,
 ): KnownBlock[] => {
-  const footerBlocksLength = 2;
+  const emailDigestHeaderLength = 1;
   const dividerBlockLength = 1;
-  let blocksLength = 0;
+  let blocksLength = emailDigestHeaderLength + dividerBlockLength;
   const result: KnownBlock[] = [];
   let totalBlocksLength = 0;
   for (const section of sections) {
@@ -124,45 +124,47 @@ const createEmailDigestSections = (
     const mailDigestMessages = createEmailDigestMessage(section.messages);
     // Calculate the length of the blocks to be added
     const addedBlocksLength =
-      emailDigestHeader.length + mailDigestMessages.length + 1; // Add 1 for the divider block
+      emailDigestHeaderLength + mailDigestMessages.length + dividerBlockLength;
     totalBlocksLength = totalBlocksLength + addedBlocksLength;
     // Check if adding the blocks will exceed the limit
+
     if (blocksLength + addedBlocksLength > limitBlocksSize) {
       // Calculate the remaining space in the blocks
-      const remainingSpace = limitBlocksSize - blocksLength - 1; // Subtract 1 for the divider block
+      const remainingSpace = limitBlocksSize - blocksLength;
       // If there is not enough space for even one mailDigestMessage, skip this section and continue with the next one
-      if (
-        remainingSpace <
-        emailDigestHeader.length + footerBlocksLength + dividerBlockLength
-      ) {
-        logger.info(
-          `Skipping section ${section.category} due to over blocks limit`,
-        );
-        continue;
+      if (remainingSpace < emailDigestHeaderLength + dividerBlockLength) {
+        logger.info(`Skipping sections due to over blocks limit`);
+        break;
       }
       const toSlice =
-        (remainingSpace - emailDigestHeader.length - 1) % 2 === 0
-          ? remainingSpace - emailDigestHeader.length - 1
-          : remainingSpace - emailDigestHeader.length - 2;
+        remainingSpace % 2 === 0 ? remainingSpace : remainingSpace - 1;
       // Slice the mailDigestMessages to fit within the remaining space the mod 2 required cause each section is 2 blocks actions and message
       const slicedMailDigestMessages = mailDigestMessages.slice(0, toSlice);
 
       // Add the blocks to the result array
-      result.push(...emailDigestHeader, ...slicedMailDigestMessages, {
+      result.push(emailDigestHeader, ...slicedMailDigestMessages, {
         type: 'divider',
       });
-      blocksLength = limitBlocksSize;
+      blocksLength +=
+        emailDigestHeaderLength +
+        slicedMailDigestMessages.length +
+        dividerBlockLength;
     } else {
       // Add the blocks to the result array
-      result.push(...emailDigestHeader, ...mailDigestMessages, {
+      result.push(emailDigestHeader, ...mailDigestMessages, {
         type: 'divider',
       });
-      blocksLength += addedBlocksLength;
+      blocksLength +=
+        emailDigestHeaderLength +
+        mailDigestMessages.length +
+        dividerBlockLength;
     }
   }
   const dropBlocksCount = totalBlocksLength - blocksLength;
   if (dropBlocksCount > 0) {
-    logger.info(`during creation email disgets sections ${dropBlocksCount}`);
+    logger.info(
+      `during creation email dropped:${dropBlocksCount} disgets sections `,
+    );
   } else {
     logger.info(`during creation email disgets sections added ${blocksLength}`);
   }
@@ -170,34 +172,27 @@ const createEmailDigestSections = (
   return result;
 };
 
-const createEmailDigestHeader = (section: GmailDigestSection): KnownBlock[] => {
+const createEmailDigestHeader = (section: GmailDigestSection): KnownBlock => {
+  const options = createDigestSectionActions(section);
   const sectionHeader: KnownBlock = {
-    type: 'header',
-    text: {
-      type: 'plain_text',
-      text: `${
-        EmailCategoryToEmoji.get(section.category) || ':e-mail:'
-      }  ${section.title.toUpperCase()}`,
-    },
-  };
-
-  const sectionAction: KnownBlock = {
     type: 'section',
     text: {
       type: 'mrkdwn',
-      text: ' ',
+      text: `*${
+        EmailCategoryToEmoji.get(section.category) || ':e-mail:'
+      }  ${section.title.toUpperCase()}*`,
     },
   };
 
-  const options = createDigestSectionActions(section);
   if (options?.length) {
-    sectionAction.accessory = {
+    sectionHeader.accessory = {
       type: 'overflow',
       action_id: Routes.EMAIL_SECTION_ACTION,
       options,
     };
   }
-  return [sectionHeader, sectionAction];
+
+  return sectionHeader;
 };
 
 const createEmailDigestMessage = (messages: DigestMessage[]): KnownBlock[] => {

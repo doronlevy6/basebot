@@ -49,6 +49,7 @@ export const AppHomeView = (
   }
 
   let gmailBlocks: Block[] = [];
+  const onBoardingHeader = OnboardingHeaderGoProBlocks(daysLeftFreeTrial);
   if (gmailConnected) {
     if (gmailDigest) {
       const { digest, lastUpdated } = gmailDigest;
@@ -67,7 +68,11 @@ export const AppHomeView = (
         const footerBlocks = EmailFooterBlocks();
         const remainingBlocksForMessages =
           MAX_BLOCKS_COUNT -
-          (3 * DIVIDER_BLOCK_LENGTH + header.length + footerBlocks.length); //footer and headr size + 3 dividers
+          (2 * DIVIDER_BLOCK_LENGTH +
+            header.length +
+            footerBlocks.length +
+            slackBlocks.length +
+            onBoardingHeader.length); //footer and headr size + 2 dividers
         gmailBlocks = [
           ...header,
           divider,
@@ -84,10 +89,5 @@ export const AppHomeView = (
   } else {
     gmailBlocks = OnboardToGmailNotConnectedBlocks(slackUserId, slackTeamId);
   }
-  return [
-    ...OnboardingHeaderGoProBlocks(daysLeftFreeTrial),
-    ...slackBlocks,
-    divider,
-    ...gmailBlocks,
-  ];
+  return [...onBoardingHeader, ...slackBlocks, divider, ...gmailBlocks];
 };
