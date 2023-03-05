@@ -105,7 +105,9 @@ export class ChatManager {
         client,
       );
 
-      const req = [...enrichedMessages];
+      const req = threadTs
+        ? [...enrichedMessages]
+        : [...enrichedMessages.reverse()];
       let cc = approximatePromptCharacterCountForChatMessages(req);
       while (cc > MAX_PROMPT_CHARACTER_COUNT) {
         if (props.threadTs && req.length >= 2) {
@@ -134,12 +136,7 @@ export class ChatManager {
         `chatGist loaded ${relatedMessages?.length} session messages`,
       );
 
-      let newestBottom = req;
-      if (!threadTs) {
-        newestBottom = req.reverse();
-      }
-
-      const prompt = chatModelPrompt(newestBottom);
+      const prompt = chatModelPrompt(req);
 
       const res = await this.chatModel.customModel(prompt, userId);
 
