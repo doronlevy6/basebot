@@ -49,7 +49,7 @@ export const AppHomeView = (
   }
 
   let gmailBlocks: Block[] = [];
-  const onBoardingHeader = OnboardingHeaderGoProBlocks(daysLeftFreeTrial);
+  const onBoardingHeader = OnboardingHeaderGoProBlocks();
   if (gmailConnected) {
     if (gmailDigest) {
       const { digest, lastUpdated } = gmailDigest;
@@ -65,7 +65,7 @@ export const AppHomeView = (
       if (isInboxEmpty) {
         gmailBlocks = [...header, divider, ...InboxZeroBlocks()];
       } else {
-        const footerBlocks = EmailFooterBlocks();
+        const footerBlocks = EmailFooterBlocks(slackTeamId, daysLeftFreeTrial);
         const remainingBlocksForMessages =
           MAX_BLOCKS_COUNT -
           (2 * DIVIDER_BLOCK_LENGTH +

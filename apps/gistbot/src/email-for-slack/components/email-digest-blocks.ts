@@ -40,7 +40,7 @@ const markAllAsReadAction = (id: string): Button => {
     type: 'button',
     text: {
       type: 'plain_text',
-      text: 'Mark all as read',
+      text: 'Mark as read',
       emoji: true,
     },
     value: id,
@@ -64,7 +64,7 @@ const archiveAllAction = (id: string): Button => {
     type: 'button',
     text: {
       type: 'plain_text',
-      text: 'Archive all',
+      text: 'Archive',
       emoji: true,
     },
     value: id,
