@@ -12,7 +12,7 @@ export const EmailFooterBlocks = (
   timeLeft?: number,
 ): KnownBlock[] => {
   if (timeLeft === undefined) {
-    logger.error(`Footer blocks called without timeLeft`);
+    logger.info(`Footer blocks called without timeLeft`);
     return [];
   }
   let text = `Your free trial expires in ${timeLeft} days. *<${STRIPE_URL}|Upgrade to Pro>* and get an *extra month* free! 🚀`;

@@ -197,10 +197,9 @@ const createEmailDigestHeader = (section: GmailDigestSection): KnownBlock => {
 
 const createEmailDigestMessage = (messages: DigestMessage[]): KnownBlock[] => {
   return messages.flatMap((message) => {
-    // If there is a timestamp, add it at the end of title.
-    const messageTitle = message.timeStamp
-      ? `*${message.title}* (${message.timeStamp}) \n\n${message.body}`
-      : `*${message.title}*\n\n${message.body}`;
+    const { timeStamp, body, title } = message;
+    const time = timeStamp ? createTimeString(timeStamp) : '';
+    const messageTitle = `*${title}*${time}\n\n${body}`;
     const blocks: KnownBlock[] = [];
 
     const bodySection: KnownBlock = {
@@ -301,4 +300,13 @@ export const createEmailDigestBlocks = (
   return sections.length
     ? createEmailDigestSections(sections, limitBlocksSize)
     : InboxZero();
+};
+
+const createTimeString = (timestamp: number) => {
+  const date = new Date(timestamp);
+  const isToday = date.getTime() >= new Date().setHours(0, 0, 0, 0);
+  if (isToday) {
+    return ` (<!date^${timestamp / 1000}^{time}| >) `;
+  }
+  return ` (<!date^${timestamp / 1000}^{date_short_pretty}| >) `;
 };
