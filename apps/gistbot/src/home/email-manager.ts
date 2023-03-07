@@ -305,6 +305,10 @@ export class EmailDigestManager extends BullMQUtil<JobData> {
         state?.gmailDigest?.lastUpdated,
       );
       if (!refreshTriggered) {
+        this.eventsEmitter.emit(UPDATE_HOME_EVENT_NAME, {
+          slackUserId,
+          slackTeamId,
+        });
         return;
       }
 
