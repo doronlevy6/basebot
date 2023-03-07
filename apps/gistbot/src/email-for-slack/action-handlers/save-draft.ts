@@ -1,7 +1,10 @@
 import { AnalyticsManager } from '@base/gistbot-shared';
 import axios from 'axios';
 import { SlackBlockActionWrapper } from '../../slack/types';
-import { replayElementActionID, replyBlockId } from '../views/email-reply-view';
+import {
+  REPLY_BLOCK_ID,
+  REPLY_ELEMENT_ACTION_ID,
+} from '../views/email-reply-view';
 import { MAIL_BOT_SERVICE_API } from '../types';
 import { GmailSubscriptionsManager } from '../gmail-subscription-manager/gmail-subscription-manager';
 import { DISPLAY_ERROR_MODAL_EVENT_NAME } from '../../home/types';
@@ -46,7 +49,7 @@ export const saveDraft =
         );
       }
       const message =
-        body.view?.state.values[replyBlockId][replayElementActionID]?.value;
+        body.view?.state.values[REPLY_BLOCK_ID][REPLY_ELEMENT_ACTION_ID]?.value;
       const { id, from } = JSON.parse(body.view?.private_metadata || '');
       threadId = id;
       const url = new URL(MAIL_BOT_SERVICE_API);

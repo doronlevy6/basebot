@@ -2,7 +2,11 @@ import { AnalyticsManager } from '@base/gistbot-shared';
 import axios from 'axios';
 import { Routes } from '../../routes/router';
 import { SlackBlockActionWrapper, ViewAction } from '../../slack/types';
-import { ReplyMailView } from '../views/email-reply-view';
+import {
+  ReplyMailView,
+  REPLY_BLOCK_ID,
+  REPLY_ELEMENT_ACTION_ID,
+} from '../views/email-reply-view';
 import { MAIL_BOT_SERVICE_API } from '../types';
 import { GmailSubscriptionsManager } from '../gmail-subscription-manager/gmail-subscription-manager';
 import { DISPLAY_ERROR_MODAL_EVENT_NAME } from '../../home/types';
@@ -69,7 +73,8 @@ export const emailReplySubmitHandler =
         return;
       }
       const { id, from } = JSON.parse(body.view.private_metadata);
-      const message = view.state.values['reply']['reply-text']?.value;
+      const message =
+        view.state.values[REPLY_BLOCK_ID][REPLY_ELEMENT_ACTION_ID]?.value;
       threadId = id;
       const url = new URL(MAIL_BOT_SERVICE_API);
       url.pathname = REPLY_PATH;
@@ -96,7 +101,7 @@ export const emailReplySubmitHandler =
       });
     } catch (e) {
       logger.error(
-        `error in emailReplySubmitHandler for user ${body.user.id}`,
+        `error in emailReplySubmitHandler for user ${body.user.id} ${e}`,
         e,
       );
       eventsEmitter.emit(DISPLAY_ERROR_MODAL_EVENT_NAME, {

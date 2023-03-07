@@ -6,8 +6,8 @@ interface IProps {
   address?: string;
 }
 
-export const replyBlockId = 'replyID';
-export const replayElementActionID = 'replyElementActionID';
+export const REPLY_BLOCK_ID = 'reply';
+export const REPLY_ELEMENT_ACTION_ID = 'reply-action-id';
 export const ReplyMailView: (props: IProps) => ModalView = ({
   metadata,
   submitCallback,
@@ -42,7 +42,7 @@ export const ReplyMailView: (props: IProps) => ModalView = ({
       },
       {
         type: 'input',
-        block_id: replyBlockId,
+        block_id: REPLY_BLOCK_ID,
         element: {
           type: 'plain_text_input',
           multiline: true,
@@ -53,7 +53,7 @@ export const ReplyMailView: (props: IProps) => ModalView = ({
             emoji: true,
           },
 
-          action_id: replayElementActionID,
+          action_id: REPLY_ELEMENT_ACTION_ID,
         },
         label: {
           type: 'plain_text',
