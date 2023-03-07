@@ -88,9 +88,20 @@ export enum EmailCategory {
   Groups = 'Groups',
 }
 
+export const EmailCategoryToName: Map<EmailCategory, string> = new Map([
+  [EmailCategory.Priority, 'PRIORITY'],
+  [EmailCategory.Apps, 'APPS'],
+  [EmailCategory.Calendar, 'CALENDAR'],
+  [EmailCategory.Newsletters, 'NEWSLETTERS'],
+  [EmailCategory.Promotions, 'PROMOTIONS'],
+  [EmailCategory.Social, 'SOCIAL'],
+  [EmailCategory.DocSigning, 'DOCUMENT SIGNING'],
+  [EmailCategory.Groups, 'GROUP MAIL'],
+]);
+
 export const EmailCategoryToEmoji: Map<EmailCategory, string> = new Map([
   [EmailCategory.Priority, ':sparkles:'],
-  [EmailCategory.Apps, ':iphone:'],
+  [EmailCategory.Apps, ':rocket:'],
   [EmailCategory.Calendar, ':calendar:'],
   [EmailCategory.Newsletters, ':newspaper:'],
   [EmailCategory.Promotions, ':moneybag:'],

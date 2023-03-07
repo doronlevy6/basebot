@@ -4,6 +4,7 @@ import {
   DigestAction,
   DigestMessage,
   EmailCategoryToEmoji,
+  EmailCategoryToName,
   GmailDigestSection,
 } from '../types';
 import { logger } from '@base/logger';
@@ -178,9 +179,9 @@ const createEmailDigestHeader = (section: GmailDigestSection): KnownBlock => {
     type: 'section',
     text: {
       type: 'mrkdwn',
-      text: `*${
-        EmailCategoryToEmoji.get(section.category) || ':e-mail:'
-      }  ${section.title.toUpperCase()}*`,
+      text: `*${EmailCategoryToEmoji.get(section.category) || ':e-mail:'}  ${
+        EmailCategoryToName.get(section.category) || ''
+      }*`,
     },
   };
 
