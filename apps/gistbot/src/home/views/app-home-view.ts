@@ -12,8 +12,8 @@ import { OnboardingHeaderBlocks } from './onboarding/onboarding-header';
 import { OnboardingHeaderGoProBlocks } from './onboarding/onboarding-header-go-pro';
 import { GoToSlackDigestBlocks } from './slack/go-to-slack-digest';
 import { OnboardToGmailNotConnectedBlocks } from './onboarding/onboard-gmail-not-connected';
+import { SLACK_MAX_HOME_BLOCKS } from '../../slack/constants';
 
-const MAX_BLOCKS_COUNT = 100;
 const DIVIDER_BLOCK_LENGTH = 1;
 export interface IHomeMetadata {
   slackUserId: string;
@@ -67,7 +67,7 @@ export const AppHomeView = (
       } else {
         const footerBlocks = EmailFooterBlocks(slackTeamId, daysLeftFreeTrial);
         const remainingBlocksForMessages =
-          MAX_BLOCKS_COUNT -
+          SLACK_MAX_HOME_BLOCKS -
           (2 * DIVIDER_BLOCK_LENGTH +
             header.length +
             footerBlocks.length +

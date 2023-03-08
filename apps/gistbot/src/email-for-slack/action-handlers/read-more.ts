@@ -1,12 +1,12 @@
+import { EventEmitter } from 'events';
 import { HomeDataStore } from '../../home/home-data-store';
+import { DISPLAY_ERROR_MODAL_EVENT_NAME } from '../../home/types';
 import { SlackBlockActionWrapper } from '../../slack/types';
 import { DigestMessage } from '../types';
 import { ReadMoreView } from '../views/email-read-more-view';
 
-const maxModalCharCount = 3000;
-
 export const emailReadMoreHandler =
-  (homeStore: HomeDataStore) =>
+  (homeStore: HomeDataStore, eventsEmitter: EventEmitter) =>
   async ({ ack, logger, body, client }: SlackBlockActionWrapper) => {
     try {
       await ack();
@@ -52,10 +52,7 @@ export const emailReadMoreHandler =
         );
         return;
       }
-      message.readMoreBody = message.readMoreBody.substring(
-        0,
-        maxModalCharCount,
-      );
+
       const title =
         message.attachments?.length || 0 > 0
           ? 'Read more :paperclip:'
@@ -72,6 +69,12 @@ export const emailReadMoreHandler =
       logger.error(
         `error in emailReadMoreHandler for user ${body.user.id}, ${e}`,
       );
+      eventsEmitter.emit(DISPLAY_ERROR_MODAL_EVENT_NAME, {
+        triggerId: body.trigger_id,
+        slackUserId: body.user.id,
+        slackTeamId: body.team?.id || '',
+        action: 'read_more',
+      });
       throw e;
     }
   };

@@ -1,0 +1,3 @@
+export const SLACK_MAX_HOME_BLOCKS = 100;
+export const SLACK_MODAL_MAX_BLOCKS = 30;
+export const SLACK_MAX_TEXT_BLOCK_LENGTH = 3000;

@@ -1,4 +1,6 @@
 import { KnownBlock, ModalView } from '@slack/web-api';
+import { LongTextBlock } from '../../slack/components/long-text-block';
+import { SLACK_MAX_TEXT_BLOCK_LENGTH } from '../../slack/constants';
 import { DigestMailAttachments } from '../types';
 
 interface IProps {
@@ -13,13 +15,7 @@ export const ReadMoreView: (props: IProps) => ModalView = ({
   attachments,
 }) => {
   const blocks = [
-    {
-      type: 'section',
-      text: {
-        type: 'mrkdwn',
-        text: body,
-      },
-    },
+    ...LongTextBlock(body),
     ...createAttachmentsBlocks(attachments),
   ];
 
@@ -62,7 +58,7 @@ function createAttachmentsBlocks(
       //check block characters limit with consider in separator   ' ,' for each attachment
       if (
         currentBlockLength + attachmentString.length + currentBlock.length * 2 >
-        3000
+        SLACK_MAX_TEXT_BLOCK_LENGTH
       ) {
         attachmentBlocks.push(currentBlock);
         currentBlock = [attachmentString];

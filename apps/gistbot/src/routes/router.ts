@@ -227,7 +227,10 @@ export const registerBoltAppRouter = (
   );
   app.action(Routes.MAIL_REPLY, emailReplyHandler(gmailSubscriptionsManager));
 
-  app.action(Routes.MAIL_READ_MORE, emailReadMoreHandler(homeDataStore));
+  app.action(
+    Routes.MAIL_READ_MORE,
+    emailReadMoreHandler(homeDataStore, eventEmitter),
+  );
 
   app.action(
     Routes.MAIL_MARK_AS_READ,
