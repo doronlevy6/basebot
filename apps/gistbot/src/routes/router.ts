@@ -86,7 +86,6 @@ import { threadSummaryPostHandler } from '../summaries/thread/thread-summary-pos
 import {
   summarySchedularSettingsButtonHandler,
   summarySchedularSettingsDisableHandler,
-  summarySchedularSettingsDisableOpenModal,
   summarySchedularSettingsModalHandler,
 } from '../summary-scheduler/handler';
 import { SchedulerSettingsManager } from '../summary-scheduler/scheduler-manager';
@@ -145,7 +144,6 @@ export enum Routes {
   OPEN_SLACK_SETTINGS_MODAL_FROM_ALL = 'open-slack-settings-modal-from-all',
   SCHEDULER_SETTINGS_MODAL_SUBMIT = 'scheduler-settings-modal-submit',
   SCHEDULER_SETTINGS_DISABLE = 'scheduler-settings-disabled',
-  SCHEDULER_SETTINGS_DISABLE_OPEN_MODAL = 'scheduler-settings-open-modal',
   EMAIL_SETTINGS_MODAL_SUBMIT = 'email-settings-modal-submit',
   EMAIL_SETTINGS_OPEN_MODAL = 'email-settings-open-modal',
   EMAIL_LINK_BROKEN_OPEN_MODAL = 'email-link-broken-open-modal',
@@ -451,11 +449,6 @@ export const registerBoltAppRouter = (
       slackDataStore,
       eventEmitter,
     ),
-  );
-
-  app.action(
-    Routes.SCHEDULER_SETTINGS_DISABLE_OPEN_MODAL,
-    summarySchedularSettingsDisableOpenModal(analyticsManager),
   );
 
   app.view(

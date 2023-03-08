@@ -11,7 +11,6 @@ import {
 import { SchedulerSettingsManager } from './scheduler-manager';
 import { UserSchedulerOptions, UserSchedulerSettings } from './types';
 import { SlackDataStore } from '../utils/slack-data-store';
-import { SchedulerSettingsDisableModal } from '../slack/components/disable-digest-modal';
 import { calculateUserDefaultHour } from '../utils/time-utils';
 import { ConversationsInfoResponse } from '@slack/web-api';
 import EventEmitter = require('events');
@@ -337,40 +336,3 @@ export function postMessage(client, body, selectedChannels, validChannels) {
   }
   return chanelNotJoined;
 }
-
-export const summarySchedularSettingsDisableOpenModal =
-  (analyticsManager: AnalyticsManager) =>
-  async ({
-    ack,
-    logger,
-    body,
-    client,
-  }: SlackBlockActionWrapper | SlackSlashCommandWrapper) => {
-    try {
-      await ack();
-
-      const teamId = (body as SlashCommand).team_id ?? body.team?.id;
-      const userId = (body as SlashCommand).user_id ?? body.user?.id;
-      if (!teamId || !userId) {
-        logger.error(
-          `no teamId or userId in handler for summarySchedularSettingsDisableOpenModal ${JSON.stringify(
-            body,
-          )}`,
-        );
-        return;
-      }
-
-      await client.views.open({
-        trigger_id: body.trigger_id,
-        view: SchedulerSettingsDisableModal(),
-      });
-
-      analyticsManager.buttonClicked({
-        type: 'scheduler-settings-disable-modal-open',
-        slackTeamId: teamId,
-        slackUserId: userId,
-      });
-    } catch (err) {
-      logger.error(`schedule settings load error: ${err} ${err.stack}`);
-    }
-  };
