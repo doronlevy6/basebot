@@ -8,6 +8,7 @@ import {
   DEFAULT_EMAIL_DIGEST_DAYS,
   EmailDigestUsersSettingsEntity,
   EmailSchedulerOptions,
+  EmailWorkMode,
   IAuthenticationMetadata,
 } from './types';
 
@@ -58,6 +59,8 @@ export const saveDefaultEmailDigestSettings = async (
     const userSettings = new EmailDigestUsersSettingsEntity();
     userSettings.userId = email;
     userSettings.enabled = true;
+    userSettings.workMode = EmailWorkMode.MarkAsRead;
+    userSettings.timeFrame = 1;
     userSettings.selectedHour = Number(EmailSchedulerOptions.MORNING);
     userSettings.timeHour = calculateUserDefaultHour(
       userInfo.tz_offset,

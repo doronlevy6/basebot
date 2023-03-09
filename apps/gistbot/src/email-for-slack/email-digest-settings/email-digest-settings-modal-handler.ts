@@ -18,6 +18,7 @@ import {
   DEFAULT_EMAIL_DIGEST_DAYS,
   EmailDigestUsersSettingsEntity,
   EmailSchedulerOptions,
+  EmailWorkMode,
 } from './types';
 
 const DEFAULT_SELECTED_HOUR = Number(EmailSchedulerOptions.MORNING);
@@ -52,27 +53,18 @@ export const showEmailDigestSettingsModal =
           userSettings,
         )}`,
       );
-
-      let enabled:
-        | EmailSchedulerOptions.ON
-        | EmailSchedulerOptions.OFF
-        | undefined;
-
-      if (userSettings) {
-        enabled = userSettings?.enabled
-          ? EmailSchedulerOptions.ON
-          : EmailSchedulerOptions.OFF;
-      }
+      const workMode = userSettings.workMode;
+      const timeFrame = userSettings.timeFrame;
 
       if (showInsideModal) {
         await client.views.push({
           trigger_id: body.trigger_id,
-          view: EmailSettingsModal(enabled),
+          view: EmailSettingsModal(userSettings.userId, workMode, timeFrame),
         });
       } else {
         await client.views.open({
           trigger_id: body.trigger_id,
-          view: EmailSettingsModal(enabled),
+          view: EmailSettingsModal(userSettings.userId, workMode, timeFrame),
         });
       }
 
@@ -117,32 +109,30 @@ export const saveEmailDigestSettingsHandler =
         );
         return;
       }
-
       logger.debug(
         `email scheduler modal fetched user info and timezone for user ${body.user.id}`,
       );
-
+      const workModeSelected =
+        view.state.values['work-mode-select']['radio_buttons-action']
+          .selected_option?.value === EmailWorkMode.MarkAsRead
+          ? EmailWorkMode.MarkAsRead
+          : EmailWorkMode.Archive;
+      const timeFrameSelected =
+        view.state.values['timeframe-select']['static_select-action']
+          .selected_option?.value;
+      const timeFrameToSave = timeFrameSelected ? Number(timeFrameSelected) : 1;
       const selectedHour = DEFAULT_SELECTED_HOUR;
 
       const usersettings = new EmailDigestUsersSettingsEntity();
-      usersettings.enabled =
-        view.state.values['radio-buttons-switch'].value.selected_option
-          ?.value === EmailSchedulerOptions.ON
-          ? true
-          : false;
-
-      if (!usersettings.enabled) {
-        analyticsManager.emailDigestSettingsDigestStopped({
-          slackTeamId: body.team?.id,
-          slackUserId: body.user.id,
-        });
-      }
+      usersettings.enabled = true;
       usersettings.timeHour = calculateUserDefaultHour(
         userInfo.tz_offset,
         selectedHour,
       );
       usersettings.selectedHour = selectedHour;
       usersettings.days = DEFAULT_EMAIL_DIGEST_DAYS;
+      usersettings.workMode = workModeSelected;
+      usersettings.timeFrame = timeFrameToSave;
 
       await saveEmailDigestSettings(
         { slackTeamId: body.team.id, slackUserId: body.user.id },

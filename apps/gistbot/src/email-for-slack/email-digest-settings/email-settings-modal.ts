@@ -1,29 +1,94 @@
-import { ModalView, Option } from '@slack/bolt';
-import { EmailSchedulerOptions } from './types';
+import { ModalView, Option, PlainTextOption } from '@slack/bolt';
+import { EmailWorkMode } from './types';
 import { Routes } from '../../routes/router';
 
-const onOption: Option = {
+const MarkAsRead: Option = {
   text: {
     type: 'plain_text',
-    text: 'On',
+    text: "Mark as read:\n\nThis mode shows only unread emails and removes an email from your inbox after you've marked it as read.",
+    emoji: true,
   },
-  value: EmailSchedulerOptions.ON,
+  value: EmailWorkMode.MarkAsRead,
 };
 
-const offOption: Option = {
+const ArchiveOption: Option = {
   text: {
     type: 'plain_text',
-    text: 'Off',
+    text: "Archive:\n\nThis mode shows all your emails and removes an email from your inbox after you've archived it.",
+    emoji: true,
   },
-  value: EmailSchedulerOptions.OFF,
+  value: EmailWorkMode.Archive,
 };
+
+const TimeFrameOptions: PlainTextOption[] = [
+  {
+    text: {
+      type: 'plain_text',
+      text: '1 day',
+      emoji: true,
+    },
+    value: '1',
+  },
+  {
+    text: {
+      type: 'plain_text',
+      text: '2 days',
+      emoji: true,
+    },
+    value: '2',
+  },
+  {
+    text: {
+      type: 'plain_text',
+      text: '3 days',
+      emoji: true,
+    },
+    value: '3',
+  },
+  {
+    text: {
+      type: 'plain_text',
+      text: '4 days',
+      emoji: true,
+    },
+    value: '4',
+  },
+  {
+    text: {
+      type: 'plain_text',
+      text: '5 days',
+      emoji: true,
+    },
+    value: '5',
+  },
+  {
+    text: {
+      type: 'plain_text',
+      text: '6 days',
+      emoji: true,
+    },
+    value: '6',
+  },
+  {
+    text: {
+      type: 'plain_text',
+      text: '7 days',
+      emoji: true,
+    },
+    value: '7',
+  },
+];
 
 export const EmailSettingsModal = (
-  enabled?: EmailSchedulerOptions.ON | EmailSchedulerOptions.OFF,
+  email: string,
+  workMode?: EmailWorkMode,
+  timeFrame?: number,
 ): ModalView => {
+  const timeFrameIndex = timeFrame ? timeFrame - 1 : 0;
   return {
     type: 'modal',
     callback_id: Routes.EMAIL_SETTINGS_MODAL_SUBMIT,
+    private_metadata: email,
     title: {
       type: 'plain_text',
       text: 'Gmail summary Settings',
@@ -31,7 +96,7 @@ export const EmailSettingsModal = (
     },
     submit: {
       type: 'plain_text',
-      text: 'Submit',
+      text: 'Done',
       emoji: true,
     },
     close: {
@@ -41,27 +106,56 @@ export const EmailSettingsModal = (
     },
     blocks: [
       {
+        type: 'divider',
+      },
+      {
+        block_id: 'work-mode-select',
         type: 'input',
-        block_id: 'radio-buttons-switch',
-        label: {
-          type: 'plain_text',
-          text: 'Get gmail summaries',
-          emoji: true,
-        },
         element: {
           type: 'radio_buttons',
-          options: [onOption, offOption],
+          focus_on_load: true,
           initial_option:
-            enabled === EmailSchedulerOptions.OFF ? offOption : onOption,
-          action_id: 'value',
+            workMode === EmailWorkMode.MarkAsRead ? MarkAsRead : ArchiveOption,
+          options: [ArchiveOption, MarkAsRead],
+          action_id: 'radio_buttons-action',
+        },
+        label: {
+          type: 'plain_text',
+          text: 'Email Working Mode',
+          emoji: true,
         },
       },
       {
         type: 'section',
+        block_id: 'timeframe-select',
         text: {
-          text: '\n\n',
           type: 'mrkdwn',
+          text: '*Email Retrieval Timeframe*',
         },
+        accessory: {
+          type: 'static_select',
+          placeholder: {
+            type: 'plain_text',
+            text: 'Select an item',
+            emoji: true,
+          },
+          initial_option: TimeFrameOptions[timeFrameIndex],
+          options: TimeFrameOptions,
+          action_id: 'static_select-action',
+        },
+      },
+      {
+        type: 'context',
+        elements: [
+          {
+            type: 'plain_text',
+            text: 'For example, selecting 3 days will display emails from the last 72 hours.',
+            emoji: true,
+          },
+        ],
+      },
+      {
+        type: 'divider',
       },
       {
         type: 'section',
