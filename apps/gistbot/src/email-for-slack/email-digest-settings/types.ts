@@ -1,3 +1,5 @@
+import { EmailCategory } from '../types';
+
 export interface IAuthenticationMetadata {
   slackUserId: string;
   slackTeamId: string;
@@ -25,3 +27,24 @@ export enum EmailWorkMode {
   MarkAsRead = 'mark_as_read',
 }
 export const DEFAULT_EMAIL_DIGEST_DAYS = [0, 1, 2, 3, 4, 5, 6];
+
+export class CreateUserDomainRuleDto {
+  senderEmail: string;
+
+  type: UserDomainRuleType;
+
+  includeSubdomains?: boolean;
+
+  includeAllUsernames?: boolean;
+
+  data: ClassificationDomainRuleData;
+}
+
+export enum UserDomainRuleType {
+  Classify = 'classify',
+  Hide = 'hide',
+}
+
+export class ClassificationDomainRuleData {
+  category: EmailCategory;
+}

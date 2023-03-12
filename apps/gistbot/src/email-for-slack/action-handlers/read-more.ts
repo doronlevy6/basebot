@@ -2,8 +2,15 @@ import { EventEmitter } from 'events';
 import { HomeDataStore } from '../../home/home-data-store';
 import { DISPLAY_ERROR_MODAL_EVENT_NAME } from '../../home/types';
 import { SlackBlockActionWrapper } from '../../slack/types';
-import { DigestMessage } from '../types';
+import {
+  DigestMessage,
+  EmailCategory,
+  ResolveActionConfig,
+  ResolveMailAction,
+} from '../types';
 import { ReadMoreView } from '../views/email-read-more-view';
+
+const title = 'Open';
 
 export const emailReadMoreHandler =
   (homeStore: HomeDataStore, eventsEmitter: EventEmitter) =>
@@ -53,16 +60,37 @@ export const emailReadMoreHandler =
         return;
       }
 
-      const title =
-        message.attachments?.length || 0 > 0
-          ? 'Read more :paperclip:'
-          : 'Read more';
+      if (!message.link) {
+        logger.error(
+          `no link to original email was found for user ${body.user.id} in emailReadMoreHandler`,
+        );
+        return;
+      }
+
+      const submitAction = message.actions.find(
+        (a) => a in ResolveActionConfig,
+      );
+
+      if (!submitAction) {
+        logger.error(
+          `no resolve action found for ${message.id} in emailReadMoreHandler`,
+        );
+        return;
+      }
+
       await client.views.open({
         trigger_id: body.trigger_id,
         view: ReadMoreView({
-          title: title,
+          title,
           body: message.readMoreBody,
           attachments: message.attachments,
+          from: message.from,
+          messageId: message.id,
+          link: message.link as string,
+          submitAction: submitAction as ResolveMailAction,
+          category:
+            message?.relatedMails?.[0]?.classifications?.[0].type ||
+            EmailCategory.Priority,
         }),
       });
     } catch (e) {

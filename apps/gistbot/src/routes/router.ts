@@ -9,22 +9,18 @@ import {
   openSlackSettingsFromAllSettings,
 } from '../all-settings/handler';
 import { chatActionItemHandler } from '../chat/chat-action-items-handler';
-import { archiveHandler } from '../email-for-slack/action-handlers/archive';
-import { archiveAllHandler } from '../email-for-slack/action-handlers/archive-all';
 
 import {
+  emailReplyFromModalHandler,
   emailReplyHandler,
   emailReplySubmitHandler,
 } from '../email-for-slack/action-handlers/email-reply';
-import { markAllAsReadHandler } from '../email-for-slack/action-handlers/mark-all-as-read';
-import { markAsReadHandler } from '../email-for-slack/action-handlers/mark-as-read';
 import { emailReadMoreHandler } from '../email-for-slack/action-handlers/read-more';
 import {
   refreshActionHandler,
   refreshFromModalHandler,
 } from '../email-for-slack/action-handlers/refresh-gmail';
 import { saveDraft } from '../email-for-slack/action-handlers/save-draft';
-import { sectionActionsHandler } from '../email-for-slack/action-handlers/section-actions';
 import {
   emailSettingsBrokenLinkSubmitted,
   showEmailDigestBrokenLinksModal,
@@ -101,6 +97,12 @@ import { SlackDataStore } from '../utils/slack-data-store';
 import { botIMRouter } from './bot-im-router';
 import { slashCommandRouter } from './slash-command-router';
 import { GmailSubscriptionsManager } from '../email-for-slack/gmail-subscription-manager/gmail-subscription-manager';
+import {
+  userEmailCalssifcation,
+  userEmailChangeCategory,
+} from '../email-for-slack/action-handlers/email-classification';
+import { resolveMailViewHandler } from '../email-for-slack/view-handlers/resolve-mail-view-handler';
+import { resolveMailActionHandler } from '../email-for-slack/action-handlers/resolve-mail-action-handler';
 
 const ARRAY_CHAT_GIST_ACTIONS = [0, 1, 2];
 
@@ -127,11 +129,10 @@ export enum Routes {
   CLICKED_TO_OPEN_PRICING = 'click-to-open-pricing',
   GISTLY_MODAL = 'open-gistly-modal',
   MAIL_REPLY = 'mail-reply-action',
+  MAIL_REPLY_FROM_MODAL = 'mail-reply-from-modal',
   MAIL_REPLY_SUBMIT = 'mail-reply-submit',
-  MAIL_MARK_AS_READ = 'mark-as-read',
-  MAIL_MARK_ALL_AS_READ = 'mark-all-as-read',
-  ARCHIVE_ALL = 'archive-all',
-  ARCHIVE = 'archive',
+  RESOLVE_MAIL = 'resolve-mail',
+  RESOLVE_MAIL_FROM_VIEW = 'resolve-mail-view',
   MAIL_SAVE_DRAFT = 'save_draft',
   REFRESH_GMAIL = 'refresh-gmail',
   REFRESH_GMAIL_FROM_VIEW = 'refresh-gmail-from-modal',
@@ -148,7 +149,8 @@ export enum Routes {
   EMAIL_SETTINGS_OPEN_MODAL = 'email-settings-open-modal',
   EMAIL_LINK_BROKEN_OPEN_MODAL = 'email-link-broken-open-modal',
   EMAIL_LINK_BROKEN_MODAL_SUBMIT = 'email-link-broken-modal-submit',
-  EMAIL_SECTION_ACTION = 'email-section-action',
+  EMIL_CLASSIFICATION_ACTION = 'classification-action',
+  EMAIL_CHANGE_CATEGORY = 'category-classification',
 }
 
 export const registerBoltAppRouter = (
@@ -226,42 +228,31 @@ export const registerBoltAppRouter = (
     ),
   );
   app.action(Routes.MAIL_REPLY, emailReplyHandler(gmailSubscriptionsManager));
+  app.view(
+    Routes.EMAIL_CHANGE_CATEGORY,
+    userEmailChangeCategory(analyticsManager, homeDataStore),
+  );
 
+  app.action(
+    Routes.EMIL_CLASSIFICATION_ACTION,
+    userEmailCalssifcation(analyticsManager, homeDataStore),
+  );
   app.action(
     Routes.MAIL_READ_MORE,
     emailReadMoreHandler(homeDataStore, eventEmitter),
   );
 
   app.action(
-    Routes.MAIL_MARK_AS_READ,
-    markAsReadHandler(
+    Routes.RESOLVE_MAIL,
+    resolveMailActionHandler(
       analyticsManager,
       eventEmitter,
       gmailSubscriptionsManager,
     ),
   );
-
-  app.action(
-    Routes.MAIL_MARK_ALL_AS_READ,
-    markAllAsReadHandler(
-      analyticsManager,
-      eventEmitter,
-      gmailSubscriptionsManager,
-    ),
-  );
-
-  app.action(
-    Routes.ARCHIVE_ALL,
-    archiveAllHandler(
-      analyticsManager,
-      eventEmitter,
-      gmailSubscriptionsManager,
-    ),
-  );
-
-  app.action(
-    Routes.ARCHIVE,
-    archiveHandler(analyticsManager, eventEmitter, gmailSubscriptionsManager),
+  app.view(
+    Routes.RESOLVE_MAIL_FROM_VIEW,
+    resolveMailViewHandler(analyticsManager, eventEmitter),
   );
 
   app.action(
@@ -280,10 +271,9 @@ export const registerBoltAppRouter = (
     Routes.MAIL_REPLY_SUBMIT,
     emailReplySubmitHandler(analyticsManager, eventEmitter),
   );
-
   app.action(
-    Routes.EMAIL_SECTION_ACTION,
-    sectionActionsHandler(analyticsManager, eventEmitter),
+    Routes.MAIL_REPLY_FROM_MODAL,
+    emailReplyFromModalHandler(analyticsManager),
   );
 
   app.action(

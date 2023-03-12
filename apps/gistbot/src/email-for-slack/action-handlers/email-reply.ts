@@ -58,47 +58,69 @@ export const emailReplyHandler =
     }
   };
 
+export const emailReplyFromModalHandler =
+  (analyticsManager: AnalyticsManager) =>
+  async (params: SlackBlockActionWrapper) => {
+    const { ack, body, logger } = params;
+    try {
+      await ack();
+      const slackUserId = body.user.id;
+      const slackTeamId = body.team?.id;
+      if (!slackTeamId) {
+        logger.error(
+          `team id not exist for user ${slackUserId} in emailReplyFromModalHandler`,
+        );
+        return;
+      }
+
+      const metadata = body.view?.private_metadata;
+      if (!metadata) {
+        logger.error(
+          `PRIVATE metadata not exist for user ${slackUserId} in emailReplyFromModalHandler`,
+        );
+        return;
+      }
+
+      const { id: threadId, from } = JSON.parse(metadata);
+      const message =
+        body?.view?.state.values[REPLY_BLOCK_ID][REPLY_ELEMENT_ACTION_ID]
+          ?.value || '';
+
+      await sendReplyToMailbot(
+        { slackUserId, slackTeamId, threadId, message, to: from },
+        analyticsManager,
+      );
+    } catch (e) {
+      logger.error(
+        `error in emailReplyFromModalHandler for user ${body.user.id} ${e}`,
+        e,
+      );
+      throw e;
+    }
+  };
+
 export const emailReplySubmitHandler =
   (analyticsManager: AnalyticsManager, eventsEmitter: EventEmitter) =>
   async (params: ViewAction) => {
     const { ack, body, view, logger } = params;
     try {
-      let threadId = '';
       await ack();
       logger.debug(`reply submit handler for user ${body.user.id}`);
-      if (!body.team?.id) {
+      const slackUserId = body.user.id;
+      const slackTeamId = body.team?.id;
+      if (!slackTeamId) {
         logger.error(
-          `team id not exist for user ${body.user.id} in emailReplySubmitHandler`,
+          `team id not exist for user ${slackUserId} in emailReplySubmitHandler`,
         );
         return;
       }
-      const { id, from } = JSON.parse(body.view.private_metadata);
+      const { id: threadId, from } = JSON.parse(body.view.private_metadata);
       const message =
-        view.state.values[REPLY_BLOCK_ID][REPLY_ELEMENT_ACTION_ID]?.value;
-      threadId = id;
-      const url = new URL(MAIL_BOT_SERVICE_API);
-      url.pathname = REPLY_PATH;
-      await axios.post(
-        url.toString(),
-        {
-          slackUserId: body.user.id,
-          slackTeamId: body.team.id,
-          to: from,
-          threadId,
-          message,
-        },
-        {
-          timeout: 60000,
-        },
+        view.state.values[REPLY_BLOCK_ID][REPLY_ELEMENT_ACTION_ID]?.value || '';
+      await sendReplyToMailbot(
+        { slackUserId, slackTeamId, threadId, message, to: from },
+        analyticsManager,
       );
-      analyticsManager.gmailUserAction({
-        slackUserId: body.user.id,
-        slackTeamId: body.team?.id || '',
-        action: 'reply',
-        extraParams: {
-          threadId,
-        },
-      });
     } catch (e) {
       logger.error(
         `error in emailReplySubmitHandler for user ${body.user.id} ${e}`,
@@ -113,3 +135,41 @@ export const emailReplySubmitHandler =
       throw e;
     }
   };
+
+interface ReplyProps {
+  slackUserId: string;
+  slackTeamId: string;
+  to: string;
+  threadId: string;
+  message: string;
+}
+
+const sendReplyToMailbot = async (
+  props: ReplyProps,
+  analyticsManager: AnalyticsManager,
+) => {
+  const { slackUserId, slackTeamId, to, threadId, message } = props;
+  const url = new URL(MAIL_BOT_SERVICE_API);
+  url.pathname = REPLY_PATH;
+  await axios.post(
+    url.toString(),
+    {
+      slackUserId,
+      slackTeamId,
+      to,
+      threadId,
+      message,
+    },
+    {
+      timeout: 60000,
+    },
+  );
+  analyticsManager.gmailUserAction({
+    slackUserId,
+    slackTeamId,
+    action: 'reply',
+    extraParams: {
+      threadId,
+    },
+  });
+};

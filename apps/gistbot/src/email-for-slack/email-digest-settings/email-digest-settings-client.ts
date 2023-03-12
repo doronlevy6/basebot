@@ -5,6 +5,7 @@ import { SlackDataStore } from '../../utils/slack-data-store';
 import { calculateUserDefaultHour } from '../../utils/time-utils';
 import { MAIL_BOT_SERVICE_API } from '../types';
 import {
+  CreateUserDomainRuleDto,
   DEFAULT_EMAIL_DIGEST_DAYS,
   EmailDigestUsersSettingsEntity,
   EmailSchedulerOptions,
@@ -103,6 +104,21 @@ export const saveEmailDigestSettings = async (
       `could not save default email scheduled digest settings for user email: ${authMetadata.slackTeamId} ${authMetadata.slackUserId}, ${e}`,
     );
     throw e;
+  }
+};
+
+export const createClassificationRule = async (
+  authMetadata: IAuthenticationMetadata,
+  userSettings: CreateUserDomainRuleDto,
+) => {
+  try {
+    const url = new URL(MAIL_BOT_SERVICE_API);
+    url.pathname = USER_SETTINGS_PATH + '/rules';
+    await axios.post(url.toString(), { ...authMetadata, ...userSettings });
+  } catch (ex) {
+    logger.error(
+      `could not update email calssification rule settings for user email: ${authMetadata.slackTeamId}, ${authMetadata.slackUserId}, ${ex}`,
+    );
   }
 };
 

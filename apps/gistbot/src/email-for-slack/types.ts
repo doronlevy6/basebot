@@ -64,7 +64,7 @@ export enum DigestAction {
   Reply = 'reply',
   MarkAllAsRead = 'markAllAsRead',
   RSVP = 'rsvp',
-  ReadMore = 'readMore',
+  ReadMore = 'open',
   Archive = 'archive',
   ArchiveAll = 'archiveAll',
 }
@@ -115,3 +115,39 @@ export interface IHomeViewMetadata {
   teamId: string;
   updatedAt: number;
 }
+
+export type ResolveMailAction = Extract<
+  DigestAction,
+  | DigestAction.Archive
+  | DigestAction.ArchiveAll
+  | DigestAction.MarkAsRead
+  | DigestAction.MarkAllAsRead
+>;
+
+interface ActionConfig {
+  name: string;
+  fullName: string;
+  isBulkAction: boolean;
+}
+export const ResolveActionConfig: Record<ResolveMailAction, ActionConfig> = {
+  [DigestAction.Archive]: {
+    name: 'Archive',
+    fullName: 'Archive',
+    isBulkAction: false,
+  },
+  [DigestAction.ArchiveAll]: {
+    name: 'Archive',
+    fullName: 'Archive all',
+    isBulkAction: true,
+  },
+  [DigestAction.MarkAsRead]: {
+    name: 'Mark as read',
+    fullName: 'Mark as read',
+    isBulkAction: false,
+  },
+  [DigestAction.MarkAllAsRead]: {
+    name: 'Mark as read',
+    fullName: 'Mark all as read',
+    isBulkAction: true,
+  },
+};
