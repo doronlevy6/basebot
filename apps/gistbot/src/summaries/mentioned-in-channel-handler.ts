@@ -52,7 +52,6 @@ export const mentionedInChannelHandler =
       if (!orgSettings || !orgSettings.newUserTriggersEnabled) {
         logger.info({
           msg: 'triggers are disabled on the organization, skipping mentioned in channel event',
-          event: body,
           orgSettings: orgSettings,
         });
         return;

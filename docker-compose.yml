@@ -4,6 +4,20 @@ secrets:
     file: ~/.aws
 
 services:
+  openai-proxy:
+    image: 221762091942.dkr.ecr.us-east-1.amazonaws.com/openai-proxy:latest
+    container_name: openai-proxy
+    ports:
+      - 8080:8080
+    environment:
+      ENV: local
+      PORT: :8080
+    depends_on: 
+      - redis
+    secrets:
+      - source: aws_creds
+        target: /root/.aws
+    command: [  "./chamber", "exec", "openai-proxy/local", "--", "./openai-proxy" ]
   slacker:
     build:
       dockerfile: ./build/Dockerfile.local
