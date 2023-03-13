@@ -186,12 +186,14 @@ const createEmailDigestMessage = (messages: DigestMessage[]): KnownBlock[] => {
 };
 
 export const createDigestActions = (message: DigestMessage): Button[] => {
+  const resolveAction = message.actions.find(
+    (action) => action in ResolveActionConfig,
+  );
   return message.actions
     .flatMap((action) => {
-      if (action in ResolveActionConfig) {
-        return resolveMailAction(message.id, action);
-      }
       switch (action) {
+        case resolveAction:
+          return resolveAction && resolveMailAction(message.id, action);
         case DigestAction.Reply:
           return replyAction(message);
         case DigestAction.ReadMore:
