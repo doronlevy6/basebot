@@ -4,6 +4,7 @@ import { GmailDigest } from '../email-for-slack/types';
 import { IEmailRefreshMetadata, IHomeState } from './types';
 
 const TABLE_NAME = `gistbot_home_data_store`;
+
 interface IPrimaryKey {
   slackUserId: string;
   slackTeamId: string;
@@ -78,14 +79,18 @@ export class HomeDataStore extends PgUtil {
       slackTeamId,
       slackUserId,
     );
-    await this.db<ITableData>(TABLE_NAME)
-      .insert({
+    await this.db.raw(
+      `INSERT INTO gistbot_home_data_store (slack_user_id, slack_team_id,email_connected)
+        VALUES (:slack_user_id, :slack_team_id,:email_connected)
+        ON CONFLICT(slack_team_id,slack_user_id) DO UPDATE
+        SET
+          email_connected = COALESCE(gistbot_home_data_store.email_connected, excluded.email_connected);`,
+      {
         slack_team_id: slackTeamId,
         slack_user_id: slackUserId,
         email_connected: connectedSince,
-      })
-      .onConflict(['slack_team_id', 'slack_user_id'])
-      .merge(['slack_team_id', 'slack_user_id']);
+      },
+    );
   }
 
   async fetch({
