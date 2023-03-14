@@ -62,11 +62,13 @@ export class PgInstallationStore extends PgUtil implements InstallationStore {
         enterprise: 'true',
       });
     }
-
+    const env = process.env.ENV;
     if (installation.team !== undefined) {
-      //  eslint-disable-next-line @typescript-eslint/no-floating-promises
-      installNotify(installation);
-
+      const isNewWorkspace = await this.isNewWorkspace(installation);
+      if (isNewWorkspace && env !== 'local') {
+        //  eslint-disable-next-line @typescript-eslint/no-floating-promises
+        installNotify(installation);
+      }
       await this.db('gistbot_slack_installations')
         .insert({
           slack_id: installation.team.id,
@@ -77,6 +79,23 @@ export class PgInstallationStore extends PgUtil implements InstallationStore {
       this.metricsReporter.incrementCounter('stored_installations_total', 1, {
         enterprise: 'false',
       });
+    }
+  }
+
+  async isNewWorkspace(installation: Installation): Promise<boolean> {
+    try {
+      const newWorkspace = await this.db
+        .select('raw')
+        .from('gistbot_slack_installations')
+        .where({ slack_id: installation?.team?.id });
+
+      const isNew = newWorkspace.length === 0;
+      return isNew;
+    } catch (error) {
+      logger.error(
+        `Error occurred while checking if this is a new org installation:  ${error}`,
+      );
+      return false;
     }
   }
 
