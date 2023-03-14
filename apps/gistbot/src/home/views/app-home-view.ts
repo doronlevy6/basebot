@@ -28,10 +28,10 @@ export const AppHomeView = (
   daysLeftFreeTrial?: number,
 ): Block[] => {
   const { slackUserId, slackTeamId } = metadata;
-  const { gmailConnected, slackOnboarded, gmailDigest, gmailRefreshMetadata } =
+  const { emailEnabled, slackOnboarded, gmailDigest, gmailRefreshMetadata } =
     state;
 
-  if (!slackOnboarded && !gmailConnected) {
+  if (!slackOnboarded && !emailEnabled) {
     logger.debug(`Showing onboarding home view for ${slackUserId}...`);
     return [
       ...OnboardingHeaderBlocks(slackUserId),
@@ -50,7 +50,7 @@ export const AppHomeView = (
 
   let gmailBlocks: Block[] = [];
   const onBoardingHeader = OnboardingHeaderGoProBlocks();
-  if (gmailConnected) {
+  if (emailEnabled) {
     if (gmailDigest) {
       const { digest, lastUpdated } = gmailDigest;
       const {

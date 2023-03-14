@@ -161,7 +161,7 @@ export const EmailSettingsModal = (
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: 'Email links takes you to a different Gmail account?',
+          text: '*Email links not working?*',
         },
         accessory: {
           type: 'button',
@@ -173,6 +173,46 @@ export const EmailSettingsModal = (
           value: 'broken-link',
           action_id: Routes.EMAIL_LINK_BROKEN_OPEN_MODAL,
         },
+      },
+      {
+        type: 'context',
+        elements: [
+          {
+            type: 'plain_text',
+            text: 'Links take you to a different Gmail account?',
+            emoji: true,
+          },
+        ],
+      },
+      {
+        type: 'divider',
+      },
+      {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: '*Disable email syncing*',
+        },
+        accessory: {
+          type: 'button',
+          text: {
+            type: 'plain_text',
+            text: 'Stop sync',
+            emoji: true,
+          },
+          value: 'broken-link',
+          action_id: Routes.DISCONNECT_GMAIL,
+        },
+      },
+      {
+        type: 'context',
+        elements: [
+          {
+            type: 'plain_text',
+            text: 'This will stop syncing emails to your Home Tab',
+            emoji: true,
+          },
+        ],
       },
     ],
   };

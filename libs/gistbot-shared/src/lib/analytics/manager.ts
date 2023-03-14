@@ -276,6 +276,23 @@ export class AnalyticsManager {
     });
   }
 
+  disconnectEmail({
+    slackUserId,
+    slackTeamId,
+  }: {
+    slackUserId: string;
+    slackTeamId: string;
+  }) {
+    this.sendEventToAnalytics({
+      eventName: 'disconnect_gmail',
+      slackUserId,
+      slackTeamId,
+      timestamp: new Date(),
+      internalUserId: this.internalId(slackTeamId, slackUserId),
+      properties: {},
+    });
+  }
+
   channelSummaryFunnel({
     funnelStep,
     slackUserId,

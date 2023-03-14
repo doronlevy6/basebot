@@ -4,7 +4,7 @@ import { Routes } from '../../routes/router';
 export const AllSettingsModal = (): ModalView => {
   return {
     type: 'modal',
-    callback_id: '',
+    callback_id: Routes.REFRESH_GMAIL_FROM_VIEW,
     title: {
       type: 'plain_text',
       text: 'theGist Settings',

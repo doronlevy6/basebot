@@ -104,6 +104,11 @@ import {
 import { resolveMailViewHandler } from '../email-for-slack/view-handlers/resolve-mail-view-handler';
 import { resolveMailActionHandler } from '../email-for-slack/action-handlers/resolve-mail-action-handler';
 
+import {
+  disconnectGmailHandler,
+  disconnectGmailViewHandler,
+} from '../email-for-slack/action-handlers/disconnect-gmail-handler';
+
 const ARRAY_CHAT_GIST_ACTIONS = [0, 1, 2];
 
 export enum Routes {
@@ -151,6 +156,9 @@ export enum Routes {
   EMAIL_LINK_BROKEN_MODAL_SUBMIT = 'email-link-broken-modal-submit',
   EMIL_CLASSIFICATION_ACTION = 'classification-action',
   EMAIL_CHANGE_CATEGORY = 'category-classification',
+  EMAIL_SECTION_ACTION = 'email-section-action',
+  DISCONNECT_GMAIL = 'disconnect-gmail',
+  DISCONNECT_GMAIL_FROM_VIEW = 'disconnect-gmail-modal-submut',
 }
 
 export const registerBoltAppRouter = (
@@ -412,6 +420,11 @@ export const registerBoltAppRouter = (
     handleGistlyModalSubmit(gistlyModel),
   );
 
+  app.action(Routes.DISCONNECT_GMAIL, disconnectGmailHandler);
+  app.view(
+    Routes.DISCONNECT_GMAIL_FROM_VIEW,
+    disconnectGmailViewHandler(homeDataStore, analyticsManager),
+  );
   app.action(
     Routes.CLICKED_TO_OPEN_PRICING,
     async ({ ack, body }: SlackBlockActionWrapper) => {
