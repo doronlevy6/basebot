@@ -12,7 +12,7 @@ services:
     environment:
       ENV: local
       PORT: :8080
-    depends_on: 
+    depends_on:
       - redis
     secrets:
       - source: aws_creds
@@ -29,7 +29,7 @@ services:
     depends_on:
       - postgres
       - redis
-      - sqs
+      - localstack
     environment:
       NODE_OVERRIDE_ENV: local${LOCAL_ENV}
       PORT: 3000
@@ -52,7 +52,7 @@ services:
     depends_on:
       - postgres
       - redis
-      - sqs
+      - localstack
     environment:
       NODE_OVERRIDE_ENV: local${LOCAL_ENV}
       PORT: 3000
@@ -76,7 +76,7 @@ services:
     depends_on:
       - postgres
       - redis
-      - sqs
+      - localstack
     environment:
       NODE_OVERRIDE_ENV: local${LOCAL_ENV}
       PORT: 3000
@@ -99,7 +99,7 @@ services:
     depends_on:
       - postgres
       - redis
-      - sqs
+      - localstack
     environment:
       NODE_ENV: local
       NODE_OVERRIDE_ENV: local
@@ -140,12 +140,12 @@ services:
     ports:
       - 6379:6379
 # AWS Services
-  sqs:
-    image: softwaremill/elasticmq-native:latest
-    logging:
-      driver: none
+  localstack:
+    image: localstack/localstack
     ports:
-      - "9324:9324"
-      - "9325:9325"
+      - "4566:4566"            # LocalStack Gateway
+      - "4510-4559:4510-4559"  # external services port range
+    environment:
+      - DEBUG=0
     volumes:
-      - ./build/local_sqs.conf:/opt/elasticmq.conf
+      - ./build/init_localstack.sh:/etc/localstack/init/ready.d/init-aws.sh # ready hook

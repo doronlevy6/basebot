@@ -6,6 +6,7 @@ export const registerBoltAppRouter = (
   app: App,
   publisher: Publisher,
   slackEventsQueueName: string,
+  eventBridgePublisher: Publisher,
 ) => {
   // This is the acking app, so we have global handlers for all of the types (events, shortcuts, actions, views, and slash commands).
   // The global handlers are simply here to register the listeners on the app, the actually never get called since the middleware will ack
@@ -41,5 +42,18 @@ export const registerBoltAppRouter = (
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   app.event(/.*/, async (_args) => {
     return;
+  });
+
+  // Custom listener specifically for message events to sent to event bridge
+  app.message(async (args) => {
+    try {
+      await eventBridgePublisher.publish('messages', args.body);
+    } catch (error) {
+      args.logger.error({
+        message: `error while sending to eventbridge`,
+        error: error.message,
+        stack: error.stack,
+      });
+    }
   });
 };

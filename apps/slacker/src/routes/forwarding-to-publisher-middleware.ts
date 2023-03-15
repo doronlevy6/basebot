@@ -11,6 +11,7 @@ import {
 
 interface acker {
   ack: AckFn<unknown>;
+  shouldNext: boolean;
 }
 
 export const forwardingToPublisherMiddleware =
@@ -51,8 +52,11 @@ export const forwardingToPublisherMiddleware =
     }
 
     // If we've reached here, it means we've successfully sent the event to the queue
-    // and acked the event. There's no need to call next() since we shouldn't have anything here
-    // that requires a next function.
+    // and acked the event. Certain events still have logic that we want to run at the "edge" (for example sending messages to a data pipeline).
+    // We check if we need to run the next function, and run it if necessary.
+    if (acker.shouldNext) {
+      await args.next();
+    }
     return;
   };
 
@@ -60,30 +64,35 @@ function getAcker(args: AnyMiddlewareArgs): acker {
   if (isActionArgs(args)) {
     return {
       ack: args.ack,
+      shouldNext: false,
     };
   }
 
   if (isCommandArgs(args)) {
     return {
       ack: args.ack,
+      shouldNext: false,
     };
   }
 
   if (isViewArgs(args)) {
     return {
       ack: args.ack,
+      shouldNext: false,
     };
   }
 
   if (isShortcutArgs(args)) {
     return {
       ack: args.ack,
+      shouldNext: false,
     };
   }
 
   if (isOptionsArgs(args)) {
     return {
       ack: args.ack,
+      shouldNext: false,
     };
   }
 
@@ -93,6 +102,7 @@ function getAcker(args: AnyMiddlewareArgs): acker {
         // Empty ack stub for anything that's an event that doesn't have an ack function
         return;
       },
+      shouldNext: true,
     };
   }
 

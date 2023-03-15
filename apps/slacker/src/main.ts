@@ -10,7 +10,7 @@ import { logger } from '@base/logger';
 import { PrometheusReporter, slackBoltMetricsMiddleware } from '@base/metrics';
 import { Server } from 'http';
 import { AnalyticsManager, PgInstallationStore } from '@base/gistbot-shared';
-import { SqsPublisher } from '@base/pubsub';
+import { SqsPublisher, EventBridgePublisher } from '@base/pubsub';
 import { readyChecker } from '@base/utils';
 import { createApp } from './slack-bolt-app';
 import { registerBoltAppRouter } from './routes/router';
@@ -54,9 +54,9 @@ const startApp = async () => {
   };
   const pgStore = new PgInstallationStore(metricsReporter, pgConfig);
 
-  const sqsRegion = process.env.SQS_REGION;
+  const sqsRegion = process.env.AWS_REGION;
   const sqsBaseUrl = process.env.SQS_BASE_URL;
-  const sqsAccountId = process.env.SQS_ACCOUNT_ID;
+  const sqsAccountId = process.env.AWS_ACCOUNT_ID;
   const slackEventsQueueName = process.env.SLACK_SQS_QUEUE_NAME;
   if (!sqsRegion || !sqsBaseUrl || !sqsAccountId || !slackEventsQueueName) {
     throw new Error('missing sqs details in configs');
@@ -69,13 +69,32 @@ const startApp = async () => {
   };
   const sqsPublisher = new SqsPublisher(sqsConfig);
 
+  const eventBridgeUrl = process.env.EVENTBRIDGE_BASE_URL;
+  const eventBridgeName = process.env.EVENT_BRIDGE_NAME;
+  const eventBridgeRegion = process.env.EVENT_BRIDGE_REGION;
+  if (!eventBridgeUrl || !eventBridgeName || !eventBridgeRegion) {
+    throw new Error('missing eventbridge details in configs');
+  }
+  const eventBridgePublisher = new EventBridgePublisher({
+    env: env,
+    serviceName: 'slacker',
+    bridge: eventBridgeName,
+    region: eventBridgeRegion,
+    baseUrl: eventBridgeUrl,
+  });
+
   // readyChecker is a small util for all things that implement `isReady`. It will
   // check to see if all of these are ready and throw an error if one isn't.
   await readyChecker(analyticsManager, pgStore);
 
   const slackApp = createApp(pgStore, metricsReporter, analyticsManager);
   slackApp.use(slackBoltMetricsMiddleware(metricsReporter));
-  registerBoltAppRouter(slackApp, sqsPublisher, slackEventsQueueName);
+  registerBoltAppRouter(
+    slackApp,
+    sqsPublisher,
+    slackEventsQueueName,
+    eventBridgePublisher,
+  );
 
   const port = process.env['PORT'] || 3000;
   const server = await slackApp.start(port);

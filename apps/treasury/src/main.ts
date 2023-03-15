@@ -57,9 +57,9 @@ const startApp = async () => {
   if (!stripeWebhookSecret) {
     throw new Error('stripe webhook secret is missing in secrets');
   }
-  const sqsRegion = process.env.SQS_REGION;
+  const sqsRegion = process.env.AWS_REGION;
   const sqsBaseUrl = process.env.SQS_BASE_URL;
-  const sqsAccountId = process.env.SQS_ACCOUNT_ID;
+  const sqsAccountId = process.env.AWS_ACCOUNT_ID;
   const stripeEventsQueueName = process.env.STRIPE_SQS_QUEUE_NAME;
   if (!sqsRegion || !sqsBaseUrl || !sqsAccountId || !stripeEventsQueueName) {
     throw new Error('missing sqs details in configs');

@@ -384,9 +384,9 @@ const startApp = async () => {
     homeDataStore,
   );
 
-  const sqsRegion = process.env.SQS_REGION;
+  const sqsRegion = process.env.AWS_REGION;
   const sqsBaseUrl = process.env.SQS_BASE_URL;
-  const sqsAccountId = process.env.SQS_ACCOUNT_ID;
+  const sqsAccountId = process.env.AWS_ACCOUNT_ID;
   const slackEventsQueueName = process.env.SLACK_SQS_QUEUE_NAME;
   if (!sqsRegion || !sqsBaseUrl || !sqsAccountId || !slackEventsQueueName) {
     throw new Error('missing sqs details in configs');
