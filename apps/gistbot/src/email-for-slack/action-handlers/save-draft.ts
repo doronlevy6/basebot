@@ -53,7 +53,9 @@ export const saveDraft =
       }
       const message =
         body.view?.state.values[REPLY_BLOCK_ID][REPLY_ELEMENT_ACTION_ID]?.value;
-      const { id, from } = JSON.parse(body.view?.private_metadata || '');
+      const { id, from, category } = JSON.parse(
+        body.view?.private_metadata || '',
+      );
       threadId = id;
       const url = new URL(MAIL_BOT_SERVICE_API);
       url.pathname = CREATE_DRAFT_PATH;
@@ -77,6 +79,7 @@ export const saveDraft =
         action: 'save_draft',
         extraParams: {
           threadId,
+          category,
         },
       });
 

@@ -23,7 +23,7 @@ export const resolveMailActionHandler =
     await ack();
     try {
       const { slackUserId, slackTeamId } = getSlackIds(body);
-      const { id: messageId, submitAction } = getParamsFromBody(body);
+      const { id: messageId, submitAction, category } = getParamsFromBody(body);
       if (!submitAction || !(submitAction in ResolveActionConfig)) {
         throw new Error('no submit action');
       }
@@ -35,6 +35,7 @@ export const resolveMailActionHandler =
         action: submitAction,
         extraParams: {
           messageId,
+          category,
         },
       });
 

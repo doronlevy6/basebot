@@ -3,6 +3,7 @@ import { Routes } from '../../routes/router';
 import {
   DigestAction,
   DigestMessage,
+  EmailCategory,
   EmailCategoryToEmoji,
   EmailCategoryToName,
   GmailDigestSection,
@@ -11,7 +12,10 @@ import {
 import { logger } from '@base/logger';
 import { InboxZero } from './inbox-zero';
 
-const replyAction = (message: DigestMessage): Button => {
+const replyAction = (
+  message: DigestMessage,
+  category: EmailCategory,
+): Button => {
   return {
     type: 'button',
     text: {
@@ -19,12 +23,16 @@ const replyAction = (message: DigestMessage): Button => {
       text: 'Reply',
       emoji: true,
     },
-    value: `${message.id}|${message.from}`,
+    value: `${message.id}|${message.from}|${category}`,
     action_id: Routes.MAIL_REPLY,
   };
 };
 
-const resolveMailAction = (messageId: string, action: DigestAction) => {
+const resolveMailAction = (
+  messageId: string,
+  action: DigestAction,
+  category: EmailCategory,
+) => {
   const cfg = ResolveActionConfig[action];
   return (
     cfg && {
@@ -37,6 +45,7 @@ const resolveMailAction = (messageId: string, action: DigestAction) => {
       value: JSON.stringify({
         id: messageId,
         submitAction: action,
+        category,
       }),
       action_id: Routes.RESOLVE_MAIL,
     }
@@ -82,7 +91,10 @@ const createEmailDigestSections = (
   let totalBlocksLength = 0;
   for (const section of sections) {
     const emailDigestHeader = createEmailDigestHeader(section);
-    const mailDigestMessages = createEmailDigestMessage(section.messages);
+    const mailDigestMessages = createEmailDigestMessage(
+      section.messages,
+      section.category,
+    );
     // Calculate the length of the blocks to be added
     const addedBlocksLength =
       emailDigestHeaderLength + mailDigestMessages.length + dividerBlockLength;
@@ -156,7 +168,10 @@ const createEmailDigestHeader = (section: GmailDigestSection): KnownBlock => {
   return sectionHeader;
 };
 
-const createEmailDigestMessage = (messages: DigestMessage[]): KnownBlock[] => {
+const createEmailDigestMessage = (
+  messages: DigestMessage[],
+  category: EmailCategory,
+): KnownBlock[] => {
   return messages.flatMap((message) => {
     const { timeStamp, body, title } = message;
     const time = timeStamp ? createTimeString(timeStamp) : '';
@@ -172,7 +187,7 @@ const createEmailDigestMessage = (messages: DigestMessage[]): KnownBlock[] => {
     };
     blocks.push(bodySection);
 
-    const actions = createDigestActions(message);
+    const actions = createDigestActions(message, category);
     if (actions.length) {
       const actionBlock: KnownBlock = {
         type: 'actions',
@@ -185,7 +200,10 @@ const createEmailDigestMessage = (messages: DigestMessage[]): KnownBlock[] => {
   });
 };
 
-export const createDigestActions = (message: DigestMessage): Button[] => {
+export const createDigestActions = (
+  message: DigestMessage,
+  category: EmailCategory,
+): Button[] => {
   const resolveAction = message.actions.find(
     (action) => action in ResolveActionConfig,
   );
@@ -193,9 +211,11 @@ export const createDigestActions = (message: DigestMessage): Button[] => {
     .flatMap((action) => {
       switch (action) {
         case resolveAction:
-          return resolveAction && resolveMailAction(message.id, action);
+          return (
+            resolveAction && resolveMailAction(message.id, action, category)
+          );
         case DigestAction.Reply:
-          return replyAction(message);
+          return replyAction(message, category);
         case DigestAction.ReadMore:
           return readMoreAction(message);
       }

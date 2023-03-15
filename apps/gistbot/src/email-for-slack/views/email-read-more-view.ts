@@ -49,6 +49,7 @@ export const ReadMoreView: (props: IProps) => ModalView = ({
       id: messageId,
       from,
       submitAction,
+      category,
     }),
     callback_id: Routes.RESOLVE_MAIL_FROM_VIEW,
     close: {

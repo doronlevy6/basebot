@@ -7,7 +7,7 @@ import {
   REPLY_BLOCK_ID,
   REPLY_ELEMENT_ACTION_ID,
 } from '../views/email-reply-view';
-import { MAIL_BOT_SERVICE_API } from '../types';
+import { EmailCategory, MAIL_BOT_SERVICE_API } from '../types';
 import { GmailSubscriptionsManager } from '../gmail-subscription-manager/gmail-subscription-manager';
 import { DISPLAY_ERROR_MODAL_EVENT_NAME } from '../../home/types';
 import { IMailErrorMetaData } from '../views/email-error-view';
@@ -55,6 +55,7 @@ export const emailReplyHandler =
           metadata: JSON.stringify({
             id: valuesArray[0],
             from: valuesArray[1],
+            category: valuesArray[2],
           }),
         }),
       });
@@ -87,7 +88,7 @@ export const emailReplyFromModalHandler =
         return;
       }
 
-      const { id: threadId, from } = JSON.parse(metadata);
+      const { id: threadId, from, category } = JSON.parse(metadata);
       const message =
         body?.view?.state.values[REPLY_BLOCK_ID][REPLY_ELEMENT_ACTION_ID]
           ?.value || '';
@@ -95,6 +96,7 @@ export const emailReplyFromModalHandler =
       await sendReplyToMailbot(
         { slackUserId, slackTeamId, threadId, message, to: from },
         analyticsManager,
+        category,
       );
 
       const view = getModalViewFromBody(body);
@@ -146,12 +148,17 @@ export const emailReplySubmitHandler =
         );
         return;
       }
-      const { id: threadId, from } = JSON.parse(body.view.private_metadata);
+      const {
+        id: threadId,
+        from,
+        category,
+      } = JSON.parse(body.view.private_metadata);
       const message =
         view.state.values[REPLY_BLOCK_ID][REPLY_ELEMENT_ACTION_ID]?.value || '';
       await sendReplyToMailbot(
         { slackUserId, slackTeamId, threadId, message, to: from },
         analyticsManager,
+        category,
       );
     } catch (e) {
       logger.error(
@@ -179,6 +186,7 @@ interface ReplyProps {
 const sendReplyToMailbot = async (
   props: ReplyProps,
   analyticsManager: AnalyticsManager,
+  category: EmailCategory,
 ) => {
   const { slackUserId, slackTeamId, to, threadId, message } = props;
   const url = new URL(MAIL_BOT_SERVICE_API);
@@ -202,6 +210,7 @@ const sendReplyToMailbot = async (
     action: 'reply',
     extraParams: {
       threadId,
+      category,
     },
   });
 };
