@@ -9,6 +9,9 @@ import { MAIL_BOT_SERVICE_API } from '../types';
 import { GmailSubscriptionsManager } from '../gmail-subscription-manager/gmail-subscription-manager';
 import { DISPLAY_ERROR_MODAL_EVENT_NAME } from '../../home/types';
 import { EventEmitter } from 'events';
+import { getModalViewFromBody } from './helpers';
+import { ActionsBlock, Button, KnownBlock } from '@slack/web-api';
+import { Routes } from '../../routes/router';
 
 const CREATE_DRAFT_PATH = '/mail/gmail-client/createDraft';
 
@@ -76,6 +79,32 @@ export const saveDraft =
           threadId,
         },
       });
+
+      const view = getModalViewFromBody(body);
+      if (view) {
+        const blocks = view.blocks.map((b: KnownBlock) =>
+          b.type === 'actions'
+            ? {
+                ...b,
+                elements: (b as ActionsBlock).elements.map((e) =>
+                  e.action_id === Routes.MAIL_SAVE_DRAFT
+                    ? {
+                        ...e,
+                        text: {
+                          ...(e as Button).text,
+                          text: ':white_check_mark: Saved as Draft',
+                        },
+                      }
+                    : e,
+                ),
+              }
+            : b,
+        );
+        await client.views.update({
+          view_id: body.view?.id,
+          view: { ...view, blocks },
+        });
+      }
     } catch (e) {
       logger.error(`error in saveDraft for user ${body.user.id}`, e);
       eventsEmitter.emit(DISPLAY_ERROR_MODAL_EVENT_NAME, {

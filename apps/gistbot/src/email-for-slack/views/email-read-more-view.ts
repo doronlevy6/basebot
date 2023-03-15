@@ -129,6 +129,7 @@ const ReplyBlock = (from: string, category: EmailCategory) => {
     },
     {
       type: 'actions',
+      block_id: 'button',
       elements: [
         {
           type: 'button',
@@ -138,7 +139,7 @@ const ReplyBlock = (from: string, category: EmailCategory) => {
             emoji: true,
           },
           value: 'save_draft',
-          action_id: 'save_draft',
+          action_id: Routes.MAIL_SAVE_DRAFT,
         },
         {
           type: 'button',

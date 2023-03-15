@@ -5,6 +5,7 @@ import {
   Button,
   HomeView,
   Logger,
+  ModalView,
   WebClient,
 } from '@slack/web-api';
 
@@ -89,3 +90,23 @@ async function updateBlocks(
     logger.error(`error in updateBlocks, couldn't update blocks. Error: ${e}`);
   }
 }
+
+export const getModalViewFromBody = ({
+  view,
+}: BlockAction<BlockElementAction>): ModalView | undefined => {
+  if (!view) {
+    return undefined;
+  }
+  return {
+    type: 'modal',
+    title: view.title,
+    blocks: view.blocks as Block[],
+    close: view.close || undefined,
+    submit: view.submit || undefined,
+    private_metadata: view.private_metadata,
+    callback_id: view.callback_id,
+    clear_on_close: view.clear_on_close,
+    notify_on_close: view.notify_on_close,
+    external_id: view.external_id,
+  };
+};
