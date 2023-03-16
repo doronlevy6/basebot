@@ -14,17 +14,22 @@ export const appHomeOpenedHandler =
     const { event, body, logger, payload } = appOpenedEvent;
     const { team_id } = body;
     const { user } = event;
-
     try {
       logger.info(`user ${user} opened the bot DMs`);
-      analyticsManager.appHomeOpened({
-        slackTeamId: team_id,
-        slackUserId: user,
-      });
+
       if (payload.tab === 'home') {
+        analyticsManager.appHomeOpened({
+          slackTeamId: team_id,
+          slackUserId: user,
+        });
         eventsEmitter.emit(UPDATE_HOME_USER_REFRESH, {
           slackUserId: user,
           slackTeamId: team_id,
+        });
+      } else if (payload.tab === 'messages') {
+        analyticsManager.appMessageOpened({
+          slackTeamId: team_id,
+          slackUserId: user,
         });
       }
       await sendOnboardingIfNeeded(onboardingManager, appOpenedEvent);

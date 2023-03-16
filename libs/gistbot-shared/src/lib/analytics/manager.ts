@@ -505,6 +505,25 @@ export class AnalyticsManager {
     });
   }
 
+  appMessageOpened({
+    slackUserId,
+    slackTeamId,
+    extraParams,
+  }: {
+    slackUserId: string;
+    slackTeamId: string;
+    extraParams?: ExtraParams;
+  }) {
+    this.sendEventToAnalytics({
+      eventName: `app_message_opened`,
+      slackUserId: slackUserId,
+      slackTeamId: slackTeamId,
+      internalUserId: this.internalId(slackTeamId, slackUserId),
+      timestamp: new Date(),
+      properties: { ...extraParams },
+    });
+  }
+
   chatMessage({
     type,
     slackUserId,
