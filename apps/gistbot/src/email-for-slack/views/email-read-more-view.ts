@@ -52,11 +52,6 @@ export const OpenView: (props: IProps) => ModalView = ({
       category,
     }),
     callback_id: Routes.RESOLVE_MAIL_FROM_VIEW,
-    close: {
-      type: 'plain_text',
-      text: 'Cancel',
-      emoji: true,
-    },
     title: {
       type: 'plain_text',
       text: title,
