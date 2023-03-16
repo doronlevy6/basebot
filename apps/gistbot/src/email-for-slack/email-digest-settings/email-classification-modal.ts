@@ -39,7 +39,7 @@ export const emailClassificationModal = (
           text: 'Choose where you want to recieve emails like this in the future',
         },
         accessory: {
-          type: 'multi_static_select',
+          type: 'static_select',
           placeholder: {
             type: 'plain_text',
             text: 'Select options',

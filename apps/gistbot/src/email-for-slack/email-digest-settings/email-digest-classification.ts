@@ -83,12 +83,15 @@ export const saveEmailDigestClassificationHandler =
     }
     try {
       changeTocategory =
-        view.state.values?.categories?.['selected-category']
-          ?.selected_options?.[0]?.value ?? '';
+        view.state.values?.categories?.['selected-category']?.selected_option
+          ?.value ?? '';
       if (!changeTocategory) {
-        console.warn(
-          `cant change category cause ,selected caterogy is missing ,userId: ${userId}, `,
+        console.error(
+          `cant change category cause ,selected caterogy is missing ,userId: ${userId}, ${JSON.stringify(
+            view.state,
+          )}`,
         );
+        return;
       }
       const data = await homeStore.fetch({
         slackUserId: userId,
