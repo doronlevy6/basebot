@@ -137,7 +137,7 @@ export const ResolveActionConfig: Record<ResolveMailAction, ActionConfig> = {
   },
   [DigestAction.ArchiveAll]: {
     name: 'Archive',
-    fullName: 'Archive all',
+    fullName: 'Archive',
     isBulkAction: true,
   },
   [DigestAction.MarkAsRead]: {
@@ -147,7 +147,7 @@ export const ResolveActionConfig: Record<ResolveMailAction, ActionConfig> = {
   },
   [DigestAction.MarkAllAsRead]: {
     name: 'Mark as read',
-    fullName: 'Mark all as read',
+    fullName: 'Mark as read',
     isBulkAction: true,
   },
 };

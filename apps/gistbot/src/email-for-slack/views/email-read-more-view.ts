@@ -37,10 +37,7 @@ export const OpenView: (props: IProps) => ModalView = ({
     ...LongTextBlock(body),
     ...createAttachmentsBlocks(attachments),
     createChangeClassificationBlock(link, messageId),
-    {
-      type: 'divider',
-    },
-    ...ReplyBlock(from || '', category),
+    ...ReplyBlocks(from || '', category),
   ];
 
   return {
@@ -91,9 +88,12 @@ function createChangeClassificationBlock(
   };
 }
 
-const ReplyBlock = (from: string, category: EmailCategory) => {
+const ReplyBlocks = (from: string, category: EmailCategory): KnownBlock[] => {
   if (!allowCategoriesToReply.includes(category)) return [];
   return [
+    {
+      type: 'divider',
+    },
     {
       type: 'section',
       text: {
