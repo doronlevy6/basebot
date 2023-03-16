@@ -23,7 +23,7 @@ interface IProps {
 
 const allowCategoriesToReply = [EmailCategory.Priority, EmailCategory.Groups];
 
-export const ReadMoreView: (props: IProps) => ModalView = ({
+export const OpenView: (props: IProps) => ModalView = ({
   title,
   body,
   attachments,

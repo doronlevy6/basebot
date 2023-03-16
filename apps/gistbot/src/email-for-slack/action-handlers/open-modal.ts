@@ -1,3 +1,4 @@
+import { AnalyticsManager } from '@base/gistbot-shared';
 import { EventEmitter } from 'events';
 import { HomeDataStore } from '../../home/home-data-store';
 import { DISPLAY_ERROR_MODAL_EVENT_NAME } from '../../home/types';
@@ -8,26 +9,41 @@ import {
   ResolveActionConfig,
   ResolveMailAction,
 } from '../types';
-import { ReadMoreView } from '../views/email-read-more-view';
+import { OpenView } from '../views/email-read-more-view';
 
 const title = 'Open';
 
-export const emailReadMoreHandler =
-  (homeStore: HomeDataStore, eventsEmitter: EventEmitter) =>
+export const emailOpenHandler =
+  (
+    homeStore: HomeDataStore,
+    eventsEmitter: EventEmitter,
+    analyticsManager: AnalyticsManager,
+  ) =>
   async ({ ack, logger, body, client }: SlackBlockActionWrapper) => {
     try {
       await ack();
-      logger.debug(`handling read-more modal for ${body.user.id}`);
+      logger.debug(`handling open modal for ${body.user.id}`);
       const action = body.actions[0];
       if (!body.team?.id) {
         logger.error(
-          `team id not exist for user ${body.user.id} in emailReadMoreHandler`,
+          `team id not exist for user ${body.user.id} in emailOpenHandler`,
         );
         return;
       }
+      try {
+        analyticsManager.buttonClicked({
+          type: 'open-modal',
+          slackTeamId: body.team?.id,
+          slackUserId: body.user.id,
+        });
+      } catch (ex) {
+        logger.error(
+          `Failed to send analytics , open modal,userId ${body.user.id}, error:  ${ex}`,
+        );
+      }
 
       if (action.type !== 'button') {
-        throw new Error('emailReadMoreHandler received non-button action');
+        throw new Error('emailOpeneHandler received non-button action');
       }
 
       const data = await homeStore.fetch({
@@ -37,7 +53,7 @@ export const emailReadMoreHandler =
       const sections = data?.gmailDigest?.digest.sections;
       if (!sections) {
         logger.error(
-          `no gmail digest was found for user ${body.user.id} in emailReadMoreHandler`,
+          `no gmail digest was found for user ${body.user.id} in emailOpeneHandler`,
         );
         return;
       }
@@ -55,14 +71,14 @@ export const emailReadMoreHandler =
 
       if (!message || !message.readMoreBody) {
         logger.error(
-          `no message to read more was found for user ${body.user.id} in emailReadMoreHandler`,
+          `no message to read more was found for user ${body.user.id} in emailOpeneHandler`,
         );
         return;
       }
 
       if (!message.link) {
         logger.error(
-          `no link to original email was found for user ${body.user.id} in emailReadMoreHandler`,
+          `no link to original email was found for user ${body.user.id} in emailOpeneHandler`,
         );
         return;
       }
@@ -73,14 +89,14 @@ export const emailReadMoreHandler =
 
       if (!submitAction) {
         logger.error(
-          `no resolve action found for ${message.id} in emailReadMoreHandler`,
+          `no resolve action found for ${message.id} in emailOpeneHandler`,
         );
         return;
       }
 
       await client.views.open({
         trigger_id: body.trigger_id,
-        view: ReadMoreView({
+        view: OpenView({
           title,
           body: message.readMoreBody,
           attachments: message.attachments,
@@ -94,14 +110,12 @@ export const emailReadMoreHandler =
         }),
       });
     } catch (e) {
-      logger.error(
-        `error in emailReadMoreHandler for user ${body.user.id}, ${e}`,
-      );
+      logger.error(`error in emailOpeneHandler for user ${body.user.id}, ${e}`);
       eventsEmitter.emit(DISPLAY_ERROR_MODAL_EVENT_NAME, {
         triggerId: body.trigger_id,
         slackUserId: body.user.id,
         slackTeamId: body.team?.id || '',
-        action: 'read_more',
+        action: 'open',
       });
       throw e;
     }

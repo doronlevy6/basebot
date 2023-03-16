@@ -15,7 +15,7 @@ import {
   emailReplyHandler,
   emailReplySubmitHandler,
 } from '../email-for-slack/action-handlers/email-reply';
-import { emailReadMoreHandler } from '../email-for-slack/action-handlers/read-more';
+import { emailOpenHandler } from '../email-for-slack/action-handlers/open-modal';
 import {
   refreshActionHandler,
   refreshFromModalHandler,
@@ -247,7 +247,7 @@ export const registerBoltAppRouter = (
   );
   app.action(
     Routes.MAIL_READ_MORE,
-    emailReadMoreHandler(homeDataStore, eventEmitter),
+    emailOpenHandler(homeDataStore, eventEmitter, analyticsManager),
   );
 
   app.action(
