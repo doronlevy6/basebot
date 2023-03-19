@@ -3,7 +3,7 @@ name: "Production Deploy Pipeline"
 on:
   push:
     branches-ignore:
-      - "*"
+      - "**"
     tags:
       - v*
 
