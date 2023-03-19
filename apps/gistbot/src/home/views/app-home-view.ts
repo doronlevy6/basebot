@@ -83,6 +83,13 @@ export const AppHomeView = (
           ...footerBlocks,
         ];
       }
+    } else if (gmailRefreshMetadata) {
+      gmailBlocks = EmailHeaderBlocks(
+        'Email Digest',
+        Date.now(),
+        gmailRefreshMetadata,
+        'Getting your first Email Digest',
+      );
     } else {
       gmailBlocks = CreateEmailDigestBlocks();
     }

@@ -8,6 +8,7 @@ export const EmailHeaderBlocks = (
   email: string,
   lastUpdated: number,
   refreshMetadata: IEmailRefreshMetadata,
+  textMessage?: string,
 ): KnownBlock[] => {
   const { refreshing, error, numEmails } = refreshMetadata ?? {};
   let buttonText = 'Refresh';
@@ -18,6 +19,9 @@ export const EmailHeaderBlocks = (
   } else if (error) {
     buttonText = 'Failed refreshing';
   }
+
+  const message =
+    textMessage ?? 'Updated ' + SlackDate(lastUpdated / 1000 + '');
 
   return [
     {
@@ -32,7 +36,7 @@ export const EmailHeaderBlocks = (
       type: 'section',
       text: {
         type: 'mrkdwn',
-        text: 'Updated ' + SlackDate(lastUpdated / 1000 + ''),
+        text: message,
       },
     },
     {

@@ -133,6 +133,7 @@ export class HomeDataStore extends PgUtil {
       return {
         gmailConnected: email_connected,
         gmailRefreshMetadata,
+        emailEnabled: email_enabled,
       };
     }
 
