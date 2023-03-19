@@ -6,6 +6,7 @@ import {
 import { SlackBlockActionWrapper, ViewAction } from '../../slack/types';
 import { MAIL_BOT_SERVICE_API } from '../types';
 import EventEmitter = require('events');
+import { AnalyticsManager } from '@base/gistbot-shared';
 
 const REFRESH_PATH = '/mail/gmail-client';
 
@@ -42,16 +43,27 @@ export const sendRefreshRequestToMailbot = async (
 };
 
 export const refreshActionHandler =
-  (eventEmitter: EventEmitter) =>
+  (eventEmitter: EventEmitter, analyticsManager: AnalyticsManager) =>
   async ({ ack, logger, body }: SlackBlockActionWrapper) => {
     await ack();
+    const userId = body.user.id;
+
     try {
-      logger.debug(`refreshing gmail for ${body.user.id}`);
+      logger.debug(`refreshing gmail for ${userId}`);
       if (!body.team?.id) {
-        logger.error(
-          `team id not exist for user ${body.user.id} in refreshGmail`,
-        );
+        logger.error(`team id not exist for user ${userId} in refreshGmail`);
         return;
+      }
+      try {
+        analyticsManager.buttonClicked({
+          type: 'gmail_action_refresh',
+          slackTeamId: body.team?.id,
+          slackUserId: userId,
+        });
+      } catch (ex) {
+        logger.error(
+          `Failed to send analytics,gmail_action_refresh,userId ${userId}, error:  ${ex}`,
+        );
       }
       await sendRefreshRequestToMailbot(
         body.user.id,
@@ -70,6 +82,7 @@ export const refreshFromModalHandler =
   (eventEmitter: EventEmitter) =>
   async ({ ack, logger, body }: ViewAction) => {
     await ack();
+
     try {
       logger.debug(`refreshing gmail for ${body.user.id}`);
       if (!body.team?.id) {
