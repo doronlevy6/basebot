@@ -17,6 +17,7 @@ const USER_SETTINGS_PATH = '/mail/users-settings';
 const SAVE_USER_SETTINGS_PATH = USER_SETTINGS_PATH + '/save';
 const GET_USER_SETTINGS_PATH = USER_SETTINGS_PATH + '/get-user-settings';
 const UPDATE_VIA_GMAIL_URL = USER_SETTINGS_PATH + '/update-mail-account-index';
+const DEFAULT_WORK_MODE = EmailWorkMode.Archive;
 
 export const getEmailDigestSettings = async (
   slackUserId: string,
@@ -60,7 +61,7 @@ export const saveDefaultEmailDigestSettings = async (
     const userSettings = new EmailDigestUsersSettingsEntity();
     userSettings.userId = email;
     userSettings.enabled = true;
-    userSettings.workMode = EmailWorkMode.MarkAsRead;
+    userSettings.workMode = DEFAULT_WORK_MODE;
     userSettings.timeFrame = 1;
     userSettings.selectedHour = Number(EmailSchedulerOptions.MORNING);
     userSettings.timeHour = calculateUserDefaultHour(
