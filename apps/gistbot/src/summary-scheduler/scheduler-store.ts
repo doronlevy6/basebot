@@ -7,6 +7,7 @@ export interface SchedulerSettingsStore {
     timeHour: number,
     limit?: number,
     offset?: number,
+    dayOfweek?: number,
   ): Promise<UserSchedulerSettings[]>;
   fetchUserSettings(
     slackUserId: string,
@@ -101,11 +102,13 @@ export class PgSchedulerSettingsStore
     timeHour: number,
     limit?: number,
     offset?: number,
+    dayOfweek?: number,
   ): Promise<UserSchedulerSettings[]> {
     const res = await this.db
       .select('*')
       .from('gistbot_user_scheduler_settings')
       .where({ enabled: true, time_hour: timeHour })
+      .whereRaw(`? = ANY(days)`, dayOfweek)
       .limit(limit || 100)
       .offset(offset || 0);
 
