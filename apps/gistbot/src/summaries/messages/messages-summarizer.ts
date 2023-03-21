@@ -127,7 +127,6 @@ export class MessagesSummarizer {
     const numberOfMessages = originalReq.length;
     const numberOfUsers = userOrBotIds.length;
     const uniqueUsers = userOrBotDetails.length;
-
     // eslint-disable-next-line no-constant-condition
     while (true) {
       logger.info(
@@ -151,7 +150,21 @@ export class MessagesSummarizer {
       }
 
       const summaries = await this.runModel(sessionId, req, requestingUserId);
-      if (summaries.length && summaries.length > 0) {
+
+      const channelSummaryAllEmpty = !summaries.some((summary) =>
+        summary?.summary?.trim(),
+      );
+
+      if (summaries?.length == 0 || channelSummaryAllEmpty) {
+        originalReq.shift();
+
+        if (originalReq.length === 0) {
+          break;
+        }
+        logger.error({
+          msg: 'getting empty respones',
+        });
+      } else {
         const formattedSummary = await formatConversationSummaries(
           channelId,
           summaries,
@@ -185,11 +198,6 @@ export class MessagesSummarizer {
           uniqueUsers: uniqueUsers,
           singleBotChannelDetected: false,
         };
-      }
-
-      originalReq.shift();
-      if (originalReq.length === 0) {
-        break;
       }
     }
 
