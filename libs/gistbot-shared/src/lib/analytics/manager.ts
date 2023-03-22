@@ -27,7 +27,12 @@ export class AnalyticsManager {
 
   constructor() {
     const key = process.env.SEGMENT_KEY as string;
-    this.client = new Segment(key, { enable: Boolean(key) });
+    const collectorHost =
+      process.env.COLLECTOR_HOST || 'https://api.segment.io';
+    this.client = new Segment(key, {
+      enable: Boolean(key),
+      host: collectorHost,
+    });
   }
 
   async isReady(): Promise<boolean> {

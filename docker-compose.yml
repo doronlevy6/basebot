@@ -18,6 +18,19 @@ services:
       - source: aws_creds
         target: /root/.aws
     command: [  "./chamber", "exec", "openai-proxy/local", "--", "./openai-proxy" ]
+  analytics-collector:
+    image: 221762091942.dkr.ecr.us-east-1.amazonaws.com/analytics-collector:latest
+    container_name: analytics-collector
+    depends_on:
+      localstack:
+        condition: service_healthy
+    environment:
+      ENV: local
+      PORT: :8080
+    secrets:
+      - source: aws_creds
+        target: /root/.aws
+    command: [  "./chamber", "exec", "analytics-collector/local", "--", "./analytics-collector", "--env", "local" ]
   slacker:
     build:
       dockerfile: ./build/Dockerfile.local
@@ -149,3 +162,12 @@ services:
       - DEBUG=0
     volumes:
       - ./build/init_localstack.sh:/etc/localstack/init/ready.d/init-aws.sh # ready hook
+    healthcheck:
+      test:
+        - CMD
+        - bash
+        - -c
+        - awslocal events list-event-buses
+      interval: 5s
+      timeout: 10s
+      start_period: 10s
