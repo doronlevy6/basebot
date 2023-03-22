@@ -42,6 +42,8 @@ export class DigestMessage {
   relatedMails?: GmailMessage[];
   readMoreBody?: string;
   attachments?: DigestMailAttachments[];
+  to: string[];
+  cc: string[];
 }
 
 export class DigestMailAttachments {
@@ -109,6 +111,12 @@ export const EmailCategoryToEmoji: Map<EmailCategory, string> = new Map([
   [EmailCategory.DocSigning, ':page_facing_up:'],
   [EmailCategory.Groups, ':people_holding_hands:'],
 ]);
+
+export enum ReplyOptions {
+  Reply = 'Reply',
+  ReplyAll = 'ReplyAll',
+  Forward = 'Forward',
+}
 
 export interface IHomeViewMetadata {
   userId: string;

@@ -93,6 +93,18 @@ export const emailOpenHandler =
         );
         return;
       }
+      const userEmailAddress = data?.gmailDigest?.digest.metedata.userId;
+      if (!userEmailAddress) {
+        logger.error(
+          `Could not retrieve email address for user ${body.user.id} team ${body.team.id}`,
+        );
+        return;
+      }
+      const filteredTo = message.to.filter(
+        (recipient) =>
+          recipient !== userEmailAddress &&
+          !recipient.includes(userEmailAddress),
+      );
 
       await client.views.open({
         trigger_id: body.trigger_id,
@@ -101,6 +113,8 @@ export const emailOpenHandler =
           body: message.readMoreBody,
           attachments: message.attachments,
           from: message.from,
+          cc: message.cc,
+          to: filteredTo,
           messageId: message.id,
           link: message.link as string,
           submitAction: submitAction as ResolveMailAction,

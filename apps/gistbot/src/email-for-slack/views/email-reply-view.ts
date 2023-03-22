@@ -1,4 +1,5 @@
 import { ModalView } from '@slack/web-api';
+import { getDynamicId } from '../action-handlers/helpers';
 interface IProps {
   metadata?: string;
   submitCallback: string;
@@ -6,7 +7,9 @@ interface IProps {
   address?: string;
 }
 
-export const REPLY_BLOCK_ID = 'reply';
+export const [getReplyBlockId, generateNewReplyId] = getDynamicId('reply');
+
+export const REPLY_TO_BLOCK_ID = 'reply-to-block';
 export const REPLY_ELEMENT_ACTION_ID = 'reply-action-id';
 export const ReplyMailView: (props: IProps) => ModalView = ({
   metadata,
@@ -42,7 +45,7 @@ export const ReplyMailView: (props: IProps) => ModalView = ({
       },
       {
         type: 'input',
-        block_id: REPLY_BLOCK_ID,
+        block_id: getReplyBlockId(),
         element: {
           type: 'plain_text_input',
           multiline: true,

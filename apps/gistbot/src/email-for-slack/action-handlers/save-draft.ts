@@ -2,18 +2,26 @@ import { AnalyticsManager } from '@base/gistbot-shared';
 import axios from 'axios';
 import { SlackBlockActionWrapper } from '../../slack/types';
 import {
-  REPLY_BLOCK_ID,
+  generateNewReplyId,
+  getReplyBlockId,
   REPLY_ELEMENT_ACTION_ID,
 } from '../views/email-reply-view';
-import { MAIL_BOT_SERVICE_API } from '../types';
+import { MAIL_BOT_SERVICE_API, ReplyOptions } from '../types';
 import { GmailSubscriptionsManager } from '../gmail-subscription-manager/gmail-subscription-manager';
 import { DISPLAY_ERROR_MODAL_EVENT_NAME } from '../../home/types';
 import { EventEmitter } from 'events';
 import { getModalViewFromBody } from './helpers';
 import { ActionsBlock, Button, KnownBlock } from '@slack/web-api';
 import { Routes } from '../../routes/router';
+import {
+  createMessageInput,
+  FORWARD_ACTION_ID,
+  FORWARD_ID,
+  REPLY_OPTIONS_ID,
+} from '../views/email-read-more-view';
 
-const CREATE_DRAFT_PATH = '/mail/gmail-client/createDraft';
+const DRAFT_REPLY_PATH = '/mail/gmail-client/draftReply';
+const DRAFT_FORWARD_PATH = '/mail/gmail-client/draftForward';
 
 export const saveDraft =
   (
@@ -51,28 +59,59 @@ export const saveDraft =
           `email saveDraft handler received non-button action for user  ${body.user.id}`,
         );
       }
+      const replyBlockId = getReplyBlockId();
       const message =
-        body.view?.state.values[REPLY_BLOCK_ID][REPLY_ELEMENT_ACTION_ID]?.value;
-      const { id, from, category } = JSON.parse(
+        body.view?.state.values[replyBlockId][REPLY_ELEMENT_ACTION_ID]?.value;
+      const { id, from, category, cc } = JSON.parse(
         body.view?.private_metadata || '',
       );
       threadId = id;
       const url = new URL(MAIL_BOT_SERVICE_API);
-      url.pathname = CREATE_DRAFT_PATH;
+      const sendToOption =
+        body?.view?.state.values[REPLY_OPTIONS_ID][Routes.EMAIL_REPLY_OPTION][
+          'selected_option'
+        ]?.value || '';
+      let sendTo: string[] = [];
+      if (
+        sendToOption === ReplyOptions.Reply ||
+        sendToOption === ReplyOptions.ReplyAll
+      ) {
+        url.pathname = DRAFT_REPLY_PATH;
+        await axios.post(
+          url.toString(),
+          {
+            slackUserId: body.user.id,
+            slackTeamId: body.team.id,
+            to: from,
+            cc: sendToOption === ReplyOptions.ReplyAll ? cc : [],
+            message,
+            threadId,
+          },
+          {
+            timeout: 60000,
+          },
+        );
+      }
+      if (sendToOption === ReplyOptions.Forward) {
+        sendTo = (
+          body?.view?.state.values[FORWARD_ID][FORWARD_ACTION_ID]?.value || ''
+        ).split(',');
+        url.pathname = DRAFT_FORWARD_PATH;
+        await axios.post(
+          url.toString(),
+          {
+            slackUserId: body.user.id,
+            slackTeamId: body.team.id,
+            to: sendTo,
+            message,
+            threadId,
+          },
+          {
+            timeout: 60000,
+          },
+        );
+      }
 
-      await axios.post(
-        url.toString(),
-        {
-          slackUserId: body.user.id,
-          slackTeamId: body.team.id,
-          to: from,
-          message,
-          threadId,
-        },
-        {
-          timeout: 60000,
-        },
-      );
       analyticsManager.gmailUserAction({
         slackUserId: body.user.id,
         slackTeamId: body.team?.id || '',
@@ -85,24 +124,29 @@ export const saveDraft =
 
       const view = getModalViewFromBody(body);
       if (view) {
-        const blocks = view.blocks.map((b: KnownBlock) =>
-          b.type === 'actions'
-            ? {
-                ...b,
-                elements: (b as ActionsBlock).elements.map((e) =>
-                  e.action_id === Routes.MAIL_SAVE_DRAFT
-                    ? {
-                        ...e,
-                        text: {
-                          ...(e as Button).text,
-                          text: ':white_check_mark: Saved as Draft',
-                        },
-                      }
-                    : e,
-                ),
-              }
-            : b,
-        );
+        const blocks = view.blocks.map((b: KnownBlock) => {
+          if (b.type === 'actions') {
+            return {
+              ...b,
+              elements: (b as ActionsBlock).elements.map((e) =>
+                e.action_id === Routes.MAIL_SAVE_DRAFT
+                  ? {
+                      ...e,
+                      text: {
+                        ...(e as Button).text,
+                        text: ':white_check_mark: Saved as Draft',
+                      },
+                    }
+                  : e,
+              ),
+            };
+          }
+          if (b.block_id === getReplyBlockId()) {
+            generateNewReplyId();
+            return createMessageInput();
+          }
+          return b;
+        });
         await client.views.update({
           view_id: body.view?.id,
           view: { ...view, blocks },

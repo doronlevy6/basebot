@@ -108,6 +108,7 @@ import {
   disconnectGmailHandler,
   disconnectGmailViewHandler,
 } from '../email-for-slack/action-handlers/disconnect-gmail-handler';
+import { ReplyOptionsHandler } from '../email-for-slack/action-handlers/reply-option';
 import { dismissedOnBoarding } from '../email-for-slack/action-handlers/dismiss-onboarding';
 
 const ARRAY_CHAT_GIST_ACTIONS = [0, 1, 2];
@@ -161,6 +162,7 @@ export enum Routes {
   EMAIL_SECTION_ACTION = 'email-section-action',
   DISCONNECT_GMAIL = 'disconnect-gmail',
   DISCONNECT_GMAIL_FROM_VIEW = 'disconnect-gmail-modal-submut',
+  EMAIL_REPLY_OPTION = 'email_reply_option',
 }
 
 export const registerBoltAppRouter = (
@@ -340,6 +342,8 @@ export const registerBoltAppRouter = (
     onboardingMiddleware,
     addToChannelFromWelcomeModalHandler(analyticsManager, metricsReporter),
   );
+
+  app.action(Routes.EMAIL_REPLY_OPTION, ReplyOptionsHandler());
 
   app.action(
     Routes.SUMMARIZE_THREAD_FROM_THREAD_MENTION,

@@ -1,14 +1,29 @@
-import { KnownBlock, ModalView } from '@slack/web-api';
+import {
+  ActionsBlock,
+  InputBlock,
+  KnownBlock,
+  ModalView,
+  PlainTextOption,
+  SectionBlock,
+} from '@slack/web-api';
 import { LongTextBlock } from '../../slack/components/long-text-block';
 import { SLACK_MAX_TEXT_BLOCK_LENGTH } from '../../slack/constants';
 import { Routes } from '../../routes/router';
 import {
   DigestMailAttachments,
   EmailCategory,
+  ReplyOptions,
   ResolveActionConfig,
   ResolveMailAction,
 } from '../types';
-import { REPLY_BLOCK_ID, REPLY_ELEMENT_ACTION_ID } from './email-reply-view';
+import {
+  getReplyBlockId,
+  REPLY_ELEMENT_ACTION_ID,
+  REPLY_TO_BLOCK_ID,
+} from './email-reply-view';
+export const FORWARD_ACTION_ID = 'forward_email_input_action';
+export const FORWARD_ID = 'forward';
+export const REPLY_OPTIONS_ID = 'reply_options_id';
 
 interface IProps {
   title: string;
@@ -19,9 +34,25 @@ interface IProps {
   link: string;
   submitAction: ResolveMailAction;
   category: EmailCategory;
+  cc?: string[];
+  to?: string[];
 }
 
 const allowCategoriesToReply = [EmailCategory.Priority, EmailCategory.Groups];
+
+export const forwardInputBlock = {
+  type: 'input',
+  element: {
+    type: 'email_text_input',
+    action_id: FORWARD_ACTION_ID,
+  },
+  label: {
+    type: 'plain_text',
+    text: 'Forward to',
+    emoji: true,
+  },
+  block_id: FORWARD_ID,
+};
 
 export const OpenView: (props: IProps) => ModalView = ({
   title,
@@ -32,11 +63,15 @@ export const OpenView: (props: IProps) => ModalView = ({
   link,
   submitAction,
   category,
+  cc,
 }) => {
   const blocks = [
     ...LongTextBlock(body),
     ...createAttachmentsBlocks(attachments),
     createChangeClassificationBlock(link, messageId),
+    {
+      type: 'divider',
+    },
     ...ReplyBlocks(from || '', category),
   ];
 
@@ -47,6 +82,7 @@ export const OpenView: (props: IProps) => ModalView = ({
       from,
       submitAction,
       category,
+      cc,
     }),
     callback_id: Routes.RESOLVE_MAIL_FROM_VIEW,
     title: {
@@ -61,6 +97,48 @@ export const OpenView: (props: IProps) => ModalView = ({
     },
 
     blocks,
+  };
+};
+const createrepllyOptionsFromEnum = (): PlainTextOption[] => {
+  const options: PlainTextOption[] = [];
+  for (const option in ReplyOptions) {
+    options.push({
+      text: {
+        type: 'plain_text',
+        text: ReplyOptions[option],
+        emoji: true,
+      },
+      value: ReplyOptions[option],
+    });
+  }
+
+  return options;
+};
+
+const createReplyOptionsBlock = (): ActionsBlock => {
+  return {
+    type: 'actions',
+    block_id: REPLY_OPTIONS_ID,
+    elements: [
+      {
+        type: 'static_select',
+        placeholder: {
+          type: 'plain_text',
+          text: 'Select an item',
+          emoji: true,
+        },
+        initial_option: {
+          text: {
+            type: 'plain_text',
+            text: ReplyOptions.Reply,
+            emoji: true,
+          },
+          value: ReplyOptions.Reply,
+        },
+        options: createrepllyOptionsFromEnum(),
+        action_id: Routes.EMAIL_REPLY_OPTION,
+      },
+    ],
   };
 };
 
@@ -88,41 +166,26 @@ function createChangeClassificationBlock(
   };
 }
 
+export const createReplyBlock = (title: string): SectionBlock => {
+  return {
+    block_id: REPLY_TO_BLOCK_ID,
+    type: 'section',
+    text: {
+      type: 'mrkdwn',
+      text: title,
+    },
+  };
+};
+
 const ReplyBlocks = (from: string, category: EmailCategory): KnownBlock[] => {
   if (!allowCategoriesToReply.includes(category)) return [];
   return [
+    createReplyOptionsBlock(),
     {
       type: 'divider',
     },
-    {
-      type: 'section',
-      text: {
-        type: 'mrkdwn',
-        text: `*Reply to:* ${from}`,
-      },
-    },
-    {
-      type: 'input',
-      block_id: REPLY_BLOCK_ID,
-      optional: true,
-      element: {
-        type: 'plain_text_input',
-        multiline: true,
-        min_length: 1,
-        placeholder: {
-          type: 'plain_text',
-          text: 'Write something',
-          emoji: true,
-        },
-
-        action_id: REPLY_ELEMENT_ACTION_ID,
-      },
-      label: {
-        type: 'plain_text',
-        text: 'Reply content',
-        emoji: true,
-      },
-    },
+    createReplyBlock(`*Reply to:* ${from}`),
+    createMessageInput(),
     {
       type: 'actions',
       block_id: 'button',
@@ -151,6 +214,30 @@ const ReplyBlocks = (from: string, category: EmailCategory): KnownBlock[] => {
     },
   ];
 };
+
+export function createMessageInput(): InputBlock {
+  return {
+    type: 'input',
+    block_id: getReplyBlockId(),
+    optional: true,
+    element: {
+      type: 'plain_text_input',
+      multiline: true,
+      min_length: 1,
+      placeholder: {
+        type: 'plain_text',
+        text: 'Write something',
+        emoji: true,
+      },
+      action_id: REPLY_ELEMENT_ACTION_ID,
+    },
+    label: {
+      type: 'plain_text',
+      text: ' ',
+      emoji: true,
+    },
+  };
+}
 
 function createAttachmentsBlocks(
   attachments: DigestMailAttachments[] | undefined,

@@ -110,3 +110,13 @@ export const getModalViewFromBody = ({
     external_id: view.external_id,
   };
 };
+
+export function getDynamicId(prefix: string): [() => string, () => void] {
+  let counter = 0;
+  const getId = () => prefix + counter;
+
+  const increment = () => {
+    counter++;
+  };
+  return [getId, increment];
+}

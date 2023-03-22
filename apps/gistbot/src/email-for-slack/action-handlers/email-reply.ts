@@ -3,11 +3,12 @@ import axios from 'axios';
 import { Routes } from '../../routes/router';
 import { SlackBlockActionWrapper, ViewAction } from '../../slack/types';
 import {
+  generateNewReplyId,
+  getReplyBlockId,
   ReplyMailView,
-  REPLY_BLOCK_ID,
   REPLY_ELEMENT_ACTION_ID,
 } from '../views/email-reply-view';
-import { EmailCategory, MAIL_BOT_SERVICE_API } from '../types';
+import { EmailCategory, MAIL_BOT_SERVICE_API, ReplyOptions } from '../types';
 import { GmailSubscriptionsManager } from '../gmail-subscription-manager/gmail-subscription-manager';
 import { DISPLAY_ERROR_MODAL_EVENT_NAME } from '../../home/types';
 import { IMailErrorMetaData } from '../views/email-error-view';
@@ -19,8 +20,40 @@ import {
 } from '@slack/bolt';
 import { EventEmitter } from 'events';
 import { getModalViewFromBody } from './helpers';
+import {
+  createMessageInput,
+  FORWARD_ACTION_ID,
+  FORWARD_ID,
+  REPLY_OPTIONS_ID,
+} from '../views/email-read-more-view';
 
 const REPLY_PATH = '/mail/gmail-client/sendReply';
+const FORWARD_PATH = '/mail/gmail-client/forward';
+
+interface MailData {
+  slackUserId: string;
+  slackTeamId: string;
+  threadId: string;
+  message: string;
+  from: string;
+  cc: string[];
+  forwardAddresses?: string[];
+}
+
+interface MailActionParams {
+  slackUserId: string;
+  slackTeamId: string;
+  to: string[];
+  cc: string[];
+  threadId: string;
+  message: string;
+}
+
+const mailActionToPath = {
+  [ReplyOptions.Reply]: REPLY_PATH,
+  [ReplyOptions.ReplyAll]: REPLY_PATH,
+  [ReplyOptions.Forward]: FORWARD_PATH,
+};
 
 export const emailReplyHandler =
   (gmailSubscriptionsManager: GmailSubscriptionsManager) =>
@@ -87,38 +120,45 @@ export const emailReplyFromModalHandler =
         );
         return;
       }
-
-      const { id: threadId, from, category } = JSON.parse(metadata);
+      const { id: threadId, from, category, cc } = JSON.parse(metadata);
+      const mailAction =
+        (body?.view?.state.values[REPLY_OPTIONS_ID][Routes.EMAIL_REPLY_OPTION][
+          'selected_option'
+        ]?.value as ReplyOptions) || '';
       const message =
-        body?.view?.state.values[REPLY_BLOCK_ID][REPLY_ELEMENT_ACTION_ID]
+        body?.view?.state.values[getReplyBlockId()][REPLY_ELEMENT_ACTION_ID]
           ?.value || '';
-
-      await sendReplyToMailbot(
-        { slackUserId, slackTeamId, threadId, message, to: from },
+      const forwardAddresses =
+        body?.view?.state.values[FORWARD_ID][FORWARD_ACTION_ID]?.value?.split(
+          ',',
+        );
+      const mailActionParams = buildMailActionParams(mailAction, {
+        slackUserId,
+        slackTeamId,
+        threadId,
+        from,
+        message,
+        cc,
+        forwardAddresses,
+      });
+      await sendMailActionToMailbot(
+        mailAction,
+        mailActionParams,
         analyticsManager,
         category,
       );
-
       const view = getModalViewFromBody(body);
       if (view) {
-        const blocks = view.blocks.map((b: KnownBlock) =>
-          b.type === 'actions'
-            ? {
-                ...b,
-                elements: (b as ActionsBlock).elements.map((e) =>
-                  e.action_id === Routes.MAIL_REPLY_FROM_MODAL
-                    ? {
-                        ...e,
-                        text: {
-                          ...(e as Button).text,
-                          text: ':white_check_mark: Sent',
-                        },
-                      }
-                    : e,
-                ),
-              }
-            : b,
-        );
+        const blocks = view.blocks.map((b: KnownBlock) => {
+          if (b.type === 'actions') {
+            return createMailActionBlock(b);
+          }
+          if (b.block_id === getReplyBlockId()) {
+            generateNewReplyId();
+            return createMessageInput();
+          }
+          return b;
+        });
         await client.views.update({
           view_id: body.view?.id,
           view: { ...view, blocks },
@@ -152,11 +192,21 @@ export const emailReplySubmitHandler =
         id: threadId,
         from,
         category,
+        cc,
       } = JSON.parse(body.view.private_metadata);
+      const replyBlockId = getReplyBlockId();
       const message =
-        view.state.values[REPLY_BLOCK_ID][REPLY_ELEMENT_ACTION_ID]?.value || '';
-      await sendReplyToMailbot(
-        { slackUserId, slackTeamId, threadId, message, to: from },
+        view.state.values[replyBlockId][REPLY_ELEMENT_ACTION_ID]?.value || '';
+      await sendMailActionToMailbot(
+        ReplyOptions.Reply,
+        {
+          slackUserId,
+          slackTeamId,
+          threadId,
+          message,
+          cc,
+          to: from,
+        },
         analyticsManager,
         category,
       );
@@ -175,28 +225,82 @@ export const emailReplySubmitHandler =
     }
   };
 
-interface ReplyProps {
-  slackUserId: string;
-  slackTeamId: string;
-  to: string;
-  threadId: string;
-  message: string;
-}
+const createMailActionBlock = (block: ActionsBlock) => {
+  return {
+    ...block,
+    elements: block.elements.map((element) =>
+      element.action_id === Routes.MAIL_REPLY_FROM_MODAL
+        ? {
+            ...element,
+            text: {
+              ...(element as Button).text,
+              text: ':white_check_mark: Sent',
+            },
+          }
+        : element,
+    ),
+  };
+};
 
-const sendReplyToMailbot = async (
-  props: ReplyProps,
+const buildMailActionParams = (
+  mailAction: ReplyOptions,
+  originalMessage: MailData,
+): MailActionParams => {
+  const {
+    slackUserId,
+    slackTeamId,
+    threadId,
+    message,
+    from,
+    cc,
+    forwardAddresses,
+  } = originalMessage;
+  if (
+    mailAction === ReplyOptions.Reply ||
+    mailAction === ReplyOptions.ReplyAll
+  ) {
+    return {
+      slackUserId,
+      slackTeamId,
+      threadId,
+      message,
+      to: [from],
+      cc: mailAction === ReplyOptions.ReplyAll ? cc : [],
+    };
+  }
+  if (mailAction === ReplyOptions.Forward) {
+    if (!forwardAddresses || !forwardAddresses.length) {
+      throw new Error('no forwarding addressed provided');
+    }
+
+    return {
+      slackUserId,
+      slackTeamId,
+      threadId,
+      message,
+      to: forwardAddresses,
+      cc: [],
+    };
+  }
+  throw new Error('unsupported mail action ' + mailAction);
+};
+
+const sendMailActionToMailbot = async (
+  mailAction: ReplyOptions,
+  props: MailActionParams,
   analyticsManager: AnalyticsManager,
   category: EmailCategory,
 ) => {
-  const { slackUserId, slackTeamId, to, threadId, message } = props;
+  const { slackUserId, slackTeamId, to, cc, threadId, message } = props;
   const url = new URL(MAIL_BOT_SERVICE_API);
-  url.pathname = REPLY_PATH;
+  url.pathname = mailActionToPath[mailAction];
   await axios.post(
     url.toString(),
     {
       slackUserId,
       slackTeamId,
       to,
+      cc,
       threadId,
       message,
     },
@@ -207,7 +311,7 @@ const sendReplyToMailbot = async (
   analyticsManager.gmailUserAction({
     slackUserId,
     slackTeamId,
-    action: 'reply',
+    action: mailAction,
     extraParams: {
       threadId,
       category,
