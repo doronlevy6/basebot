@@ -85,6 +85,7 @@ export enum EmailCategory {
   Newsletters = 'Newsletters',
   Personal = 'Personal',
   Promotions = 'Promotions',
+  MailingList = 'Mailing-list',
   Social = 'Social',
   DocSigning = 'Document-signing',
   Groups = 'Groups',
@@ -99,6 +100,7 @@ export const EmailCategoryToName: Map<EmailCategory, string> = new Map([
   [EmailCategory.Social, 'SOCIAL'],
   [EmailCategory.DocSigning, 'DOCUMENT SIGNING'],
   [EmailCategory.Groups, 'GROUP MAIL'],
+  [EmailCategory.MailingList, 'MAILING LIST'],
 ]);
 
 export const EmailCategoryToEmoji: Map<EmailCategory, string> = new Map([
@@ -110,6 +112,7 @@ export const EmailCategoryToEmoji: Map<EmailCategory, string> = new Map([
   [EmailCategory.Social, ':bowling:'],
   [EmailCategory.DocSigning, ':page_facing_up:'],
   [EmailCategory.Groups, ':people_holding_hands:'],
+  [EmailCategory.MailingList, ':mailbox_with_mail:'],
 ]);
 
 export enum ReplyOptions {
