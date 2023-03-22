@@ -3,12 +3,14 @@ import { pluralString } from '../../../utils/string';
 import { Routes } from '../../../routes/router';
 import { SlackDate } from '../../../slack/components/date';
 import { IEmailRefreshMetadata } from '../../types';
+import { GmailPersonalizedOnBoarding } from '../onboarding/personalized-onboarding-message';
 
 export const EmailHeaderBlocks = (
   email: string,
   lastUpdated: number,
   refreshMetadata: IEmailRefreshMetadata,
   textMessage?: string,
+  onBoardingMessage?: string,
 ): KnownBlock[] => {
   const { refreshing, error, numEmails } = refreshMetadata ?? {};
   let buttonText = 'Refresh';
@@ -53,5 +55,6 @@ export const EmailHeaderBlocks = (
         },
       ],
     },
+    ...GmailPersonalizedOnBoarding(onBoardingMessage),
   ];
 };

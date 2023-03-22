@@ -15,6 +15,7 @@ import { OnboardToGmailNotConnectedBlocks } from './onboarding/onboard-gmail-not
 import { SLACK_MAX_HOME_BLOCKS } from '../../slack/constants';
 
 const DIVIDER_BLOCK_LENGTH = 1;
+
 export interface IHomeMetadata {
   slackUserId: string;
   slackTeamId: string;
@@ -28,8 +29,13 @@ export const AppHomeView = (
   daysLeftFreeTrial?: number,
 ): Block[] => {
   const { slackUserId, slackTeamId } = metadata;
-  const { emailEnabled, slackOnboarded, gmailDigest, gmailRefreshMetadata } =
-    state;
+  const {
+    emailEnabled,
+    slackOnboarded,
+    gmailDigest,
+    gmailRefreshMetadata,
+    onBoardingMessage,
+  } = state;
 
   if (!slackOnboarded && !emailEnabled) {
     logger.debug(`Showing onboarding home view for ${slackUserId}...`);
@@ -60,6 +66,8 @@ export const AppHomeView = (
         userId,
         lastUpdated,
         gmailRefreshMetadata,
+        undefined,
+        onBoardingMessage,
       );
       const isInboxEmpty = digest.sections.length === 0;
       if (isInboxEmpty) {
@@ -89,6 +97,7 @@ export const AppHomeView = (
         Date.now(),
         gmailRefreshMetadata,
         'Getting your first Email Digest',
+        onBoardingMessage,
       );
     } else {
       gmailBlocks = CreateEmailDigestBlocks();

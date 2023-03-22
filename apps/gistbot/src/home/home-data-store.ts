@@ -11,12 +11,12 @@ interface IPrimaryKey {
 }
 
 export type HomeData = Omit<IHomeState, 'slackOnboarded'>;
-
 interface ITableData {
   slack_team_id: string;
   slack_user_id: string;
   email_connected: Date;
   email_enabled: boolean;
+  onboarding_message: string;
   email_digest: string;
   email_digest_last_updated: Date;
   email_digest_refresh_metadata: string;
@@ -29,6 +29,7 @@ export class HomeDataStore extends PgUtil {
         slack_user_id varchar(36) NOT NULL,
         email_connected timestamp default null,
         email_enabled boolean default TRUE,
+        onboarding_message text,
         email_digest jsonb,
         email_digest_last_updated timestamp,
         email_digest_refresh_metadata jsonb,
@@ -37,7 +38,8 @@ export class HomeDataStore extends PgUtil {
 
       Alter table ${TABLE_NAME}
       Add column IF NOT EXISTS email_digest_refresh_metadata jsonb,
-      Add column IF NOT EXISTS email_enabled boolean default TRUE
+      Add column IF NOT EXISTS email_enabled boolean default TRUE,
+      Add column IF NOT EXISTS onboarding_message text
     `);
   }
 
@@ -51,15 +53,21 @@ export class HomeDataStore extends PgUtil {
     { slackTeamId, slackUserId }: IPrimaryKey,
     digest: object,
     email_digest_refresh_metadata?: '{}',
+    onboarding_message?: string,
   ): Promise<void> {
+    const dataToInsert: Partial<ITableData> = {
+      slack_team_id: slackTeamId,
+      slack_user_id: slackUserId,
+      email_digest: JSON.stringify(digest),
+      email_digest_last_updated: new Date(),
+      email_digest_refresh_metadata: email_digest_refresh_metadata,
+    };
+
+    if (onboarding_message) {
+      dataToInsert.onboarding_message = onboarding_message;
+    }
     await this.db<ITableData>(TABLE_NAME)
-      .insert({
-        slack_team_id: slackTeamId,
-        slack_user_id: slackUserId,
-        email_digest: JSON.stringify(digest),
-        email_digest_last_updated: new Date(),
-        email_digest_refresh_metadata,
-      })
+      .insert(dataToInsert)
       .onConflict(['slack_team_id', 'slack_user_id'])
       .merge();
   }
@@ -124,6 +132,7 @@ export class HomeDataStore extends PgUtil {
       email_digest,
       email_digest_last_updated,
       email_digest_refresh_metadata,
+      onboarding_message,
     } = res[0];
 
     const gmailRefreshMetadata =
@@ -145,6 +154,13 @@ export class HomeDataStore extends PgUtil {
         lastUpdated: new Date(email_digest_last_updated).getTime(),
       },
       gmailRefreshMetadata,
+      onBoardingMessage: onboarding_message,
     };
+  }
+
+  async dismissOnboarding(slackUserId: string, slackTeamId: string) {
+    await this.db(TABLE_NAME)
+      .update({ onboarding_message: null })
+      .where({ slack_team_id: slackTeamId, slack_user_id: slackUserId });
   }
 }

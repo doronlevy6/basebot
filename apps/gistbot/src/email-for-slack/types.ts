@@ -21,8 +21,8 @@ export class SlackIdToMailResponse {
 export class GmailDigest {
   metedata: UserMetadata;
   sections: GmailDigestSection[];
+  message?: string;
 }
-
 export class GmailDigestSection {
   title: string;
   messages: DigestMessage[];

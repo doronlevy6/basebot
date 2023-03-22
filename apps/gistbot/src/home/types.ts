@@ -8,6 +8,7 @@ export interface IEmailRefreshMetadata {
 export interface IHomeState {
   gmailConnected?: Date;
   emailEnabled?: boolean;
+  onBoardingMessage?: string;
   slackOnboarded: boolean;
   gmailDigest?: {
     digest: GmailDigest;

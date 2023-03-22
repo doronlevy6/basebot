@@ -108,6 +108,7 @@ import {
   disconnectGmailHandler,
   disconnectGmailViewHandler,
 } from '../email-for-slack/action-handlers/disconnect-gmail-handler';
+import { dismissedOnBoarding } from '../email-for-slack/action-handlers/dismiss-onboarding';
 
 const ARRAY_CHAT_GIST_ACTIONS = [0, 1, 2];
 
@@ -144,6 +145,7 @@ export enum Routes {
   MAIL_RSVP = 'rsvp',
   MAIL_READ_MORE = 'mail-read-more',
   GISTLY_MODAL_SUBMIT = 'gistly-modal-submit',
+  MAIL_ONBOARDING_DISMISSED = 'mail-onboarding-dismissed',
   OPEN_SCHEDULER_SETTINGS = 'open-scheduler-settings',
   OPEN_ALL_SETTINGS_MODAL = 'open-all-settings-modal',
   OPEN_EMAIL_SETTINGS_MODAL_FROM_ALL = 'open-email-settings-modal-from-all',
@@ -424,6 +426,10 @@ export const registerBoltAppRouter = (
   );
 
   app.action(Routes.DISCONNECT_GMAIL, disconnectGmailHandler);
+  app.action(
+    Routes.MAIL_ONBOARDING_DISMISSED,
+    dismissedOnBoarding(homeDataStore, analyticsManager, eventEmitter),
+  );
   app.view(
     Routes.DISCONNECT_GMAIL_FROM_VIEW,
     disconnectGmailViewHandler(homeDataStore, analyticsManager),

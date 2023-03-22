@@ -77,6 +77,8 @@ export class EmailDigestManager extends BullMQUtil<JobData> {
       await this.homeDataStore.updateEmailDigest(
         { slackTeamId, slackUserId },
         data,
+        undefined,
+        data.message,
       );
 
       this.eventsEmitter.emit(UPDATE_HOME_EVENT_NAME, { ...data.metedata });
