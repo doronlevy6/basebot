@@ -43,7 +43,7 @@ interface MailData {
 interface MailActionParams {
   slackUserId: string;
   slackTeamId: string;
-  to: string[];
+  to: string;
   cc: string[];
   threadId: string;
   message: string;
@@ -264,7 +264,7 @@ const buildMailActionParams = (
       slackTeamId,
       threadId,
       message,
-      to: [from],
+      to: from,
       cc: mailAction === ReplyOptions.ReplyAll ? cc : [],
     };
   }
@@ -278,7 +278,7 @@ const buildMailActionParams = (
       slackTeamId,
       threadId,
       message,
-      to: forwardAddresses,
+      to: forwardAddresses.join(','),
       cc: [],
     };
   }
