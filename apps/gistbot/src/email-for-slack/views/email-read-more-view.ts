@@ -24,6 +24,7 @@ import {
 export const FORWARD_ACTION_ID = 'forward_email_input_action';
 export const FORWARD_ID = 'forward';
 export const REPLY_OPTIONS_ID = 'reply_options_id';
+export const MAIL_ACTION_NOTE_ID = 'mail_action_note';
 
 interface IProps {
   title: string;
@@ -83,6 +84,7 @@ export const OpenView: (props: IProps) => ModalView = ({
       submitAction,
       category,
       cc,
+      hasAttachments: !!attachments?.length,
     }),
     callback_id: Routes.RESOLVE_MAIL_FROM_VIEW,
     title: {
@@ -186,6 +188,16 @@ const ReplyBlocks = (from: string, category: EmailCategory): KnownBlock[] => {
     },
     createReplyBlock(`*Reply to:* ${from}`),
     createMessageInput(),
+    {
+      type: 'context',
+      block_id: MAIL_ACTION_NOTE_ID,
+      elements: [
+        {
+          type: 'mrkdwn',
+          text: ' ',
+        },
+      ],
+    },
     {
       type: 'actions',
       block_id: 'button',

@@ -1,4 +1,4 @@
-import { InputBlock } from '@slack/web-api';
+import { ContextBlock, InputBlock } from '@slack/web-api';
 import { union } from 'lodash';
 import { SlackBlockActionWrapper } from '../../slack/types';
 import { ReplyOptions } from '../types';
@@ -6,6 +6,7 @@ import {
   createReplyBlock,
   forwardInputBlock,
   FORWARD_ID,
+  MAIL_ACTION_NOTE_ID,
 } from '../views/email-read-more-view';
 import { getReplyBlockId, REPLY_TO_BLOCK_ID } from '../views/email-reply-view';
 import { getModalViewFromBody } from './helpers';
@@ -30,7 +31,7 @@ export const ReplyOptionsHandler =
       );
       return;
     }
-    const { from, cc } = JSON.parse(metadata);
+    const { from, cc, hasAttachments } = JSON.parse(metadata);
     const blocks = view.blocks.map((block) => {
       if (
         block.block_id === REPLY_TO_BLOCK_ID ||
@@ -52,6 +53,18 @@ export const ReplyOptionsHandler =
             ...(block as InputBlock).label,
             text: newOption === ReplyOptions.Forward ? 'Add message' : ' ',
           },
+        };
+      }
+      if (hasAttachments && block.block_id === MAIL_ACTION_NOTE_ID) {
+        return {
+          ...block,
+          elements: (block as ContextBlock).elements.map((e) => ({
+            ...e,
+            text:
+              newOption === ReplyOptions.Forward
+                ? '* Attachments are not forwarded'
+                : ' ',
+          })),
         };
       }
 
