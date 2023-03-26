@@ -114,13 +114,24 @@ export class SummarySchedulerJob {
         throw new Error(errMsg);
       }
       const client = new WebClient(token);
+      // all public channels or private channels in which the user is a member
+      let limitedChannelSummries = await this.getUserAccessibleChannels(
+        userSettings.channels,
+        client,
+        userSettings.slackUser,
+      );
 
-      let limitedChannelSummries = userSettings.channels;
+      if (!limitedChannelSummries) {
+        const errMsg = `There are no valid channels to be summarized for the user ${userSettings.slackUser}`;
+        logger.error(errMsg);
+        throw new Error(errMsg);
+      }
+
       let nonIncludingChannels: string[] = [];
       let featureLimit: number | 'infinite' = 0;
       let tier = SubscriptionTier.FREE;
       if (
-        userSettings.channels.length > FeatureLimits.SCHEDULED_SUMMARIES.FREE
+        limitedChannelSummries.length > FeatureLimits.SCHEDULED_SUMMARIES.FREE
       ) {
         tier = await this.subscriptionManager.userTier(
           userSettings.slackTeam,
@@ -129,8 +140,11 @@ export class SummarySchedulerJob {
 
         featureLimit = FeatureLimits.SCHEDULED_SUMMARIES[tier];
         if (featureLimit !== 'infinite') {
-          limitedChannelSummries = userSettings.channels.slice(0, featureLimit);
-          nonIncludingChannels = userSettings.channels
+          limitedChannelSummries = limitedChannelSummries.slice(
+            0,
+            featureLimit,
+          );
+          nonIncludingChannels = limitedChannelSummries
             .slice(featureLimit)
             .map((c) => c.channelId);
         }
@@ -158,7 +172,7 @@ export class SummarySchedulerJob {
       this.analyticsManager.scheduledMultichannelSummaryFunnel({
         slackUserId: userSettings.slackUser,
         slackTeamId: userSettings.slackTeam,
-        channelIds: userSettings.channels.map((c) => c.channelId),
+        channelIds: limitedChannelSummries.map((c) => c.channelId),
         scheduledTime: timeToSchedule?.toString(),
         isSentToUser,
         extraParams: {
@@ -181,6 +195,52 @@ export class SummarySchedulerJob {
         `error in scheduler summaries for user ${userSettings.slackUser} in team ${userSettings.slackTeam}, error: ${e}`,
       );
     }
+  }
+
+  private async getUserAccessibleChannels(
+    channels: { channelId: string; channelName: string }[],
+    client: WebClient,
+    user_id: string,
+  ) {
+    const maxUsersAvailable = 1000;
+
+    const userAccessibleChannelsPromises = channels.map(async (channel) => {
+      try {
+        const channelInfo = await client.conversations.info({
+          channel: channel.channelId,
+        });
+        if (!channelInfo.channel?.is_private) {
+          return channel;
+        }
+        const channelMembers = await client.conversations.members({
+          channel: channel.channelId,
+          limit: maxUsersAvailable,
+        });
+        const hasMoreMembersThanLimit =
+          channelMembers.response_metadata?.next_cursor;
+        if (
+          channelMembers?.members?.includes(user_id) ||
+          hasMoreMembersThanLimit
+        ) {
+          return channel;
+        }
+        logger.warn(
+          `User ${user_id} doesn't have access to channel ${channel.channelName} `,
+        );
+      } catch (error) {
+        logger.error(
+          `Error while getting user:${user_id} info from slack, error : ${error} `,
+        );
+      }
+    });
+
+    const userAccessibleChannels = await Promise.all(
+      userAccessibleChannelsPromises,
+    );
+    return userAccessibleChannels.filter((result) => result !== undefined) as {
+      channelId: string;
+      channelName: string;
+    }[];
   }
 
   private async sendScheduledSummaries(
