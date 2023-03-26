@@ -64,6 +64,7 @@ export const AppHomeView = (
       } = digest;
       const header = EmailHeaderBlocks(
         userId,
+        slackUserId,
         lastUpdated,
         gmailRefreshMetadata,
         undefined,
@@ -94,6 +95,7 @@ export const AppHomeView = (
     } else if (gmailRefreshMetadata) {
       gmailBlocks = EmailHeaderBlocks(
         'Email Digest',
+        slackUserId,
         Date.now(),
         gmailRefreshMetadata,
         'Getting your first Email Digest',

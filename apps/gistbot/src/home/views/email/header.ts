@@ -7,6 +7,7 @@ import { GmailPersonalizedOnBoarding } from '../onboarding/personalized-onboardi
 
 export const EmailHeaderBlocks = (
   email: string,
+  slackUserId: string,
   lastUpdated: number,
   refreshMetadata: IEmailRefreshMetadata,
   textMessage?: string,
@@ -55,6 +56,6 @@ export const EmailHeaderBlocks = (
         },
       ],
     },
-    ...GmailPersonalizedOnBoarding(onBoardingMessage),
+    ...GmailPersonalizedOnBoarding(slackUserId, onBoardingMessage),
   ];
 };
