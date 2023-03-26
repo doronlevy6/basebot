@@ -129,9 +129,9 @@ export const emailReplyFromModalHandler =
         body?.view?.state.values[getReplyBlockId()][REPLY_ELEMENT_ACTION_ID]
           ?.value || '';
       const forwardAddresses =
-        body?.view?.state.values[FORWARD_ID][FORWARD_ACTION_ID]?.value?.split(
-          ',',
-        );
+        body?.view?.state.values?.[FORWARD_ID]?.[
+          FORWARD_ACTION_ID
+        ]?.value?.split(',');
       const mailActionParams = buildMailActionParams(mailAction, {
         slackUserId,
         slackTeamId,
