@@ -8,6 +8,7 @@ import {
   EmailCategoryToName,
   GmailDigestSection,
   ResolveActionConfig,
+  ResolveMailAction,
 } from '../types';
 import { logger } from '@base/logger';
 import { InboxZero } from './inbox-zero';
@@ -52,7 +53,11 @@ const resolveMailAction = (
   );
 };
 
-const resolveMailOption = (id: string, action): Option => {
+const resolveMailOption = (
+  id: string,
+  action: ResolveMailAction,
+  category: string,
+): Option => {
   const cfg = ResolveActionConfig[action];
   return (
     cfg && {
@@ -61,7 +66,7 @@ const resolveMailOption = (id: string, action): Option => {
         text: cfg.fullName,
         emoji: true,
       },
-      value: JSON.stringify({ id, submitAction: action }),
+      value: JSON.stringify({ id, submitAction: action, category }),
     }
   );
 };
@@ -231,7 +236,11 @@ export const createDigestSectionActions = (
   return section.actions
     ?.filter((action) => ResolveActionConfig[action]?.isBulkAction)
     .map((action) =>
-      resolveMailOption(section.id as string, action),
+      resolveMailOption(
+        section.id as string,
+        action as ResolveMailAction,
+        section.category,
+      ),
     ) as Option[];
 };
 
