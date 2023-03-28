@@ -14,7 +14,9 @@ import {
 import { SlackDataStore } from '../utils/slack-data-store';
 import { HomeDataStore } from './home-data-store';
 import {
+  IShareToSlackMetaData,
   ON_MESSAGE_CLEARED_EVENT_NAME,
+  ON_MESSAGE_SHARED_EVENT_NAME,
   OnMessageClearedEvent,
   UPDATE_EMAIL_REFRESH_METADATA_EVENT_NAME,
   UPDATE_HOME_EVENT_NAME,
@@ -22,7 +24,9 @@ import {
   UpdateEmailRefreshMetadataEvent,
 } from './types';
 import { sendRefreshRequestToMailbot } from '../email-for-slack/action-handlers/refresh-gmail';
+import { SharedEmail } from '../email-for-slack/components/shared-in-channel-email';
 import EventEmitter = require('events');
+import { addToChannel } from '../slack/add-to-channel';
 
 const QUEUE_NAME = 'emailMessageSender';
 type JobData = GmailDigest | SlackIdToMailResponse;
@@ -40,6 +44,9 @@ export class EmailDigestManager extends BullMQUtil<JobData> {
     super(QUEUE_NAME, queueCfg);
     this.eventsEmitter.on(ON_MESSAGE_CLEARED_EVENT_NAME, (data) => {
       this.onMessageClearedNotification(data).catch(logger.error);
+    });
+    this.eventsEmitter.on(ON_MESSAGE_SHARED_EVENT_NAME, (data) => {
+      this.handleShareToSlack(data).catch(logger.error);
     });
 
     this.eventsEmitter.on(UPDATE_EMAIL_REFRESH_METADATA_EVENT_NAME, (data) => {
@@ -355,4 +362,57 @@ export class EmailDigestManager extends BullMQUtil<JobData> {
     }
     return false;
   };
+
+  private async handleShareToSlack(data: IShareToSlackMetaData) {
+    logger.info({
+      msg: 'handleShareToSlack for gmail message starting',
+      job: data,
+    });
+
+    const {
+      id,
+      text,
+      channels,
+      userMetaData: { slackUserId, slackTeamId },
+    } = data;
+    try {
+      const installation =
+        await this.installationStore.fetchInstallationByTeamId(slackTeamId);
+
+      if (!installation.bot?.token) {
+        throw new Error(`no bot token for team ${slackTeamId}`);
+      }
+      const data = await this.homeDataStore.fetch({
+        slackUserId,
+        slackTeamId,
+      });
+
+      const messageToShare = data?.gmailDigest?.digest.sections
+        .flatMap((m) => m.messages)
+        .find((m) => m.id === id);
+      if (!messageToShare) {
+        return;
+      }
+      const client = new WebClient(installation.bot?.token);
+      const results = channels.map(async (c) => {
+        await addToChannel(
+          client,
+          {
+            channelId: c,
+            currentUser: slackUserId,
+            teamId: slackTeamId,
+          },
+          this.analyticsManager,
+        );
+        const blocks = SharedEmail(messageToShare, slackUserId, c, text);
+        return client.chat.postMessage({ channel: c, blocks });
+      });
+      await Promise.allSettled(results);
+      logger.debug({ msg: 'shared message event completed' });
+    } catch (e) {
+      logger.error(
+        `error in handleShareToSlack for user, slackUserId: ${slackUserId}, ${e}`,
+      );
+    }
+  }
 }

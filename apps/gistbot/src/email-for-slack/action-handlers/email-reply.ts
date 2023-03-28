@@ -5,12 +5,16 @@ import { SlackBlockActionWrapper, ViewAction } from '../../slack/types';
 import {
   generateNewReplyId,
   getReplyBlockId,
-  ReplyMailView,
   REPLY_ELEMENT_ACTION_ID,
+  ReplyMailView,
 } from '../views/email-reply-view';
 import { EmailCategory, MAIL_BOT_SERVICE_API, ReplyOptions } from '../types';
 import { GmailSubscriptionsManager } from '../gmail-subscription-manager/gmail-subscription-manager';
-import { DISPLAY_ERROR_MODAL_EVENT_NAME } from '../../home/types';
+import {
+  DISPLAY_ERROR_MODAL_EVENT_NAME,
+  IShareToSlackMetaData,
+  ON_MESSAGE_SHARED_EVENT_NAME,
+} from '../../home/types';
 import { IMailErrorMetaData } from '../views/email-error-view';
 import {
   ActionsBlock,
@@ -25,6 +29,8 @@ import {
   FORWARD_ACTION_ID,
   FORWARD_ID,
   REPLY_OPTIONS_ID,
+  SHARE_TO_SLACK_ACTION_ID,
+  SHARE_TO_SLACK_ID,
 } from '../views/email-read-more-view';
 
 const REPLY_PATH = '/mail/gmail-client/sendReply';
@@ -98,8 +104,63 @@ export const emailReplyHandler =
     }
   };
 
+async function mailActionFromSendButton(
+  mailAction: ReplyOptions,
+  slackUserId: string,
+  slackTeamId: string,
+  threadId,
+  from,
+  message: string,
+  cc,
+  forwardAddresses: string[] | undefined,
+  analyticsManager: AnalyticsManager,
+  category,
+) {
+  const mailActionParams = buildMailActionParams(mailAction, {
+    slackUserId,
+    slackTeamId,
+    threadId,
+    from,
+    message,
+    cc,
+    forwardAddresses,
+  });
+  await sendMailActionToMailbot(
+    mailAction,
+    mailActionParams,
+    analyticsManager,
+    category,
+  );
+}
+
+async function shareToSlackSendButton(
+  analyticsManager: AnalyticsManager,
+  mailAction: ReplyOptions,
+  eventEmitter: EventEmitter,
+  selectedChannel: string[],
+  message: string,
+  id: string,
+  slackUserId: string,
+  slackTeamId: string,
+) {
+  analyticsManager.gmailUserAction({
+    slackUserId,
+    slackTeamId,
+    action: mailAction,
+    extraParams: {
+      messageId: id,
+    },
+  });
+  eventEmitter.emit(ON_MESSAGE_SHARED_EVENT_NAME, {
+    id,
+    text: message,
+    userMetaData: { slackUserId, slackTeamId },
+    channels: selectedChannel,
+  } as IShareToSlackMetaData);
+}
+
 export const emailReplyFromModalHandler =
-  (analyticsManager: AnalyticsManager) =>
+  (analyticsManager: AnalyticsManager, eventsEmitter: EventEmitter) =>
   async (params: SlackBlockActionWrapper) => {
     const { ack, body, logger, client } = params;
     try {
@@ -132,21 +193,66 @@ export const emailReplyFromModalHandler =
         body?.view?.state.values?.[FORWARD_ID]?.[
           FORWARD_ACTION_ID
         ]?.value?.split(',');
-      const mailActionParams = buildMailActionParams(mailAction, {
-        slackUserId,
-        slackTeamId,
-        threadId,
-        from,
-        message,
-        cc,
-        forwardAddresses,
-      });
-      await sendMailActionToMailbot(
-        mailAction,
-        mailActionParams,
-        analyticsManager,
-        category,
-      );
+      const selectedChannels =
+        body?.view?.state.values?.[SHARE_TO_SLACK_ID]?.[
+          SHARE_TO_SLACK_ACTION_ID
+        ]?.selected_conversations || [];
+
+      switch (mailAction) {
+        case ReplyOptions.Reply:
+          await mailActionFromSendButton(
+            mailAction,
+            slackUserId,
+            slackTeamId,
+            threadId,
+            from,
+            message,
+            cc,
+            forwardAddresses,
+            analyticsManager,
+            category,
+          );
+          break;
+        case ReplyOptions.ReplyAll:
+          await mailActionFromSendButton(
+            mailAction,
+            slackUserId,
+            slackTeamId,
+            threadId,
+            from,
+            message,
+            cc,
+            forwardAddresses,
+            analyticsManager,
+            category,
+          );
+          break;
+        case ReplyOptions.Forward:
+          await mailActionFromSendButton(
+            mailAction,
+            slackUserId,
+            slackTeamId,
+            threadId,
+            from,
+            message,
+            cc,
+            forwardAddresses,
+            analyticsManager,
+            category,
+          );
+          break;
+        case ReplyOptions.ShareToSlack:
+          await shareToSlackSendButton(
+            analyticsManager,
+            mailAction,
+            eventsEmitter,
+            selectedChannels,
+            message,
+            threadId,
+            slackUserId,
+            slackTeamId,
+          );
+      }
       const view = getModalViewFromBody(body);
       if (view) {
         const blocks = view.blocks.map((b: KnownBlock) => {

@@ -22,6 +22,8 @@ import {
   REPLY_TO_BLOCK_ID,
 } from './email-reply-view';
 export const FORWARD_ACTION_ID = 'forward_email_input_action';
+export const SHARE_TO_SLACK_ID = 'share_to_slack_input_block_id';
+export const SHARE_TO_SLACK_ACTION_ID = 'share_to_slack_input_action_id';
 export const FORWARD_ID = 'forward';
 export const REPLY_OPTIONS_ID = 'reply_options_id';
 export const MAIL_ACTION_NOTE_ID = 'mail_action_note';
@@ -41,6 +43,23 @@ interface IProps {
 
 const allowCategoriesToReply = [EmailCategory.Priority, EmailCategory.Groups];
 
+export const shareToInputBlock = {
+  type: 'section',
+  text: {
+    type: 'mrkdwn',
+    text: 'Choose which channel to share this email',
+  },
+  accessory: {
+    type: 'multi_conversations_select',
+    placeholder: {
+      type: 'plain_text',
+      text: 'Select conversations',
+      emoji: true,
+    },
+    action_id: SHARE_TO_SLACK_ACTION_ID,
+  },
+  block_id: SHARE_TO_SLACK_ID,
+};
 export const forwardInputBlock = {
   type: 'input',
   element: {
@@ -54,7 +73,6 @@ export const forwardInputBlock = {
   },
   block_id: FORWARD_ID,
 };
-
 export const OpenView: (props: IProps) => ModalView = ({
   title,
   body,

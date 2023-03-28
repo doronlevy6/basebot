@@ -6,6 +6,8 @@ import {
   createReplyBlock,
   forwardInputBlock,
   FORWARD_ID,
+  shareToInputBlock,
+  SHARE_TO_SLACK_ID,
   MAIL_ACTION_NOTE_ID,
 } from '../views/email-read-more-view';
 import { getReplyBlockId, REPLY_TO_BLOCK_ID } from '../views/email-reply-view';
@@ -35,7 +37,8 @@ export const ReplyOptionsHandler =
     const blocks = view.blocks.map((block) => {
       if (
         block.block_id === REPLY_TO_BLOCK_ID ||
-        block.block_id === FORWARD_ID
+        block.block_id === FORWARD_ID ||
+        block.block_id === SHARE_TO_SLACK_ID
       ) {
         switch (newOption) {
           case ReplyOptions.Reply:
@@ -44,6 +47,8 @@ export const ReplyOptionsHandler =
             return createReplyBlock(`*Reply to:* ${union([from], cc)}`);
           case ReplyOptions.Forward:
             return forwardInputBlock;
+          case ReplyOptions.ShareToSlack:
+            return shareToInputBlock;
         }
       }
       if (block.block_id === getReplyBlockId()) {
@@ -51,7 +56,11 @@ export const ReplyOptionsHandler =
           ...block,
           label: {
             ...(block as InputBlock).label,
-            text: newOption === ReplyOptions.Forward ? 'Add message' : ' ',
+            text:
+              newOption === ReplyOptions.Forward ||
+              newOption === ReplyOptions.ShareToSlack
+                ? 'Add message'
+                : ' ',
           },
         };
       }

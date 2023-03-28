@@ -288,7 +288,7 @@ export const registerBoltAppRouter = (
   );
   app.action(
     Routes.MAIL_REPLY_FROM_MODAL,
-    emailReplyFromModalHandler(analyticsManager),
+    emailReplyFromModalHandler(analyticsManager, eventEmitter),
   );
 
   app.action(

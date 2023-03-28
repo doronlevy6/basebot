@@ -266,7 +266,7 @@ export const createEmailDigestBlocks = (
     : InboxZero();
 };
 
-const createTimeString = (timestamp: number) => {
+export const createTimeString = (timestamp: number) => {
   const date = new Date(timestamp);
   const isToday = date.getTime() >= new Date().setHours(0, 0, 0, 0);
   if (isToday) {

@@ -119,6 +119,7 @@ export enum ReplyOptions {
   Reply = 'Reply',
   ReplyAll = 'ReplyAll',
   Forward = 'Forward',
+  ShareToSlack = 'Share to slack',
 }
 
 export interface IHomeViewMetadata {
