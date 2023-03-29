@@ -24,7 +24,7 @@ export const AllSettingsModal = (): ModalView => {
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: 'Gmail configuration',
+          text: 'Gmail Digest',
         },
         accessory: {
           type: 'button',
@@ -41,7 +41,7 @@ export const AllSettingsModal = (): ModalView => {
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: 'Slack Digest configuration',
+          text: 'Slack Digest',
         },
         accessory: {
           type: 'button',
