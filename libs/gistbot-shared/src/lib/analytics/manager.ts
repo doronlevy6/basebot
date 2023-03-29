@@ -32,6 +32,7 @@ export class AnalyticsManager {
     this.client = new Segment(key, {
       enable: Boolean(key),
       host: collectorHost,
+      flushAt: 8, // Make sure we don't send more than 8 in a batch (default is 20 and too big for eventbridge)
     });
   }
 
