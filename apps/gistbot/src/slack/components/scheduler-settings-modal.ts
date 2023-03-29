@@ -33,25 +33,12 @@ const eveningOption: Option = {
   },
   value: UserSchedulerOptions.EVENING,
 };
-const fullWeekdays = [0, 1, 2, 3, 4, 5, 6];
-const weekdays = [
-  'Sunday',
-  'Monday',
-  'Tuesday',
-  'Wednesday',
-  'Thursday',
-  'Friday',
-  'Saturday',
-];
 
 export const SchedulerSettingsModal = (
   enabled?: UserSchedulerOptions.ON | UserSchedulerOptions.OFF,
   hour?: UserSchedulerOptions.MORNING | UserSchedulerOptions.EVENING,
   channels?: string[],
-  defaultDays?: number[],
 ): ModalView => {
-  const defaultWorkDays = defaultDays || fullWeekdays;
-
   return {
     type: 'modal',
     callback_id: Routes.SCHEDULER_SETTINGS_MODAL_SUBMIT,
@@ -102,22 +89,6 @@ export const SchedulerSettingsModal = (
           type: 'mrkdwn',
         },
       },
-
-      {
-        type: 'input',
-        block_id: 'checkbox-day-of-week',
-        element: {
-          type: 'checkboxes',
-          action_id: 'day_of_week',
-          initial_options: formatDaysOfWeek(defaultWorkDays),
-          options: formatDaysOfWeek(fullWeekdays),
-        },
-        label: {
-          type: 'plain_text',
-          text: 'Select a day of the week:',
-          emoji: true,
-        },
-      },
       {
         type: 'input',
         block_id: 'radio-buttons-time',
@@ -162,14 +133,3 @@ export const SchedulerSettingsModal = (
     ],
   };
 };
-export function formatDaysOfWeek(daysOfWeek: number[]): Option[] {
-  return daysOfWeek.map((day) => {
-    return {
-      text: {
-        type: 'plain_text',
-        text: weekdays[day],
-      },
-      value: day.toString(),
-    };
-  });
-}
