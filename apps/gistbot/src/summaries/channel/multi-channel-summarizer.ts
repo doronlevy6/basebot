@@ -15,6 +15,7 @@ import { MessagesSummarizer } from '../messages/messages-summarizer';
 import { generateIDAsync } from '../../utils/id-generator.util';
 import { SlackDataStore } from '../../utils/slack-data-store';
 import { ChannelSummaryStore } from '../channel-summary-store';
+import { IReporter } from '@base/metrics';
 
 export type OutputError =
   | 'channel_too_small'
@@ -48,6 +49,7 @@ export class MultiChannelSummarizer {
     private channelSummarizer: ChannelSummarizer,
     private slackDataStore: SlackDataStore,
     private channelSummaryStore: ChannelSummaryStore,
+    private metricsReporter: IReporter,
   ) {}
 
   async summarize(
@@ -179,6 +181,12 @@ export class MultiChannelSummarizer {
     } catch (error) {
       logger.error(
         `error in multi-channel summarizer: ${error} ${error.stack}`,
+      );
+
+      this.metricsReporter.error(
+        'multi channel summary',
+        'multi-channel-summary',
+        teamId,
       );
 
       return { summaries: [], error: 'general_error' };

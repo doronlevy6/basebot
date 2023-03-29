@@ -270,6 +270,7 @@ export class ThreadSummarizer {
       this.metricsReporter.error(
         'thread summarizer',
         'summarization-processing',
+        teamId,
       );
 
       this.analyticsManager.error({

@@ -109,7 +109,7 @@ export class OnboardingManager {
       logger.error(
         `User onboarding in ${onboardingContext} error: ${error} ${error.stack}`,
       );
-      this.metricsReporter.error('onboarding', 'onboard-user');
+      this.metricsReporter.error('onboarding', 'onboard-user', teamId);
     }
   }
 

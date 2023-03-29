@@ -343,6 +343,7 @@ export class ChannelSummarizer {
       this.metricsReporter.error(
         'channel summarizer',
         'summarization-processing',
+        teamId,
       );
 
       this.analyticsManager.error({

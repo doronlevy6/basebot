@@ -1,15 +1,22 @@
-import { SubscriptionManager } from '@base/customer-identifier';
+import {
+  SubscriptionManager,
+  SubscriptionTier,
+} from '@base/customer-identifier';
+import { AnalyticsManager, PgInstallationStore } from '@base/gistbot-shared';
 import { logger } from '@base/logger';
-import { generateIDAsync } from '../utils/id-generator.util';
+import { IReporter } from '@base/metrics';
 import { WebClient } from '@slack/web-api';
 import * as cron from 'node-cron';
-import { AnalyticsManager, PgInstallationStore } from '@base/gistbot-shared';
 import { FeatureLimits } from '../feature-rate-limiter/limits';
+import { OnboardingManager } from '../onboarding/manager';
 import { ScheduledMultiChannelSummary } from '../slack/components/scheduled-multi-channel-summary';
+import { ScheduledMessageSender } from '../slack/scheduled-messages/manager';
 import {
   MultiChannelSummarizer,
   OutputError,
 } from '../summaries/channel/multi-channel-summarizer';
+import { generateIDAsync } from '../utils/id-generator.util';
+import { delay } from '../utils/retry';
 import { SchedulerSettingsManager } from './scheduler-manager';
 import { RedisSchedulerSettingsLock } from './scheduler-settings-lock';
 import {
@@ -18,10 +25,6 @@ import {
   TIME_MINUTES_TO_LOCK,
   UserSchedulerSettings,
 } from './types';
-import { ScheduledMessageSender } from '../slack/scheduled-messages/manager';
-import { delay } from '../utils/retry';
-import { OnboardingManager } from '../onboarding/manager';
-import { SubscriptionTier } from '@base/customer-identifier';
 
 export class SummarySchedulerJob {
   private readonly tempWeekDays = '0,1,2,3,4,5';
@@ -34,7 +37,14 @@ export class SummarySchedulerJob {
     private subscriptionManager: SubscriptionManager,
     private scheduledMessageSender: ScheduledMessageSender,
     private onboardingManager: OnboardingManager,
-  ) {}
+    private metricsReporter: IReporter,
+  ) {
+    this.metricsReporter.registerCounter(
+      'slack_digest_schedule_run_count',
+      'A counter for the number of times a slack digest schedule run',
+      ['slack_team', 'is_sent_to_user'],
+    );
+  }
   start() {
     cron.schedule(
       `0 */${JOB_MINUTES_INTERVAL} * * * ${this.tempWeekDays}`,
@@ -186,11 +196,26 @@ export class SummarySchedulerJob {
         },
       });
 
+      this.metricsReporter.incrementCounter(
+        'slack_digest_schedule_run_count',
+        1,
+        {
+          slack_team: userSettings.slackTeam,
+          is_sent_to_user: isSentToUser ? 'true' : 'false',
+        },
+      );
+
       await this.onboardingManager.completeOnboarding(
         userSettings.slackTeam,
         userSettings.slackUser,
       );
     } catch (e) {
+      this.metricsReporter.error(
+        'schedule slack digest run error',
+        'handle-slack-digest-schedule',
+        userSettings.slackTeam,
+      );
+
       logger.error(
         `error in scheduler summaries for user ${userSettings.slackUser} in team ${userSettings.slackTeam}, error: ${e}`,
       );

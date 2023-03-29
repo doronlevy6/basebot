@@ -189,8 +189,12 @@ export class PrometheusReporter implements IReporter {
     this.histograms[name].observe(labels, value);
   }
 
-  public error(context: string, step: string): void {
-    this.incrementCounter('errors_total', 1, { context, step });
+  public error(context: string, step: string, team?: string): void {
+    this.incrementCounter('errors_total', 1, {
+      context,
+      step,
+      team: team || 'unknown',
+    });
   }
 
   public flow(context: string, step: string, startedAt: Date): void {

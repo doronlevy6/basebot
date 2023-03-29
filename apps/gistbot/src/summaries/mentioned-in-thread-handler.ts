@@ -232,6 +232,7 @@ export const summarizeSuggestedThreadAfterMention =
       metricsReporter.error(
         'summarize thread after mention',
         'summarize-thread-after-mention',
+        body.team?.id,
       );
       logger.error(
         `error in summarize suggested thread after mention: ${error} ${error.stack}`,

@@ -316,6 +316,7 @@ const startApp = async () => {
     channelSummarizer,
     slackDataStore,
     channelSummaryStore,
+    metricsReporter,
   );
 
   const summarySchedulerMgr = new SchedulerSettingsManager(
@@ -368,6 +369,7 @@ const startApp = async () => {
     subscriptionManager,
     scheduledMessageSender,
     onboardingManager,
+    metricsReporter,
   );
 
   const orgSettingsStore = new PgOrgSettingsStore(pgConfig);

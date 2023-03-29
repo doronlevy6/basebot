@@ -43,6 +43,6 @@ export interface IReporter {
   ) => void;
 
   // Default metrics
-  error: (context: string, step: string) => void;
+  error: (context: string, step: string, team?: string) => void;
   flow: (context: string, step: string, startedAt: Date) => void;
 }
