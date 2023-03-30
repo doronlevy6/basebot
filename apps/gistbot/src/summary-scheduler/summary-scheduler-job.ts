@@ -55,15 +55,20 @@ export class SummarySchedulerJob {
       },
     );
   }
+
   async handleScheduler() {
     let offset = 0;
     // eslint-disable-next-line no-constant-condition
     while (true) {
       // set interval for next hour, to be able to process summaries ahead of time.
       const timeToFetchSettings = new Date().getUTCHours() + 1;
+
+      const currentDay = new Date().getDay();
+
       const usersSettings =
         await this.schedulerMgr.fetchUsersSettingsInInterval(
           timeToFetchSettings,
+          currentDay,
           LIMIT,
           offset,
         );

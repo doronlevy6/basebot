@@ -16,6 +16,16 @@ import { ConversationsInfoResponse } from '@slack/web-api';
 import EventEmitter = require('events');
 import { UPDATE_HOME_EVENT_NAME } from '../home/types';
 
+enum Country {
+  Israel = 'israel',
+  Other = 'other',
+}
+
+const workingDaysMap = {
+  [Country.Israel]: [0, 1, 2, 3, 4, 5],
+  [Country.Other]: [1, 2, 3, 4, 5, 6],
+};
+
 export const summarySchedularSettingsButtonHandler =
   (
     schedulerSettingsMgr: SchedulerSettingsManager,
@@ -67,16 +77,37 @@ export const summarySchedularSettingsButtonHandler =
 
         channels = userSettings.channels.map((c) => c.channelId);
       }
+      const userInfo = await client.users.info({
+        user: userId,
+      });
+
+      const workingDaysInUserTimezone = userInfo.user?.tz_label
+        ?.toLowerCase()
+        .includes(Country.Israel)
+        ? workingDaysMap[Country.Israel]
+        : workingDaysMap[Country.Other];
+
+      const defaultDays = userSettings?.days || workingDaysInUserTimezone;
 
       if (showInsideModal) {
         await client.views.push({
           trigger_id: body.trigger_id,
-          view: SchedulerSettingsModal(enabled, selectedHour, channels),
+          view: SchedulerSettingsModal(
+            enabled,
+            selectedHour,
+            channels,
+            defaultDays,
+          ),
         });
       } else {
         await client.views.open({
           trigger_id: body.trigger_id,
-          view: SchedulerSettingsModal(enabled, selectedHour, channels),
+          view: SchedulerSettingsModal(
+            enabled,
+            selectedHour,
+            channels,
+            defaultDays,
+          ),
         });
       }
 
@@ -230,7 +261,13 @@ export const summarySchedularSettingsModalHandler =
           channelName: channelInfo.channel?.name as string,
         };
       });
-      usersettings.days = [0, 1, 2, 3, 4, 5, 6];
+
+      const selectedDays =
+        view.state.values['checkbox-day-of-week'].day_of_week.selected_options;
+      if (selectedDays) {
+        usersettings.days = selectedDays?.map((x) => +x.value);
+        usersettings.days.sort((a, b) => a - b);
+      }
       logger.debug(
         `scheduler modal start saving user settings ${usersettings},  for user ${body.user.id}`,
       );

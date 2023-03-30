@@ -31,10 +31,16 @@ export class SchedulerSettingsManager {
 
   async fetchUsersSettingsInInterval(
     timeHour: number,
+    dayOfweek: number,
     limit?: number,
     offset?: number,
   ): Promise<UserSchedulerSettings[]> {
-    return this.store.fetchUsersSettingsInInterval(timeHour, limit, offset);
+    return this.store.fetchUsersSettingsInInterval(
+      timeHour,
+      dayOfweek,
+      limit,
+      offset,
+    );
   }
 
   async saveDefaultUserSchedulerSettings(

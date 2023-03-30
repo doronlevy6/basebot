@@ -5,6 +5,7 @@ export interface SchedulerSettingsStore {
   saveUserSchedulerSettings(settings: UserSchedulerSettings): Promise<void>;
   fetchUsersSettingsInInterval(
     timeHour: number,
+    dayOfweek: number,
     limit?: number,
     offset?: number,
   ): Promise<UserSchedulerSettings[]>;
@@ -99,6 +100,7 @@ export class PgSchedulerSettingsStore
 
   async fetchUsersSettingsInInterval(
     timeHour: number,
+    dayOfweek: number,
     limit?: number,
     offset?: number,
   ): Promise<UserSchedulerSettings[]> {
@@ -106,6 +108,7 @@ export class PgSchedulerSettingsStore
       .select('*')
       .from('gistbot_user_scheduler_settings')
       .where({ enabled: true, time_hour: timeHour })
+      .whereRaw(`? = ANY(days)`, dayOfweek)
       .limit(limit || 100)
       .offset(offset || 0);
 
