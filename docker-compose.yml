@@ -107,8 +107,8 @@ services:
       dockerfile: ../mail-bot/build/images/Dockerfile.local
       context: ../mail-bot
     volumes:
-      - ../mail-bot/src:/app/src
-      - ../mail-bot/configs:/app/configs
+      - ../mail-bot/apps/mail-bot/src:/app/src
+      - ../mail-bot/apps/mail-bot/configs:/app/configs
     depends_on:
       - postgres
       - redis
