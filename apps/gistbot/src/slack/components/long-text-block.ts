@@ -7,16 +7,22 @@ export const LongTextBlock = (
   text: string,
   delimeter: string = DEFAULT_DELIMETER,
 ): KnownBlock[] => {
+  const [caption, body] = text.split(/(?<=\n)/); //Separating the caption from the body.
   const isTooLong = text.length >= SLACK_MAX_TEXT_BLOCK_LENGTH;
+
   if (!isTooLong) {
     return [TextBlock(text)];
   }
+  const headBlock = [TextBlock(caption)];
 
-  const splits = text
+  const bodySplits = body
     .split(delimeter)
     .flatMap((str) => splitString(str, SLACK_MAX_TEXT_BLOCK_LENGTH));
 
-  return splits.map((str) => TextBlock(str));
+  const BodyBlocks = bodySplits.map((str) => TextBlock(str));
+  const bodyAndHeadBlocks = [...headBlock, ...BodyBlocks];
+
+  return bodyAndHeadBlocks;
 };
 
 const TextBlock = (text: string): KnownBlock => ({
@@ -32,10 +38,28 @@ const splitString = (str: string, chunkSize: number) => {
     return [str];
   }
 
-  const chunksCount = Math.ceil(str.length / chunkSize);
-  const chunks: string[] = new Array(chunksCount);
-  for (let i = 0; i < chunksCount; i++) {
-    chunks[i] = str.substring(i * chunkSize, (i + 1) * chunkSize);
+  const sentences = str.includes('.') ? str.split(/(?<=\.)/) : str.split(/ /); //first priority is to split by sentence. If that's not possible, then splitting by words
+
+  const chunks: string[] = [];
+  let currentLine = '';
+
+  for (const sentence of sentences) {
+    if (currentLine === '') {
+      currentLine = sentence;
+    } else if (currentLine.length + sentence.length + 1 < chunkSize) {
+      currentLine += ' ' + sentence;
+    } else {
+      if (currentLine[0] !== '>') {
+        chunks.push('>' + currentLine);
+      } else {
+        chunks.push(currentLine);
+      }
+      currentLine = sentence;
+    }
+  }
+
+  if (currentLine !== '') {
+    chunks.push('>' + currentLine);
   }
 
   return chunks;
