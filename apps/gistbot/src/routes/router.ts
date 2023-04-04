@@ -237,6 +237,8 @@ export const registerBoltAppRouter = (
       featureRateLimiter,
       schedulerSettingsManager,
       multiChannelSummarizer,
+      homeDataStore,
+      eventEmitter,
     ),
   );
   app.action(Routes.MAIL_REPLY, emailReplyHandler(gmailSubscriptionsManager));
@@ -458,7 +460,10 @@ export const registerBoltAppRouter = (
     ),
   );
 
-  app.action(Routes.OPEN_ALL_SETTINGS_MODAL, allSettingsButtonHandler());
+  app.action(
+    Routes.OPEN_ALL_SETTINGS_MODAL,
+    allSettingsButtonHandler(homeDataStore, eventEmitter),
+  );
 
   app.view(
     Routes.SCHEDULER_SETTINGS_MODAL_SUBMIT,

@@ -14,6 +14,8 @@ import { connectGmailCommand } from './slash-routes/gmail-command';
 import { helpCommand } from './slash-routes/help-command';
 import { increaseLimitsCommand } from './slash-routes/increase-limits-command';
 import { multiChannelSummaryCommand } from './slash-routes/multi-channel-summary-command';
+import { HomeDataStore } from '../home/home-data-store';
+import { EventEmitter } from 'stream';
 
 export const slashCommandRouter = (
   channelSummarizer: ChannelSummarizer,
@@ -21,6 +23,8 @@ export const slashCommandRouter = (
   featureRateLimiter: FeatureRateLimiter,
   schedulerSettingsMgr: SchedulerSettingsManager,
   multiChannelSummarizer: MultiChannelSummarizer,
+  homeDataStore: HomeDataStore,
+  eventEmitter: EventEmitter,
 ) => {
   const singleChannelSummaryHandler = channelSummarizationHandler(
     analyticsManager,
@@ -34,7 +38,7 @@ export const slashCommandRouter = (
   );
 
   const showEmailSettings = showEmailDigestSettingsModal(analyticsManager);
-  const showAllSettings = allSettingsButtonHandler();
+  const showAllSettings = allSettingsButtonHandler(homeDataStore, eventEmitter);
 
   return async (props: SlackSlashCommandWrapper) => {
     const {
