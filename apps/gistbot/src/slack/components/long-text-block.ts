@@ -7,11 +7,12 @@ export const LongTextBlock = (
   text: string,
   delimeter: string = DEFAULT_DELIMETER,
 ): KnownBlock[] => {
-  const [caption, body] = text.split(/(?<=\n)/); //Separating the caption from the body.
-  const isTooLong = text.length >= SLACK_MAX_TEXT_BLOCK_LENGTH;
+  const textWithShortLinks = shortenLinks(text);
+  const [caption, body] = textWithShortLinks.split(/(?<=\n)/); //Separating the caption from the body.
+  const isTooLong = textWithShortLinks.length >= SLACK_MAX_TEXT_BLOCK_LENGTH;
 
   if (!isTooLong) {
-    return [TextBlock(text)];
+    return [TextBlock(textWithShortLinks)];
   }
   const headBlock = [TextBlock(caption)];
 
@@ -38,7 +39,7 @@ const splitString = (str: string, chunkSize: number) => {
     return [str];
   }
 
-  const sentences = str.includes('.') ? str.split(/(?<=\.)/) : str.split(/ /); //first priority is to split by sentence. If that's not possible, then splitting by words
+  const sentences = str.includes('. ') ? str.split(/(?<=\. )/) : str.split(/ /); //first priority is to split by sentence. If that's not possible, then splitting by words
 
   const chunks: string[] = [];
   let currentLine = '';
@@ -64,3 +65,15 @@ const splitString = (str: string, chunkSize: number) => {
 
   return chunks;
 };
+function shortenLinks(text: string): string {
+  const urlRegex =
+    /https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_+.~#?&//=]*)/gi;
+  return text.replace(urlRegex, (url) => {
+    const matches = url.match(/(?:https?:\/\/(?:www\.)?)?([^/]+)/);
+    if (matches) {
+      const hostname = matches[1];
+      return `<${url}|${hostname}>`;
+    }
+    return url;
+  });
+}
