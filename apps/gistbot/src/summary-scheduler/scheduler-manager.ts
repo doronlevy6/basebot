@@ -117,4 +117,52 @@ export class SchedulerSettingsManager {
   async disableSchedulerSettings(userId: string, teamId: string) {
     return this.store.disableSchedulerSettings(userId, teamId);
   }
+
+  async updateUserTimeZone(
+    userSettings: UserSchedulerSettings,
+    client: WebClient,
+  ) {
+    try {
+      const userInfo = await client.users.info({
+        user: userSettings.slackUser,
+      });
+
+      if (userInfo.user?.tz_offset === undefined) {
+        logger.error(
+          `could not fetch user: ${userSettings.slackUser} info to get timezone in summary scheduler modal`,
+        );
+        return;
+      }
+
+      const newTimehour = calculateUserDefaultHour(
+        userInfo.user.tz_offset,
+        userSettings.selectedHour,
+      );
+
+      if (newTimehour === userSettings.timeHour) {
+        logger.debug(
+          `no need to update user time zone for ${userSettings.slackUser}`,
+        );
+        return;
+      }
+
+      logger.info(
+        `updating user time zone for ${userSettings.slackUser} to ${newTimehour} due to time zone change to ${userInfo.user.tz_offset}`,
+      );
+
+      await this.store.updateTimeHour(
+        userSettings.slackUser,
+        userSettings.slackTeam,
+        newTimehour,
+      );
+
+      logger.debug(
+        `Successfully updated user time zone for ${userSettings.slackUser} to ${newTimehour} due to time zone change to ${userInfo.user.tz_offset}`,
+      );
+    } catch (err) {
+      logger.error(
+        `Failed refreshing time zone after sending digest to ${userSettings.slackUser}`,
+      );
+    }
+  }
 }

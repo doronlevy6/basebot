@@ -17,6 +17,11 @@ export interface SchedulerSettingsStore {
     slackUserId: string,
     slackTeamId: string,
   ): Promise<void>;
+  updateTimeHour(
+    slackUser: string,
+    slackTeam: string,
+    timeHour: number,
+  ): Promise<void>;
 }
 
 export class PgSchedulerSettingsStore
@@ -58,6 +63,23 @@ export class PgSchedulerSettingsStore
         days: settings.days,
         channels: JSON.stringify(settings.channels),
         selected_hour: settings.selectedHour,
+      })
+      .onConflict(['slack_team_id', 'slack_user_id'])
+      .merge();
+  }
+
+  async updateTimeHour(
+    slackUser: string,
+    slackTeam: string,
+    timeHour: number,
+  ): Promise<void> {
+    await this.db('gistbot_user_scheduler_settings')
+      .update({
+        time_hour: timeHour,
+      })
+      .where({
+        slack_team_id: slackTeam,
+        slack_user_id: slackUser,
       })
       .onConflict(['slack_team_id', 'slack_user_id'])
       .merge();

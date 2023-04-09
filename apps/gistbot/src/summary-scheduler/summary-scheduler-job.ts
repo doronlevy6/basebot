@@ -145,9 +145,9 @@ export class SummarySchedulerJob {
       let nonIncludingChannels: string[] = [];
       let featureLimit: number | 'infinite' = 0;
       let tier = SubscriptionTier.FREE;
-      if (
-        limitedChannelSummries.length > FeatureLimits.SCHEDULED_SUMMARIES.FREE
-      ) {
+      const scheduledSummariesFreeTierLimit = FeatureLimits.SCHEDULED_SUMMARIES
+        .FREE as number;
+      if (limitedChannelSummries.length > scheduledSummariesFreeTierLimit) {
         tier = await this.subscriptionManager.userTier(
           userSettings.slackTeam,
           userSettings.slackUser,
@@ -208,6 +208,11 @@ export class SummarySchedulerJob {
           slack_team: userSettings.slackTeam,
           is_sent_to_user: isSentToUser ? 'true' : 'false',
         },
+      );
+
+      await this.schedulerMgr.updateUserTimeZone(
+        userSettings,
+        new WebClient(token),
       );
 
       await this.onboardingManager.completeOnboarding(
