@@ -107,8 +107,9 @@ services:
       dockerfile: ../mail-bot/build/images/Dockerfile.local
       context: ../mail-bot
     volumes:
-      - ../mail-bot/apps/mail-bot/src:/app/src
       - ../mail-bot/apps/mail-bot/configs:/app/configs
+      - ../mail-bot/apps:/app/apps
+      - ../mail-bot/libs:/app/libs
     depends_on:
       - postgres
       - redis
@@ -121,7 +122,7 @@ services:
     secrets:
       - source: aws_creds
         target: /root/.aws
-    command: [  "./chamber", "exec", "mail-bot/local", "--", "npm", "run", "start:debug" ]
+    command: [  "./chamber", "exec", "mail-bot/local", "--", "npm", "run", "start:mailbot:debug" ]
     ports:
       - 3004:3000
       - 9234:9229
