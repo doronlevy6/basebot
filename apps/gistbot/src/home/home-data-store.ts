@@ -55,10 +55,71 @@ export class HomeDataStore extends PgUtil {
     email_digest_refresh_metadata?: '{}',
     onboarding_message?: string,
   ): Promise<void> {
+    // create a deep copy of the input object with all fields set to empty strings except for fields with the key 'type' within the 'classifications' array inside the 'relatedMails' array.
+
+    function copyObjectWithEmptyFieldsExceptType(obj) {
+      if (Array.isArray(obj)) {
+        return obj.map(copyObjectWithEmptyFieldsExceptType);
+      } else if (typeof obj === 'object' && obj !== null) {
+        return copyObjectWithRelatedMails(obj);
+      } else {
+        return obj;
+      }
+    }
+
+    function copyObjectWithRelatedMails(obj) {
+      const newObj = {};
+
+      for (const key in obj) {
+        if (key === 'relatedMails') {
+          newObj[key] = obj[key].map(
+            copyMailWithEmptyFieldsExceptClassificationType,
+          );
+        } else {
+          newObj[key] = copyObjectWithEmptyFieldsExceptType(obj[key]);
+        }
+      }
+
+      return newObj;
+    }
+
+    function copyMailWithEmptyFieldsExceptClassificationType(mail) {
+      const newMail = {};
+
+      for (const mailKey in mail) {
+        if (mailKey === 'classifications') {
+          newMail[mailKey] = mail[mailKey].map(
+            copyClassificationWithEmptyFieldsExceptType,
+          );
+        } else {
+          newMail[mailKey] = '';
+        }
+      }
+
+      return newMail;
+    }
+
+    function copyClassificationWithEmptyFieldsExceptType(classification) {
+      const newClassification = {};
+
+      for (const classificationKey in classification) {
+        if (classificationKey === 'type') {
+          newClassification[classificationKey] =
+            classification[classificationKey];
+        } else {
+          newClassification[classificationKey] = '';
+        }
+      }
+
+      return newClassification;
+    }
+
+    const newObj = copyObjectWithEmptyFieldsExceptType(digest);
+
     const dataToInsert: Partial<ITableData> = {
       slack_team_id: slackTeamId,
       slack_user_id: slackUserId,
-      email_digest: JSON.stringify(digest),
+      email_digest: JSON.stringify(newObj),
       email_digest_last_updated: new Date(),
       email_digest_refresh_metadata: email_digest_refresh_metadata,
     };
