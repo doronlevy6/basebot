@@ -61,7 +61,7 @@ export class SummarySchedulerJob {
     // eslint-disable-next-line no-constant-condition
     while (true) {
       // set interval for next hour, to be able to process summaries ahead of time.
-      const timeToFetchSettings = new Date().getUTCHours() + 1;
+      const timeToFetchSettings = (new Date().getUTCHours() + 1) % 24;
 
       const currentDay = new Date().getDay();
 
@@ -340,7 +340,8 @@ export class SummarySchedulerJob {
       this.multiChannelSummarizer.getMultiChannelSummaryFormatted(summaries);
 
     const timeToSchedule = new Date();
-    timeToSchedule.setUTCHours(userSettings.timeHour, 0, 0);
+    const time = userSettings.timeHour === 0 ? 24 : userSettings.timeHour;
+    timeToSchedule.setUTCHours(time, 0, 0);
 
     // post scheduled message to slack
     await this.scheduledMessageSender.sendScheduledMessage(
