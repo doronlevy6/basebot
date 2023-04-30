@@ -86,12 +86,18 @@ export const mentionedInChannelHandler =
         return;
       }
 
+      await filterUsersNotInChannel(
+        client,
+        logger,
+        body.event,
+        channelMentionedUsers,
+      );
+
       messages.forEach((m) => {
         if (m.user && channelMentionedUsers.has(m.user)) {
           channelMentionedUsers.delete(m.user);
         }
       });
-
       if (channelMentionedUsers.size === 0) {
         logger.info(
           `all mentioned users were active within the last ${CHANNEL_LENGTH_LIMIT} messages on ${event.channel}`,
@@ -123,6 +129,39 @@ export const mentionedInChannelHandler =
       logger.error(
         `error in handling channel mentioned users: ${error} ${error.stack}`,
       );
+    }
+
+    async function filterUsersNotInChannel(
+      client,
+      logger,
+      event,
+      channelMentionedUsers,
+    ) {
+      try {
+        const channelInfo = await client.conversations.info({
+          channel: event.channel,
+        });
+        if (channelInfo.channel?.is_private) {
+          const result = await client.conversations.members({
+            channel: event.channel,
+          });
+          channelMentionedUsers.forEach((user) => {
+            if (!result.members?.includes(user)) {
+              logger.info(
+                `Deleting user ${user} as they are not part of the channel. Org ID: ${event.team}, Channel ID: ${event.channel}`,
+              );
+              channelMentionedUsers.delete(user);
+            }
+          });
+        }
+      } catch (error) {
+        logger.error(
+          `Error fetching channel members. Org ID: ${event.team}, Channel ID: ${event.channel} : `,
+          error,
+        );
+
+        return;
+      }
     }
   };
 
