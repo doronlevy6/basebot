@@ -129,7 +129,7 @@ export class SchedulerSettingsManager {
 
       if (userInfo.user?.tz_offset === undefined) {
         logger.error(
-          `could not fetch user: ${userSettings.slackUser} info to get timezone in summary scheduler modal`,
+          `[SchedulerSettingsManager.updateUserTimeZone] could not fetch user: ${userSettings.slackUser} info to get timezone in summary scheduler modal`,
         );
         return;
       }

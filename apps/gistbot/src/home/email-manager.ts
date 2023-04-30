@@ -308,6 +308,16 @@ export class EmailDigestManager extends BullMQUtil<JobData> {
         slackUserId,
         slackTeamId,
       });
+
+      if (!state || !state.emailEnabled || !state.gmailConnected) {
+        logger.debug(
+          `Gmail not connected fully enabled for ${slackUserId} in ${slackTeamId}. ${JSON.stringify(
+            state,
+          )}`,
+        );
+        return;
+      }
+
       const refreshTriggered = this.refreshStateIfNeeded(
         slackTeamId,
         slackUserId,
