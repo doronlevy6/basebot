@@ -35,6 +35,7 @@ export const AppHomeView = (
     gmailDigest,
     gmailRefreshMetadata,
     onBoardingMessage,
+    gmailConnected,
   } = state;
 
   if (!slackOnboarded && !emailEnabled) {
@@ -57,7 +58,9 @@ export const AppHomeView = (
   let gmailBlocks: Block[] = [];
   const onBoardingHeader = OnboardingHeaderGoProBlocks();
   if (emailEnabled) {
-    if (gmailDigest) {
+    if (!gmailConnected) {
+      gmailBlocks = OnboardToGmailNotConnectedBlocks(slackUserId, slackTeamId);
+    } else if (gmailDigest) {
       const { digest, lastUpdated } = gmailDigest;
       const {
         metedata: { userId },
@@ -105,7 +108,7 @@ export const AppHomeView = (
       gmailBlocks = CreateEmailDigestBlocks();
     }
   } else {
-    gmailBlocks = OnboardToGmailNotConnectedBlocks(slackUserId, slackTeamId);
+    gmailBlocks = OnboardToGmailBlocks(slackUserId, slackTeamId);
   }
   return [...onBoardingHeader, ...slackBlocks, divider, ...gmailBlocks];
 };
