@@ -130,13 +130,13 @@ export class SummarySchedulerJob {
       }
       const client = new WebClient(token);
       // all public channels or private channels in which the user is a member
-      let limitedChannelSummries = await this.getUserAccessibleChannels(
+      const askedChannelToSummries = await this.getUserAccessibleChannels(
         userSettings.channels,
         client,
         userSettings.slackUser,
       );
 
-      if (!limitedChannelSummries) {
+      if (!askedChannelToSummries) {
         const errMsg = `There are no valid channels to be summarized for the user ${userSettings.slackUser}`;
         logger.error(errMsg);
         throw new Error(errMsg);
@@ -147,19 +147,23 @@ export class SummarySchedulerJob {
       let tier = SubscriptionTier.FREE;
       const scheduledSummariesFreeTierLimit = FeatureLimits.SCHEDULED_SUMMARIES
         .FREE as number;
-      if (limitedChannelSummries.length > scheduledSummariesFreeTierLimit) {
+      let limitedChannelToSummries = askedChannelToSummries;
+
+      if (askedChannelToSummries.length > scheduledSummariesFreeTierLimit) {
         tier = await this.subscriptionManager.userTier(
           userSettings.slackTeam,
           userSettings.slackUser,
         );
 
         featureLimit = FeatureLimits.SCHEDULED_SUMMARIES[tier];
+
         if (featureLimit !== 'infinite') {
-          limitedChannelSummries = limitedChannelSummries.slice(
+          limitedChannelToSummries = askedChannelToSummries.slice(
             0,
             featureLimit,
           );
-          nonIncludingChannels = limitedChannelSummries
+
+          nonIncludingChannels = askedChannelToSummries
             .slice(featureLimit)
             .map((c) => c.channelId);
         }
@@ -171,7 +175,7 @@ export class SummarySchedulerJob {
           sessionId,
           userSettings,
           tier,
-          limitedChannelSummries,
+          limitedChannelToSummries,
           nonIncludingChannels,
           Number(featureLimit),
           botId,
@@ -187,12 +191,12 @@ export class SummarySchedulerJob {
       this.analyticsManager.scheduledMultichannelSummaryFunnel({
         slackUserId: userSettings.slackUser,
         slackTeamId: userSettings.slackTeam,
-        channelIds: limitedChannelSummries.map((c) => c.channelId),
+        channelIds: limitedChannelToSummries.map((c) => c.channelId),
         scheduledTime: timeToSchedule?.toString(),
         isSentToUser,
         extraParams: {
           gist_session: sessionId,
-          number_of_summarized_channels: limitedChannelSummries.length,
+          number_of_summarized_channels: limitedChannelToSummries.length,
           number_of_successful_summaries: summaryMetrics.successful,
           number_of_moderated_summaries: summaryMetrics.moderated,
           number_of_too_small_summaries: summaryMetrics.channel_too_small,
