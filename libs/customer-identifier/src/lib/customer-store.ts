@@ -224,10 +224,13 @@ export class PgCustomerStore extends PgUtil implements CustomerStore {
     // Force select 1. If rows returned is 0 then the WHERE clause didn't match,
     // so no rows is equivalent to no enterprise. If rows are returned, then
     // the WHERE clause matched, so any rows is equivalent to enterprise.
-    const res = await this.db.select('1').from('treasury_customers').where({
-      slack_team_id: slackTeamId,
-      subscription_tier: SubscriptionTier.ENTERPRISE,
-    });
+    const res = await this.db
+      .select(this.db.raw('?', ['1']))
+      .from('treasury_customers')
+      .where({
+        slack_team_id: slackTeamId,
+        subscription_tier: SubscriptionTier.ENTERPRISE,
+      });
     if (!res || res.length == 0) {
       return false;
     }
