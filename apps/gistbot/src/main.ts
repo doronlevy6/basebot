@@ -140,9 +140,14 @@ const startApp = async () => {
   if (!stripeApiKey) {
     throw new Error('stripe api key is missing in secrets');
   }
+  const stripeEnterpriseProductId = process.env.STRIPE_ENTERPRISE_PRODUCT_ID;
+  if (!stripeEnterpriseProductId) {
+    throw new Error('stripe enterprise product id is missing in configs');
+  }
   const subscriptionManager = new SubscriptionManager(
     customerStore,
     stripeApiKey,
+    stripeEnterpriseProductId,
   );
   const featureRateLimiter = new FeatureRateLimiter(
     redisRateLimiter,

@@ -5,7 +5,11 @@ import { SubscriptionTier } from './tiers';
 export class SubscriptionManager {
   private client: Stripe;
 
-  constructor(private customerStore: CustomerStore, stripeApiKey: string) {
+  constructor(
+    private customerStore: CustomerStore,
+    stripeApiKey: string,
+    private readonly enterpriseProductId,
+  ) {
     this.client = new Stripe(stripeApiKey, {
       apiVersion: '2022-08-01',
       typescript: true,
@@ -19,10 +23,18 @@ export class SubscriptionManager {
     slackTeamId: string,
     slackUserId: string,
   ): Promise<SubscriptionTier> {
-    const info = await this.customerStore.getCustomerInfoByUser(
-      slackTeamId,
-      slackUserId,
-    );
+    const [info, hasEnterpriseStatus] = await Promise.all([
+      this.customerStore.getCustomerInfoByUser(slackTeamId, slackUserId),
+      this.customerStore.getCustomerEnterpriseStatusByTeam(slackTeamId),
+    ]);
+
+    // If any team member has an enterprise subscription,
+    // then we return an enterprise tier.
+    // TODO: We need to have some sort of system in place to make sure we don't "double dip" (have both types within same team).
+    if (hasEnterpriseStatus) {
+      return SubscriptionTier.ENTERPRISE;
+    }
+
     if (!info) {
       return SubscriptionTier.FREE;
     }
@@ -73,11 +85,23 @@ export class SubscriptionManager {
       customerId = subscription.customer.id;
     }
 
+    const subscriptionProductIds = subscription.items.data.map((item) => {
+      let productId: string;
+      if (typeof item.price.product === 'string') {
+        productId = item.price.product;
+      } else {
+        productId = item.price.product.id;
+      }
+      return productId;
+    });
+
+    const tier = subscriptionProductIds.includes(this.enterpriseProductId)
+      ? SubscriptionTier.ENTERPRISE
+      : SubscriptionTier.PRO;
+
     await this.customerStore.setCustomerSubscription(
       customerId,
-      // TODO: Match different levels of subscriptions?
-      // Right now we only have the one (other than enterprise which is separate)
-      SubscriptionTier.PRO,
+      tier,
       subscriptionActive,
       subscription.current_period_end,
     );

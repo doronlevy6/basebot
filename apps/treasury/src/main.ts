@@ -53,6 +53,10 @@ const startApp = async () => {
   if (!stripeApiKey) {
     throw new Error('stripe api key is missing in secrets');
   }
+  const stripeEnterpriseProductId = process.env.STRIPE_ENTERPRISE_PRODUCT_ID;
+  if (!stripeEnterpriseProductId) {
+    throw new Error('stripe enterprise product id is missing in configs');
+  }
   const stripeWebhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
   if (!stripeWebhookSecret) {
     throw new Error('stripe webhook secret is missing in secrets');
@@ -105,6 +109,7 @@ const startApp = async () => {
   const subscriptionManager = new SubscriptionManager(
     customerStore,
     stripeApiKey,
+    stripeEnterpriseProductId,
   );
 
   const fullSyncJobLock = new RedisFullSyncJobLock(redisConfig, env);
