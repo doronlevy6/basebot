@@ -721,4 +721,26 @@ export class AnalyticsManager {
       properties: { ...extraParams },
     });
   }
+  homeRefreshMetadataError({
+    type,
+    slackUserId,
+    slackTeamId,
+    errorMessage,
+    extraParams,
+  }: {
+    type: string;
+    slackUserId: string;
+    slackTeamId: string;
+    errorMessage: string;
+    extraParams?: ExtraParams;
+  }) {
+    this.sendEventToAnalytics({
+      eventName: type,
+      slackUserId: slackUserId,
+      slackTeamId: slackTeamId,
+      internalUserId: this.internalId(slackTeamId, slackUserId),
+      timestamp: new Date(),
+      properties: { ...extraParams, errorMessage },
+    });
+  }
 }

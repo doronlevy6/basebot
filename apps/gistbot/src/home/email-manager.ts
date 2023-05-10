@@ -272,6 +272,13 @@ export class EmailDigestManager extends BullMQUtil<JobData> {
         )}`,
       );
 
+      if (metadata.error)
+        this.analyticsManager.homeRefreshMetadataError({
+          type: 'gmail_digest_error',
+          slackTeamId: slackTeamId,
+          slackUserId: slackUserId,
+          errorMessage: metadata.error,
+        });
       await this.homeDataStore.updateEmailRefreshMetadata(
         { slackTeamId, slackUserId },
         metadata,

@@ -47,7 +47,7 @@ export const refreshActionHandler =
   async ({ ack, logger, body }: SlackBlockActionWrapper) => {
     await ack();
     const userId = body.user.id;
-
+    let isSuccessfullyRequested = true;
     try {
       logger.debug(`refreshing gmail for ${userId}`);
       if (!body.team?.id) {
@@ -74,7 +74,15 @@ export const refreshActionHandler =
       logger.error(
         `Failed refreshing for ${body.user.id} in refreshGmail ${e}`,
       );
+      isSuccessfullyRequested = false;
       throw e;
+    } finally {
+      analyticsManager.buttonClicked({
+        type: 'gmail_digest_requested',
+        slackTeamId: body.team?.id || '',
+        slackUserId: userId,
+        extraParams: { successfullyRequested: isSuccessfullyRequested },
+      });
     }
   };
 
