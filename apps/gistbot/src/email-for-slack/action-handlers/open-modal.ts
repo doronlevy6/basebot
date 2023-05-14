@@ -118,9 +118,7 @@ export const emailOpenHandler =
           messageId: message.id,
           link: message.link as string,
           submitAction: submitAction as ResolveMailAction,
-          category:
-            message?.relatedMails?.[0]?.classifications?.[0].type ||
-            EmailCategory.Priority,
+          category: message?.clasificationType || EmailCategory.Priority,
         }),
       });
     } catch (e) {

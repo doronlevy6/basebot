@@ -37,8 +37,8 @@ export const showEmailDigestClassifcationsModal =
       });
       const messageId = body.actions[0].value;
       const sections = data?.gmailDigest?.digest.sections;
-      const category = getMessage(sections, messageId)?.relatedMails?.[0]
-        ?.classifications?.[0]?.type as string;
+      const category = getMessage(sections, messageId)
+        ?.clasificationType as string;
       await client.views.push({
         trigger_id: body.trigger_id,
         view: {
@@ -98,8 +98,7 @@ export const saveEmailDigestClassificationHandler =
         slackTeamId: teamId,
       });
       const message = getMessage(data?.gmailDigest?.digest.sections, messageId);
-      currentCategory = message?.relatedMails?.[0]?.classifications?.[0]
-        ?.type as string;
+      currentCategory = message?.clasificationType as string;
       const from = message?.from;
       if (!from) {
         logger.error(

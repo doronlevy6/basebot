@@ -39,11 +39,11 @@ export class DigestMessage {
   body: string;
   from: string;
   link?: string;
-  relatedMails?: GmailMessage[];
   readMoreBody?: string;
   attachments?: DigestMailAttachments[];
   to: string[];
   cc: string[];
+  clasificationType?: EmailCategory;
 }
 
 export class DigestMailAttachments {
