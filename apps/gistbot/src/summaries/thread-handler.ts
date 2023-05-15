@@ -59,13 +59,15 @@ export const runShortcut = async (
       `${shortcut.user.id} requested a thread summarization on ${payload.message.ts} in channel ${payload.channel.id}`,
     );
 
+    const threadTs = payload.message.thread_ts || payload.message_ts;
+
     await threadSummarizer.summarize(
       context.botId || '',
       payload.team?.id || 'unknown',
       payload.user.id,
       {
         type: 'thread',
-        threadTs: payload.message_ts,
+        threadTs: threadTs,
         channelId: payload.channel.id,
         channelName: payload.channel.name,
       },
