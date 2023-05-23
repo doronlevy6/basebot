@@ -47,11 +47,9 @@ export class ThreadSummarizer {
         throw new RateLimitedError('rate limited');
       }
 
-      const { ok, error, messages } = await client.conversations.history({
+      const { ok, error, messages } = await client.conversations.replies({
         channel: props.channelId,
-        limit: 1,
-        oldest: props.threadTs,
-        inclusive: true,
+        ts: props.threadTs,
       });
 
       if (error || !ok) {
