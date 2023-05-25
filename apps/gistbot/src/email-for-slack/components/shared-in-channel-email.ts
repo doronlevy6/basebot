@@ -10,6 +10,7 @@ export const SharedEmail = (
   channelId: string,
   text?: string,
 ): KnownBlock[] => {
+  const modifiedTitle = stripGmailLink(messageToShare.title);
   const blocksText = splitTextBlocks(messageToShare.body);
   return [
     {
@@ -28,7 +29,7 @@ export const SharedEmail = (
       type: 'section',
       text: {
         type: 'mrkdwn',
-        text: `*${messageToShare.title}* _${
+        text: `*${modifiedTitle}* _${
           messageToShare.timeStamp
             ? createTimeString(messageToShare.timeStamp)
             : ''
@@ -46,3 +47,15 @@ export const SharedEmail = (
     }),
   ];
 };
+
+function stripGmailLink(inputString) {
+  const regex = /<([^|]*)\|/i;
+  const match = regex.exec(inputString);
+
+  if (match && match.length > 1 && match[1].includes('mail.google.com')) {
+    const modifiedString = inputString.replace(regex, '');
+    return modifiedString.replace('>', '');
+  }
+
+  return inputString;
+}
